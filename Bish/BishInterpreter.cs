@@ -30,6 +30,11 @@ namespace Bish {
                 double value = double.Parse(str!);
                 return new BishVariable(null, value);
             }
+            else if (node.Term is StringLiteral) {
+                var str = node.Token.Value.ToString();
+                BishUtils.Assert(str != null, "NumberLiteral is Null");
+                return new BishVariable(null, str!);
+            }
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "factor") {
@@ -57,10 +62,11 @@ namespace Bish {
                     }
                 }
                 if (node.ChildNodes.Count == 4 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    string _ = node.ChildNodes[0].FindTokenAndGetText();
+                    string type = node.ChildNodes[0].FindTokenAndGetText();
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
-                    return vars.New(varName, right);
+                    dynamic? value = BishVars.WeakConvert(type, right);
+                    return vars.New(varName, value);
                 }
                 throw new InvalidOperationException($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");
             }

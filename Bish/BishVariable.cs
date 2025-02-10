@@ -33,7 +33,10 @@
         }
 
         public override string ToString() {
-            return $"{name ?? "[TEMP]"} with value {value}";
+            dynamic? value;
+            if (this.value is string str) value = $"\"{str}\"";
+            else value = this.value;
+            return $"var {name ?? "[TEMP]"} with value {value}";
         }
     }
 }

@@ -7,6 +7,8 @@ namespace Bish {
         public BishGrammar() {
             var identifier = new IdentifierTerminal("identifier");
             var number = new NumberLiteral("number");
+            var singleString = new StringLiteral("single_string", "'");
+            var doubleString = new StringLiteral("double_string", "\"");
             var plus = ToTerm("+");
             var minus = ToTerm("-");
             var multiply = ToTerm("*");
@@ -15,6 +17,8 @@ namespace Bish {
             var assign = ToTerm("=");
             var numVar = ToTerm("num");
 
+            var str = new NonTerminal("string");
+            var literal = new NonTerminal("literal");
             var factor = new NonTerminal("factor");
             var powerExpr = new NonTerminal("powerExpr");
             var term = new NonTerminal("term");
@@ -22,7 +26,9 @@ namespace Bish {
             var assignment = new NonTerminal("assignment");
             var statement = new NonTerminal("statement");
 
-            factor.Rule = (minus | plus) + factor | number | identifier | "(" + expression + ")";
+            str.Rule = singleString | doubleString;
+            literal.Rule = str | number;
+            factor.Rule = (minus | plus) + factor | literal | identifier | "(" + expression + ")";
             powerExpr.Rule = factor | powerExpr + power + factor;
             term.Rule = powerExpr | term + multiply + powerExpr | term + divide + powerExpr;
             expression.Rule = term | expression + plus + term | expression + minus + term;

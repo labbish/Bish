@@ -1,6 +1,4 @@
-﻿using MathNet.Numerics;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishUnitTest {
 

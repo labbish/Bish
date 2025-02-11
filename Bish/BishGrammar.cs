@@ -15,6 +15,8 @@ namespace Bish {
             var divide = ToTerm("/");
             var power = ToTerm("^");
             var assign = ToTerm("=");
+            var nullable = ToTerm("?");
+
             var intVar = ToTerm("int");
             var numVar = ToTerm("num");
             var strVar = ToTerm("string");

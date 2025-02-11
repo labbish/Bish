@@ -22,28 +22,30 @@ namespace Bish {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) return var;
-            throw new InvalidDataException($"Variable not found: {name}");
+            return BishUtils.Error($"Variable not found: {name}");
         }
 
         public BishVariable Set(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
-                var.value = value.value;
+                BishVariable newVar = new(null, value.value);
+                WeakConvert(var.type, newVar); //might throw
+                var.value = newVar.value;
                 return new BishVariable(null, value.value);
             }
-            throw new InvalidDataException($"Variable not found: {name}");
+            return BishUtils.Error($"Variable not found: {name}");
         }
 
         public BishVariable New(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
-            BishUtils.Assert(vars.Where(var => var.name == name).ToHashSet().Count == 0
-                , $"Var {name} already exists");
-            vars.Add(new BishVariable(name, value.value));
+            var matched = vars.Where(var => var.name == name).ToHashSet();
+            BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
+            vars.Add(new BishVariable(name, value.value, value.type));
             return value;
         }
 
-        public static BishVariable WeakConvert(string type, BishVariable var) {
+        public static BishVariable WeakConvert(string? type, BishVariable var) {
             bool converted = false;
             dynamic? value = null;
             if (type == "num") {
@@ -51,14 +53,14 @@ namespace Bish {
                     value = num;
                     converted = true;
                 }
+                else if (var.value is int i) {
+                    value = i;
+                    converted = true;
+                }
             }
             else if (type == "int") {
                 if (var.value is int num) {
                     value = num;
-                    converted = true;
-                }
-                else if (var.value is int i) {
-                    value = i;
                     converted = true;
                 }
             }
@@ -68,8 +70,13 @@ namespace Bish {
                     converted = true;
                 }
             }
-            if (!converted)
-                throw new TypeLoadException($"Cannot convert [{var}] into type {type}");
+            else if (type == "bool") {
+                if (var.value is bool b) {
+                    value = b;
+                    converted = true;
+                }
+            }
+            BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
             return new BishVariable(null, value);
         }
     }

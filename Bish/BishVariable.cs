@@ -2,8 +2,21 @@
 
     internal class BishVariable(string? name, dynamic? value = null, string? type = null) {
         public string? name = name;
-        public string? type = type;
         public dynamic? value = value;
+        public string? type = type ?? GetTypeName(value);
+
+        public static readonly Dictionary<Type, string> TypeNames = [];
+
+        static BishVariable() {
+            TypeNames[typeof(int)] = "int";
+            TypeNames[typeof(double)] = "num";
+            TypeNames[typeof(string)] = "string";
+            TypeNames[typeof(bool)] = "bool";
+        }
+
+        public static string? GetTypeName(dynamic? value) {
+            return TypeNames[value == null ? null : value.GetType()];
+        }
 
         public static BishVariable operator +(BishVariable a, BishVariable b) {
             return new BishVariable(null, a.value + b.value);
@@ -44,9 +57,12 @@
         public override string ToString() {
             dynamic? value = this.value switch {
                 string str => $"\"{str}\"",
+                true => "true",
+                false => "false",
+                null => "null",
                 _ => this.value,
             };
-            return $"var {name ?? "[TEMP]"} with value {value}, type <{"?"}>";
+            return $"var {name ?? "[TEMP]"} with value {value}, type <{type ?? "?"}>";
         }
 
         public override bool Equals(object? obj) {
@@ -55,11 +71,11 @@
         }
 
         public override int GetHashCode() {
-            return HashCode.Combine(name, type, value);
+            return HashCode.Combine<string?, dynamic?, dynamic?>(name, type, value);
         }
 
         public static bool SameVar(BishVariable a, BishVariable b) {
-            return a.name == b.name && a.value == b.value;
+            return a.name == b.name && a.type == b.type && a.value == b.value;
         }
     }
 }

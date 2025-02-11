@@ -18,8 +18,12 @@ namespace Bish {
             var intVar = ToTerm("int");
             var numVar = ToTerm("num");
             var strVar = ToTerm("string");
+            var boolVar = ToTerm("bool");
+            var trueValue = ToTerm("true");
+            var falseValue = ToTerm("false");
 
             var str = new NonTerminal("string");
+            var boolValue = new NonTerminal("boolValue");
             var literal = new NonTerminal("literal");
             var factor = new NonTerminal("factor");
             var powerExpr = new NonTerminal("powerExpr");
@@ -28,18 +32,21 @@ namespace Bish {
             var assignment = new NonTerminal("assignment");
             var varType = new NonTerminal("varType");
             var statement = new NonTerminal("statement");
+            var root = new NonTerminal("root");
 
             str.Rule = singleString | doubleString;
-            literal.Rule = str | number;
+            boolValue.Rule = trueValue | falseValue;
+            literal.Rule = str | number | boolValue;
             factor.Rule = (minus | plus) + factor | literal | identifier | "(" + expression + ")";
             powerExpr.Rule = factor | powerExpr + power + factor;
             term.Rule = powerExpr | term + multiply + powerExpr | term + divide + powerExpr;
             expression.Rule = term | expression + plus + term | expression + minus + term;
             assignment.Rule = expression | expression + assign + assignment;
-            varType.Rule = intVar | numVar | strVar;
-            statement.Rule = assignment | varType + identifier + assign + assignment;
+            varType.Rule = intVar | numVar | strVar | boolVar;
+            statement.Rule = assignment | varType + identifier | varType + identifier + assign + assignment;
+            root.Rule = statement | Empty;
 
-            Root = statement;
+            Root = root;
         }
     }
 }

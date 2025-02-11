@@ -14,7 +14,6 @@ public class Program {
             Console.Write(">>>");
             string input = Console.ReadLine()!;
             if (input == "end") break;
-            if (input.EndsWith(';')) input = input.Remove(input.Length - 1);
             string[] sentences = input.Split(';');
             foreach (string sentence in sentences) program.Run(sentence);
         }

@@ -11,16 +11,14 @@ namespace Bish {
         }
 
         public BishVariable Interpret(ParseTree parseTree) {
-            if (parseTree.Root == null) {
-                throw new ArgumentException("Parse tree is empty.");
-            }
+            if (parseTree.Root == null) return BishUtils.Error("Parse tree is empty.");
             return Evaluate(parseTree.Root);
         }
 
         private BishVariable Evaluate(ParseTreeNode node) {
             //Console.WriteLine(node.Term.Name);
             if (node == null) return new BishVariable(null);
-            if (node.Term is IdentifierTerminal) {
+            else if (node.Term is IdentifierTerminal) {
                 return vars.Get(node);
             }
             else if (node.Term is NumberLiteral) {
@@ -33,8 +31,19 @@ namespace Bish {
             }
             else if (node.Term is StringLiteral) {
                 var str = node.Token.Value.ToString();
-                BishUtils.Assert(str != null, "NumberLiteral is Null");
+                BishUtils.Assert(str != null, "StringLiteral is Null");
                 return new BishVariable(null, str!);
+            }
+            else if (node.Term.Name == "boolValue") {
+                var str = node.FindTokenAndGetText();
+                //node.Token.Value.ToString();
+                BishUtils.Assert(str != null, "BoolLiteral is Null");
+                bool b = str switch {
+                    "true" => true,
+                    "false" => false,
+                    _ => BishUtils.Error($"{str} is not bool"),
+                };
+                return new BishVariable(null, b);
             }
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
@@ -43,6 +52,11 @@ namespace Bish {
                     var value = Evaluate(node.ChildNodes[1]);
                     if (sign == "+") return +value;
                     if (sign == "-") return -value;
+                }
+                if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
+                    string type = node.ChildNodes[0].FindTokenAndGetText();
+                    BishVariable var = new(null, null, type);
+                    return vars.New(node.ChildNodes[1], var);
                 }
                 if (node.ChildNodes.Count == 3 && node.ChildNodes[0].FindTokenAndGetText() == "(" && node.ChildNodes[2].FindTokenAndGetText() == ")")
                     return Evaluate(node.ChildNodes[1]);

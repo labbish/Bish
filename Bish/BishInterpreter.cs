@@ -10,12 +10,11 @@ namespace Bish {
             vars = new BishVars();
         }
 
-        public void Interpret(ParseTree parseTree) {
+        public BishVariable Interpret(ParseTree parseTree) {
             if (parseTree.Root == null) {
-                throw new ArgumentException("Parse tree is empty.");
+                throw new ArgumentException("Run tree is empty.");
             }
-            var result = Evaluate(parseTree.Root);
-            Console.WriteLine($"Result: {result}");
+            return Evaluate(parseTree.Root);
         }
 
         private BishVariable Evaluate(ParseTreeNode node) {
@@ -27,7 +26,9 @@ namespace Bish {
             else if (node.Term is NumberLiteral) {
                 var str = node.Token.Value.ToString();
                 BishUtils.Assert(str != null, "NumberLiteral is Null");
-                double value = double.Parse(str!);
+                dynamic value;
+                if (str!.Contains('.')) value = double.Parse(str!);
+                else value = int.Parse(str!);
                 return new BishVariable(null, value);
             }
             else if (node.Term is StringLiteral) {
@@ -50,16 +51,15 @@ namespace Bish {
                     BishVariable left = Evaluate(node.ChildNodes[0]);
                     BishVariable right = Evaluate(node.ChildNodes[2]);
                     string op = node.ChildNodes[1].FindTokenAndGetText();
-                    switch (op) {
-                        case "+": return left + right;
-                        case "-": return left - right;
-                        case "*": return left * right;
-                        case "/": return left / right;
-                        case "^": return left ^ right;
-                        case "=": return vars.Set(leftNode, right);
-                        default:
-                            throw new InvalidOperationException($"Unsupported operator: {op}");
-                    }
+                    return op switch {
+                        "+" => left + right,
+                        "-" => left - right,
+                        "*" => left * right,
+                        "/" => left / right,
+                        "^" => left ^ right,
+                        "=" => vars.Set(leftNode, right),
+                        _ => (BishVariable)BishUtils.Error($"Unsupported operator: {op}"),
+                    };
                 }
                 if (node.ChildNodes.Count == 4 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();
@@ -68,9 +68,9 @@ namespace Bish {
                     dynamic? value = BishVars.WeakConvert(type, right);
                     return vars.New(varName, value);
                 }
-                throw new InvalidOperationException($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");
+                return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");
             }
-            throw new InvalidOperationException($"Unsupported expression type: {node.Term}");
+            return BishUtils.Error($"Unsupported expression type: {node.Term}");
         }
     }
 }

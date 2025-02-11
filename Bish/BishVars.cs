@@ -7,7 +7,7 @@ namespace Bish {
         public HashSet<BishVariable> vars;
 
         public BishVars() {
-            vars = new HashSet<BishVariable> { };
+            vars = [];
         }
 
         public IEnumerator<BishVariable> GetEnumerator() {
@@ -37,8 +37,8 @@ namespace Bish {
 
         public BishVariable New(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
-            foreach (BishVariable var in vars)
-                BishUtils.Assert(var.name != name, $"Var {name} already exists");
+            BishUtils.Assert(vars.Where(var => var.name == name).ToHashSet().Count == 0
+                , $"Var {name} already exists");
             vars.Add(new BishVariable(name, value.value));
             return value;
         }
@@ -46,13 +46,27 @@ namespace Bish {
         public static BishVariable WeakConvert(string type, BishVariable var) {
             bool converted = false;
             dynamic? value = null;
-            if (type == "num" && var.value is double num) {
-                value = num;
-                converted = true;
+            if (type == "num") {
+                if (var.value is double num) {
+                    value = num;
+                    converted = true;
+                }
             }
-            if (type == "string" && var.value is string str) {
-                value = str;
-                converted = true;
+            else if (type == "int") {
+                if (var.value is int num) {
+                    value = num;
+                    converted = true;
+                }
+                else if (var.value is int i) {
+                    value = i;
+                    converted = true;
+                }
+            }
+            else if (type == "string") {
+                if (var.value is string str) {
+                    value = str;
+                    converted = true;
+                }
             }
             if (!converted)
                 throw new TypeLoadException($"Cannot convert [{var}] into type {type}");

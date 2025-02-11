@@ -15,7 +15,9 @@ namespace Bish {
             var divide = ToTerm("/");
             var power = ToTerm("^");
             var assign = ToTerm("=");
+            var intVar = ToTerm("int");
             var numVar = ToTerm("num");
+            var strVar = ToTerm("string");
 
             var str = new NonTerminal("string");
             var literal = new NonTerminal("literal");
@@ -24,6 +26,7 @@ namespace Bish {
             var term = new NonTerminal("term");
             var expression = new NonTerminal("expression");
             var assignment = new NonTerminal("assignment");
+            var varType = new NonTerminal("varType");
             var statement = new NonTerminal("statement");
 
             str.Rule = singleString | doubleString;
@@ -33,7 +36,8 @@ namespace Bish {
             term.Rule = powerExpr | term + multiply + powerExpr | term + divide + powerExpr;
             expression.Rule = term | expression + plus + term | expression + minus + term;
             assignment.Rule = expression | expression + assign + assignment;
-            statement.Rule = assignment | numVar + identifier + assign + assignment;
+            varType.Rule = intVar | numVar | strVar;
+            statement.Rule = assignment | varType + identifier + assign + assignment;
 
             Root = statement;
         }

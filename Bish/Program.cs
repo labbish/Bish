@@ -2,36 +2,18 @@
 using Irony.Parsing;
 
 public class Program {
-    private static BishGrammar grammar = new BishGrammar();
-    private static Parser parser = new Parser(grammar);
-    private static BishInterpreter bishInterpreter = new BishInterpreter();
+    private static BishProgram program = new();
 
-    public static void Main(string[] args) {
+    public static void Main() {
+        BishUnitTest.TestAll();
+
         while (true) {
             Console.Write(">>>");
             string input = Console.ReadLine()!;
             if (input == "end") break;
             if (input.EndsWith(';')) input = input.Remove(input.Length - 1);
             string[] sentences = input.Split(';');
-            foreach (string sentence in sentences) Parse(sentence);
-        }
-    }
-
-    private static void Parse(string input) {
-        var parseTree = parser.Parse(input);
-        if (parseTree.HasErrors()) {
-            foreach (var error in parseTree.ParserMessages) {
-                Console.WriteLine(error.Message);
-            }
-        }
-        else {
-            //PrintParseTree(parseTree.Root);
-            try {
-                bishInterpreter.Interpret(parseTree);
-            }
-            catch (Exception ex) {
-                Console.WriteLine($"Exception: {ex.Message}");
-            }
+            foreach (string sentence in sentences) program.Run(sentence);
         }
     }
 

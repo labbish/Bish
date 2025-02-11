@@ -9,5 +9,11 @@
         public static dynamic Error(string message = "") {
             throw new ArgumentException(message);
         }
+
+        public static void Todo(string todo) {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"###TODO: {todo}");
+            Console.ResetColor();
+        }
     }
 }

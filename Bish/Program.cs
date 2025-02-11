@@ -5,6 +5,9 @@ public class Program {
     private static BishProgram program = new();
 
     public static void Main() {
+        BishUtils.Todo("store type info in var");
+        BishUtils.Todo("complete unit tests");
+
         BishUnitTest.TestAll();
 
         while (true) {

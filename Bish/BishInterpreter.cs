@@ -12,7 +12,7 @@ namespace Bish {
 
         public BishVariable Interpret(ParseTree parseTree) {
             if (parseTree.Root == null) {
-                throw new ArgumentException("Run tree is empty.");
+                throw new ArgumentException("Parse tree is empty.");
             }
             return Evaluate(parseTree.Root);
         }

@@ -57,11 +57,21 @@
             FailTest(count, Array.Empty<string>(), input);
         }
 
+        private static void TestGroup(int count, string info) {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine($"Starting Test Group {count}: {info}");
+            Console.ResetColor();
+        }
+
         private static void TestGroup0() {
+            TestGroup(0, "test");
+
             ConditionTest(0, true);
         }
 
         private static void TestGroup1() {
+            TestGroup(1, "types");
+
             ExpectTest(1.1, "114514", 114514);
             ExpectTest(1.2, "114.514", 114.514);
             ExpectTest(1.3, "'114514'", "114514");
@@ -69,6 +79,8 @@
         }
 
         private static void TestGroup2() {
+            TestGroup(2, "operations");
+
             ExpectTest(2.1, "6+3", 9);
             ExpectTest(2.2, "6-3", 3);
             ExpectTest(2.3, "6*3", 18);
@@ -77,10 +89,14 @@
         }
 
         private static void TestGroup3() {
+            TestGroup(3, "multiple operations");
+
             ExpectTest(3, "-8/((6-2^3)*4)", 1);
         }
 
         private static void TestGroup4() {
+            TestGroup(4, "vars");
+
             ExpectVarTest(4.11, "int x = 3", null, 3);
             ExpectVarTest(4.12, "num x = 3.14", null, 3.14);
             ExpectVarTest(4.13, "string x = '3.14'", null, "3.14");
@@ -110,6 +126,8 @@
         }
 
         private static void TestGroup5() {
+            TestGroup(5, "multi-sentences");
+
             ExpectVarTest(5.1, "", null, null);
             ExpectTest(5.2, ["int x = 3; x = x * x"], "x", 9);
             ExpectTest(5.3, ["int x = 3; x = x * x;"], "x", 9);

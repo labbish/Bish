@@ -77,7 +77,7 @@
         }
 
         public static bool SameVar(BishVariable a, BishVariable b) {
-            return a.name == b.name && a.type == b.type && a.value == b.value;
+            return a.name == b.name && a.value == b.value;
         }
 
         public BishVariable GetNullChecked() {

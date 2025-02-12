@@ -92,6 +92,8 @@
             ExpectVarTest(4.23, ["int x = 3", "x = 5"], "x", "x", 5);
             ExpectVarTest(4.24, ["int x = 3", "x = x + 1"], "x", "x", 4);
             ExpectVarTest(4.25, ["int x", "x = 5"], "x", "x", 5);
+            ExpectVarTest(4.26, ["int x = 3", "int y = 5", "x = y = 4"], "x", "x", 4);
+            ExpectVarTest(4.27, ["int x = 3", "int y = 5", "x = y = 4"], "y", "y", 4);
 
             FailTest(4.31, "x");
             FailTest(4.32, ["int x = 3"], "int x = 5");
@@ -100,6 +102,11 @@
 
             FailTest(4.41, ["int x"], "x");
             FailTest(4.42, ["int x"], "int y = x");
+            ExpectVarTest(4.43, ["int? x"], "x", "x", null);
+            ExpectVarTest(4.44, ["int? x = null"], "x", "x", null);
+            FailTest(4.45, ["int x"], "x = null");
+            FailTest(4.46, ["int? x"], "int y = x");
+            ExpectVarTest(4.47, ["int? x", "int? y = x"], "y", "y", null);
         }
 
         public static void TestAll() {

@@ -5,7 +5,7 @@
         public static readonly bool ShowErrorStack = false;
         public static readonly bool DoUnitTests = false;
         public static readonly bool StopIfTestFailed = false;
-        public static readonly bool StopIfTestFinished = true;
+        public static readonly bool StopIfTestFinished = false;
 
         private static BishProgram program = new();
 
@@ -19,8 +19,8 @@
                 Console.Write(">>>");
                 string input = Console.ReadLine()!;
                 if (input == "end") break;
-                if (input == "test") BishUnitTest.TestAll();
-                program.Run(input);
+                else if (input == "test") BishUnitTest.TestAll();
+                else program.Run(input);
             }
         }
     }

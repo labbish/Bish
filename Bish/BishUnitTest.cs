@@ -81,11 +81,16 @@
         private static void TestGroup2() {
             TestGroup(2, "operations");
 
-            ExpectTest(2.1, "6+3", 9);
-            ExpectTest(2.2, "6-3", 3);
-            ExpectTest(2.3, "6*3", 18);
-            ExpectTest(2.4, "6/3", 2);
-            ExpectTest(2.5, "6^3", 216);
+            ExpectTest(2.11, "6+3", 9);
+            ExpectTest(2.12, "6-3", 3);
+            ExpectTest(2.13, "6*3", 18);
+            ExpectTest(2.14, "6/3", 2);
+            ExpectTest(2.15, "6^3", 216);
+
+            ExpectTest(2.21, "+3", 3);
+            ExpectTest(2.22, "-3", -3);
+            ExpectTest(2.23, "!true", false);
+            ExpectTest(2.23, "!false", true);
         }
 
         private static void TestGroup3() {
@@ -115,6 +120,7 @@
             FailTest(4.32, ["int x = 3"], "int x = 5");
             FailTest(4.33, ["int x"], "x = 3.14");
             FailTest(4.34, ["int x"], "int x");
+            FailTest(4.35, "1=2");
 
             FailTest(4.41, ["int x"], "x");
             FailTest(4.42, ["int x"], "int y = x");
@@ -123,6 +129,10 @@
             FailTest(4.45, ["int x"], "x = null");
             FailTest(4.46, ["int? x"], "int y = x");
             ExpectVarTest(4.47, ["int? x", "int? y = x"], "y", "y", null);
+
+            ExpectTest(4.51, ["int x = 5", "x++"], "x", 6);
+            ExpectTest(4.52, ["int x = 6", "x--"], "x", 5);
+            FailTest(4.53, "12++");
         }
 
         private static void TestGroup5() {

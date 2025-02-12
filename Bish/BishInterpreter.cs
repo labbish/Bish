@@ -76,17 +76,29 @@ namespace Bish {
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "factor"
                     && node.ChildNodes[0].FindTokenAndGetText().Length == 1) {
                     var sign = node.ChildNodes[0].FindTokenAndGetText();
-                    if (sign == "+") return +Evaluate(node.ChildNodes[1]);
-                    if (sign == "-") return -Evaluate(node.ChildNodes[1]);
+                    List<string> ops = ["+", "-", "!"];
+                    if (ops.Contains(sign)) {
+                        var value = Evaluate(node.ChildNodes[1]);
+                        return sign switch {
+                            "+" => +value,
+                            "-" => -value,
+                            "!" => !value,
+                            _ => BishUtils.Error(),
+                        };
+                    }
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "factor"
                     && node.ChildNodes[1].FindTokenAndGetText().Length == 2) {
                     var sign = node.ChildNodes[1].FindTokenAndGetText();
-                    var var = vars.Get(node.ChildNodes[0]);
-                    if (sign == "++") var++;
-                    if (sign == "--") var--;
-                    var _ = var; //avoid unused warning
-                    return new(null);
+
+                    List<string> ops = ["++", "--"];
+                    if (ops.Contains(sign)) {
+                        var var = vars.Get(node.ChildNodes[0]);
+                        if (sign == "++") var++;
+                        if (sign == "--") var--;
+                        var _ = var; //avoid unused warning
+                        return new(null);
+                    }
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();
@@ -115,7 +127,7 @@ namespace Bish {
                         "*" => left * right,
                         "/" => left / right,
                         "^" => left ^ right,
-                        _ => (BishVariable)BishUtils.Error($"Unsupported operator: {op}"),
+                        _ => BishUtils.Error($"Unsupported operator: {op}"),
                     };
                 }
                 if (node.ChildNodes.Count == 4

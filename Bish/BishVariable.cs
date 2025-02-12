@@ -63,6 +63,10 @@
             return new(null, a.value--);
         }
 
+        public static BishVariable operator !(BishVariable a) {
+            return new BishVariable(null, !a.value);
+        }
+
         public override string ToString() {
             dynamic? value = this.value switch {
                 string str => $"\"{str}\"",

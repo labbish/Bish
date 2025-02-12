@@ -2,15 +2,16 @@
 using Irony.Parsing;
 
 public class Program {
+    public static readonly bool ShowParseTree = false;
     public static readonly bool ShowErrorStack = false;
     public static readonly bool DoUnitTests = true;
     public static readonly bool StopIfTestFailed = false;
-    public static readonly bool StopIfTestFinished = false;
+    public static readonly bool StopIfTestFinished = true;
 
     private static BishProgram program = new();
 
     public static void Main() {
-        BishUtils.Todo("complete nullable");
+        BishUtils.Todo("code blocks");
 
         if (DoUnitTests) BishUnitTest.TestAll();
 
@@ -18,18 +19,7 @@ public class Program {
             Console.Write(">>>");
             string input = Console.ReadLine()!;
             if (input == "end") break;
-            string[] sentences = input.Split(';');
-            foreach (string sentence in sentences) program.Run(sentence);
-        }
-    }
-
-    public static void PrintParseTree(ParseTreeNode node, int level = 0) {
-        var isErrorNode = node.Term.Name == "<error>";
-        Console.WriteLine(new string(' ', level * 2) + node.Term.Name
-            + (isErrorNode ? " (Error)" : ""));
-
-        foreach (var child in node.ChildNodes) {
-            PrintParseTree(child, level + 1);
+            program.Run(input);
         }
     }
 }

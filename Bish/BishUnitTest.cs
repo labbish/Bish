@@ -18,8 +18,8 @@
             BishProgram program = new();
             foreach (string preInput in preInputs) program.Parse(preInput);
             var result = program.Parse(input);
-            ConditionTest(count, result.value == value,
-                $"Expected {value}, Returned {result.value}");
+            ConditionTest(count, result[0].value == value,
+                $"Expected {value}, Returned {result[0].value}");
         }
 
         private static void ExpectTest(double count, string input, dynamic? value) {
@@ -32,7 +32,7 @@
             foreach (string preInput in preInputs) program.Parse(preInput);
             var result = program.Parse(input);
             BishVariable expected = new(name, value);
-            ConditionTest(count, BishVariable.SameVar(result, expected),
+            ConditionTest(count, BishVariable.SameVar(result[0], expected),
                 $"Expected [{expected}], Returned [{result}]");
         }
 
@@ -109,6 +109,12 @@
             ExpectVarTest(4.47, ["int? x", "int? y = x"], "y", "y", null);
         }
 
+        private static void TestGroup5() {
+            ExpectVarTest(5.1, "", null, null);
+            ExpectTest(5.2, ["int x = 3; x = x * x"], "x", 9);
+            ExpectTest(5.3, ["int x = 3; x = x * x;"], "x", 9);
+        }
+
         public static void TestAll() {
             try {
                 TestGroup0();
@@ -116,9 +122,14 @@
                 TestGroup2();
                 TestGroup3();
                 TestGroup4();
+                TestGroup5();
 
-                if (Program.StopIfTestFinished)
-                    Error(double.PositiveInfinity, "End of Program");
+                if (Program.StopIfTestFinished) {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("Test Finished");
+                    Console.ResetColor();
+                    Environment.Exit(0);
+                }
             }
             catch (ArgumentException ex) {
                 Console.ForegroundColor = ConsoleColor.Red;

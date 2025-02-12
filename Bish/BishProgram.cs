@@ -3,7 +3,7 @@
 namespace Bish {
 
     internal class BishProgram {
-        private BishGrammar grammar;
+        private readonly BishGrammar grammar;
         private Parser parser;
         private BishInterpreter bishInterpreter;
 
@@ -13,8 +13,9 @@ namespace Bish {
             bishInterpreter = new BishInterpreter();
         }
 
-        public BishVariable Parse(string input) {
+        public List<BishVariable> Parse(string input) {
             var parseTree = parser.Parse(input);
+            if (Program.ShowParseTree) PrintParseTree(parseTree.Root);
             if (parseTree.HasErrors())
                 BishUtils.Error($"Parse Error: {parseTree.ParserMessages[0].Message}");
             return bishInterpreter.Interpret(parseTree);
@@ -22,13 +23,26 @@ namespace Bish {
 
         public void Run(string input) {
             try {
-                Console.WriteLine($"Result: {Parse(input)}");
+                var results = Parse(input);
+                Console.WriteLine($"Result: {string.Join("; ", results)}");
             }
             catch (Exception ex) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 if (Program.ShowErrorStack) Console.WriteLine($"Exception: {ex}");
                 else Console.WriteLine($"Exception: {ex.Message}");
                 Console.ResetColor();
+            }
+        }
+
+        public static void PrintParseTree(ParseTreeNode node, int level = 0) {
+            if (node == null) return;
+            var isErrorNode = node.Term == null || node.Term.Name == "<error>";
+            var name = node.Term == null ? "<error>" : node.Term.Name;
+            Console.WriteLine($"{new string(' ', level * 2)}[{name}]"
+                + $"{node.FindTokenAndGetText()}{(isErrorNode ? " (Error)" : "")}");
+
+            foreach (var child in node.ChildNodes) {
+                PrintParseTree(child, level + 1);
             }
         }
     }

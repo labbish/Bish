@@ -18,8 +18,8 @@
             BishProgram program = new();
             foreach (string preInput in preInputs) program.Parse(preInput);
             var result = program.Parse(input);
-            ConditionTest(count, result[0].value == value,
-                $"Expected {value}, Returned {result[0].value}");
+            ConditionTest(count, result.value == value,
+                $"Expected {value}, Returned {result.value}");
         }
 
         private static void ExpectTest(double count, string input, dynamic? value) {
@@ -32,7 +32,7 @@
             foreach (string preInput in preInputs) program.Parse(preInput);
             var result = program.Parse(input);
             BishVariable expected = new(name, value);
-            ConditionTest(count, BishVariable.SameVar(result[0], expected),
+            ConditionTest(count, BishVariable.SameVar(result, expected),
                 $"Expected [{expected}], Returned [{result}]");
         }
 

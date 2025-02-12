@@ -13,7 +13,7 @@ namespace Bish {
             bishInterpreter = new BishInterpreter();
         }
 
-        public List<BishVariable> Parse(string input) {
+        public BishVariable Parse(string input) {
             var parseTree = parser.Parse(input);
             if (Program.ShowParseTree) PrintParseTree(parseTree.Root);
             if (parseTree.HasErrors())
@@ -23,8 +23,7 @@ namespace Bish {
 
         public void Run(string input) {
             try {
-                var results = Parse(input);
-                Console.WriteLine($"Result: {string.Join("; ", results)}");
+                Console.WriteLine($"Result: {Parse(input)}");
             }
             catch (Exception ex) {
                 Console.ForegroundColor = ConsoleColor.Red;

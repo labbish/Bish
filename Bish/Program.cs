@@ -4,7 +4,7 @@ using Irony.Parsing;
 public class Program {
     public static readonly bool ShowParseTree = false;
     public static readonly bool ShowErrorStack = false;
-    public static readonly bool DoUnitTests = true;
+    public static readonly bool DoUnitTests = false;
     public static readonly bool StopIfTestFailed = false;
     public static readonly bool StopIfTestFinished = true;
 

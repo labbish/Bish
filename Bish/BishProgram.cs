@@ -26,7 +26,8 @@ namespace Bish {
             }
             catch (Exception ex) {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Exception: {ex.Message}");
+                if (Program.ShowErrorStack) Console.WriteLine($"Exception: {ex}");
+                else Console.WriteLine($"Exception: {ex.Message}");
                 Console.ResetColor();
             }
         }

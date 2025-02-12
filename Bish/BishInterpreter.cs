@@ -44,6 +44,9 @@ namespace Bish {
                 };
                 return new BishVariable(null, b);
             }
+            else if (node.Term.Name == "null") {
+                return new BishVariable(null);
+            }
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "factor") {
@@ -54,7 +57,9 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();
-                    BishVariable var = new(null, null, type);
+                    bool nullable = node.ChildNodes[0].ChildNodes.Count == 2
+                        && node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText() == "?";
+                    BishVariable var = new(null, null, type, nullable);
                     return vars.New(node.ChildNodes[1], var);
                 }
                 if (node.ChildNodes.Count == 3 && node.ChildNodes[0].FindTokenAndGetText() == "(" && node.ChildNodes[2].FindTokenAndGetText() == ")")
@@ -80,14 +85,17 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 4 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();
+                    bool nullable = node.ChildNodes[0].ChildNodes.Count == 2
+                        && node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText() == "?";
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
-                    dynamic? value = BishVars.WeakConvert(type, right);
+                    BishVariable value = BishVars.WeakConvert(type, right, nullable);
+                    value.nullable = nullable;
                     return vars.New(varName, value);
                 }
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");
             }
-            return BishUtils.Error($"Unsupported expression type: {node.Term}");
+            return BishUtils.Error($"Unsupported expression type: {node.Term.Name}");
         }
     }
 }

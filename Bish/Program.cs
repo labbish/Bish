@@ -2,12 +2,17 @@
 using Irony.Parsing;
 
 public class Program {
+    public static readonly bool ShowErrorStack = false;
+    public static readonly bool DoUnitTests = false;
+    public static readonly bool StopIfTestFailed = false;
+    public static readonly bool StopIfTestFinished = false;
+
     private static BishProgram program = new();
 
     public static void Main() {
         BishUtils.Todo("complete nullable");
 
-        BishUnitTest.TestAll();
+        if (DoUnitTests) BishUnitTest.TestAll();
 
         while (true) {
             Console.Write(">>>");

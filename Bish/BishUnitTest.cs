@@ -87,16 +87,19 @@
             ExpectVarTest(4.14, "bool x = true", null, true);
             ExpectVarTest(4.15, "bool x = false", null, false);
 
-            FailTest(4.21, "x");
-            ExpectVarTest(4.22, ["int x = 3"], "x", "x", 3);
-            ExpectTest(4.23, ["int x = 3"], "x * (x + 1)", 12);
-            ExpectVarTest(4.24, ["int x = 3", "x = 5"], "x", "x", 5);
-            ExpectVarTest(4.25, ["int x = 3", "x = x + 1"], "x", "x", 4);
-            FailTest(4.26, ["int x = 3"], "int x = 5");
-            ExpectVarTest(4.27, ["int x", "x = 5"], "x", "x", 5);
-            FailTest(4.28, ["int x"], "x = 3.14");
-            FailTest(4.29, ["int x"], "int x");
-            FailTest(4.29, ["int x"], "x");
+            ExpectVarTest(4.21, ["int x = 3"], "x", "x", 3);
+            ExpectTest(4.22, ["int x = 3"], "x * (x + 1)", 12);
+            ExpectVarTest(4.23, ["int x = 3", "x = 5"], "x", "x", 5);
+            ExpectVarTest(4.24, ["int x = 3", "x = x + 1"], "x", "x", 4);
+            ExpectVarTest(4.25, ["int x", "x = 5"], "x", "x", 5);
+
+            FailTest(4.31, "x");
+            FailTest(4.32, ["int x = 3"], "int x = 5");
+            FailTest(4.33, ["int x"], "x = 3.14");
+            FailTest(4.34, ["int x"], "int x");
+
+            FailTest(4.41, ["int x"], "x");
+            FailTest(4.42, ["int x"], "int y = x");
         }
 
         public static void TestAll() {
@@ -107,13 +110,14 @@
                 TestGroup3();
                 TestGroup4();
 
-                //Error(double.PositiveInfinity, "End of Program");
+                if (Program.StopIfTestFinished)
+                    Error(double.PositiveInfinity, "End of Program");
             }
             catch (ArgumentException ex) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.Message);
                 Console.ResetColor();
-                //Environment.Exit(-1);
+                if (Program.StopIfTestFailed) Environment.Exit(-1);
             }
         }
     }

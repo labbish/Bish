@@ -16,7 +16,7 @@
         }
 
         public static string? GetTypeName(dynamic? value) {
-            return TypeNames[value == null ? null : value.GetType()];
+            return value == null ? null : TypeNames[value.GetType()];
         }
 
         public static BishVariable operator +(BishVariable a, BishVariable b) {
@@ -81,7 +81,7 @@
         }
 
         public BishVariable GetNullChecked() {
-            if (nullable || value != null) return this;
+            if (nullable || value != null || name == null) return this;
             return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
         }
     }

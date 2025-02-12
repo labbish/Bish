@@ -37,7 +37,7 @@ namespace Bish {
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
                 BishVariable newVar = new(null, value.value);
-                WeakConvert(var.type, newVar); //might throw
+                WeakConvert(var.type, newVar, var.nullable); //might throw
                 var.value = newVar.value;
                 return new BishVariable(null, value.value);
             }
@@ -48,13 +48,16 @@ namespace Bish {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
             BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
-            vars.Add(new BishVariable(name, value.value, value.type));
+            vars.Add(new BishVariable(name, value.value, value.type, value.nullable));
             return value;
         }
 
-        public static BishVariable WeakConvert(string? type, BishVariable var) {
+        public static BishVariable WeakConvert(string? type, BishVariable var, bool nullable = false) {
             bool converted = false;
             dynamic? value = null;
+            if (nullable && var.value == null) {
+                converted = true;
+            }
             if (type == "num") {
                 if (var.value is double num) {
                     value = num;
@@ -84,7 +87,7 @@ namespace Bish {
                 }
             }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
-            return new BishVariable(null, value);
+            return new BishVariable(null, value, type, nullable);
         }
     }
 }

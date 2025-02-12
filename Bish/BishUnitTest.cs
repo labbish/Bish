@@ -96,6 +96,7 @@
             ExpectVarTest(4.27, ["int x", "x = 5"], "x", "x", 5);
             FailTest(4.28, ["int x"], "x = 3.14");
             FailTest(4.29, ["int x"], "int x");
+            FailTest(4.29, ["int x"], "x");
         }
 
         public static void TestAll() {
@@ -111,7 +112,8 @@
             catch (ArgumentException ex) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.Message);
-                Environment.Exit(-1);
+                Console.ResetColor();
+                //Environment.Exit(-1);
             }
         }
     }

@@ -25,7 +25,9 @@ namespace Bish {
                 Console.WriteLine($"Result: {Parse(input)}");
             }
             catch (Exception ex) {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Exception: {ex.Message}");
+                Console.ResetColor();
             }
         }
     }

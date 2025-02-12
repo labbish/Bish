@@ -21,6 +21,13 @@ namespace Bish {
         public BishVariable Get(ParseTreeNode node) {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
+            foreach (BishVariable var in matched) return var.GetNullChecked();
+            return BishUtils.Error($"Variable not found: {name}");
+        }
+
+        public BishVariable GetUnchecked(ParseTreeNode node) {
+            string name = node.FindTokenAndGetText();
+            var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) return var;
             return BishUtils.Error($"Variable not found: {name}");
         }

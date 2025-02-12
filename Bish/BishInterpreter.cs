@@ -34,9 +34,8 @@ namespace Bish {
                 BishUtils.Assert(str != null, "StringLiteral is Null");
                 return new BishVariable(null, str!);
             }
-            else if (node.Term.Name == "boolValue") {
+            else if (node.Term.Name == "boolLiteral") {
                 var str = node.FindTokenAndGetText();
-                //node.Token.Value.ToString();
                 BishUtils.Assert(str != null, "BoolLiteral is Null");
                 bool b = str switch {
                     "true" => true,
@@ -60,6 +59,11 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 3 && node.ChildNodes[0].FindTokenAndGetText() == "(" && node.ChildNodes[2].FindTokenAndGetText() == ")")
                     return Evaluate(node.ChildNodes[1]);
+                if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == "=") {
+                    var name = node.ChildNodes[0];
+                    BishVariable right = Evaluate(node.ChildNodes[2]);
+                    return vars.Set(name, right);
+                }
                 if (node.ChildNodes.Count == 3) {
                     ParseTreeNode leftNode = node.ChildNodes[0];
                     BishVariable left = Evaluate(node.ChildNodes[0]);
@@ -71,7 +75,6 @@ namespace Bish {
                         "*" => left * right,
                         "/" => left / right,
                         "^" => left ^ right,
-                        "=" => vars.Set(leftNode, right),
                         _ => (BishVariable)BishUtils.Error($"Unsupported operator: {op}"),
                     };
                 }

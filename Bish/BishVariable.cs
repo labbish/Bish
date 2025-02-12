@@ -1,9 +1,10 @@
 ﻿namespace Bish {
 
-    internal class BishVariable(string? name, dynamic? value = null, string? type = null) {
+    internal class BishVariable(string? name, dynamic? value = null, string? type = null, bool? nullable = null) {
         public string? name = name;
         public dynamic? value = value;
         public string? type = type ?? GetTypeName(value);
+        public bool nullable = nullable ?? false;
 
         public static readonly Dictionary<Type, string> TypeNames = [];
 
@@ -62,7 +63,8 @@
                 null => "null",
                 _ => this.value,
             };
-            return $"var {name ?? "[TEMP]"} with value {value}, type <{type ?? "?"}>";
+            return $"var [{name ?? "TEMP"}] with value {value},"
+                + $" type <{type ?? "(?)"}{(nullable ? "?" : "")}>";
         }
 
         public override bool Equals(object? obj) {
@@ -76,6 +78,11 @@
 
         public static bool SameVar(BishVariable a, BishVariable b) {
             return a.name == b.name && a.type == b.type && a.value == b.value;
+        }
+
+        public BishVariable GetNullChecked() {
+            if (nullable || value != null) return this;
+            return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
         }
     }
 }

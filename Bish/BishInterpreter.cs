@@ -3,10 +3,22 @@
 namespace Bish {
 
     internal class BishInterpreter {
+        public BishScope scope;
         public BishVars vars;
 
         public BishInterpreter() {
-            vars = new BishVars();
+            scope = new();
+            vars = scope.currentVars;
+        }
+
+        private void Inner() {
+            scope.Inner();
+            vars = scope.currentVars;
+        }
+
+        private void Outer() {
+            scope.Outer();
+            vars = scope.currentVars;
         }
 
         public BishVariable Interpret(ParseTree parseTree) {
@@ -25,7 +37,10 @@ namespace Bish {
             else if (node.ChildNodes.Count == 3
                 && node.ChildNodes[0].FindTokenAndGetText() == "{"
                 && node.ChildNodes[2].FindTokenAndGetText() == "}") {
-                return Evaluate(node.ChildNodes[1]);
+                Inner();
+                BishVariable result = Evaluate(node.ChildNodes[1]);
+                Outer();
+                return result;
             }
             else if (node.Term is IdentifierTerminal) {
                 return vars.Get(node);

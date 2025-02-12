@@ -133,6 +133,14 @@
             ExpectTest(5.3, ["int x = 3; x = x * x;"], "x", 9);
         }
 
+        private static void TestGroup6() {
+            TestGroup(6, "code blocks");
+
+            ExpectTest(6.1, "{int x = 3; x = x * x; x}", 9);
+            ExpectTest(6.2, "{int x = 3; x = x * x; x;}", null);
+            FailTest(6.3, ["{int x = 3; x = x * x; x;}"], "x");
+        }
+
         public static void TestAll() {
             try {
                 TestGroup0();
@@ -141,6 +149,7 @@
                 TestGroup3();
                 TestGroup4();
                 TestGroup5();
+                TestGroup6();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

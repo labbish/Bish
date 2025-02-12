@@ -1,5 +1,4 @@
 ﻿using Bish;
-using Irony.Parsing;
 
 public class Program {
     public static readonly bool ShowParseTree = false;
@@ -11,7 +10,7 @@ public class Program {
     private static BishProgram program = new();
 
     public static void Main() {
-        BishUtils.Todo("var scopes");
+        BishUtils.Todo("conditions");
 
         if (DoUnitTests) BishUnitTest.TestAll();
 
@@ -19,6 +18,7 @@ public class Program {
             Console.Write(">>>");
             string input = Console.ReadLine()!;
             if (input == "end") break;
+            if (input == "test") BishUnitTest.TestAll();
             program.Run(input);
         }
     }

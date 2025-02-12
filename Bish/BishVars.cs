@@ -10,6 +10,10 @@ namespace Bish {
             vars = [];
         }
 
+        public BishVars(BishVars original) {
+            vars = [.. original.vars];
+        }
+
         public IEnumerator<BishVariable> GetEnumerator() {
             return vars.GetEnumerator();
         }

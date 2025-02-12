@@ -36,8 +36,10 @@ namespace Bish {
             stringLiteral.Rule = singleString | doubleString;
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral | nullLiteral;
-            factor.Rule = "+" + factor | "-" + factor | literal
-                | identifier | "(" + expression + ")";
+            factor.Rule = "+" + factor | "-" + factor
+                | factor + "++" | factor + "--"
+                | literal | identifier
+                | "(" + expression + ")";
             powerExpr.Rule = factor | powerExpr + "^" + factor;
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr;
             expression.Rule = term | expression + "+" + term | expression + "-" + term;

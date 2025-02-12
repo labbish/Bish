@@ -30,9 +30,8 @@ namespace Bish {
             //Console.WriteLine(node.Term.Name);
             if (node == null) return new BishVariable(null);
             else if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
-                var left = Evaluate(node.ChildNodes[0]);
-                var right = Evaluate(node.ChildNodes[2]);
-                return right;
+                Evaluate(node.ChildNodes[0]);
+                return Evaluate(node.ChildNodes[2]);
             }
             else if (node.ChildNodes.Count == 3
                 && node.ChildNodes[0].FindTokenAndGetText() == "{"
@@ -74,11 +73,20 @@ namespace Bish {
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 0) return new BishVariable(null);
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
-                if (node.ChildNodes.Count == 2 && node.Term.Name == "factor") {
+                if (node.ChildNodes.Count == 2 && node.Term.Name == "factor"
+                    && node.ChildNodes[0].FindTokenAndGetText().Length == 1) {
                     var sign = node.ChildNodes[0].FindTokenAndGetText();
-                    var value = Evaluate(node.ChildNodes[1]);
-                    if (sign == "+") return +value;
-                    if (sign == "-") return -value;
+                    if (sign == "+") return +Evaluate(node.ChildNodes[1]);
+                    if (sign == "-") return -Evaluate(node.ChildNodes[1]);
+                }
+                if (node.ChildNodes.Count == 2 && node.Term.Name == "factor"
+                    && node.ChildNodes[1].FindTokenAndGetText().Length == 2) {
+                    var sign = node.ChildNodes[1].FindTokenAndGetText();
+                    var var = vars.Get(node.ChildNodes[0]);
+                    if (sign == "++") var++;
+                    if (sign == "--") var--;
+                    var _ = var; //avoid unused warning
+                    return new(null);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();

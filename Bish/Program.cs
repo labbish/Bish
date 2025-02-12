@@ -11,7 +11,7 @@ public class Program {
     private static BishProgram program = new();
 
     public static void Main() {
-        BishUtils.Todo("code blocks");
+        BishUtils.Todo("var scopes");
 
         if (DoUnitTests) BishUnitTest.TestAll();
 

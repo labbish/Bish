@@ -31,6 +31,7 @@ namespace Bish {
             var statement = new NonTerminal("statement");
             var sentence = new NonTerminal("sentence");
             var sentences = new NonTerminal("sentences");
+            var codeBlocks = new NonTerminal("codeBlocks");
 
             stringLiteral.Rule = singleString | doubleString;
             boolLiteral.Rule = trueLiteral | falseLiteral;
@@ -46,9 +47,10 @@ namespace Bish {
             statement.Rule = assignment | varNullableTypes + identifier
                 | varNullableTypes + identifier + "=" + assignment;
             sentence.Rule = statement | Empty;
-            sentences.Rule = sentence | sentences + ";" + sentence | sentences + ";";
+            sentences.Rule = sentence | sentences + ";" + sentence;
+            codeBlocks.Rule = sentences | "{" + sentences + "}";
 
-            Root = sentences;
+            Root = codeBlocks;
         }
     }
 }

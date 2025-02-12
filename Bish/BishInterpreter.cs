@@ -1,5 +1,4 @@
 ﻿using Irony.Parsing;
-using System.Diagnostics;
 
 namespace Bish {
 
@@ -17,12 +16,17 @@ namespace Bish {
 
         private BishVariable Evaluate(ParseTreeNode node) {
             //Console.WriteLine(node.Term.Name);
-            if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
+            if (node == null) return new BishVariable(null);
+            else if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
                 var left = Evaluate(node.ChildNodes[0]);
                 var right = Evaluate(node.ChildNodes[2]);
                 return right;
             }
-            if (node == null) return new BishVariable(null);
+            else if (node.ChildNodes.Count == 3
+                && node.ChildNodes[0].FindTokenAndGetText() == "{"
+                && node.ChildNodes[2].FindTokenAndGetText() == "}") {
+                return Evaluate(node.ChildNodes[1]);
+            }
             else if (node.Term is IdentifierTerminal) {
                 return vars.Get(node);
             }
@@ -68,9 +72,12 @@ namespace Bish {
                     BishVariable var = new(null, null, type, nullable);
                     return vars.New(node.ChildNodes[1], var);
                 }
-                if (node.ChildNodes.Count == 3 && node.ChildNodes[0].FindTokenAndGetText() == "(" && node.ChildNodes[2].FindTokenAndGetText() == ")")
+                if (node.ChildNodes.Count == 3
+                    && node.ChildNodes[0].FindTokenAndGetText() == "("
+                    && node.ChildNodes[2].FindTokenAndGetText() == ")")
                     return Evaluate(node.ChildNodes[1]);
-                if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == "=") {
+                if (node.ChildNodes.Count == 3
+                    && node.ChildNodes[1].FindTokenAndGetText() == "=") {
                     var name = node.ChildNodes[0];
                     BishVariable right = Evaluate(node.ChildNodes[2]);
                     return vars.Set(name, right);
@@ -88,7 +95,8 @@ namespace Bish {
                         _ => (BishVariable)BishUtils.Error($"Unsupported operator: {op}"),
                     };
                 }
-                if (node.ChildNodes.Count == 4 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
+                if (node.ChildNodes.Count == 4
+                    && node.ChildNodes[2].FindTokenAndGetText() == "=") {
                     string type = node.ChildNodes[0].FindTokenAndGetText();
                     bool nullable = node.ChildNodes[0].ChildNodes.Count == 2
                         && node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText() == "?";

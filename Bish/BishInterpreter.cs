@@ -126,7 +126,15 @@ namespace Bish {
                         "-" => left - right,
                         "*" => left * right,
                         "/" => left / right,
+                        "%" => left % right,
                         "^" => left ^ right,
+                        "<=>" => BishVariable.TriCompare(left, right),
+                        "==" => left == right,
+                        "!=" => left != right,
+                        "<" => left < right,
+                        "<=" => left <= right,
+                        ">" => left > right,
+                        ">=" => left >= right,
                         _ => BishUtils.Error($"Unsupported operator: {op}"),
                     };
                 }

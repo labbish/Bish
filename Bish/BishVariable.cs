@@ -43,16 +43,44 @@
             return new BishVariable(null, a.value / b.value);
         }
 
+        public static BishVariable operator %(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value % b.value);
+        }
+
         public static BishVariable operator ^(BishVariable a, BishVariable b) {
             return new BishVariable(null, Math.Pow(a.value, b.value));
         }
 
-        public static bool operator ==(BishVariable a, BishVariable b) {
-            return a.value == b.value;
+        public static BishVariable TriCompare(BishVariable a, BishVariable b) {
+            if (a.value == null && b.value == null)
+                return new BishVariable(null, 0);
+            if (a.value == null || b.value == null)
+                return BishUtils.Error("Cannot Compare Between Null");
+            return new BishVariable(null, a.value!.CompareTo(b.value!));
         }
 
-        public static bool operator !=(BishVariable a, BishVariable b) {
-            return a.value != b.value;
+        public static BishVariable operator ==(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value == b.value);
+        }
+
+        public static BishVariable operator !=(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value != b.value);
+        }
+
+        public static BishVariable operator <(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value < b.value);
+        }
+
+        public static BishVariable operator <=(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value <= b.value);
+        }
+
+        public static BishVariable operator >(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value > b.value);
+        }
+
+        public static BishVariable operator >=(BishVariable a, BishVariable b) {
+            return new BishVariable(null, a.value >= b.value);
         }
 
         public static BishVariable operator ++(BishVariable a) {

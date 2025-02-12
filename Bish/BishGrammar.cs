@@ -25,6 +25,7 @@ namespace Bish {
             var powerExpr = new NonTerminal("powerExpr");
             var term = new NonTerminal("term");
             var expression = new NonTerminal("expression");
+            var comparison = new NonTerminal("comparison");
             var assignment = new NonTerminal("assignment");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
@@ -40,9 +41,14 @@ namespace Bish {
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
                 | literal | identifier | "(" + expression + ")";
             powerExpr.Rule = factor | powerExpr + "^" + factor;
-            term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr;
+            term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
+                | term + "%" + powerExpr;
             expression.Rule = term | expression + "+" + term | expression + "-" + term;
-            assignment.Rule = expression | identifier + "=" + assignment;
+            comparison.Rule = expression | expression + "<=>" + expression
+                | expression + "==" + expression | expression + "!=" + expression
+                | expression + ">" + expression | expression + ">=" + expression
+                | expression + "<" + expression | expression + "<=" + expression;
+            assignment.Rule = comparison | identifier + "=" + assignment;
             varTypes.Rule = intType | numType | stringType | boolType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             statement.Rule = assignment | varNullableTypes + identifier

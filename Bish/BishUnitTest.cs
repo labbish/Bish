@@ -115,7 +115,6 @@
                 ["true || true", "true || false", "false || true", "false || false"],
                 [true, true, true, false]);
             ExpectTest(2.33, ["bool x = false", "true || (x = true)"], "x", false);
-            //FailTest(2.34, "true || 3.14");
 
             ExpectTest(2.41, "1 > 5", false);
             ExpectTest(2.42, "3 <= 4", true);
@@ -204,6 +203,7 @@
             ExpectTest(7.21, "true ? 3 : 5", 3);
             ExpectTest(7.22, "false ? 3 : 5", 5);
             ExpectTest(7.23, ["int x = 0", "true ? x : x = 1"], "x", 0);
+            ExpectTest(7.24, "int x = 0; true ? x : x = 1", 0);
         }
 
         public static void Test(int? num = null) {

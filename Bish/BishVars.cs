@@ -103,6 +103,12 @@ namespace Bish {
                     converted = true;
                 }
             }
+            else if (type == "interval") {
+                if (var.value is BishInterval i) {
+                    value = i;
+                    converted = true;
+                }
+            }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
             return new BishVariable(null, value, type, nullable);
         }

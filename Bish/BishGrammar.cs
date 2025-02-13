@@ -28,6 +28,7 @@ namespace Bish {
             var startPos = ToTerm("start");
             var nextPos = ToTerm("next");
             var tagTerm = ToTerm("tag");
+            var intervalType = ToTerm("interval");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -42,6 +43,7 @@ namespace Bish {
             var logicOr = new NonTerminal("logicOr");
             var triCondition = new NonTerminal("triCondition");
             var assignment = new NonTerminal("assignment");
+            var interval = new NonTerminal("interval");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
@@ -79,11 +81,16 @@ namespace Bish {
                 | identifier + "+=" + assignment | identifier + "-=" + assignment
                 | identifier + "*=" + assignment | identifier + "/=" + assignment
                 | identifier + "%=" + assignment | identifier + "^=" + assignment;
-            varTypes.Rule = intType | numType | stringType | boolType;
+            interval.Rule = assignment
+                | "(" + assignment + "," + assignment + ")"
+                | "(" + assignment + "," + assignment + "]"
+                | "[" + assignment + "," + assignment + ")"
+                | "[" + assignment + "," + assignment + "]";
+            varTypes.Rule = intType | numType | stringType | boolType | intervalType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
-            statement.Rule = assignment | varModifiedTypes + identifier
-                | varModifiedTypes + identifier + "=" + assignment;
+            statement.Rule = interval | varModifiedTypes + identifier
+                | varModifiedTypes + identifier + "=" + interval;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
             sentence.Rule = Empty | statement | jump;

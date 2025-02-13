@@ -206,6 +206,23 @@ namespace Bish {
                     return vars.New(varName, value);
                 }
                 if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[2].FindTokenAndGetText() == ",") {
+                    bool? left = node.ChildNodes[0].FindTokenAndGetText() switch {
+                        "[" => true,
+                        "(" => false,
+                        _ => null,
+                    };
+                    bool? right = node.ChildNodes[4].FindTokenAndGetText() switch {
+                        "]" => true,
+                        ")" => false,
+                        _ => null,
+                    };
+                    BishUtils.Assert(left != null && right != null, $"Wrong Interval");
+                    double from = (double)Evaluate(node.ChildNodes[1]).value;
+                    double to = (double)Evaluate(node.ChildNodes[3]).value;
+                    return new(null, new BishInterval(left!.Value, from, right!.Value, to), "interval");
+                }
+                if (node.ChildNodes.Count == 5
                     && node.ChildNodes[1].FindTokenAndGetText() == "?"
                     && node.ChildNodes[3].FindTokenAndGetText() == ":") {
                     BishVariable condition = Evaluate(node.ChildNodes[0]);

@@ -14,6 +14,7 @@
             TypeNames[typeof(double)] = "num";
             TypeNames[typeof(string)] = "string";
             TypeNames[typeof(bool)] = "bool";
+            TypeNames[typeof(BishInterval)] = "interval";
         }
 
         public static string? GetTypeName(dynamic? value) {

@@ -10,7 +10,6 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("shortcut: parse (e.g. true||3.14 should fail)");
             BishUtils.Todo("loops");
 
             if (DoUnitTests) BishUnitTest.Test();

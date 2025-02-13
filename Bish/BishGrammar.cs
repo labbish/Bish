@@ -70,7 +70,7 @@ namespace Bish {
             statement.Rule = assignment | varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
             sentence.Rule = statement | Empty;
-            sentences.Rule = sentence | sentences + ";" + sentence;
+            sentences.Rule = sentence | sentences + ";" + root;
             codeBlocks.Rule = sentences | "{" + sentences + "}";
             ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + codeBlocks
                 | ifTerm + "(" + sentence + ")" + codeBlocks + elseTerm + codeBlocks;

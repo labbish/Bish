@@ -231,6 +231,13 @@ namespace Bish {
                     Outer();
                     return result;
                 }
+
+                if (node.ChildNodes.Count == 4
+                    && node.ChildNodes[0].FindTokenAndGetText() == "print") {
+                    Console.Write(Evaluate(node.ChildNodes[2]).value);
+                    return new(null);
+                }
+
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name}"
                     + $" and child count of {node.ChildNodes.Count}");
             }

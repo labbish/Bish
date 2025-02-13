@@ -23,6 +23,7 @@ namespace Bish {
             var whileTerm = ToTerm("while");
             var doTerm = ToTerm("do");
             var forTerm = ToTerm("for");
+            var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -45,6 +46,7 @@ namespace Bish {
             var codeBlocks = new NonTerminal("codeBlocks");
             var ifStatement = new NonTerminal("ifStatement");
             var loopStatement = new NonTerminal("loopStatement");
+            var print = new NonTerminal("print");
             var root = new NonTerminal("root");
 
             stringLiteral.Rule = singleString | doubleString;
@@ -81,7 +83,8 @@ namespace Bish {
             loopStatement.Rule = ifStatement | whileTerm + "(" + sentence + ")" + ifStatement
                 | doTerm + ifStatement + whileTerm + "(" + sentence + ")"
                 | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + ifStatement;
-            root.Rule = loopStatement;
+            print.Rule = loopStatement | printTerm + "(" + loopStatement + ")";
+            root.Rule = print;
 
             Root = root;
         }

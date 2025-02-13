@@ -10,11 +10,10 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("execute from files");
             BishUtils.Todo("shortcut: parse (e.g. true||3.14 should fail)");
-            BishUtils.Todo("conditions");
+            BishUtils.Todo("loops");
 
-            if (DoUnitTests) BishUnitTest.TestAll();
+            if (DoUnitTests) BishUnitTest.Test();
 
             if (args.Length == 1) ExecuteFile(args[0]);
 
@@ -23,7 +22,10 @@
                 string input = Console.ReadLine()!;
                 string[] inputs = input.Split(' ');
                 if (input == "end") break;
-                else if (input == "test") BishUnitTest.TestAll();
+                else if (input == "test") BishUnitTest.Test();
+                else if (inputs.Length == 2 && inputs[0] == "test") {
+                    if (int.TryParse(inputs[1], out int num)) BishUnitTest.Test(num);
+                }
                 else if (inputs.Length == 2 && inputs[0] == "open")
                     ExecuteFile(inputs[1]);
                 else program.Run(input);

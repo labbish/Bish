@@ -21,6 +21,13 @@ namespace Bish {
             vars = scope.currentVars;
         }
 
+        private BishVariable EvaluateInScope(ParseTreeNode parseTree) {
+            Inner();
+            BishVariable result = Evaluate(parseTree);
+            Outer();
+            return result;
+        }
+
         public BishVariable Interpret(ParseTree parseTree) {
             if (parseTree.Root == null) return BishUtils.Error("Parse tree is empty.");
             return Evaluate(parseTree.Root);
@@ -36,10 +43,7 @@ namespace Bish {
             else if (node.ChildNodes.Count == 3
                 && node.ChildNodes[0].FindTokenAndGetText() == "{"
                 && node.ChildNodes[2].FindTokenAndGetText() == "}") {
-                Inner();
-                BishVariable result = Evaluate(node.ChildNodes[1]);
-                Outer();
-                return result;
+                return EvaluateInScope(node.ChildNodes[1]);
             }
             else if (node.Term is IdentifierTerminal) {
                 return vars.Get(node);
@@ -138,14 +142,14 @@ namespace Bish {
                             if (!left.value) return new BishVariable(null, false);
                             else {
                                 BishVariable right = Evaluate(node.ChildNodes[2]);
-                                return new BishVariable(null, (bool)right.value);
+                                return new BishVariable(null, right.value ? true : false);
                             }
                         }
                         else {
                             if (left.value) return new BishVariable(null, true);
                             else {
                                 BishVariable right = Evaluate(node.ChildNodes[2]);
-                                return new BishVariable(null, (bool)right.value);
+                                return new BishVariable(null, right.value ? true : false);
                             }
                         }
                     }
@@ -180,7 +184,28 @@ namespace Bish {
                     value.isConst = isConst;
                     return vars.New(varName, value);
                 }
-                return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[1].FindTokenAndGetText() == "?"
+                    && node.ChildNodes[3].FindTokenAndGetText() == ":") {
+                    BishVariable condition = Evaluate(node.ChildNodes[0]);
+                    if (condition.value) return EvaluateInScope(node.ChildNodes[2]);
+                    else return EvaluateInScope(node.ChildNodes[4]);
+                }
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "if") {
+                    BishVariable condition = Evaluate(node.ChildNodes[2]);
+                    if (condition.value) return EvaluateInScope(node.ChildNodes[4]);
+                    return new(null);
+                }
+                if (node.ChildNodes.Count == 7
+                    && node.ChildNodes[0].FindTokenAndGetText() == "if"
+                    && node.ChildNodes[5].FindTokenAndGetText() == "else") {
+                    BishVariable condition = Evaluate(node.ChildNodes[2]);
+                    if (condition.value) return EvaluateInScope(node.ChildNodes[4]);
+                    else return EvaluateInScope(node.ChildNodes[6]);
+                }
+                return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name}"
+                    + $" and child count of {node.ChildNodes.Count}");
             }
             return BishUtils.Error($"Unsupported expression type: {node.Term.Name}");
         }

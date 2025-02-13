@@ -114,6 +114,8 @@
             ExpectGroupTest(2.32,
                 ["true || true", "true || false", "false || true", "false || false"],
                 [true, true, true, false]);
+            ExpectTest(2.33, ["bool x = false", "true || (x = true)"], "x", false);
+            //FailTest(2.34, "true || 3.14");
 
             ExpectTest(2.41, "1 > 5", false);
             ExpectTest(2.42, "3 <= 4", true);
@@ -185,17 +187,35 @@
             ExpectTest(6.1, "{int x = 3; x = x * x; x}", 9);
             ExpectTest(6.2, "{int x = 3; x = x * x; x;}", null);
             FailTest(6.3, ["{int x = 3; x = x * x; x;}"], "x");
+            ExpectTest(6.4, ["int x = 3", "{x = 5}"], "x", 5);
         }
 
-        public static void TestAll() {
+        private static void TestGroup7() {
+            TestGroup(7, "conditions");
+
+            ExpectTest(7.11, "if (true) 3", 3);
+            ExpectTest(7.12, "if (false) 3", null);
+            ExpectTest(7.13, "if (true) 3 else 5", 3);
+            ExpectTest(7.14, "if (false) 3 else 5", 5);
+            ExpectTest(7.15, ["int x = 0", "if (false) x = 3;"], "x", 0);
+            ExpectTest(7.16, ["int x = 0", "if (true) x = 3; else x = 5;"], "x", 3);
+            ExpectTest(7.17, ["int x = 0", "if (false) x = 3; else x = 5;"], "x", 5);
+
+            ExpectTest(7.21, "true ? 3 : 5", 3);
+            ExpectTest(7.22, "false ? 3 : 5", 5);
+            ExpectTest(7.23, ["int x = 0", "true ? x : x = 1"], "x", 0);
+        }
+
+        public static void Test(int? num = null) {
             try {
-                TestGroup0();
-                TestGroup1();
-                TestGroup2();
-                TestGroup3();
-                TestGroup4();
-                TestGroup5();
-                TestGroup6();
+                if (num == null || num == 0) TestGroup0();
+                if (num == null || num == 1) TestGroup1();
+                if (num == null || num == 2) TestGroup2();
+                if (num == null || num == 3) TestGroup3();
+                if (num == null || num == 4) TestGroup4();
+                if (num == null || num == 5) TestGroup5();
+                if (num == null || num == 6) TestGroup6();
+                if (num == null || num == 7) TestGroup7();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

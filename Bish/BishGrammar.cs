@@ -18,6 +18,8 @@ namespace Bish {
             var falseLiteral = ToTerm("false");
             var nullLiteral = ToTerm("null");
             var constModifier = ToTerm("const");
+            var ifTerm = ToTerm("if");
+            var elseTerm = ToTerm("else");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -29,6 +31,7 @@ namespace Bish {
             var comparison = new NonTerminal("comparison");
             var logicAnd = new NonTerminal("logicAnd");
             var logicOr = new NonTerminal("logicOr");
+            var triCondition = new NonTerminal("triCondition");
             var assignment = new NonTerminal("assignment");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
@@ -37,13 +40,15 @@ namespace Bish {
             var sentence = new NonTerminal("sentence");
             var sentences = new NonTerminal("sentences");
             var codeBlocks = new NonTerminal("codeBlocks");
+            var ifStatement = new NonTerminal("ifStatement");
+            var root = new NonTerminal("root");
 
             stringLiteral.Rule = singleString | doubleString;
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral | nullLiteral;
             factor.Rule = "!" + factor
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
-                | literal | identifier | "(" + expression + ")";
+                | literal | identifier | "(" + codeBlocks + ")";
             powerExpr.Rule = factor | powerExpr + "^" + factor;
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
                 | term + "%" + powerExpr;
@@ -54,7 +59,8 @@ namespace Bish {
                 | comparison + "<" + expression | comparison + "<=" + expression;
             logicAnd.Rule = comparison | logicAnd + "&&" + comparison;
             logicOr.Rule = logicAnd | logicOr + "||" + logicAnd;
-            assignment.Rule = logicOr | identifier + "=" + assignment
+            triCondition.Rule = logicOr | logicOr + "?" + codeBlocks + ":" + codeBlocks;
+            assignment.Rule = triCondition | identifier + "=" + assignment
                 | identifier + "+=" + assignment | identifier + "-=" + assignment
                 | identifier + "*=" + assignment | identifier + "/=" + assignment
                 | identifier + "%=" + assignment | identifier + "^=" + assignment;
@@ -66,8 +72,11 @@ namespace Bish {
             sentence.Rule = statement | Empty;
             sentences.Rule = sentence | sentences + ";" + sentence;
             codeBlocks.Rule = sentences | "{" + sentences + "}";
+            ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + codeBlocks
+                | ifTerm + "(" + sentence + ")" + codeBlocks + elseTerm + codeBlocks;
+            root.Rule = ifStatement;
 
-            Root = codeBlocks;
+            Root = root;
         }
     }
 }

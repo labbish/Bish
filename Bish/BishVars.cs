@@ -44,9 +44,21 @@ namespace Bish {
                 BishVariable newVar = new(null, value.value);
                 WeakConvert(var.type, newVar, var.nullable); //might throw
                 var.value = newVar.value;
-                return new BishVariable(null, value.value);
+                return new(null, value.value);
             }
             return BishUtils.Error($"Variable not found: {name}");
+        }
+
+        public BishVariable SetIfExist(string name, BishVariable value) {
+            var matched = vars.Where(var => var.name == name).ToHashSet();
+            foreach (BishVariable var in matched) {
+                BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
+                BishVariable newVar = new(null, value.value);
+                WeakConvert(var.type, newVar, var.nullable); //might throw
+                var.value = newVar.value;
+                return new(null, value.value);
+            }
+            return new(null);
         }
 
         public BishVariable New(ParseTreeNode node, BishVariable value) {

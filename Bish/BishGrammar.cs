@@ -20,6 +20,8 @@ namespace Bish {
             var constModifier = ToTerm("const");
             var ifTerm = ToTerm("if");
             var elseTerm = ToTerm("else");
+            var whileTerm = ToTerm("while");
+            var doTerm = ToTerm("do");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -41,6 +43,7 @@ namespace Bish {
             var sentences = new NonTerminal("sentences");
             var codeBlocks = new NonTerminal("codeBlocks");
             var ifStatement = new NonTerminal("ifStatement");
+            var loopStatement = new NonTerminal("loopStatement");
             var root = new NonTerminal("root");
 
             stringLiteral.Rule = singleString | doubleString;
@@ -70,11 +73,13 @@ namespace Bish {
             statement.Rule = assignment | varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
             sentence.Rule = statement | Empty;
-            sentences.Rule = sentence | sentences + ";" + root;
+            sentences.Rule = root | sentence | sentences + ";" + root;
             codeBlocks.Rule = sentences | "{" + sentences + "}";
             ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + codeBlocks
                 | ifTerm + "(" + sentence + ")" + codeBlocks + elseTerm + codeBlocks;
-            root.Rule = ifStatement;
+            loopStatement.Rule = ifStatement | whileTerm + "(" + sentence + ")" + ifStatement
+                /*| doTerm + ifStatement*/;
+            root.Rule = loopStatement;
 
             Root = root;
         }

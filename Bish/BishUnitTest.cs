@@ -199,11 +199,24 @@
             ExpectTest(7.15, ["int x = 0", "if (false) x = 3;"], "x", 0);
             ExpectTest(7.16, ["int x = 0", "if (true) x = 3; else x = 5;"], "x", 3);
             ExpectTest(7.17, ["int x = 0", "if (false) x = 3; else x = 5;"], "x", 5);
+            ExpectGroupTest(7.18,
+                ["if (true) { if (true) 1 else 2 } else 3",
+                "if (true) { if (false) 1 else 2 } else 3",
+                "if (false) { if (false) 1 else 2 } else 3", ],
+                [1, 2, 3]);
 
             ExpectTest(7.21, "true ? 3 : 5", 3);
             ExpectTest(7.22, "false ? 3 : 5", 5);
             ExpectTest(7.23, ["int x = 0", "true ? x : x = 1"], "x", 0);
             ExpectTest(7.24, "int x = 0; true ? x : x = 1", 0);
+        }
+
+        private static void TestGroup8() {
+            TestGroup(8, "loops");
+
+            ExpectTest(8.11, ["int x = 11", "while (x > 0) x -= 2; "], "x", -1);
+            ExpectTest(8.12, ["int x = 11", "int y = 0",
+                "while (x > 0) { x--; y += x; }"], "y", 55);
         }
 
         public static void Test(int? num = null) {
@@ -216,6 +229,7 @@
                 if (num == null || num == 5) TestGroup5();
                 if (num == null || num == 6) TestGroup6();
                 if (num == null || num == 7) TestGroup7();
+                if (num == null || num == 8) TestGroup8();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

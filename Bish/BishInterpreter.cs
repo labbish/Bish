@@ -197,6 +197,13 @@ namespace Bish {
                     if (condition.value) return EvaluateInScope(node.ChildNodes[4]);
                     return new(null);
                 }
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "while") {
+                    BishVariable result = new(null);
+                    while (Evaluate(node.ChildNodes[2]).value)
+                        result = EvaluateInScope(node.ChildNodes[4]);
+                    return result;
+                }
                 if (node.ChildNodes.Count == 7
                     && node.ChildNodes[0].FindTokenAndGetText() == "if"
                     && node.ChildNodes[5].FindTokenAndGetText() == "else") {

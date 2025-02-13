@@ -23,7 +23,13 @@ namespace Bish {
 
         public void Run(string input) {
             try {
-                Console.WriteLine($"Result: {Parse(input)}");
+                try {
+                    Console.WriteLine($"Result: {Parse(input)}");
+                }
+                catch (BishJumpException jump) {
+                    if (jump.tag != null) throw;
+                    else BishUtils.Error($"No loops found");
+                }
             }
             catch (Exception ex) {
                 Console.ForegroundColor = ConsoleColor.Red;

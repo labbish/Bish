@@ -77,6 +77,11 @@ namespace Bish {
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 0) return new BishVariable(null);
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
+                if (node.ChildNodes.Count == 2
+                    && node.ChildNodes[0].FindTokenAndGetText() == "jump") {
+                    string pos = node.ChildNodes[1].FindTokenAndGetText();
+                    throw new BishJumpException(pos);
+                }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "factor"
                     && node.ChildNodes[0].FindTokenAndGetText().Length == 1) {
                     var sign = node.ChildNodes[0].FindTokenAndGetText();
@@ -200,8 +205,32 @@ namespace Bish {
                 if (node.ChildNodes.Count == 5
                     && node.ChildNodes[0].FindTokenAndGetText() == "while") {
                     BishVariable result = new(null);
-                    while (Evaluate(node.ChildNodes[2]).value)
-                        result = EvaluateInScope(node.ChildNodes[4]);
+                    try {
+                        while (Evaluate(node.ChildNodes[2]).value)
+                            result = EvaluateInScope(node.ChildNodes[4]);
+                    }
+                    catch (BishJumpException jump) {
+                        if (jump.tag != null) throw;
+                    }
+                    return result;
+                }
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "jump") {
+                    string pos = node.ChildNodes[1].FindTokenAndGetText();
+                    string tag = node.ChildNodes[3].FindTokenAndGetText();
+                    throw new BishJumpException(pos, tag);
+                }
+                if (node.ChildNodes.Count == 6
+                    && node.ChildNodes[1].FindTokenAndGetText() == "while") {
+                    string tag = node.ChildNodes[0].ChildNodes[0].FindTokenAndGetText();
+                    BishVariable result = new(null);
+                    try {
+                        while (Evaluate(node.ChildNodes[3]).value)
+                            result = EvaluateInScope(node.ChildNodes[5]);
+                    }
+                    catch (BishJumpException jump) {
+                        if (jump.tag != tag && jump.tag != null) throw;
+                    }
                     return result;
                 }
                 if (node.ChildNodes.Count == 6

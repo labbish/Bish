@@ -9,6 +9,7 @@ namespace Bish {
             var numberLiteral = new NumberLiteral("numberLiteral");
             var singleString = new StringLiteral("single_string", "'");
             var doubleString = new StringLiteral("double_string", "\"");
+            var tagIdentifier = new IdentifierTerminal("tagIdentifier");
 
             var intType = ToTerm("int");
             var numType = ToTerm("num");
@@ -23,6 +24,8 @@ namespace Bish {
             var whileTerm = ToTerm("while");
             var doTerm = ToTerm("do");
             var forTerm = ToTerm("for");
+            var jumpTerm = ToTerm("jump");
+            var endTerm = ToTerm("end");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -41,11 +44,14 @@ namespace Bish {
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
             var statement = new NonTerminal("statement");
+            var jumpPos = new NonTerminal("jumpPos");
+            var jump = new NonTerminal("jump");
             var sentence = new NonTerminal("sentence");
             var sentences = new NonTerminal("sentences");
             var structure = new NonTerminal("structure");
             var codeBlocks = new NonTerminal("codeBlocks");
             var ifStatement = new NonTerminal("ifStatement");
+            var tag = new NonTerminal("tag");
             var loopStatement = new NonTerminal("loopStatement");
             var print = new NonTerminal("print");
             var root = new NonTerminal("root");
@@ -76,13 +82,18 @@ namespace Bish {
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             statement.Rule = assignment | varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
-            sentence.Rule = statement | Empty;
+            jumpPos.Rule = endTerm;
+            jump.Rule = jumpTerm + jumpPos + "[" + tagIdentifier + "]" | jumpTerm + jumpPos;
+            sentence.Rule = Empty | statement | jump;
             sentences.Rule = root | sentence | sentences + ";" + root;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
             ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + structure
                 | ifTerm + "(" + sentence + ")" + structure + elseTerm + structure;
-            loopStatement.Rule = codeBlocks | whileTerm + "(" + sentence + ")" + structure
+            tag.Rule = tagIdentifier + ":";
+            loopStatement.Rule = codeBlocks
+                | whileTerm + "(" + sentence + ")" + structure
+                | tag + whileTerm + "(" + sentence + ")" + structure
                 | doTerm + structure + whileTerm + "(" + sentence + ")"
                 | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
             print.Rule = ifStatement | loopStatement | printTerm + "(" + print + ")";

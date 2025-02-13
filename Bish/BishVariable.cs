@@ -48,6 +48,9 @@
         }
 
         public static BishVariable operator ^(BishVariable a, BishVariable b) {
+            if (a.value is int && b.value is int) {
+                return new BishVariable(null, (int)Math.Pow(a.value, b.value));
+            }
             return new BishVariable(null, Math.Pow(a.value, b.value));
         }
 

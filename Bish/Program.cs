@@ -10,7 +10,7 @@
         private static BishProgram program = new();
 
         public static void Main() {
-            BishUtils.Todo("bool operators");
+            BishUtils.Todo("shortcut: parse (e.g. true||3.14 should fail)");
             BishUtils.Todo("conditions");
 
             if (DoUnitTests) BishUnitTest.TestAll();

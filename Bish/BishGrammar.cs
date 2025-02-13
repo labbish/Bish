@@ -26,6 +26,8 @@ namespace Bish {
             var term = new NonTerminal("term");
             var expression = new NonTerminal("expression");
             var comparison = new NonTerminal("comparison");
+            var logicAnd = new NonTerminal("logicAnd");
+            var logicOr = new NonTerminal("logicOr");
             var assignment = new NonTerminal("assignment");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
@@ -44,11 +46,16 @@ namespace Bish {
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
                 | term + "%" + powerExpr;
             expression.Rule = term | expression + "+" + term | expression + "-" + term;
-            comparison.Rule = expression | expression + "<=>" + expression
-                | expression + "==" + expression | expression + "!=" + expression
-                | expression + ">" + expression | expression + ">=" + expression
-                | expression + "<" + expression | expression + "<=" + expression;
-            assignment.Rule = comparison | identifier + "=" + assignment;
+            comparison.Rule = expression | comparison + "<=>" + expression
+                | comparison + "==" + expression | comparison + "!=" + expression
+                | comparison + ">" + expression | comparison + ">=" + expression
+                | comparison + "<" + expression | comparison + "<=" + expression;
+            logicAnd.Rule = comparison | logicAnd + "&&" + comparison;
+            logicOr.Rule = logicAnd | logicOr + "||" + logicAnd;
+            assignment.Rule = logicOr | identifier + "=" + assignment
+                | identifier + "+=" + assignment | identifier + "-=" + assignment
+                | identifier + "*=" + assignment | identifier + "/=" + assignment
+                | identifier + "%=" + assignment | identifier + "^=" + assignment;
             varTypes.Rule = intType | numType | stringType | boolType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             statement.Rule = assignment | varNullableTypes + identifier

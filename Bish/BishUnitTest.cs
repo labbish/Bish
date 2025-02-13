@@ -2,18 +2,18 @@
 
     internal class BishUnitTest {
 
-        private static void Error(double count, string? message = null) {
+        private static void Error(dynamic count, string? message = null) {
             ConditionTest(count, false, message);
         }
 
-        private static void ConditionTest(double count, bool condition, string? message = null) {
+        private static void ConditionTest(dynamic count, bool condition, string? message = null) {
             BishUtils.Assert(condition, $"Test {count} Failed: {message}");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Test {count} Passed");
             Console.ResetColor();
         }
 
-        private static void ExpectTest(double count, string[] preInputs, string input
+        private static void ExpectTest(dynamic count, string[] preInputs, string input
             , dynamic? value) {
             BishProgram program = new();
             foreach (string preInput in preInputs) program.Parse(preInput);
@@ -22,11 +22,26 @@
                 $"Expected {value}, Returned {result.value}");
         }
 
-        private static void ExpectTest(double count, string input, dynamic? value) {
+        private static void ExpectTest(dynamic count, string input, dynamic? value) {
             ExpectTest(count, Array.Empty<string>(), input, value);
         }
 
-        private static void ExpectVarTest(double count, string[] preInputs, string input
+        private static void ExpectGroupTest(dynamic count, string[] preInputs,
+            string[] inputs, dynamic?[] values) {
+            BishUtils.Assert(inputs.Length == values.Length,
+                $"ExpectGroupTest {count} Argument Error");
+            for (int i = 0; i < inputs.Length; i++) {
+                string input = inputs[i];
+                dynamic? value = values[i];
+                ExpectTest($"{count}.{i + 1}", preInputs, input, value);
+            }
+        }
+
+        private static void ExpectGroupTest(dynamic count, string[] inputs, dynamic?[] values) {
+            ExpectGroupTest(count, Array.Empty<string>(), inputs, values);
+        }
+
+        private static void ExpectVarTest(dynamic count, string[] preInputs, string input
             , string? name, dynamic? value) {
             BishProgram program = new();
             foreach (string preInput in preInputs) program.Parse(preInput);
@@ -36,11 +51,11 @@
                 $"Expected [{expected}], Returned [{result}]");
         }
 
-        private static void ExpectVarTest(double count, string input, string? name, dynamic? value) {
+        private static void ExpectVarTest(dynamic count, string input, string? name, dynamic? value) {
             ExpectVarTest(count, Array.Empty<string>(), input, name, value);
         }
 
-        private static void FailTest(double count, string[] preInputs, string input) {
+        private static void FailTest(dynamic count, string[] preInputs, string input) {
             bool caught = false;
             try {
                 BishProgram program = new();
@@ -53,7 +68,7 @@
             ConditionTest(count, caught, "Expected to Fail, No Exceptions Caught");
         }
 
-        private static void FailTest(double count, string input) {
+        private static void FailTest(dynamic count, string input) {
             FailTest(count, Array.Empty<string>(), input);
         }
 
@@ -85,12 +100,24 @@
             ExpectTest(2.12, "6-3", 3);
             ExpectTest(2.13, "6*3", 18);
             ExpectTest(2.14, "6/3", 2);
-            ExpectTest(2.15, "6^3", 216);
+            ExpectTest(2.15, "6%3", 0);
+            ExpectTest(2.16, "6^3", 216);
 
             ExpectTest(2.21, "+3", 3);
             ExpectTest(2.22, "-3", -3);
             ExpectTest(2.23, "!true", false);
             ExpectTest(2.23, "!false", true);
+
+            ExpectGroupTest(2.31,
+                ["true && true", "true && false", "false && true", "false && false"],
+                [true, false, false, false]);
+            ExpectGroupTest(2.32,
+                ["true || true", "true || false", "false || true", "false || false"],
+                [true, true, true, false]);
+
+            ExpectTest(2.41, "1 > 5", false);
+            ExpectTest(2.42, "3 <= 4", true);
+            ExpectTest(2.43, "2 != 2", false);
         }
 
         private static void TestGroup3() {
@@ -133,6 +160,9 @@
             ExpectTest(4.51, ["int x = 5", "x++"], "x", 6);
             ExpectTest(4.52, ["int x = 6", "x--"], "x", 5);
             FailTest(4.53, "12++");
+            ExpectGroupTest(4.54, ["int x = 2"],
+                ["x += 3; x", "x -= 3; x", "x *= 2; x", "x /= 2; x", "x %= 3; x", "x ^= 3; x"],
+                [5, -1, 4, 1, 2, 8]);
         }
 
         private static void TestGroup5() {

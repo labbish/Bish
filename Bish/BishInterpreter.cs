@@ -111,32 +111,64 @@ namespace Bish {
                     && node.ChildNodes[0].FindTokenAndGetText() == "("
                     && node.ChildNodes[2].FindTokenAndGetText() == ")")
                     return Evaluate(node.ChildNodes[1]);
-                if (node.ChildNodes.Count == 3
-                    && node.ChildNodes[1].FindTokenAndGetText() == "=") {
-                    var name = node.ChildNodes[0];
-                    BishVariable right = Evaluate(node.ChildNodes[2]);
-                    return vars.Set(name, right);
+                if (node.ChildNodes.Count == 3) {
+                    string op = node.ChildNodes[1].FindTokenAndGetText();
+                    List<string> assignment = ["=", "+=", "-=", "*=", "/=", "%=", "^="];
+                    if (assignment.Contains(op)) {
+                        var name = node.ChildNodes[0];
+                        BishVariable right = Evaluate(node.ChildNodes[2]);
+                        return op switch {
+                            "=" => vars.Set(name, right),
+                            "+=" => vars.Set(name, vars.Get(name) + right),
+                            "-=" => vars.Set(name, vars.Get(name) - right),
+                            "*=" => vars.Set(name, vars.Get(name) * right),
+                            "/=" => vars.Set(name, vars.Get(name) / right),
+                            "%=" => vars.Set(name, vars.Get(name) % right),
+                            "^=" => vars.Set(name, vars.Get(name) ^ right),
+                            _ => BishUtils.Error(),
+                        };
+                    }
                 }
                 if (node.ChildNodes.Count == 3) {
-                    BishVariable left = Evaluate(node.ChildNodes[0]);
-                    BishVariable right = Evaluate(node.ChildNodes[2]);
+                    List<string> shortCircuit = ["&&", "||"];
                     string op = node.ChildNodes[1].FindTokenAndGetText();
-                    return op switch {
-                        "+" => left + right,
-                        "-" => left - right,
-                        "*" => left * right,
-                        "/" => left / right,
-                        "%" => left % right,
-                        "^" => left ^ right,
-                        "<=>" => BishVariable.TriCompare(left, right),
-                        "==" => left == right,
-                        "!=" => left != right,
-                        "<" => left < right,
-                        "<=" => left <= right,
-                        ">" => left > right,
-                        ">=" => left >= right,
-                        _ => BishUtils.Error($"Unsupported operator: {op}"),
-                    };
+                    if (shortCircuit.Contains(op)) {
+                        BishVariable left = Evaluate(node.ChildNodes[0]);
+                        if (op == "&&") {
+                            if (!left.value) return new BishVariable(null, false);
+                            else {
+                                BishVariable right = Evaluate(node.ChildNodes[2]);
+                                return new BishVariable(null, (bool)right.value);
+                            }
+                        }
+                        else {
+                            if (left.value) return new BishVariable(null, true);
+                            else {
+                                BishVariable right = Evaluate(node.ChildNodes[2]);
+                                return new BishVariable(null, (bool)right.value);
+                            }
+                        }
+                    }
+                    else {
+                        BishVariable left = Evaluate(node.ChildNodes[0]);
+                        BishVariable right = Evaluate(node.ChildNodes[2]);
+                        return op switch {
+                            "+" => left + right,
+                            "-" => left - right,
+                            "*" => left * right,
+                            "/" => left / right,
+                            "%" => left % right,
+                            "^" => left ^ right,
+                            "<=>" => BishVariable.TriCompare(left, right),
+                            "==" => left == right,
+                            "!=" => left != right,
+                            "<" => left < right,
+                            "<=" => left <= right,
+                            ">" => left > right,
+                            ">=" => left >= right,
+                            _ => BishUtils.Error($"Unsupported operator: {op}"),
+                        };
+                    }
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {

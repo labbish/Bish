@@ -11,19 +11,35 @@ namespace Bish {
             vars = scope.currentVars;
         }
 
+        private void showDepth(string msg) {
+            if (Program.ShowVarsStackDepth)
+                Console.WriteLine($"{msg} {new string('#', scope.Depth() * 2)}");
+        }
+
         private void Inner() {
+            showDepth(">>");
             scope.Inner();
             vars = scope.currentVars;
+            showDepth(">>");
         }
 
         private void Outer() {
+            showDepth("<<");
             scope.Outer();
             vars = scope.currentVars;
+            showDepth("<<");
         }
 
         private BishVariable EvaluateInScope(ParseTreeNode parseTree) {
+            BishVariable result = new(null);
             Inner();
-            BishVariable result = Evaluate(parseTree);
+            try {
+                result = Evaluate(parseTree);
+            }
+            catch (Exception) {
+                Outer();
+                throw;
+            }
             Outer();
             return result;
         }
@@ -204,14 +220,21 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 5
                     && node.ChildNodes[0].FindTokenAndGetText() == "while") {
+                    bool restart = false;
                     BishVariable result = new(null);
-                    try {
-                        while (Evaluate(node.ChildNodes[2]).value)
-                            result = EvaluateInScope(node.ChildNodes[4]);
-                    }
-                    catch (BishJumpException jump) {
-                        if (jump.tag != null) throw;
-                    }
+                    do {
+                        try {
+                            while (Evaluate(node.ChildNodes[2]).value)
+                                result = EvaluateInScope(node.ChildNodes[4]);
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != null) throw;
+                            if (jump.pos == BishJumpException.Position.START)
+                                restart = true;
+                            if (jump.pos == BishJumpException.Position.NEXT)
+                                BishUtils.Error("Jumping to NEXT is not supported for while loop");
+                        }
+                    } while (restart);
                     return result;
                 }
                 if (node.ChildNodes.Count == 5
@@ -222,22 +245,60 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[1].FindTokenAndGetText() == "while") {
-                    string tag = node.ChildNodes[0].ChildNodes[0].FindTokenAndGetText();
+                    string tag = node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText();
+                    bool restart = false;
                     BishVariable result = new(null);
-                    try {
-                        while (Evaluate(node.ChildNodes[3]).value)
-                            result = EvaluateInScope(node.ChildNodes[5]);
-                    }
-                    catch (BishJumpException jump) {
-                        if (jump.tag != tag && jump.tag != null) throw;
-                    }
+                    do {
+                        try {
+                            while (Evaluate(node.ChildNodes[3]).value)
+                                result = EvaluateInScope(node.ChildNodes[5]);
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != tag && jump.tag != null) throw;
+                            if (jump.pos == BishJumpException.Position.START) restart = true;
+                            if (jump.pos == BishJumpException.Position.NEXT)
+                                BishUtils.Error("Jumping to NEXT is not supported for while loop");
+                        }
+                    } while (restart);
                     return result;
                 }
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[0].FindTokenAndGetText() == "do") {
-                    BishVariable result;
-                    do result = EvaluateInScope(node.ChildNodes[1]);
-                    while (Evaluate(node.ChildNodes[4]).value);
+                    bool restart = false;
+                    BishVariable result = new(null);
+                    do {
+                        try {
+                            do result = EvaluateInScope(node.ChildNodes[1]);
+                            while (Evaluate(node.ChildNodes[4]).value);
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != null) throw;
+                            if (jump.pos == BishJumpException.Position.START)
+                                restart = true;
+                            if (jump.pos == BishJumpException.Position.NEXT)
+                                BishUtils.Error("Jumping to NEXT is not supported for do-while loop");
+                        }
+                    } while (restart);
+                    return result;
+                }
+                if (node.ChildNodes.Count == 7
+                    && node.ChildNodes[1].FindTokenAndGetText() == "do") {
+                    string tag = node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText();
+                    bool restart = false;
+                    BishVariable result = new(null);
+                    do {
+                        try {
+                            do result = EvaluateInScope(node.ChildNodes[2]);
+                            while (Evaluate(node.ChildNodes[5]).value);
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != null && jump.tag != tag) throw;
+                            if (jump.pos == BishJumpException.Position.START)
+                                restart = true;
+                            if (jump.pos == BishJumpException.Position.NEXT)
+                                BishUtils.Error("Jumping to NEXT is not supported for do-while loop");
+                        }
+                    } while (restart);
                     return result;
                 }
                 if (node.ChildNodes.Count == 7
@@ -252,12 +313,61 @@ namespace Bish {
                     var init = node.ChildNodes[2];
                     var condition = node.ChildNodes[4];
                     var add = node.ChildNodes[6];
+                    bool restart = false;
                     BishVariable result = new(null);
-                    Inner();
-                    for (Evaluate(init); Evaluate(condition).value; Evaluate(add)) {
-                        result = EvaluateInScope(node.ChildNodes[8]);
-                    }
-                    Outer();
+                    do {
+                        Inner();
+                        try {
+                            for (Evaluate(init); Evaluate(condition).value; Evaluate(add)) {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[8]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if (jump.tag != null
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                    Evaluate(add);
+                                }
+                            }
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != null || jump.pos == BishJumpException.Position.NEXT) throw;
+                            if (jump.pos == BishJumpException.Position.START)
+                                restart = true;
+                        }
+                        Outer();
+                    } while (restart);
+                    return result;
+                }
+                if (node.ChildNodes.Count == 10
+                    && node.ChildNodes[1].FindTokenAndGetText() == "for") {
+                    string tag = node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText();
+                    var init = node.ChildNodes[3];
+                    var condition = node.ChildNodes[5];
+                    var add = node.ChildNodes[7];
+                    bool restart = false;
+                    BishVariable result = new(null);
+                    do {
+                        Inner();
+                        try {
+                            for (Evaluate(init); Evaluate(condition).value; Evaluate(add)) {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[8]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if ((jump.tag != null && jump.tag != tag)
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                    Evaluate(add);
+                                }
+                            }
+                        }
+                        catch (BishJumpException jump) {
+                            if (jump.tag != null && jump.tag != tag
+                                 || jump.pos == BishJumpException.Position.NEXT) throw;
+                            if (jump.pos == BishJumpException.Position.START)
+                                restart = true;
+                        }
+                        Outer();
+                    } while (restart);
                     return result;
                 }
 

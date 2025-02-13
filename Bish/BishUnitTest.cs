@@ -223,7 +223,15 @@
             ExpectTest(8.31, "for (int i = 0; i < 10; i++) {i}", 10);
             ExpectTest(8.32, ["int j = 0; for (int i = 0; i < 10; i++) {j++}"], "j", 10);
             ExpectTest(8.33, ["int s = 0; for (int i = 0; i < 10; i++) {s += i}"], "s", 45);
-            FailTest(8.34, ["for (int i = 0; i < 10; i++) i"], "i");
+            FailTest(8.34, ["for (int i = 0; i < 10; i++) {i}"], "i");
+
+            ExpectTest(8.41, ["int x = 3", "do {jump end; x = 5;} while (false)"], "x", 3);
+            ExpectTest(8.42, ["int x = 3", "tag a: do {jump end[a]; x = 5;} while (false)"], "x", 3);
+            ExpectTest(8.43, ["int s = 0", "for (int i = 0; i < 10; i++)"
+                + "{s += i; if (i % 2 == 0) {jump next;}}"], "s", 20);
+            FailTest(8.44, ["while (true) {int i; jump end;}"], "i");
+            FailTest(8.45, ["do {int i; jump end;} while (true)"], "i");
+            FailTest(8.46, ["for (int i = 0; i < 10; i++) {jump end;}"], "i");
         }
 
         public static void Test(int? num = null) {

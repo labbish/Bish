@@ -8,8 +8,10 @@
         public enum Position {
             START,
             END,
-            LAST,
             NEXT,
+
+            [Obsolete("Jump Pos 'Last' is not Implemented")]
+            LAST,
         };
 
         public static Position GetPosition(string pos) {

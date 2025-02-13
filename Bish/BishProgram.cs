@@ -17,7 +17,10 @@ namespace Bish {
             var parseTree = parser.Parse(input);
             if (Program.ShowParseTree) PrintParseTree(parseTree.Root);
             if (parseTree.HasErrors())
-                BishUtils.Error($"Parse Error: {parseTree.ParserMessages[0].Message}");
+                foreach (var msg in parseTree.ParserMessages) {
+                    BishUtils.Error($"Parse Error: {msg.Message}, "
+                        + $"at Line {msg.Location.Line}, Column {msg.Location.Column}");
+                }
             return bishInterpreter.Interpret(parseTree);
         }
 

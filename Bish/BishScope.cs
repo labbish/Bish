@@ -19,5 +19,9 @@
             VarsStack = VarsStack[..^1];
             currentVars = VarsStack[^1];
         }
+
+        public int Depth() {
+            return VarsStack.Count - 1;
+        }
     }
 }

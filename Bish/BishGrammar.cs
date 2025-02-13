@@ -9,7 +9,6 @@ namespace Bish {
             var numberLiteral = new NumberLiteral("numberLiteral");
             var singleString = new StringLiteral("single_string", "'");
             var doubleString = new StringLiteral("double_string", "\"");
-            var tagIdentifier = new IdentifierTerminal("tagIdentifier");
 
             var intType = ToTerm("int");
             var numType = ToTerm("num");
@@ -25,7 +24,10 @@ namespace Bish {
             var doTerm = ToTerm("do");
             var forTerm = ToTerm("for");
             var jumpTerm = ToTerm("jump");
-            var endTerm = ToTerm("end");
+            var endPos = ToTerm("end");
+            var startPos = ToTerm("start");
+            var nextPos = ToTerm("next");
+            var tagTerm = ToTerm("tag");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -82,20 +84,22 @@ namespace Bish {
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             statement.Rule = assignment | varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
-            jumpPos.Rule = endTerm;
-            jump.Rule = jumpTerm + jumpPos + "[" + tagIdentifier + "]" | jumpTerm + jumpPos;
+            jumpPos.Rule = endPos | startPos | nextPos;
+            jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
             sentence.Rule = Empty | statement | jump;
             sentences.Rule = root | sentence | sentences + ";" + root;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
             ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + structure
                 | ifTerm + "(" + sentence + ")" + structure + elseTerm + structure;
-            tag.Rule = tagIdentifier + ":";
+            tag.Rule = tagTerm + identifier + ":";
             loopStatement.Rule = codeBlocks
                 | whileTerm + "(" + sentence + ")" + structure
                 | tag + whileTerm + "(" + sentence + ")" + structure
                 | doTerm + structure + whileTerm + "(" + sentence + ")"
-                | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
+                | tag + doTerm + structure + whileTerm + "(" + sentence + ")"
+                | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure
+                | tag + forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
             print.Rule = ifStatement | loopStatement | printTerm + "(" + print + ")";
             root.Rule = print;
 

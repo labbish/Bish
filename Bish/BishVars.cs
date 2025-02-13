@@ -40,6 +40,7 @@ namespace Bish {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
+                BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
                 BishVariable newVar = new(null, value.value);
                 WeakConvert(var.type, newVar, var.nullable); //might throw
                 var.value = newVar.value;
@@ -52,7 +53,7 @@ namespace Bish {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
             BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
-            vars.Add(new BishVariable(name, value.value, value.type, value.nullable));
+            vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
             return value;
         }
 
@@ -92,6 +93,33 @@ namespace Bish {
             }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
             return new BishVariable(null, value, type, nullable);
+        }
+
+        private static List<string> PlainListFromTree(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 0) return [node.FindTokenAndGetText()];
+            List<string> strings = [];
+            foreach (ParseTreeNode child in node.ChildNodes) {
+                strings.AddRange(PlainListFromTree(child));
+            }
+            return strings;
+        }
+
+        public static (bool, string, bool) CutType(ParseTreeNode node) {
+            var parts = PlainListFromTree(node);
+            bool isConst = false;
+            string type = "";
+            bool nullable = false;
+            if (parts.Last() == "?") {
+                nullable = true;
+                parts = parts[..^1];
+            }
+            if (parts.First() == "const") {
+                isConst = true;
+                parts = parts[1..];
+            }
+            BishUtils.Assert(parts.Count == 1, "Cannot Find Type Info");
+            type = parts[0];
+            return (isConst, type, nullable);
         }
     }
 }

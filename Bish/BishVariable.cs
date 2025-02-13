@@ -1,10 +1,11 @@
 ﻿namespace Bish {
 
-    internal class BishVariable(string? name, dynamic? value = null, string? type = null, bool? nullable = null) {
+    internal class BishVariable(string? name, dynamic? value = null, string? type = null, bool? nullable = null, bool isConst = false) {
         public string? name = name;
         public dynamic? value = value;
         public string? type = type ?? GetTypeName(value);
         public bool nullable = nullable ?? false;
+        public bool isConst = isConst;
 
         public static readonly Dictionary<Type, string> TypeNames = [];
 
@@ -87,10 +88,12 @@
         }
 
         public static BishVariable operator ++(BishVariable a) {
+            BishUtils.Assert(!a.isConst, $"Cannot modify const var: {a.name}");
             return new(null, a.value++);
         }
 
         public static BishVariable operator --(BishVariable a) {
+            BishUtils.Assert(!a.isConst, $"Cannot modify const var: {a.name}");
             return new(null, a.value--);
         }
 
@@ -107,7 +110,7 @@
                 _ => this.value,
             };
             return $"var [{name ?? "TEMP"}] with value {value},"
-                + $" type <{type ?? "(?)"}{(nullable ? "?" : "")}>";
+                + $" type <{(isConst ? "const " : "")}{type ?? "(?)"}{(nullable ? "?" : "")}>";
         }
 
         public override bool Equals(object? obj) {

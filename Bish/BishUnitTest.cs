@@ -163,6 +163,12 @@
             ExpectGroupTest(4.54, ["int x = 2"],
                 ["x += 3; x", "x -= 3; x", "x *= 2; x", "x /= 2; x", "x %= 3; x", "x ^= 3; x"],
                 [5, -1, 4, 1, 2, 8]);
+
+            FailTest(4.61, ["const int x = 1"], "x = 2");
+            FailTest(4.62, ["const int x = 1"], "x += 2");
+            FailTest(4.63, ["const int x = 1"], "x++");
+            FailTest(4.64, "const int x");
+            ExpectTest(4.65, ["const int? x"], "x", null);
         }
 
         private static void TestGroup5() {

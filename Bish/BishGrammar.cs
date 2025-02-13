@@ -17,6 +17,7 @@ namespace Bish {
             var trueLiteral = ToTerm("true");
             var falseLiteral = ToTerm("false");
             var nullLiteral = ToTerm("null");
+            var constModifier = ToTerm("const");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -31,6 +32,7 @@ namespace Bish {
             var assignment = new NonTerminal("assignment");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
+            var varModifiedTypes = new NonTerminal("varModifiedTypes");
             var statement = new NonTerminal("statement");
             var sentence = new NonTerminal("sentence");
             var sentences = new NonTerminal("sentences");
@@ -58,8 +60,9 @@ namespace Bish {
                 | identifier + "%=" + assignment | identifier + "^=" + assignment;
             varTypes.Rule = intType | numType | stringType | boolType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
-            statement.Rule = assignment | varNullableTypes + identifier
-                | varNullableTypes + identifier + "=" + assignment;
+            varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
+            statement.Rule = assignment | varModifiedTypes + identifier
+                | varModifiedTypes + identifier + "=" + assignment;
             sentence.Rule = statement | Empty;
             sentences.Rule = sentence | sentences + ";" + sentence;
             codeBlocks.Rule = sentences | "{" + sentences + "}";

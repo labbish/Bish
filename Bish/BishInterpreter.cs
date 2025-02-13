@@ -101,10 +101,10 @@ namespace Bish {
                     }
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
-                    string type = node.ChildNodes[0].FindTokenAndGetText();
-                    bool nullable = node.ChildNodes[0].ChildNodes.Count == 2
-                        && node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText() == "?";
-                    BishVariable var = new(null, null, type, nullable);
+                    var (isConst, type, nullable) = BishVars.CutType(node.ChildNodes[0]);
+                    if (isConst && !nullable)
+                        BishUtils.Error("Const vars must be Initialized if not nullable");
+                    BishVariable var = new(null, null, type, nullable, isConst);
                     return vars.New(node.ChildNodes[1], var);
                 }
                 if (node.ChildNodes.Count == 3
@@ -172,13 +172,12 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    string type = node.ChildNodes[0].FindTokenAndGetText();
-                    bool nullable = node.ChildNodes[0].ChildNodes.Count == 2
-                        && node.ChildNodes[0].ChildNodes[1].FindTokenAndGetText() == "?";
+                    var (isConst, type, nullable) = BishVars.CutType(node.ChildNodes[0]);
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
                     BishVariable value = BishVars.WeakConvert(type, right, nullable);
                     value.nullable = nullable;
+                    value.isConst = isConst;
                     return vars.New(varName, value);
                 }
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name} and child count of {node.ChildNodes.Count}");

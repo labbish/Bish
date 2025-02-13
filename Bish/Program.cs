@@ -11,6 +11,7 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
+            BishUtils.Todo("pattern matching & switch");
             BishUtils.Todo("funcs (maybe?)");
 
             if (DoUnitTests) BishUnitTest.Test();
@@ -29,8 +30,7 @@
                 else if (inputs.Length == 2 && inputs[0] == "test") {
                     if (int.TryParse(inputs[1], out int num)) BishUnitTest.Test(num);
                 }
-                else if (inputs.Length == 2 && inputs[0] == "open"
-                    )
+                else if (inputs.Length == 2 && inputs[0] == "open")
                     ExecuteFile(inputs[1]);
                 else program.Run(input);
             }

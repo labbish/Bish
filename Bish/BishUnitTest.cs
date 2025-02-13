@@ -217,6 +217,13 @@
             ExpectTest(8.11, ["int x = 11", "while (x > 0) x -= 2; "], "x", -1);
             ExpectTest(8.12, ["int x = 11", "int y = 0",
                 "while (x > 0) { x--; y += x; }"], "y", 55);
+
+            ExpectTest(8.21, ["int x = 11", "do x -= 2 while (x > 0)"], "x", -1);
+
+            ExpectTest(8.31, "for (int i = 0; i < 10; i++) i", 10);
+            ExpectTest(8.32, ["int j = 0; for (int i = 0; i < 10; i++) j++"], "j", 10);
+            ExpectTest(8.33, ["int s = 0; for (int i = 0; i < 10; i++) s += i"], "s", 45);
+            FailTest(8.34, ["for (int i = 0; i < 10; i++) i"], "i");
         }
 
         public static void Test(int? num = null) {

@@ -204,12 +204,32 @@ namespace Bish {
                         result = EvaluateInScope(node.ChildNodes[4]);
                     return result;
                 }
+                if (node.ChildNodes.Count == 6
+                    && node.ChildNodes[0].FindTokenAndGetText() == "do") {
+                    BishVariable result;
+                    do result = EvaluateInScope(node.ChildNodes[1]);
+                    while (Evaluate(node.ChildNodes[4]).value);
+                    return result;
+                }
                 if (node.ChildNodes.Count == 7
                     && node.ChildNodes[0].FindTokenAndGetText() == "if"
                     && node.ChildNodes[5].FindTokenAndGetText() == "else") {
                     BishVariable condition = Evaluate(node.ChildNodes[2]);
                     if (condition.value) return EvaluateInScope(node.ChildNodes[4]);
                     else return EvaluateInScope(node.ChildNodes[6]);
+                }
+                if (node.ChildNodes.Count == 9
+                    && node.ChildNodes[0].FindTokenAndGetText() == "for") {
+                    var init = node.ChildNodes[2];
+                    var condition = node.ChildNodes[4];
+                    var add = node.ChildNodes[6];
+                    BishVariable result = new(null);
+                    Inner();
+                    for (Evaluate(init); Evaluate(condition).value; Evaluate(add)) {
+                        result = EvaluateInScope(node.ChildNodes[8]);
+                    }
+                    Outer();
+                    return result;
                 }
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name}"
                     + $" and child count of {node.ChildNodes.Count}");

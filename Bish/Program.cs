@@ -10,7 +10,7 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("loops");
+            BishUtils.Todo("jump out of loops");
 
             if (DoUnitTests) BishUnitTest.Test();
 

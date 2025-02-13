@@ -43,6 +43,7 @@ namespace Bish {
             var statement = new NonTerminal("statement");
             var sentence = new NonTerminal("sentence");
             var sentences = new NonTerminal("sentences");
+            var structure = new NonTerminal("structure");
             var codeBlocks = new NonTerminal("codeBlocks");
             var ifStatement = new NonTerminal("ifStatement");
             var loopStatement = new NonTerminal("loopStatement");
@@ -77,13 +78,14 @@ namespace Bish {
                 | varModifiedTypes + identifier + "=" + assignment;
             sentence.Rule = statement | Empty;
             sentences.Rule = root | sentence | sentences + ";" + root;
+            structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
-            ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + codeBlocks
-                | ifTerm + "(" + sentence + ")" + codeBlocks + elseTerm + codeBlocks;
-            loopStatement.Rule = ifStatement | whileTerm + "(" + sentence + ")" + ifStatement
-                | doTerm + ifStatement + whileTerm + "(" + sentence + ")"
-                | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + ifStatement;
-            print.Rule = loopStatement | printTerm + "(" + loopStatement + ")";
+            ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + structure
+                | ifTerm + "(" + sentence + ")" + structure + elseTerm + structure;
+            loopStatement.Rule = codeBlocks | whileTerm + "(" + sentence + ")" + structure
+                | doTerm + structure + whileTerm + "(" + sentence + ")"
+                | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
+            print.Rule = ifStatement | loopStatement | printTerm + "(" + print + ")";
             root.Rule = print;
 
             Root = root;

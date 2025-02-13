@@ -192,17 +192,17 @@
         private static void TestGroup7() {
             TestGroup(7, "conditions");
 
-            ExpectTest(7.11, "if (true) 3", 3);
-            ExpectTest(7.12, "if (false) 3", null);
-            ExpectTest(7.13, "if (true) 3 else 5", 3);
-            ExpectTest(7.14, "if (false) 3 else 5", 5);
-            ExpectTest(7.15, ["int x = 0", "if (false) x = 3;"], "x", 0);
-            ExpectTest(7.16, ["int x = 0", "if (true) x = 3; else x = 5;"], "x", 3);
-            ExpectTest(7.17, ["int x = 0", "if (false) x = 3; else x = 5;"], "x", 5);
+            ExpectTest(7.11, "if (true) {3}", 3);
+            ExpectTest(7.12, "if (false) {3}", null);
+            ExpectTest(7.13, "if (true) {3} else {5}", 3);
+            ExpectTest(7.14, "if (false) {3} else {5}", 5);
+            ExpectTest(7.15, ["int x = 0", "if (false) {x = 3;}"], "x", 0);
+            ExpectTest(7.16, ["int x = 0", "if (true) {x = 3;} else {x = 5;}"], "x", 3);
+            ExpectTest(7.17, ["int x = 0", "if (false) {x = 3;} else {x = 5;}"], "x", 5);
             ExpectGroupTest(7.18,
-                ["if (true) { if (true) 1 else 2 } else 3",
-                "if (true) { if (false) 1 else 2 } else 3",
-                "if (false) { if (false) 1 else 2 } else 3", ],
+                ["if (true) { if (true) {1} else {2} } else {3}",
+                "if (true) { if (false) {1} else {2} } else {3}",
+                "if (false) { if (false) {1} else {2} } else {3}", ],
                 [1, 2, 3]);
 
             ExpectTest(7.21, "true ? 3 : 5", 3);
@@ -214,15 +214,15 @@
         private static void TestGroup8() {
             TestGroup(8, "loops");
 
-            ExpectTest(8.11, ["int x = 11", "while (x > 0) x -= 2; "], "x", -1);
+            ExpectTest(8.11, ["int x = 11", "while (x > 0) {x -= 2;} "], "x", -1);
             ExpectTest(8.12, ["int x = 11", "int y = 0",
                 "while (x > 0) { x--; y += x; }"], "y", 55);
 
-            ExpectTest(8.21, ["int x = 11", "do x -= 2 while (x > 0)"], "x", -1);
+            ExpectTest(8.21, ["int x = 11", "do {x -= 2} while (x > 0)"], "x", -1);
 
-            ExpectTest(8.31, "for (int i = 0; i < 10; i++) i", 10);
-            ExpectTest(8.32, ["int j = 0; for (int i = 0; i < 10; i++) j++"], "j", 10);
-            ExpectTest(8.33, ["int s = 0; for (int i = 0; i < 10; i++) s += i"], "s", 45);
+            ExpectTest(8.31, "for (int i = 0; i < 10; i++) {i}", 10);
+            ExpectTest(8.32, ["int j = 0; for (int i = 0; i < 10; i++) {j++}"], "j", 10);
+            ExpectTest(8.33, ["int s = 0; for (int i = 0; i < 10; i++) {s += i}"], "s", 45);
             FailTest(8.34, ["for (int i = 0; i < 10; i++) i"], "i");
         }
 

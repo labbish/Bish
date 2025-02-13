@@ -234,7 +234,8 @@ namespace Bish {
 
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[0].FindTokenAndGetText() == "print") {
-                    Console.Write(Evaluate(node.ChildNodes[2]).value);
+                    var value = Evaluate(node.ChildNodes[2]).value;
+                    Console.Write(value ?? "null");
                     return new(null);
                 }
 

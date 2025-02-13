@@ -1,8 +1,8 @@
 ﻿namespace Bish {
 
     public class Program {
-        public static readonly bool ShowParseTree = true;
-        public static readonly bool ShowErrorStack = false;
+        public static bool ShowParseTree = false;
+        public static bool ShowErrorStack = false;
         public static readonly bool DoUnitTests = false;
         public static readonly bool StopIfTestFailed = false;
         public static readonly bool StopIfTestFinished = false;
@@ -10,8 +10,6 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("split between blocks & sentence (e.g. '{...}...' without ';' cannot be parsed)");
-            BishUtils.Todo("if/for should only get nearest sentence without '{' and '}'");
             BishUtils.Todo("jump out of loops");
 
             if (DoUnitTests) BishUnitTest.Test();
@@ -24,6 +22,8 @@
                 string[] inputs = input.Split(' ');
                 if (input == "end") break;
                 else if (input == "test") BishUnitTest.Test();
+                else if (input == "tree") ShowParseTree = !ShowParseTree;
+                else if (input == "stack") ShowErrorStack = !ShowErrorStack;
                 else if (inputs.Length == 2 && inputs[0] == "test") {
                     if (int.TryParse(inputs[1], out int num)) BishUnitTest.Test(num);
                 }

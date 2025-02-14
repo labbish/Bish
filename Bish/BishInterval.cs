@@ -35,7 +35,7 @@ namespace Bish {
         }
 
         public static bool operator <=(BishSingleInterval I1, BishSingleInterval I2) {
-            bool left = I1.from > I2.from || (I1.from == I2.from && (I1.fromPoint || !I2.fromPoint));
+            bool left = I1.from > I2.from || (I1.from == I2.from && (!I1.fromPoint || I2.fromPoint));
             bool right = I1.to < I2.to || (I1.to == I2.to && (!I1.toPoint || I2.toPoint));
             return left && right;
         }

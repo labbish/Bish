@@ -266,6 +266,19 @@
             FailTest(9.7, "(5,3)");
         }
 
+        public static void TestGroup10() {
+            TestGroup(10, "pattern matching");
+
+            ExpectGroupTest(10.1, ["1 ~ 0", "1 ~ 1", "1 ~ 2"], [false, true, false]);
+            ExpectGroupTest(10.2, ["1 ~ null", "null ~ null"], [false, true]);
+            ExpectGroupTest(10.3, ["1 !~ 0", "1 !~ 1", "1 !~ 2"], [true, false, true]);
+            ExpectGroupTest(10.4, ["1 ~ <2", "3 ~ <2", "3 ~ >=2", "2 ~ ==2"],
+                [true, false, true, true]);
+            ExpectGroupTest(10.5,
+                ["1 ~ 1 & <2", "1 ~ (>5 & <2)", "1 ~ (>2 | <5) & 1"],
+                [true, false, true]);
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num == null || num == 0) TestGroup0();
@@ -278,6 +291,7 @@
                 if (num == null || num == 7) TestGroup7();
                 if (num == null || num == 8) TestGroup8();
                 if (num == null || num == 9) TestGroup9();
+                if (num == null || num == 10) TestGroup10();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

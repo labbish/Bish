@@ -455,7 +455,7 @@ namespace Bish {
         private BishVariable EvaluateMatching(ParseTreeNode node, ParseTreeNode expr) {
             while (expr.ChildNodes.Count == 1) {
                 var left = Evaluate(node.ChildNodes[0]);
-                BishVariable right = new(null);
+                BishVariable right;
                 try {
                     right = Evaluate(expr);
                 }
@@ -463,7 +463,8 @@ namespace Bish {
                     expr = expr.ChildNodes[0];
                     continue;
                 }
-                return left == right;
+                if (right.value is null) return new(null, left.value is null);
+                else return left == right;
             }
             if (expr.ChildNodes.Count == 2
                   && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {

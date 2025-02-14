@@ -14,7 +14,6 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("continue in switch-cases");
             BishUtils.Todo("funcs (maybe?)");
 
             if (DoUnitTests) BishUnitTest.Test();

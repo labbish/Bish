@@ -42,10 +42,11 @@ namespace Bish {
                 result = Evaluate(parseTree);
             }
             catch (Exception) {
-                Outer();
                 throw;
             }
-            Outer();
+            finally {
+                Outer();
+            }
             return result;
         }
 
@@ -544,10 +545,11 @@ namespace Bish {
                     done = false;
                 }
                 catch (Exception) {
-                    Outer();
                     throw;
                 }
-                Outer();
+                finally {
+                    Outer();
+                }
                 if (done) return result;
             }
             return new(null);

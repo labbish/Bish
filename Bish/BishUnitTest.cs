@@ -64,9 +64,9 @@
 
         private static void FailTest(dynamic count, string[] preInputs, string input) {
             bool caught = false;
+            BishProgram program = new();
+            foreach (string preInput in preInputs) program.Parse(preInput);
             try {
-                BishProgram program = new();
-                foreach (string preInput in preInputs) program.Parse(preInput);
                 var result = program.Parse(input);
             }
             catch (Exception) {
@@ -239,6 +239,7 @@
             FailTest(8.44, ["while (true) {int i; jump end;}"], "i");
             FailTest(8.45, ["do {int i; jump end;} while (true)"], "i");
             FailTest(8.46, ["for (int i = 0; i < 10; i++) {jump end;}"], "i");
+            FailTest(8.47, ["tag a: for (int i = 0; i < 10; i++) {jump end[a]}"], "i");
         }
 
         private static void TestGroup9() {

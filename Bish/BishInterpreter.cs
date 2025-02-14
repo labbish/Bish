@@ -371,7 +371,7 @@ namespace Bish {
                         try {
                             for (Evaluate(init); Evaluate(condition).value; Evaluate(add)) {
                                 try {
-                                    result = EvaluateInScope(node.ChildNodes[8]);
+                                    result = EvaluateInScope(node.ChildNodes[9]);
                                 }
                                 catch (BishJumpException jump) {
                                     if ((jump.tag != null && jump.tag != tag)

@@ -47,8 +47,11 @@ namespace Bish {
             var isErrorNode = node.Term == null || node.Term.Name == "<error>";
             var name = node.Term == null ? "<error>" : node.Term.Name;
             if (node.ChildNodes.Count != 1) {
-                Console.WriteLine($"{new string('·', level * 2)}[{name}]"
-                    + $"{node.FindTokenAndGetText()}{(isErrorNode ? " (Error)" : "")}");
+                Console.Write($"{new string('·', level * 2)}");
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.Write($"[{name}]");
+                Console.ResetColor();
+                Console.WriteLine($"{node.FindTokenAndGetText()}{(isErrorNode ? " (Error)" : "")}");
                 foreach (var child in node.ChildNodes) {
                     PrintParseTree(child, level + 1);
                 }

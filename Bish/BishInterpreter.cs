@@ -59,6 +59,7 @@ namespace Bish {
             if (Program.ShowEvaluateTime)
                 Console.WriteLine($"Cost {watch.Elapsed.TotalMilliseconds:N2} ms, "
                     + $"Average Cost {watch.Elapsed.TotalMilliseconds / steps:N2} ms");
+            watch.Reset();
             return ans;
         }
 

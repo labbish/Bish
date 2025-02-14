@@ -38,6 +38,7 @@ namespace Bish {
 
         public BishVariable Set(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
+            if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
                 BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
@@ -50,6 +51,7 @@ namespace Bish {
         }
 
         public BishVariable SetIfExist(string name, BishVariable value) {
+            if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
                 BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
@@ -63,13 +65,15 @@ namespace Bish {
 
         public BishVariable New(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
+            if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
             vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
             return value;
         }
 
-        public static BishVariable WeakConvert(string? type, BishVariable var, bool nullable = false) {
+        public static BishVariable WeakConvert(string? type, BishVariable var,
+            bool nullable = false) {
             bool converted = false;
             dynamic? value = null;
             if (nullable && var.value == null) {

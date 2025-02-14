@@ -135,6 +135,42 @@ namespace Bish {
                     BishVariable var = new(null, null, type, nullable, isConst);
                     return vars.New(node.ChildNodes[1], var);
                 }
+                if (node.ChildNodes.Count(node => node.FindTokenAndGetText() == "~") == 1) {
+                    if (node.ChildNodes.Count == 3
+                        && node.ChildNodes[1].FindTokenAndGetText() == "~") {
+                        var expr = node.ChildNodes[2];
+                        if (expr.ChildNodes.Count == 1) {
+                            var left = Evaluate(node.ChildNodes[0]);
+                            var right = Evaluate(node.ChildNodes[2]);
+                            return left == right;
+                        }
+                        else if (expr.ChildNodes.Count == 2
+                              && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
+                            node.ChildNodes[1] = expr.ChildNodes[0];
+                            node.ChildNodes[2] = expr.ChildNodes[1];
+                            return Evaluate(node);
+                        }
+                        else if (expr.ChildNodes.Count == 2) {
+                            BishVariable value = Evaluate(node.ChildNodes[0]);
+                            var (_, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
+                            BishVariable converted;
+                            try {
+                                converted = BishVars.WeakConvert(type, value, nullable);
+                            }
+                            catch (ArgumentException) {
+                                return new(null, false);
+                            }
+                            vars.New(expr.ChildNodes[1], converted);
+                            return new(null, true);
+                        }
+                    }
+                    if (node.ChildNodes.Count == 4
+                        && node.ChildNodes[1].FindTokenAndGetText() == "!"
+                        && node.ChildNodes[2].FindTokenAndGetText() == "~") {
+                        node.ChildNodes.RemoveAt(1);
+                        return !Evaluate(node);
+                    }
+                }
                 if (node.ChildNodes.Count == 3
                     && node.ChildNodes[0].FindTokenAndGetText() == "("
                     && node.ChildNodes[2].FindTokenAndGetText() == ")")

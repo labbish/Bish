@@ -51,7 +51,8 @@ namespace Bish {
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Console.Write($"[{name}]");
                 Console.ResetColor();
-                Console.WriteLine($"{node.FindTokenAndGetText()}{(isErrorNode ? " (Error)" : "")}");
+                Console.WriteLine($"{(node.ChildNodes.Count < 2 ? node.FindTokenAndGetText() : "")}"
+                    + $"{(isErrorNode ? " (Error)" : "")}");
                 foreach (var child in node.ChildNodes) {
                     PrintParseTree(child, level + 1);
                 }

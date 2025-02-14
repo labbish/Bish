@@ -3,6 +3,7 @@
 namespace Bish {
 
     public class BishGrammar : Grammar {
+        public static readonly List<string> MatchableOperators = ["==", "!=", "<", "<=", ">", ">="];
 
         public BishGrammar() {
             var identifier = new IdentifierTerminal("identifier");
@@ -48,6 +49,8 @@ namespace Bish {
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
+            var matchingExpr = new NonTerminal("matchingExpr");
+            var matching = new NonTerminal("matching");
             var statement = new NonTerminal("statement");
             var jumpPos = new NonTerminal("jumpPos");
             var jump = new NonTerminal("jump");
@@ -90,8 +93,13 @@ namespace Bish {
             varTypes.Rule = intType | numType | stringType | boolType | intervalType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
-            statement.Rule = assignment | varModifiedTypes + identifier
-                | varModifiedTypes + identifier + "=" + assignment;
+            matchingExpr.Rule = assignment | varNullableTypes + identifier;
+            foreach (var op in MatchableOperators)
+                matchingExpr.Rule |= op + assignment;
+            matching.Rule = assignment | assignment + "~" + matchingExpr
+                | assignment + "!" + "~" + matchingExpr;
+            statement.Rule = matching | varModifiedTypes + identifier
+                | varModifiedTypes + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
             sentence.Rule = Empty | statement | jump;

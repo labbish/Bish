@@ -117,17 +117,8 @@ namespace Bish {
             return new BishVariable(null, value, type, nullable);
         }
 
-        private static List<string> PlainListFromTree(ParseTreeNode node) {
-            if (node.ChildNodes.Count == 0) return [node.FindTokenAndGetText()];
-            List<string> strings = [];
-            foreach (ParseTreeNode child in node.ChildNodes) {
-                strings.AddRange(PlainListFromTree(child));
-            }
-            return strings;
-        }
-
         public static (bool, string, bool) CutType(ParseTreeNode node) {
-            var parts = PlainListFromTree(node);
+            var parts = ToPlainStrings(node);
             bool isConst = false;
             string type = "";
             bool nullable = false;
@@ -148,6 +139,19 @@ namespace Bish {
             return "{\n  "
                 + string.Join("\n  ", vars.Select(var => $"{var.name}: {var.ValueString()}"))
                 + "\n}";
+        }
+
+        private static List<string> ToPlainStrings(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 0) return [node.FindTokenAndGetText()];
+            List<string> strings = [];
+            foreach (ParseTreeNode child in node.ChildNodes) {
+                strings.AddRange(ToPlainStrings(child));
+            }
+            return strings;
+        }
+
+        public static string ToPlainString(ParseTreeNode node) {
+            return string.Join(" ", ToPlainStrings(node));
         }
     }
 }

@@ -50,6 +50,8 @@ namespace Bish {
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
             var matchingExpr = new NonTerminal("matchingExpr");
+            var matchingAndExpr = new NonTerminal("matchingAndExpr");
+            var matchingOrExpr = new NonTerminal("matchingOrExpr");
             var matching = new NonTerminal("matching");
             var statement = new NonTerminal("statement");
             var jumpPos = new NonTerminal("jumpPos");
@@ -96,8 +98,11 @@ namespace Bish {
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
             foreach (var op in MatchableOperators)
                 matchingExpr.Rule |= op + assignment;
-            matching.Rule = assignment | assignment + "~" + matchingExpr
-                | assignment + "!" + "~" + matchingExpr;
+            matchingExpr.Rule |= "(" + matchingOrExpr + ")";
+            matchingAndExpr.Rule = matchingExpr | matchingAndExpr + "&" + matchingExpr;
+            matchingOrExpr.Rule = matchingAndExpr | matchingOrExpr + "|" + matchingAndExpr;
+            matching.Rule = assignment | assignment + "~" + matchingOrExpr
+                | assignment + "!" + "~" + matchingOrExpr;
             statement.Rule = matching | varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;

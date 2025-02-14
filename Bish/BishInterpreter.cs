@@ -1,10 +1,13 @@
 ﻿using Irony.Parsing;
+using System.Diagnostics;
 
 namespace Bish {
 
     internal class BishInterpreter {
         public BishScope scope;
         public BishVars vars;
+        private int steps;
+        private Stopwatch watch = new();
 
         public BishInterpreter() {
             scope = new();
@@ -46,11 +49,21 @@ namespace Bish {
 
         public BishVariable Interpret(ParseTree parseTree) {
             if (parseTree.Root == null) return BishUtils.Error("Parse tree is empty.");
-            return Evaluate(parseTree.Root);
+            var ans = Evaluate(parseTree.Root, true);
+            watch.Stop();
+            if (Program.ShowEvaluateSteps)
+                Console.WriteLine($"Complete Evaluation after {steps} Steps");
+            if (Program.ShowEvaluateTime)
+                Console.WriteLine($"Cost {watch.Elapsed.TotalMilliseconds:N2} ms, "
+                    + $"Average Cost {watch.Elapsed.TotalMilliseconds / steps:N2} ms");
+            return ans;
         }
 
-        private BishVariable Evaluate(ParseTreeNode node) {
-            //Console.WriteLine(node.Term.Name);
+        private BishVariable Evaluate(ParseTreeNode node, bool isRoot = false) {
+            if (isRoot) steps = 0;
+            steps++;
+            watch.Start();
+
             if (node == null) return new BishVariable(null);
             else if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
                 Evaluate(node.ChildNodes[0]);
@@ -139,30 +152,7 @@ namespace Bish {
                     if (node.ChildNodes.Count == 3
                         && node.ChildNodes[1].FindTokenAndGetText() == "~") {
                         var expr = node.ChildNodes[2];
-                        if (expr.ChildNodes.Count == 1) {
-                            var left = Evaluate(node.ChildNodes[0]);
-                            var right = Evaluate(node.ChildNodes[2]);
-                            return left == right;
-                        }
-                        else if (expr.ChildNodes.Count == 2
-                              && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
-                            node.ChildNodes[1] = expr.ChildNodes[0];
-                            node.ChildNodes[2] = expr.ChildNodes[1];
-                            return Evaluate(node);
-                        }
-                        else if (expr.ChildNodes.Count == 2) {
-                            BishVariable value = Evaluate(node.ChildNodes[0]);
-                            var (_, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
-                            BishVariable converted;
-                            try {
-                                converted = BishVars.WeakConvert(type, value, nullable);
-                            }
-                            catch (ArgumentException) {
-                                return new(null, false);
-                            }
-                            vars.New(expr.ChildNodes[1], converted);
-                            return new(null, true);
-                        }
+                        return EvaluateMatching(node, expr);
                     }
                     if (node.ChildNodes.Count == 4
                         && node.ChildNodes[1].FindTokenAndGetText() == "!"
@@ -275,29 +265,34 @@ namespace Bish {
                     return new(null);
                 }
                 if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "jump") {
+                    string pos = node.ChildNodes[1].FindTokenAndGetText();
+                    string tag = node.ChildNodes[3].FindTokenAndGetText();
+                    throw new BishJumpException(pos, tag);
+                }
+                if (node.ChildNodes.Count == 5
                     && node.ChildNodes[0].FindTokenAndGetText() == "while") {
                     bool restart = false;
                     BishVariable result = new(null);
                     do {
                         try {
-                            while (Evaluate(node.ChildNodes[2]).value)
-                                result = EvaluateInScope(node.ChildNodes[4]);
+                            while (Evaluate(node.ChildNodes[2]).value) {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[4]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if ((jump.tag != null)
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                }
+                            }
                         }
                         catch (BishJumpException jump) {
                             if (jump.tag != null) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
-                            if (jump.pos == BishJumpException.Position.NEXT)
-                                BishUtils.Error("Jumping to NEXT is not supported for while loop");
                         }
                     } while (restart);
                     return result;
-                }
-                if (node.ChildNodes.Count == 5
-                    && node.ChildNodes[0].FindTokenAndGetText() == "jump") {
-                    string pos = node.ChildNodes[1].FindTokenAndGetText();
-                    string tag = node.ChildNodes[3].FindTokenAndGetText();
-                    throw new BishJumpException(pos, tag);
                 }
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[1].FindTokenAndGetText() == "while") {
@@ -306,14 +301,19 @@ namespace Bish {
                     BishVariable result = new(null);
                     do {
                         try {
-                            while (Evaluate(node.ChildNodes[3]).value)
-                                result = EvaluateInScope(node.ChildNodes[5]);
+                            while (Evaluate(node.ChildNodes[3]).value) {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[5]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if ((jump.tag != null && jump.tag != tag)
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                }
+                            }
                         }
                         catch (BishJumpException jump) {
                             if (jump.tag != tag && jump.tag != null) throw;
                             if (jump.pos == BishJumpException.Position.START) restart = true;
-                            if (jump.pos == BishJumpException.Position.NEXT)
-                                BishUtils.Error("Jumping to NEXT is not supported for while loop");
                         }
                     } while (restart);
                     return result;
@@ -324,15 +324,21 @@ namespace Bish {
                     BishVariable result = new(null);
                     do {
                         try {
-                            do result = EvaluateInScope(node.ChildNodes[1]);
+                            do {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[1]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if (jump.tag != null
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                }
+                            }
                             while (Evaluate(node.ChildNodes[4]).value);
                         }
                         catch (BishJumpException jump) {
                             if (jump.tag != null) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
-                            if (jump.pos == BishJumpException.Position.NEXT)
-                                BishUtils.Error("Jumping to NEXT is not supported for do-while loop");
                         }
                     } while (restart);
                     return result;
@@ -344,15 +350,21 @@ namespace Bish {
                     BishVariable result = new(null);
                     do {
                         try {
-                            do result = EvaluateInScope(node.ChildNodes[2]);
+                            do {
+                                try {
+                                    result = EvaluateInScope(node.ChildNodes[2]);
+                                }
+                                catch (BishJumpException jump) {
+                                    if ((jump.tag != null && jump.tag != tag)
+                                        || jump.pos != BishJumpException.Position.NEXT) throw;
+                                }
+                            }
                             while (Evaluate(node.ChildNodes[5]).value);
                         }
                         catch (BishJumpException jump) {
                             if (jump.tag != null && jump.tag != tag) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
-                            if (jump.pos == BishJumpException.Position.NEXT)
-                                BishUtils.Error("Jumping to NEXT is not supported for do-while loop");
                         }
                     } while (restart);
                     return result;
@@ -438,6 +450,58 @@ namespace Bish {
                     + $" and child count of {node.ChildNodes.Count}");
             }
             return BishUtils.Error($"Unsupported expression type: {node.Term.Name}");
+        }
+
+        private BishVariable EvaluateMatching(ParseTreeNode node, ParseTreeNode expr) {
+            while (expr.ChildNodes.Count == 1) {
+                var left = Evaluate(node.ChildNodes[0]);
+                BishVariable right = new(null);
+                try {
+                    right = Evaluate(expr);
+                }
+                catch (Exception) {
+                    expr = expr.ChildNodes[0];
+                    continue;
+                }
+                return left == right;
+            }
+            if (expr.ChildNodes.Count == 2
+                  && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
+                node.ChildNodes[1] = expr.ChildNodes[0];
+                node.ChildNodes[2] = expr.ChildNodes[1];
+                return Evaluate(node);
+            }
+            else if (expr.ChildNodes.Count == 2) {
+                BishVariable value = Evaluate(node.ChildNodes[0]);
+                var (_, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
+                BishVariable converted;
+                try {
+                    converted = BishVars.WeakConvert(type, value, nullable);
+                }
+                catch (ArgumentException) {
+                    return new(null, false);
+                }
+                vars.New(expr.ChildNodes[1], converted);
+                return new(null, true);
+            }
+            else if (expr.ChildNodes.Count == 3
+                && expr.ChildNodes[0].FindTokenAndGetText() == "("
+                && expr.ChildNodes[2].FindTokenAndGetText() == ")") {
+                return EvaluateMatching(node, expr.ChildNodes[1]);
+            }
+            else if (expr.ChildNodes.Count == 3
+                && expr.ChildNodes[1].FindTokenAndGetText() == "&") {
+                var left = EvaluateMatching(node, expr.ChildNodes[0]);
+                if (!left.value) return new(null, false);
+                return EvaluateMatching(node, expr.ChildNodes[2]);
+            }
+            else if (expr.ChildNodes.Count == 3
+                && expr.ChildNodes[1].FindTokenAndGetText() == "|") {
+                var left = EvaluateMatching(node, expr.ChildNodes[0]);
+                if (left.value) return new(null, true);
+                return EvaluateMatching(node, expr.ChildNodes[2]);
+            }
+            return BishUtils.Error("Wrong Matching Pattern");
         }
     }
 }

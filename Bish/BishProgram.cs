@@ -46,10 +46,14 @@ namespace Bish {
             if (node == null) return;
             var isErrorNode = node.Term == null || node.Term.Name == "<error>";
             var name = node.Term == null ? "<error>" : node.Term.Name;
-            if (node.ChildNodes.Count != 1) {
+            if (node.ChildNodes.Count != 1 || Program.WholeParseTree) {
                 Console.Write($"{new string('·', level * 2)}");
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
-                Console.Write($"[{name}]");
+                Console.Write("[");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(name);
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.Write("]");
                 Console.ResetColor();
                 Console.WriteLine($"{(node.ChildNodes.Count < 2 ? node.FindTokenAndGetText() : "")}"
                     + $"{(isErrorNode ? " (Error)" : "")}");

@@ -180,6 +180,13 @@ namespace Bish {
             FailTest(4.63, ["const int x = 1"], "x++");
             FailTest(4.64, "const int x");
             ExpectTest(4.65, ["const int? x"], "x", null);
+
+            ExpectVarTest(4.71, ["var x = 2"], "x", "x", 2);
+            ExpectVarTest(4.72, ["var x = 2", "x = 'hello'"], "x", "x", "hello");
+            FailTest(4.73, ["var x"], "x");
+            FailTest(4.74, ["var x = 1"], "x = null");
+            ExpectVarTest(4.75, ["var? x"], "x", "x", null);
+            ExpectVarTest(4.76, ["var? x = null"], "x", "x", null);
         }
 
         private static void TestGroup5() {

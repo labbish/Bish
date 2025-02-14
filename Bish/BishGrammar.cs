@@ -35,6 +35,7 @@ namespace Bish {
             var caseTerm = ToTerm("case");
             var continueTerm = ToTerm("continue");
             var defaultTerm = ToTerm("default");
+            var varType = ToTerm("var");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -101,7 +102,7 @@ namespace Bish {
                 | "(" + assignment + "," + assignment + "]"
                 | "[" + assignment + "," + assignment + ")"
                 | "[" + assignment + "," + assignment + "]";
-            varTypes.Rule = intType | numType | stringType | boolType | intervalType;
+            varTypes.Rule = intType | numType | stringType | boolType | intervalType | varType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             matchingExpr.Rule = assignment | varNullableTypes + identifier;

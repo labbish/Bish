@@ -18,6 +18,8 @@
         }
 
         public static string? GetTypeName(dynamic? value) {
+            if (value == null) return null;
+            if (!TypeNames.ContainsKey(value.GetType())) return null;
             return value == null ? null : TypeNames[value.GetType()];
         }
 

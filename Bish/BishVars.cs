@@ -76,7 +76,11 @@ namespace Bish {
             bool nullable = false) {
             bool converted = false;
             dynamic? value = null;
-            if (nullable && var.value == null) {
+            if (nullable && var.value is null) {
+                converted = true;
+            }
+            if (type == "var" && var.value is not null) {
+                value = var.value;
                 converted = true;
             }
             if (type == "num") {

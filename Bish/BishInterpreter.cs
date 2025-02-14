@@ -487,6 +487,11 @@ namespace Bish {
                 else return left == right;
             }
             if (expr.ChildNodes.Count == 2
+                  && expr.ChildNodes[1].FindTokenAndGetText() == "!") {
+                node.ChildNodes[2] = expr.ChildNodes[0];
+                return !EvaluateMatching(node, expr.ChildNodes[0]);
+            }
+            if (expr.ChildNodes.Count == 2
                   && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
                 node.ChildNodes[1] = expr.ChildNodes[0];
                 node.ChildNodes[2] = expr.ChildNodes[1];

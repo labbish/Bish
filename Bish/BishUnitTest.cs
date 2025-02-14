@@ -282,9 +282,11 @@ namespace Bish {
             ExpectGroupTest(10.1, ["1 ~ 0", "1 ~ 1", "1 ~ 2"], [false, true, false]);
             ExpectGroupTest(10.2, ["1 ~ null", "null ~ null"], [false, true]);
             ExpectGroupTest(10.3, ["1 !~ 0", "1 !~ 1", "1 !~ 2"], [true, false, true]);
-            ExpectGroupTest(10.4, ["1 ~ <2", "3 ~ <2", "3 ~ >=2", "2 ~ ==2"],
+            ExpectGroupTest(10.4, ["1 ~ 0!", "1 ~ 1!", "1 ~ 2!"], [true, false, true]);
+            ExpectGroupTest(10.5, ["1 !~ 0!", "1 !~ 1!", "1 !~ 2!"], [false, true, false]);
+            ExpectGroupTest(10.6, ["1 ~ <2", "3 ~ <2", "3 ~ >=2", "2 ~ ==2"],
                 [true, false, true, true]);
-            ExpectGroupTest(10.5,
+            ExpectGroupTest(10.7,
                 ["1 ~ 1 & <2", "1 ~ (>5 & <2)", "1 ~ (>2 | <5) & 1"],
                 [true, false, true]);
         }
@@ -313,12 +315,19 @@ namespace Bish {
                     ["int x = 3", $"switch(0!){{case {pattern}: {{x = 5;}}}}"], "x", 5);
             }
 
-            ExpectTest(11.41, ["int x = 3",
+            List<string> patterns4 = ["1", "string _", "!=0"];
+            for (int i = 0; i < patterns4.Count; i++) {
+                string pattern = patterns4[i];
+                ExpectTest($"11.4{i + 1}",
+                    ["int x = 3", $"switch(0){{case {pattern}!: {{x = 5;}}}}"], "x", 5);
+            }
+
+            ExpectTest(11.51, ["int x = 3",
                 "switch(0){case 1: {x = 5;} case 0: {x = 4;}}"], "x", 4);
-            FailTest(11.42, ["switch(0){case int x: {}}"], "x");
-            ExpectTest(11.43, ["int x = 3",
+            FailTest(11.52, ["switch(0){case int x: {}}"], "x");
+            ExpectTest(11.53, ["int x = 3",
                 "switch(0){case 0: {x = 4; continue} case 0: {x = 5}}"], "x", 5);
-            ExpectTest(11.44, ["int x = 3",
+            ExpectTest(11.54, ["int x = 3",
                 "switch(0){case 1: {x = 4} default: {x = 5}}"], "x", 5);
         }
 

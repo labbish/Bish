@@ -139,5 +139,11 @@ namespace Bish {
             type = parts[0];
             return (isConst, type, nullable);
         }
+
+        public override string ToString() {
+            return "{\n  "
+                + string.Join("\n  ", vars.Select(var => $"{var.name}: {var.ValueString()}"))
+                + "\n}";
+        }
     }
 }

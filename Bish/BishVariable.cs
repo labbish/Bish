@@ -102,15 +102,18 @@
             return new BishVariable(null, !a.value);
         }
 
-        public override string ToString() {
-            dynamic? value = this.value switch {
+        public string ValueString() {
+            return value switch {
                 string str => $"\"{str}\"",
                 true => "true",
                 false => "false",
                 null => "null",
-                _ => this.value,
+                _ => $"{value}",
             };
-            return $"var [{name ?? "TEMP"}] with value {value},"
+        }
+
+        public override string ToString() {
+            return $"var [{name ?? "TEMP"}] with value {ValueString()},"
                 + $" type <{(isConst ? "const " : "")}{type ?? "(?)"}{(nullable ? "?" : "")}>";
         }
 
@@ -128,7 +131,7 @@
         }
 
         public BishVariable GetNullChecked() {
-            if (nullable || value != null || name == null) return this;
+            if (nullable || value is not null || name == null) return this;
             return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
         }
     }

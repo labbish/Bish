@@ -5,7 +5,7 @@ namespace Bish {
     internal class BishProgram {
         private readonly BishGrammar grammar;
         private Parser parser;
-        private BishInterpreter bishInterpreter;
+        public BishInterpreter bishInterpreter;
 
         public BishProgram() {
             grammar = new BishGrammar();

@@ -33,6 +33,8 @@
                 }
                 else if (inputs.Length == 2 && inputs[0] == "open")
                     ExecuteFile(inputs[1]);
+                else if (input == "vars")
+                    Console.WriteLine($"vars = {program.bishInterpreter.vars}");
                 else program.Run(input);
             }
         }

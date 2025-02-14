@@ -55,6 +55,13 @@
             ExpectVarTest(count, Array.Empty<string>(), input, name, value);
         }
 
+        private static void SameTest(dynamic count, string input1, string input2) {
+            var result1 = new BishProgram().Parse(input1);
+            var result2 = new BishProgram().Parse(input2);
+            ConditionTest(count, (result1 == result2).value,
+                $"Expected same, Returned ([{result1}] , [{result2}])");
+        }
+
         private static void FailTest(dynamic count, string[] preInputs, string input) {
             bool caught = false;
             try {
@@ -234,6 +241,30 @@
             FailTest(8.46, ["for (int i = 0; i < 10; i++) {jump end;}"], "i");
         }
 
+        private static void TestGroup9() {
+            TestGroup(9, "intervals");
+
+            ExpectGroupTest(9.1,
+                ["(3,5)", "(3,5]", "[3,5)", "[3,5]"],
+                [   new BishInterval(false, 3, false, 5),
+                    new BishInterval(false, 3, true, 5),
+                    new BishInterval(true, 3, false, 5),
+                    new BishInterval(true, 3, true, 5)]);
+            SameTest(9.2, "(1,3)+(2,4)", "(1,4)");
+            SameTest(9.3, "(1,3)*(2,4)", "(2,3)");
+            ExpectGroupTest(9.4, ["interval I = (3,5]"],
+                ["2 < I", "3 < I", "4 < I", "5 < I", "6 < I"],
+                [false, false, true, true, false]);
+            ExpectGroupTest(9.5,
+                ["interval I = (3,5]", "interval J = (1,5)", "interval K = (1,7]"],
+                ["I <= J", "I <= K", "J <= K"],
+                [false, true, true]);
+            ExpectGroupTest(9.6,
+                ["inf < (-inf,5)", "-inf < (-inf,5)", "-inf < [-inf,5)"],
+                [false, false, true]);
+            FailTest(9.7, "(5,3)");
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num == null || num == 0) TestGroup0();
@@ -245,6 +276,7 @@
                 if (num == null || num == 6) TestGroup6();
                 if (num == null || num == 7) TestGroup7();
                 if (num == null || num == 8) TestGroup8();
+                if (num == null || num == 9) TestGroup9();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

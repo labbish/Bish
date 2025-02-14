@@ -302,6 +302,10 @@ namespace Bish {
             ExpectTest(11.31, ["int x = 3",
                 "switch(0){case 1: {x = 5;} case 0: {x = 4;}}"], "x", 4);
             FailTest(11.32, ["switch(0){case int x: {}}"], "x");
+            ExpectTest(11.33, ["int x = 3",
+                "switch(0){case 0: {x = 4; continue} case 0: {x = 5}}"], "x", 5);
+            ExpectTest(11.34, ["int x = 3",
+                "switch(0){case 1: {x = 4} default: {x = 5}}"], "x", 5);
         }
 
         public static void Test(int? num = null) {

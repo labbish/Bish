@@ -33,6 +33,8 @@ namespace Bish {
             var infLiteral = ToTerm("inf");
             var switchTerm = ToTerm("switch");
             var caseTerm = ToTerm("case");
+            var continueTerm = ToTerm("continue");
+            var defaultTerm = ToTerm("default");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -113,7 +115,7 @@ namespace Bish {
                 | varModifiedTypes + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
-            sentence.Rule = Empty | statement | jump;
+            sentence.Rule = Empty | statement | jump | continueTerm;
             sentences.Rule = root | sentence | sentences + ";" + root;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
@@ -127,7 +129,7 @@ namespace Bish {
                 | tag + doTerm + structure + whileTerm + "(" + sentence + ")"
                 | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure
                 | tag + forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
-            caseTag.Rule = caseTerm + matchingOrExpr + ":";
+            caseTag.Rule = caseTerm + matchingOrExpr + ":" | defaultTerm + ":";
             caseBlock.Rule = caseTag + structure;
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";

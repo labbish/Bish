@@ -1,4 +1,5 @@
 ﻿using Irony.Parsing;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -110,6 +111,9 @@ namespace Bish {
             }
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 0) return new BishVariable(null);
+                if (node.ChildNodes.Count == 1
+                    && node.ChildNodes[0].FindTokenAndGetText() == "continue")
+                    throw new BishContinueException();
                 if (node.ChildNodes.Count == 1) return Evaluate(node.ChildNodes[0]);
                 if (node.ChildNodes.Count == 2
                     && node.ChildNodes[0].FindTokenAndGetText() == "jump") {
@@ -447,7 +451,8 @@ namespace Bish {
                     var cases = node.ChildNodes[5];
                     var caseBlocks = ToPlainCaseBlocks(cases)
                         .Select(single =>
-                        (Match: single.ChildNodes[0].ChildNodes[1],
+                        (Match: single.ChildNodes[0].FindTokenAndGetText() == "default"
+                        ? null : single.ChildNodes[0].ChildNodes[1],
                         Block: single.ChildNodes[1]))
                         .ToList();
                     return EvaluateSwitch(value, caseBlocks);
@@ -516,11 +521,11 @@ namespace Bish {
                 if (left.value) return new(null, true);
                 return EvaluateMatching(node, expr.ChildNodes[2]);
             }
-            return BishUtils.Error("Wrong Matching Pattern");
+            return BishUtils.Error($"Wrong Matching Pattern: {BishVars.ToPlainString(expr)}");
         }
 
         private BishVariable EvaluateSwitch(ParseTreeNode value,
-            List<(ParseTreeNode Match, ParseTreeNode Block)> caseBlocks) {
+            List<(ParseTreeNode? Match, ParseTreeNode Block)> caseBlocks) {
             foreach (var (match, block) in caseBlocks) {
                 Inner();
                 ParseTreeNode equal = GetNewNode("matching");
@@ -530,8 +535,13 @@ namespace Bish {
                 bool done = false;
                 BishVariable result = new(null);
                 try {
-                    bool condition = EvaluateMatching(equal, match).value;
+                    bool condition;
+                    if (match is null) condition = true;
+                    else condition = EvaluateMatching(equal, match).value;
                     if (condition) (done, result) = (true, EvaluateInScope(block));
+                }
+                catch (BishContinueException) {
+                    done = false;
                 }
                 catch (Exception) {
                     Outer();

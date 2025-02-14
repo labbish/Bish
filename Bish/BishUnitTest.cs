@@ -1,4 +1,7 @@
-﻿namespace Bish {
+﻿using System;
+using System.Reflection;
+
+namespace Bish {
 
     internal class BishUnitTest {
 
@@ -279,6 +282,28 @@
                 [true, false, true]);
         }
 
+        public static void TestGroup11() {
+            TestGroup(11, "switch-cases");
+
+            List<string> patterns1 = ["0", "==0", "<2", ">1|<=2", "0&<2", "int? a", "int _"];
+            for (int i = 0; i < patterns1.Count; i++) {
+                string pattern = patterns1[i];
+                ExpectTest($"11.1{i + 1}",
+                    ["int x = 3", $"switch(0){{case {pattern}: {{x = 5;}}}}"], "x", 5);
+            }
+
+            List<string> patterns2 = ["0&>1", "string _", ">1|3"];
+            for (int i = 0; i < patterns2.Count; i++) {
+                string pattern = patterns2[i];
+                ExpectTest($"11.2{i + 1}",
+                    ["int x = 3", $"switch(0){{case {pattern}: {{x = 5;}}}}"], "x", 3);
+            }
+
+            ExpectTest(11.31, ["int x = 3",
+                "switch(0){case 1: {x = 5;} case 0: {x = 4;}}"], "x", 4);
+            FailTest(11.32, ["switch(0){case int x: {}}"], "x");
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num == null || num == 0) TestGroup0();
@@ -292,6 +317,7 @@
                 if (num == null || num == 8) TestGroup8();
                 if (num == null || num == 9) TestGroup9();
                 if (num == null || num == 10) TestGroup10();
+                if (num == null || num == 11) TestGroup11();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

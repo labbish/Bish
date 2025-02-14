@@ -59,7 +59,7 @@ namespace Bish {
                     Console.WriteLine($"{node.FindTokenAndGetText()}{(isErrorNode ? " (Error)" : "")}");
                 else {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"(x{node.ChildNodes.Count})");
+                    Console.WriteLine($"(×{node.ChildNodes.Count})");
                     Console.ResetColor();
                 }
                 foreach (var child in node.ChildNodes) {

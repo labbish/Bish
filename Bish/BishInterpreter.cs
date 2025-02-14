@@ -1,5 +1,6 @@
 ﻿using Irony.Parsing;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Bish {
 
@@ -65,6 +66,7 @@ namespace Bish {
             watch.Start();
 
             if (node == null) return new BishVariable(null);
+            if (node.Term == null) return new BishVariable(null);
             else if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
                 Evaluate(node.ChildNodes[0]);
                 return Evaluate(node.ChildNodes[2]);
@@ -439,6 +441,18 @@ namespace Bish {
                     return result;
                 }
 
+                if (node.ChildNodes.Count == 7
+                    && node.ChildNodes[0].FindTokenAndGetText() == "switch") {
+                    var value = node.ChildNodes[2];
+                    var cases = node.ChildNodes[5];
+                    var caseBlocks = ToPlainCaseBlocks(cases)
+                        .Select(single =>
+                        (Match: single.ChildNodes[0].ChildNodes[1],
+                        Block: single.ChildNodes[1]))
+                        .ToList();
+                    return EvaluateSwitch(value, caseBlocks);
+                }
+
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[0].FindTokenAndGetText() == "print") {
                     var value = Evaluate(node.ChildNodes[2]).value;
@@ -503,6 +517,45 @@ namespace Bish {
                 return EvaluateMatching(node, expr.ChildNodes[2]);
             }
             return BishUtils.Error("Wrong Matching Pattern");
+        }
+
+        private BishVariable EvaluateSwitch(ParseTreeNode value,
+            List<(ParseTreeNode Match, ParseTreeNode Block)> caseBlocks) {
+            foreach (var (match, block) in caseBlocks) {
+                Inner();
+                ParseTreeNode equal = GetNewNode("matching");
+                equal.ChildNodes.Add(value);
+                equal.ChildNodes.Add(GetNewNode());
+                equal.ChildNodes.Add(match);
+                bool done = false;
+                BishVariable result = new(null);
+                try {
+                    bool condition = EvaluateMatching(equal, match).value;
+                    if (condition) (done, result) = (true, EvaluateInScope(block));
+                }
+                catch (Exception) {
+                    Outer();
+                    throw;
+                }
+                Outer();
+                if (done) return result;
+            }
+            return new(null);
+        }
+
+        private static List<ParseTreeNode> ToPlainCaseBlocks(ParseTreeNode cases) {
+            if (cases.Term.Name == "caseBlock") return [cases];
+            return cases.ChildNodes.SelectMany(son => ToPlainCaseBlocks(son)).ToList();
+        }
+
+        private static ParseTreeNode GetNewNode(string name = "") {
+            Type type = typeof(ParseTreeNode);
+            ConstructorInfo? constructor =
+                type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, [], []);
+            if (constructor == null) return BishUtils.Error("Constructor not Found");
+            var node = (ParseTreeNode)constructor.Invoke(null);
+            node.Term = new NonTerminal(name);
+            return node;
         }
     }
 }

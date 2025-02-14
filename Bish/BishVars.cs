@@ -151,7 +151,7 @@ namespace Bish {
         }
 
         public static string ToPlainString(ParseTreeNode node) {
-            return string.Join(" ", ToPlainStrings(node));
+            return string.Join("·", ToPlainStrings(node));
         }
     }
 }

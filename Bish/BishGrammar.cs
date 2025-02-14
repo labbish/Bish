@@ -31,6 +31,8 @@ namespace Bish {
             var tagTerm = ToTerm("tag");
             var intervalType = ToTerm("interval");
             var infLiteral = ToTerm("inf");
+            var switchTerm = ToTerm("switch");
+            var caseTerm = ToTerm("case");
             var printTerm = ToTerm("print"); //TEMP
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -63,6 +65,11 @@ namespace Bish {
             var ifStatement = new NonTerminal("ifStatement");
             var tag = new NonTerminal("tag");
             var loopStatement = new NonTerminal("loopStatement");
+            var caseTag = new NonTerminal("caseTag");
+            var caseBlock = new NonTerminal("caseBlock");
+            var caseBlocks = new NonTerminal("caseBlocks");
+            var switchExpr = new NonTerminal("switchExpr");
+            var switchStatement = new NonTerminal("switchStatement");
             var print = new NonTerminal("print");
             var root = new NonTerminal("root");
 
@@ -96,8 +103,7 @@ namespace Bish {
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
-            foreach (var op in MatchableOperators)
-                matchingExpr.Rule |= op + assignment;
+            foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
             matchingExpr.Rule |= "(" + matchingOrExpr + ")";
             matchingAndExpr.Rule = matchingExpr | matchingAndExpr + "&" + matchingExpr;
             matchingOrExpr.Rule = matchingAndExpr | matchingOrExpr + "|" + matchingAndExpr;
@@ -121,7 +127,13 @@ namespace Bish {
                 | tag + doTerm + structure + whileTerm + "(" + sentence + ")"
                 | forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure
                 | tag + forTerm + "(" + sentence + ";" + sentence + ";" + sentence + ")" + structure;
-            print.Rule = ifStatement | loopStatement | printTerm + "(" + print + ")";
+            caseTag.Rule = caseTerm + matchingOrExpr + ":";
+            caseBlock.Rule = caseTag + structure;
+            caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
+            switchExpr.Rule = assignment | assignment + "!";
+            switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
+            print.Rule = ifStatement | loopStatement | switchStatement
+                | printTerm + "(" + print + ")";
             root.Rule = print;
 
             Root = root;

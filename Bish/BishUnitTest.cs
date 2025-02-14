@@ -306,12 +306,19 @@ namespace Bish {
                     ["int x = 3", $"switch(0){{case {pattern}: {{x = 5;}}}}"], "x", 3);
             }
 
-            ExpectTest(11.31, ["int x = 3",
+            List<string> patterns3 = ["1", "string _", "!=0"];
+            for (int i = 0; i < patterns3.Count; i++) {
+                string pattern = patterns3[i];
+                ExpectTest($"11.3{i + 1}",
+                    ["int x = 3", $"switch(0!){{case {pattern}: {{x = 5;}}}}"], "x", 5);
+            }
+
+            ExpectTest(11.41, ["int x = 3",
                 "switch(0){case 1: {x = 5;} case 0: {x = 4;}}"], "x", 4);
-            FailTest(11.32, ["switch(0){case int x: {}}"], "x");
-            ExpectTest(11.33, ["int x = 3",
+            FailTest(11.42, ["switch(0){case int x: {}}"], "x");
+            ExpectTest(11.43, ["int x = 3",
                 "switch(0){case 0: {x = 4; continue} case 0: {x = 5}}"], "x", 5);
-            ExpectTest(11.34, ["int x = 3",
+            ExpectTest(11.44, ["int x = 3",
                 "switch(0){case 1: {x = 4} default: {x = 5}}"], "x", 5);
         }
 

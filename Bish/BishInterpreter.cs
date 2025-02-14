@@ -526,7 +526,12 @@ namespace Bish {
         }
 
         private BishVariable EvaluateSwitch(ParseTreeNode value,
-            List<(ParseTreeNode? Match, ParseTreeNode Block)> caseBlocks) {
+            List<(ParseTreeNode? Match, ParseTreeNode Block)> caseBlocks,
+            bool reverse = false) {
+            if (value.ChildNodes.Count == 2
+                && value.ChildNodes[1].FindTokenAndGetText() == "!")
+                return EvaluateSwitch(value.ChildNodes[0], caseBlocks, !reverse);
+
             foreach (var (match, block) in caseBlocks) {
                 Inner();
                 ParseTreeNode equal = GetNewNode("matching");
@@ -539,7 +544,7 @@ namespace Bish {
                     bool condition;
                     if (match is null) condition = true;
                     else condition = EvaluateMatching(equal, match).value;
-                    if (condition) (done, result) = (true, EvaluateInScope(block));
+                    if (condition ^ reverse) (done, result) = (true, EvaluateInScope(block));
                 }
                 catch (BishContinueException) {
                     done = false;

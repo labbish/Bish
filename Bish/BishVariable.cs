@@ -15,6 +15,7 @@
             TypeNames[typeof(string)] = "string";
             TypeNames[typeof(bool)] = "bool";
             TypeNames[typeof(BishInterval)] = "interval";
+            TypeNames[typeof(BishFunc)] = "func";
         }
 
         public static string? GetTypeName(dynamic? value) {
@@ -104,12 +105,18 @@
             return new BishVariable(null, !a.value);
         }
 
+        public BishVariable exec(BishVariable[] args) {
+            if (value is null) BishUtils.Error($"Cannot Execute null");
+            return value!.exec(args);
+        }
+
         public string ValueString() {
             return value switch {
                 string str => $"\"{str}\"",
                 true => "true",
                 false => "false",
                 null => "null",
+                BishFunc => "[func]",
                 _ => $"{value}",
             };
         }

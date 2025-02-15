@@ -36,11 +36,13 @@ namespace Bish {
             var continueTerm = ToTerm("continue");
             var defaultTerm = ToTerm("default");
             var varType = ToTerm("var");
-            var printTerm = ToTerm("print"); //TEMP
+            var funcTerm = ToTerm("func");
+            var returnTerm = ToTerm("return");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
             var literal = new NonTerminal("literal");
+            var funcCall = new NonTerminal("funcCall");
             var factor = new NonTerminal("factor");
             var powerExpr = new NonTerminal("powerExpr");
             var term = new NonTerminal("term");
@@ -73,16 +75,17 @@ namespace Bish {
             var caseBlocks = new NonTerminal("caseBlocks");
             var switchExpr = new NonTerminal("switchExpr");
             var switchStatement = new NonTerminal("switchStatement");
-            var print = new NonTerminal("print");
+            var funcStatement = new NonTerminal("funcStatement");
             var root = new NonTerminal("root");
 
             stringLiteral.Rule = singleString | doubleString;
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral
                 | nullLiteral | infLiteral | interval;
+            funcCall.Rule = identifier + "(" + "`" + ")";
             factor.Rule = "!" + factor
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
-                | literal | identifier | "(" + codeBlocks + ")";
+                | literal | identifier | "(" + codeBlocks + ")" | funcCall;
             powerExpr.Rule = factor | powerExpr + "^" + factor;
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
                 | term + "%" + powerExpr;
@@ -102,7 +105,8 @@ namespace Bish {
                 | "(" + assignment + "," + assignment + "]"
                 | "[" + assignment + "," + assignment + ")"
                 | "[" + assignment + "," + assignment + "]";
-            varTypes.Rule = intType | numType | stringType | boolType | intervalType | varType;
+            varTypes.Rule = intType | numType | stringType | boolType
+                | intervalType | varType | funcTerm;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
@@ -117,7 +121,7 @@ namespace Bish {
                 | varModifiedTypes + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
-            sentence.Rule = Empty | statement | jump | continueTerm;
+            sentence.Rule = Empty | statement | jump | continueTerm | returnTerm + statement;
             sentences.Rule = root | sentence | sentences + ";" + root;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
@@ -136,9 +140,8 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
-            print.Rule = ifStatement | loopStatement | switchStatement
-                | printTerm + "(" + print + ")";
-            root.Rule = print;
+            funcStatement.Rule = funcTerm + identifier + "(" + "`" + ")" + structure;
+            root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 
             Root = root;
         }

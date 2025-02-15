@@ -16,6 +16,11 @@ namespace Bish {
             vars = scope.currentVars;
         }
 
+        public BishInterpreter(BishVars vars) {
+            scope = new(vars);
+            this.vars = scope.currentVars;
+        }
+
         private void showDepth(string msg) {
             if (Program.ShowVarsStackDepth)
                 Console.WriteLine($"{msg} {new string('#', scope.Depth() * 2)}");
@@ -63,7 +68,7 @@ namespace Bish {
             return ans;
         }
 
-        private BishVariable Evaluate(ParseTreeNode node, bool isRoot = false) {
+        public BishVariable Evaluate(ParseTreeNode node, bool isRoot = false) {
             if (isRoot) steps = 0;
             steps++;
             watch.Start();
@@ -148,6 +153,11 @@ namespace Bish {
                         var _ = var; //avoid unused warning
                         return new(null);
                     }
+                }
+                if (node.ChildNodes.Count == 2
+                    && node.ChildNodes[0].FindTokenAndGetText() == "return") {
+                    BishVariable value = Evaluate(node.ChildNodes[1]);
+                    throw new BishReturnException(value);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
                     var (isConst, type, nullable) = BishVars.CutType(node.ChildNodes[0]);
@@ -242,8 +252,21 @@ namespace Bish {
                     value.isConst = isConst;
                     return vars.New(varName, value);
                 }
+                if (node.ChildNodes.Count == 4
+                    && node.ChildNodes[1].FindTokenAndGetText() == "("
+                    && node.ChildNodes[3].FindTokenAndGetText() == ")") {
+                    BishVariable value;
+                    try {
+                        BishVariable func = vars.GetUnchecked(node.ChildNodes[0]);
+                        value = func.exec([]);
+                    }
+                    catch (BishReturnException returning) {
+                        value = returning.returnVar;
+                    }
+                    return value;
+                }
                 if (node.ChildNodes.Count == 5
-                    && node.ChildNodes[2].FindTokenAndGetText() == ",") {
+                && node.ChildNodes[2].FindTokenAndGetText() == ",") {
                     bool? left = node.ChildNodes[0].FindTokenAndGetText() switch {
                         "[" => true,
                         "(" => false,
@@ -458,6 +481,14 @@ namespace Bish {
                         Block: single.ChildNodes[1]))
                         .ToList();
                     return EvaluateSwitch(value, caseBlocks);
+                }
+
+                if (node.ChildNodes.Count == 6
+                    && node.ChildNodes[0].FindTokenAndGetText() == "func") {
+                    Inner();
+                    BishFunc func = new(vars, node.ChildNodes[5]);
+                    Outer();
+                    return vars.New(node.ChildNodes[1], new(null, func));
                 }
 
                 if (node.ChildNodes.Count == 4

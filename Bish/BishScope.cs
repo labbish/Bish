@@ -10,6 +10,11 @@
             currentVars = VarsStack[^1];
         }
 
+        public BishScope(BishVars vars) {
+            VarsStack = [vars];
+            currentVars = VarsStack[^1];
+        }
+
         public void Inner() {
             VarsStack.Add(new(currentVars));
             currentVars = VarsStack[^1];

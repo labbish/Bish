@@ -37,11 +37,13 @@ namespace Bish {
             var defaultTerm = ToTerm("default");
             var varType = ToTerm("var");
             var funcTerm = ToTerm("func");
+            var defTerm = ToTerm("def");
             var returnTerm = ToTerm("return");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
             var literal = new NonTerminal("literal");
+            var funcType = new NonTerminal("funcType");
             var funcCallArg = new NonTerminal("funcCallArg");
             var funcCallArgs = new NonTerminal("funcCallArgs");
             var funcCall = new NonTerminal("funcCall");
@@ -86,6 +88,7 @@ namespace Bish {
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral
                 | nullLiteral | infLiteral | interval;
+            funcType.Rule = funcTerm;
             funcCallArg.Rule = assignment;
             funcCallArgs.Rule = funcCallArg | funcCallArgs + "," + funcCallArg;
             funcCall.Rule = identifier + "(" + (funcCallArgs | Empty) + ")";
@@ -112,7 +115,7 @@ namespace Bish {
                 | "[" + assignment + "," + assignment + ")"
                 | "[" + assignment + "," + assignment + "]";
             varTypes.Rule = intType | numType | stringType | boolType
-                | intervalType | varType | funcTerm;
+                | intervalType | varType | funcType;
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
@@ -149,7 +152,7 @@ namespace Bish {
             funcStateArg.Rule = varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
-            funcStatement.Rule = funcTerm + identifier + "(" + (funcStateArgs | Empty) + ")" + structure;
+            funcStatement.Rule = defTerm + identifier + "(" + (funcStateArgs | Empty) + ")" + structure;
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 
             Root = root;

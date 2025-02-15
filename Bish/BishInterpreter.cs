@@ -486,7 +486,7 @@ namespace Bish {
                 }
 
                 if (node.ChildNodes.Count == 6
-                    && node.ChildNodes[0].FindTokenAndGetText() == "func") {
+                    && node.ChildNodes[0].FindTokenAndGetText() == "def") {
                     var args = ToPlainArgs(node.ChildNodes[3])
                         .Select(ToBishArg).ToList();
                     Inner();

@@ -334,32 +334,34 @@ namespace Bish {
         public static void TestGroup12() {
             TestGroup(12, "funcs");
 
-            ExpectTest(12.11, ["func f() {0}"], "f()", 0);
-            ExpectTest(12.12, ["func f() {return 0}"], "f()", 0);
-            ExpectTest(12.13, ["func f(int x) {return x}"], "f(0)", 0);
-            ExpectTest(12.14, ["int a = 0", "func f() {return a}"], "f()", 0);
-            ExpectTest(12.15, ["int a = 1", "func f() {return a}", "a = 0"], "f()", 0);
-            ExpectTest(12.16, ["int a = 1", "func f() {a = 0}", "f()"], "a", 0);
+            ExpectTest(12.11, ["def f() {0}"], "f()", 0);
+            ExpectTest(12.12, ["def f() {return 0}"], "f()", 0);
+            ExpectTest(12.13, ["def f(int x) {return x}"], "f(0)", 0);
+            ExpectTest(12.14, ["int a = 0", "def f() {return a}"], "f()", 0);
+            ExpectTest(12.15, ["int a = 1", "def f() {return a}", "a = 0"], "f()", 0);
+            ExpectTest(12.16, ["int a = 1", "def f() {a = 0}", "f()"], "a", 0);
 
-            FailTest(12.21, ["func f(int x) {x}"], "f(null)");
-            ExpectTest(12.22, ["func f(int? x) {x}"], "f(null)", null);
-            FailTest(12.23, ["func f(const int x) {x = 1}"], "f(0)");
-            ExpectTest(12.24, ["int a = 0", "func f(int x) {x = 1}", "f(a)"], "a", 0);
-            FailTest(12.25, ["func f() {int x = 1}"], "x");
+            FailTest(12.21, ["def f(int x) {x}"], "f(null)");
+            ExpectTest(12.22, ["def f(int? x) {x}"], "f(null)", null);
+            FailTest(12.23, ["def f(const int x) {x = 1}"], "f(0)");
+            ExpectTest(12.24, ["int a = 0", "def f(int x) {x = 1}", "f(a)"], "a", 0);
+            FailTest(12.25, ["def f() {int x = 1}"], "x");
 
-            ExpectTest(12.31, ["func f() {return 0}", "func f(int _) {return 1}"], "f()", 0);
-            ExpectTest(12.32, ["func f() {return 1}", "func f(int _) {return 0}"], "f(1)", 0);
-            FailTest(12.33, ["func f() {return 1}", "func f() {return 0}"], "f()");
+            ExpectTest(12.31, ["def f() {return 0}", "def f(int _) {return 1}"], "f()", 0);
+            ExpectTest(12.32, ["def f() {return 1}", "def f(int _) {return 0}"], "f(1)", 0);
+            FailTest(12.33, ["def f() {return 1}", "def f() {return 0}"], "f()");
 
-            ExpectGroupTest(12.41, ["func f(int x = 0) {return x}"],
+            ExpectGroupTest(12.41, ["def f(int x = 0) {return x}"],
                 ["f()", "f(1)"], [0, 1]);
-            ExpectGroupTest(12.42, ["func f(int x = 0, int y) {return x + y}"],
+            ExpectGroupTest(12.42, ["def f(int x = 0, int y) {return x + y}"],
                 ["f(1)", "f(1, 1)"], [1, 2]);
-            ExpectGroupTest(12.43, ["func f(int x = 0, int y = 0) {return x + y}"],
+            ExpectGroupTest(12.43, ["def f(int x = 0, int y = 0) {return x + y}"],
                 ["f()", "f(1, 1)"], [0, 2]);
-            FailTest(12.44, ["func f(int x = 0, int y = 0) {return x + y}"], "f(1)");
-            ExpectGroupTest(12.45, ["func f(int x = 0, num y = 0) {return x + y}"],
+            FailTest(12.44, ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
+            ExpectGroupTest(12.45, ["def f(int x = 0, num y = 0) {return x + y}"],
                 ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
+
+            ExpectTest(12.51, ["def f(){return 0}", "func g = f"], "g()", 0);
         }
 
         public static void Test(int? num = null) {

@@ -490,7 +490,10 @@ namespace Bish {
                     var args = ToPlainArgs(node.ChildNodes[3])
                         .Select(ToBishArg).ToList();
                     Inner();
-                    BishFunc func = new(vars, node.ChildNodes[5], args);
+                    var f = node.ChildNodes[5];
+                    BishFunc func;
+                    if (f.ChildNodes.Count == 1) func = new(vars, f, args);
+                    else func = new(vars, f.ChildNodes[1], args);
                     Outer();
                     return vars.NewUnchecked(node.ChildNodes[1], new(null, func));
                 }

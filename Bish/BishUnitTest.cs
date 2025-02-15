@@ -362,6 +362,8 @@ namespace Bish {
                 ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
 
             ExpectTest(12.51, ["def f(){return 0}", "func g = f"], "g()", 0);
+            ExpectTest(12.52, ["def f() => 0"], "f()", 0);
+            ExpectTest(12.53, ["def f(int x) => x + 1"], "f(0)", 1);
         }
 
         public static void Test(int? num = null) {

@@ -152,7 +152,8 @@ namespace Bish {
             funcStateArg.Rule = varModifiedTypes + identifier
                 | varModifiedTypes + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
-            funcStatement.Rule = defTerm + identifier + "(" + (funcStateArgs | Empty) + ")" + structure;
+            funcStatement.Rule = defTerm + identifier + "(" + (funcStateArgs | Empty) + ")"
+                + (structure | "=>" + statement);
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 
             Root = root;

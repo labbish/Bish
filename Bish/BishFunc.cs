@@ -2,10 +2,18 @@
 
 namespace Bish {
 
-    internal class BishArg(string type, string name, BishVariable? defaultValue = null) {
-        public string type = type;
-        public string name = name;
-        public BishVariable? defaultValue = defaultValue;
+    internal class BishArg {
+        public bool isConst;
+        public string type;
+        public bool nullable;
+        public string name;
+        public BishVariable? defaultValue;
+
+        public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null) {
+            this.name = name;
+            (isConst, type, nullable) = BishVars.CutType(typeNode);
+            this.defaultValue = defaultValue;
+        }
 
         public override string ToString() {
             return $"{type} {name}";
@@ -34,7 +42,9 @@ namespace Bish {
                 foreach (BishArg require in this.args) {
                     if (args.Count == 0) BishUtils.Error("Less args than Required");
                     string name = require.name;
-                    var value = BishVars.WeakConvert(require.type, args[0]);
+                    var value = BishVars.WeakConvert(require.type, args[0], require.nullable);
+                    value.nullable = require.nullable;
+                    value.isConst = require.isConst;
                     values.Add((name, value));
                     args = args[1..];
                 }

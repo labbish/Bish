@@ -621,13 +621,13 @@ namespace Bish {
         private BishArg ToBishArg(ParseTreeNode node) {
             if (node.ChildNodes.Count == 1) return ToBishArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2) {
-                string type = node.ChildNodes[0].FindTokenAndGetText();
+                var type = node.ChildNodes[0];
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 return new(type, name);
             }
             if (node.ChildNodes.Count == 4
                 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                string type = node.ChildNodes[0].FindTokenAndGetText();
+                var type = node.ChildNodes[0];
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 BishVariable defaultValue = Evaluate(node.ChildNodes[3]);
                 return new(type, name, defaultValue);

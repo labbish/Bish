@@ -331,6 +331,27 @@ namespace Bish {
                 "switch(0){case 1: {x = 4} default: {x = 5}}"], "x", 5);
         }
 
+        public static void TestGroup12() {
+            TestGroup(12, "funcs");
+
+            ExpectTest(12.11, ["func f() {0}"], "f()", 0);
+            ExpectTest(12.12, ["func f() {return 0}"], "f()", 0);
+            ExpectTest(12.13, ["func f(int x) {return x}"], "f(0)", 0);
+            ExpectTest(12.14, ["int a = 0", "func f() {return a}"], "f()", 0);
+            ExpectTest(12.15, ["int a = 1", "func f() {return a}", "a = 0"], "f()", 0);
+            ExpectTest(12.16, ["int a = 1", "func f() {a = 0}", "f()"], "a", 0);
+
+            FailTest(12.21, ["func f(int x) {x}"], "f(null)");
+            ExpectTest(12.22, ["func f(int? x) {x}"], "f(null)", null);
+            FailTest(12.23, ["func f(const int x) {x = 1}"], "f(0)");
+            ExpectTest(12.24, ["int a = 0", "func f(int x) {x = 1}", "f(a)"], "a", 0);
+            FailTest(12.25, ["func f() {int x = 1}"], "x");
+
+            ExpectTest(12.31, ["func f() {return 0}", "func f(int _) {return 1}"], "f()", 0);
+            ExpectTest(12.32, ["func f() {return 1}", "func f(int _) {return 0}"], "f(1)", 0);
+            FailTest(12.33, ["func f() {return 1}", "func f() {return 0}"], "f()");
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num == null || num == 0) TestGroup0();
@@ -345,6 +366,7 @@ namespace Bish {
                 if (num == null || num == 9) TestGroup9();
                 if (num == null || num == 10) TestGroup10();
                 if (num == null || num == 11) TestGroup11();
+                if (num == null || num == 12) TestGroup12();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

@@ -485,6 +485,18 @@ namespace Bish {
                     return EvaluateSwitch(value, caseBlocks);
                 }
 
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "func") {
+                    var args = ToPlainArgs(node.ChildNodes[2])
+                        .Select(ToBishArg).ToList();
+                    Inner();
+                    var f = node.ChildNodes[4];
+                    BishFunc func;
+                    if (f.ChildNodes.Count == 1) func = new(vars, f, args);
+                    else func = new(vars, f.ChildNodes[1], args);
+                    Outer();
+                    return new(null, func);
+                }
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[0].FindTokenAndGetText() == "def") {
                     var args = ToPlainArgs(node.ChildNodes[3])

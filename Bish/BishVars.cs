@@ -109,6 +109,7 @@ namespace Bish {
             if (type == "var" && var.value is not null) {
                 value = var.value;
                 converted = true;
+                ConvertTimes += 1;
             }
             if (type == "num") {
                 if (var.value is double num) {

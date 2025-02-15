@@ -27,6 +27,7 @@ namespace Bish {
         public void Run(string input) {
             try {
                 try {
+                    Console.ForegroundColor = ConsoleColor.Blue;
                     Console.WriteLine($"Result: {Parse(input)}");
                 }
                 catch (BishJumpException jump) {
@@ -38,6 +39,8 @@ namespace Bish {
                 Console.ForegroundColor = ConsoleColor.Red;
                 if (Program.ShowErrorStack) Console.WriteLine($"Exception: {ex}");
                 else Console.WriteLine($"Exception: {ex.Message}");
+            }
+            finally {
                 Console.ResetColor();
             }
         }

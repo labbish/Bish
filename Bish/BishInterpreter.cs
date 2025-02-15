@@ -635,7 +635,7 @@ namespace Bish {
             return BishUtils.Error("Error Arg");
         }
 
-        private static ParseTreeNode GetNewNode(string name = "") {
+        public static ParseTreeNode GetNewNode(string name = "") {
             Type type = typeof(ParseTreeNode);
             ConstructorInfo? constructor =
                 type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, [], []);

@@ -1,4 +1,5 @@
 ﻿using Irony.Parsing;
+using System.Collections.Generic;
 
 namespace Bish {
 
@@ -27,39 +28,52 @@ namespace Bish {
         public bool MatchArgs(BishVariable[] args);
     }
 
-    internal class BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args) : IBishExecutable {
+    internal class BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args)
+        : IBishExecutable {
         private BishVars VarsFrame = new(vars);
         private ParseTreeNode node = node;
         private List<BishArg> args = CheckArgs(args);
 
-        private bool ToVars(BishVariable[] inArgs,
-            out List<(string name, BishVariable value)> values,
-            out string ErrorMsg) {
+        //false for no solution, null for more than 1 solution
+        private bool? ToVars(BishVariable[] inArgs,
+            out List<(string name, BishVariable value)> values, out string ErrorMsg
+            , List<BishArg>? expected = null) {
             ErrorMsg = "";
             values = [];
-            try {
-                List<BishVariable> args = [.. inArgs];
-                foreach (BishArg require in this.args) {
-                    if (args.Count == 0) BishUtils.Error("Less args than Required");
-                    string name = require.name;
-                    var value = BishVars.WeakConvert(require.type, args[0], require.nullable);
-                    value.nullable = require.nullable;
-                    value.isConst = require.isConst;
-                    values.Add((name, value));
-                    args = args[1..];
+            expected ??= this.args;
+            List<BishVariable> args = [.. inArgs];
+            List<BishArg> defaults = [.. expected.Where(var => var.defaultValue is not null)];
+            BishUtils.Assert(args.Count >= expected.Count, $"Less args than Expected");
+            if (expected.Count == args.Count) {
+                try {
+                    foreach (BishArg require in this.args) {
+                        if (args.Count == 0) BishUtils.Error("Less args than Expected");
+                        string name = require.name;
+                        var value = BishVars.WeakConvert(require.type, args[0], require.nullable);
+                        value.nullable = require.nullable;
+                        value.isConst = require.isConst;
+                        values.Add((name, value));
+                        args = args[1..];
+                    }
+                    if (args.Count != 0) BishUtils.Error("More args than Expected");
                 }
-                if (args.Count != 0) BishUtils.Error("More args than Required");
-            }
-            catch (Exception ex) {
-                ErrorMsg = ex.Message;
-                return false;
-            }
+                catch (Exception ex) {
+                    ErrorMsg = ex.Message;
+                    return false;
+                }
+            } //Trivial
+            BishUtils.Assert(defaults.Count > 0, $"More args than Expected");
+            BishArg firstDefault = defaults[0];
+
+            //if firstDefault is chosen
+            //Not done
+
             return true;
         }
 
         public BishVariable Exec(BishVariable[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
-            bool success = ToVars(inArgs, out var values, out string msg);
+            bool success = ToVars(inArgs, out var values, out string msg) ?? false;
             if (!success) BishUtils.Error(msg);
             foreach (var (name, value) in values) {
                 interpreter.vars.New(name, value);
@@ -68,7 +82,7 @@ namespace Bish {
         }
 
         public bool MatchArgs(BishVariable[] inArgs) {
-            return ToVars(inArgs, out _, out _);
+            return ToVars(inArgs, out _, out _) ?? false;
         }
 
         private static List<BishArg> CheckArgs(List<BishArg> args) {

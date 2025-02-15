@@ -148,6 +148,17 @@ namespace Bish {
             return new BishVariable(null, value, type, nullable);
         }
 
+        public static bool CanWeakConvert(string? type, BishVariable var,
+            bool nullable = false) {
+            try {
+                WeakConvert(type, var, nullable);
+            }
+            catch (Exception) {
+                return false;
+            }
+            return true;
+        }
+
         public static (bool, string, bool) CutType(ParseTreeNode node) {
             var parts = ToPlainStrings(node);
             bool isConst = false;

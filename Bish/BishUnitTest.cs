@@ -350,6 +350,16 @@ namespace Bish {
             ExpectTest(12.31, ["func f() {return 0}", "func f(int _) {return 1}"], "f()", 0);
             ExpectTest(12.32, ["func f() {return 1}", "func f(int _) {return 0}"], "f(1)", 0);
             FailTest(12.33, ["func f() {return 1}", "func f() {return 0}"], "f()");
+
+            ExpectGroupTest(12.41, ["func f(int x = 0) {return x}"],
+                ["f()", "f(1)"], [0, 1]);
+            ExpectGroupTest(12.42, ["func f(int x = 0, int y) {return x + y}"],
+                ["f(1)", "f(1, 1)"], [1, 2]);
+            ExpectGroupTest(12.43, ["func f(int x = 0, int y = 0) {return x + y}"],
+                ["f()", "f(1, 1)"], [0, 2]);
+            FailTest(12.44, ["func f(int x = 0, int y = 0) {return x + y}"], "f(1)");
+            ExpectGroupTest(12.45, ["func f(int x = 0, num y = 0) {return x + y}"],
+                ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
         }
 
         public static void Test(int? num = null) {

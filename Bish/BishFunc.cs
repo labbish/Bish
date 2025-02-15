@@ -2,9 +2,10 @@
 
 namespace Bish {
 
-    internal class BishArg(string type, string name) {
+    internal class BishArg(string type, string name, BishVariable? defaultValue = null) {
         public string type = type;
         public string name = name;
+        public BishVariable? defaultValue = defaultValue;
 
         public override string ToString() {
             return $"{type} {name}";
@@ -14,6 +15,8 @@ namespace Bish {
     internal interface IBishExecutable {
 
         public BishVariable Exec(BishVariable[] args);
+
+        public bool MatchArgs(BishVariable[] args);
     }
 
     internal class BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args) : IBishExecutable {
@@ -21,18 +24,41 @@ namespace Bish {
         private ParseTreeNode node = node;
         private List<BishArg> args = CheckArgs(args);
 
+        private bool ToVars(BishVariable[] inArgs,
+            out List<(string name, BishVariable value)> values,
+            out string ErrorMsg) {
+            ErrorMsg = "";
+            values = [];
+            try {
+                List<BishVariable> args = [.. inArgs];
+                foreach (BishArg require in this.args) {
+                    if (args.Count == 0) BishUtils.Error("Less args than Required");
+                    string name = require.name;
+                    var value = BishVars.WeakConvert(require.type, args[0]);
+                    values.Add((name, value));
+                    args = args[1..];
+                }
+                if (args.Count != 0) BishUtils.Error("More args than Required");
+            }
+            catch (Exception ex) {
+                ErrorMsg = ex.Message;
+                return false;
+            }
+            return true;
+        }
+
         public BishVariable Exec(BishVariable[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
-            List<BishVariable> args = [.. inArgs];
-            foreach (BishArg require in this.args) {
-                if (args.Count == 0) BishUtils.Error("Less args than Required");
-                string name = require.name;
-                var value = BishVars.WeakConvert(require.type, args[0]);
+            bool success = ToVars(inArgs, out var values, out string msg);
+            if (!success) BishUtils.Error(msg);
+            foreach (var (name, value) in values) {
                 interpreter.vars.New(name, value);
-                args = args[1..];
             }
-            if (args.Count != 0) BishUtils.Error("More args than Required");
             return interpreter.Evaluate(node);
+        }
+
+        public bool MatchArgs(BishVariable[] inArgs) {
+            return ToVars(inArgs, out _, out _);
         }
 
         private static List<BishArg> CheckArgs(List<BishArg> args) {

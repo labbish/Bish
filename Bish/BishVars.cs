@@ -36,6 +36,16 @@ namespace Bish {
             return BishUtils.Error($"Variable not found: {name}");
         }
 
+        public BishVariable Exec(ParseTreeNode node, BishVariable[] args) {
+            string name = node.FindTokenAndGetText();
+            var matched = vars.Where(var => var.name == name).ToHashSet();
+            var funcs = matched.Where(var => var.value is BishFunc && var.value is not null)
+                .Where(var => var.value!.MatchArgs(args)).ToHashSet();
+            BishUtils.Assert(funcs.Count <= 1, $"Multiple Functions found: {name}");
+            foreach (BishVariable func in funcs) return func.Exec(args);
+            return BishUtils.Error($"Function not found: {name}");
+        }
+
         public BishVariable Set(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
             if (name.All(c => c == '_')) return new(null, value.value);

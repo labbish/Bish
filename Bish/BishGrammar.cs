@@ -146,7 +146,8 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
-            funcStateArg.Rule = varModifiedTypes + identifier;
+            funcStateArg.Rule = varModifiedTypes + identifier
+                | varModifiedTypes + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
             funcStatement.Rule = funcTerm + identifier + "(" + (funcStateArgs | Empty) + ")" + structure;
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;

@@ -261,8 +261,7 @@ namespace Bish {
                             .Select(arg => Evaluate(arg))];
                     BishVariable value;
                     try {
-                        BishVariable func = vars.GetUnchecked(node.ChildNodes[0]);
-                        value = func.Exec([.. args]);
+                        value = vars.Exec(node.ChildNodes[0], [.. args]);
                     }
                     catch (BishReturnException returning) {
                         value = returning.returnVar;
@@ -619,12 +618,19 @@ namespace Bish {
             return [node];
         }
 
-        private static BishArg ToBishArg(ParseTreeNode node) {
+        private BishArg ToBishArg(ParseTreeNode node) {
             if (node.ChildNodes.Count == 1) return ToBishArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2) {
                 string type = node.ChildNodes[0].FindTokenAndGetText();
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 return new(type, name);
+            }
+            if (node.ChildNodes.Count == 4
+                && node.ChildNodes[2].FindTokenAndGetText() == "=") {
+                string type = node.ChildNodes[0].FindTokenAndGetText();
+                string name = node.ChildNodes[1].FindTokenAndGetText();
+                BishVariable defaultValue = Evaluate(node.ChildNodes[3]);
+                return new(type, name, defaultValue);
             }
             return BishUtils.Error("Error Arg");
         }

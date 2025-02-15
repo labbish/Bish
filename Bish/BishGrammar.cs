@@ -77,6 +77,8 @@ namespace Bish {
             var caseBlocks = new NonTerminal("caseBlocks");
             var switchExpr = new NonTerminal("switchExpr");
             var switchStatement = new NonTerminal("switchStatement");
+            var funcStateArg = new NonTerminal("funcStateArg");
+            var funcStateArgs = new NonTerminal("funcStateArgs");
             var funcStatement = new NonTerminal("funcStatement");
             var root = new NonTerminal("root");
 
@@ -144,7 +146,9 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
-            funcStatement.Rule = funcTerm + identifier + "(" + "`" + ")" + structure;
+            funcStateArg.Rule = varModifiedTypes + identifier;
+            funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
+            funcStatement.Rule = funcTerm + identifier + "(" + (funcStateArgs | Empty) + ")" + structure;
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 
             Root = root;

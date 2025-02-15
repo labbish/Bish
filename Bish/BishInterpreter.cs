@@ -489,10 +489,12 @@ namespace Bish {
 
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[0].FindTokenAndGetText() == "func") {
+                    var args = ToPlainArgs(node.ChildNodes[3])
+                        .Select(ToBishArg).ToList();
                     Inner();
-                    BishFunc func = new(vars, node.ChildNodes[5]);
+                    BishFunc func = new(vars, node.ChildNodes[5], args);
                     Outer();
-                    return vars.New(node.ChildNodes[1], new(null, func));
+                    return vars.NewUnchecked(node.ChildNodes[1], new(null, func));
                 }
 
                 if (node.ChildNodes.Count == 4
@@ -607,10 +609,24 @@ namespace Bish {
         }
 
         private static List<ParseTreeNode> ToPlainArgs(ParseTreeNode node) {
+            if (node.Term.Name == "funcCallArg"
+                || node.Term.Name == "funcStateArg") return [node];
+            if (node.ChildNodes.Count == 0) return [];
+            if (node.ChildNodes.Count == 1) return ToPlainArgs(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 3
                 && node.ChildNodes[1].FindTokenAndGetText() == ",")
                 return [.. ToPlainArgs(node.ChildNodes[0]), .. ToPlainArgs(node.ChildNodes[2])];
             return [node];
+        }
+
+        private static BishArg ToBishArg(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 1) return ToBishArg(node.ChildNodes[0]);
+            if (node.ChildNodes.Count == 2) {
+                string type = node.ChildNodes[0].FindTokenAndGetText();
+                string name = node.ChildNodes[1].FindTokenAndGetText();
+                return new(type, name);
+            }
+            return BishUtils.Error("Error Arg");
         }
 
         private static ParseTreeNode GetNewNode(string name = "") {

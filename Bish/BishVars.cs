@@ -65,9 +65,20 @@ namespace Bish {
 
         public BishVariable New(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
+            return New(name, value);
+        }
+
+        public BishVariable New(string name, BishVariable value) {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
+            vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
+            return value;
+        }
+
+        public BishVariable NewUnchecked(ParseTreeNode node, BishVariable value) {
+            string name = node.FindTokenAndGetText();
+            if (name.All(c => c == '_')) return new(null, value.value);
             vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
             return value;
         }
@@ -114,6 +125,12 @@ namespace Bish {
             else if (type == "interval") {
                 if (var.value is BishInterval i) {
                     value = i;
+                    converted = true;
+                }
+            }
+            else if (type == "func") {
+                if (var.value is BishFunc f) {
+                    value = f;
                     converted = true;
                 }
             }

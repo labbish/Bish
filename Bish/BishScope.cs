@@ -11,7 +11,7 @@
         }
 
         public BishScope(BishVars vars) {
-            VarsStack = [vars];
+            VarsStack = [new(vars)];
             currentVars = VarsStack[^1];
         }
 

@@ -248,7 +248,6 @@ namespace Bish {
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
                     BishVariable value = BishVars.WeakConvert(type, right, nullable);
-                    value.nullable = nullable;
                     value.isConst = isConst;
                     return vars.New(varName, value);
                 }
@@ -536,7 +535,7 @@ namespace Bish {
             }
             else if (expr.ChildNodes.Count == 2) {
                 BishVariable value = Evaluate(node.ChildNodes[0]);
-                var (_, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
+                var (isConst, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
                 BishVariable converted;
                 try {
                     converted = BishVars.WeakConvert(type, value, nullable);
@@ -544,6 +543,7 @@ namespace Bish {
                 catch (ArgumentException) {
                     return new(null, false);
                 }
+                converted.isConst = isConst;
                 vars.New(expr.ChildNodes[1], converted);
                 return new(null, true);
             }

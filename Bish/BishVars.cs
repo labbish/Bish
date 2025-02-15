@@ -95,8 +95,14 @@ namespace Bish {
 
         public static BishVariable WeakConvert(string? type, BishVariable var,
             bool nullable = false) {
+            return WeakConvert(type, var, out _, nullable);
+        }
+
+        public static BishVariable WeakConvert(string? type, BishVariable var,
+            out int ConvertTimes, bool nullable = false) {
             bool converted = false;
             dynamic? value = null;
+            ConvertTimes = 0;
             if (nullable && var.value is null) {
                 converted = true;
             }
@@ -112,6 +118,7 @@ namespace Bish {
                 else if (var.value is int i) {
                     value = i;
                     converted = true;
+                    ConvertTimes++;
                 }
             }
             else if (type == "int") {
@@ -146,17 +153,6 @@ namespace Bish {
             }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
             return new BishVariable(null, value, type, nullable);
-        }
-
-        public static bool CanWeakConvert(string? type, BishVariable var,
-            bool nullable = false) {
-            try {
-                WeakConvert(type, var, nullable);
-            }
-            catch (Exception) {
-                return false;
-            }
-            return true;
         }
 
         public static (bool, string, bool) CutType(ParseTreeNode node) {

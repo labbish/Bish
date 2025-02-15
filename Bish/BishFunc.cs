@@ -34,55 +34,74 @@ namespace Bish {
         private ParseTreeNode node = node;
         private List<BishArg> args = CheckArgs(args);
 
-        //false for no solution, null for more than 1 solution
-        private bool? ToVars(BishVariable[] inArgs,
-            out List<(string name, BishVariable value)> values, out string ErrorMsg
-            , List<BishArg>? expected = null) {
-            ErrorMsg = "";
+        private bool TriviallyToVars(BishVariable[] inArgs,
+            out List<(string name, BishVariable value)> values, out string ErrorMsg,
+            out int times, List<BishArg>? expected = null) {
+            times = 0;
             values = [];
-            expected ??= this.args;
+            ErrorMsg = "";
             List<BishVariable> args = [.. inArgs];
-            List<BishArg> defaults = [.. expected.Where(var => var.defaultValue is not null)];
-            BishUtils.Assert(args.Count >= expected.Count, $"Less args than Expected");
-            if (expected.Count == args.Count) {
-                try {
-                    foreach (BishArg require in this.args) {
-                        if (args.Count == 0) BishUtils.Error("Less args than Expected");
-                        string name = require.name;
-                        var value = BishVars.WeakConvert(require.type, args[0], require.nullable);
-                        value.nullable = require.nullable;
-                        value.isConst = require.isConst;
-                        values.Add((name, value));
-                        args = args[1..];
-                    }
-                    if (args.Count != 0) BishUtils.Error("More args than Expected");
+            expected ??= this.args;
+            try {
+                BishUtils.Assert(expected.Count >= args.Count, "Args more than Expected");
+                BishUtils.Assert(expected.Count <= args.Count, "Args less than Expected");
+                for (int i = 0; i < args.Count; i++) {
+                    BishVariable arg = args[i];
+                    BishArg expect = expected[i];
+                    BishVariable value =
+                        BishVars.WeakConvert(expect.type, arg, out int t, expect.nullable);
+                    value.isConst = expect.isConst;
+                    values.Add((expect.name, value));
+                    times += t;
                 }
-                catch (Exception ex) {
-                    ErrorMsg = ex.Message;
-                    return false;
-                }
-            } //Trivial
-            BishUtils.Assert(defaults.Count > 0, $"More args than Expected");
-            BishArg firstDefault = defaults[0];
-
-            //if firstDefault is chosen
-            //Not done
-
+            }
+            catch (Exception ex) {
+                ErrorMsg = ex.Message;
+                values = [];
+                return false;
+            }
             return true;
+        }
+
+        private bool ToVars(BishVariable[] inArgs,
+            out List<(List<(string name, BishVariable value)>, int times)> values, out string ErrorMsg) {
+            values = [];
+            ErrorMsg = "";
+            List<BishVariable> args = [.. inArgs];
+            var expected = this.args;
+            var defaults = expected.Where(arg => arg.defaultValue is not null).ToList();
+            int n = defaults.Count;
+            var choices = GetAllCombinations(n);
+            foreach (var choice in choices) {
+                List<BishArg> exp = [.. expected];
+                List<(string name, BishVariable value)> values0 = [];
+                for (int i = 0; i < n; i++)
+                    if (choice[i] == 0) {
+                        exp.Remove(defaults[i]);
+                        values0.Add((defaults[i].name, defaults[i].defaultValue!));
+                    }
+                if (TriviallyToVars([.. args], out var values1, out _, out int t, exp))
+                    values.Add(([.. values1.Concat(values0)], t));
+            }
+            return values.Count != 0;
         }
 
         public BishVariable Exec(BishVariable[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
-            bool success = ToVars(inArgs, out var values, out string msg) ?? false;
+            bool success = ToVars(inArgs, out var values, out string msg);
+            int minTimes = values.Min(x => x.times);
+            var minValues = values.Where(x => x.times == minTimes).ToList();
+            BishUtils.Assert(minValues.Count > 0, "No Possible Function Found");
+            BishUtils.Assert(minValues.Count == 1, "More than 1 Possible Function Found");
             if (!success) BishUtils.Error(msg);
-            foreach (var (name, value) in values) {
+            foreach (var (name, value) in minValues[0].Item1) {
                 interpreter.vars.New(name, value);
             }
             return interpreter.Evaluate(node);
         }
 
         public bool MatchArgs(BishVariable[] inArgs) {
-            return ToVars(inArgs, out _, out _) ?? false;
+            return ToVars(inArgs, out _, out _);
         }
 
         private static List<BishArg> CheckArgs(List<BishArg> args) {
@@ -93,6 +112,16 @@ namespace Bish {
                 names.Add(name);
             }
             return args;
+        }
+
+        public static List<List<int>> GetAllCombinations(int length, int max = 1) {
+            if (length == 0) return [[]];
+            List<List<int>> last = GetAllCombinations(length - 1, max);
+            List<List<int>> ans = [];
+            foreach (var list in last)
+                foreach (int i in Enumerable.Range(0, max + 1))
+                    ans.Add([.. list, i]);
+            return ans;
         }
     }
 }

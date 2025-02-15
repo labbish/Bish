@@ -95,7 +95,8 @@ namespace Bish {
             funcCall.Rule = identifier + "(" + (funcCallArgs | Empty) + ")";
             factor.Rule = "!" + factor
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
-                | literal | identifier | "(" + codeBlocks + ")" | funcCall;
+                | literal | identifier | "(" + codeBlocks + ")" | funcCall
+                | statement + "(" + (funcCallArgs | Empty) + ")";
             powerExpr.Rule = factor | powerExpr + "^" + factor;
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
                 | term + "%" + powerExpr;

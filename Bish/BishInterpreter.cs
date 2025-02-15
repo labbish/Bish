@@ -254,18 +254,35 @@ namespace Bish {
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[1].FindTokenAndGetText() == "("
                     && node.ChildNodes[3].FindTokenAndGetText() == ")") {
-                    List<BishVariable> args = [];
-                    if (node.ChildNodes[2].ChildNodes.Count != 0)
-                        args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
+                    if (node.ChildNodes[0].Term.Name == "identifier") {
+                        List<BishVariable> args = [];
+                        if (node.ChildNodes[2].ChildNodes.Count != 0)
+                            args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
                             .Select(arg => Evaluate(arg))];
-                    BishVariable value;
-                    try {
-                        value = vars.Exec(node.ChildNodes[0], [.. args]);
+                        BishVariable value;
+                        try {
+                            value = vars.Exec(node.ChildNodes[0], [.. args]);
+                        }
+                        catch (BishReturnException returning) {
+                            value = returning.returnVar;
+                        }
+                        return value;
                     }
-                    catch (BishReturnException returning) {
-                        value = returning.returnVar;
+                    else {
+                        List<BishVariable> args = [];
+                        if (node.ChildNodes[2].ChildNodes.Count != 0)
+                            args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
+                            .Select(arg => Evaluate(arg))];
+                        BishVariable value;
+                        try {
+                            var func = Evaluate(node.ChildNodes[0]);
+                            value = func.Exec([.. args]);
+                        }
+                        catch (BishReturnException returning) {
+                            value = returning.returnVar;
+                        }
+                        return value;
                     }
-                    return value;
                 }
                 if (node.ChildNodes.Count == 5
                 && node.ChildNodes[2].FindTokenAndGetText() == ",") {

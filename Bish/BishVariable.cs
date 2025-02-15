@@ -105,9 +105,9 @@
             return new BishVariable(null, !a.value);
         }
 
-        public BishVariable exec(BishVariable[] args) {
+        public BishVariable Exec(BishVariable[] args) {
             if (value is null) BishUtils.Error($"Cannot Execute null");
-            return value!.exec(args);
+            return value!.Exec(args);
         }
 
         public string ValueString() {

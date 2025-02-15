@@ -42,6 +42,8 @@ namespace Bish {
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
             var literal = new NonTerminal("literal");
+            var funcCallArg = new NonTerminal("funcCallArg");
+            var funcCallArgs = new NonTerminal("funcCallArgs");
             var funcCall = new NonTerminal("funcCall");
             var factor = new NonTerminal("factor");
             var powerExpr = new NonTerminal("powerExpr");
@@ -82,7 +84,9 @@ namespace Bish {
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral
                 | nullLiteral | infLiteral | interval;
-            funcCall.Rule = identifier + "(" + "`" + ")";
+            funcCallArg.Rule = assignment;
+            funcCallArgs.Rule = funcCallArg | funcCallArgs + "," + funcCallArg;
+            funcCall.Rule = identifier + "(" + (funcCallArgs | Empty) + ")";
             factor.Rule = "!" + factor
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
                 | literal | identifier | "(" + codeBlocks + ")" | funcCall;

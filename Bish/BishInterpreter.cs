@@ -255,10 +255,14 @@ namespace Bish {
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[1].FindTokenAndGetText() == "("
                     && node.ChildNodes[3].FindTokenAndGetText() == ")") {
+                    List<BishVariable> args = [];
+                    if (node.ChildNodes[2].ChildNodes.Count != 0)
+                        args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
+                            .Select(arg => Evaluate(arg))];
                     BishVariable value;
                     try {
                         BishVariable func = vars.GetUnchecked(node.ChildNodes[0]);
-                        value = func.exec([]);
+                        value = func.Exec([.. args]);
                     }
                     catch (BishReturnException returning) {
                         value = returning.returnVar;
@@ -599,7 +603,14 @@ namespace Bish {
 
         private static List<ParseTreeNode> ToPlainCaseBlocks(ParseTreeNode cases) {
             if (cases.Term.Name == "caseBlock") return [cases];
-            return cases.ChildNodes.SelectMany(son => ToPlainCaseBlocks(son)).ToList();
+            return [.. cases.ChildNodes.SelectMany(son => ToPlainCaseBlocks(son))];
+        }
+
+        private static List<ParseTreeNode> ToPlainArgs(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 3
+                && node.ChildNodes[1].FindTokenAndGetText() == ",")
+                return [.. ToPlainArgs(node.ChildNodes[0]), .. ToPlainArgs(node.ChildNodes[2])];
+            return [node];
         }
 
         private static ParseTreeNode GetNewNode(string name = "") {

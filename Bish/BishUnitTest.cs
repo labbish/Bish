@@ -188,6 +188,9 @@ namespace Bish {
             FailTest(4.74, ["var x = 1"], "x = null");
             ExpectVarTest(4.75, ["var? x"], "x", "x", null);
             ExpectVarTest(4.76, ["var? x = null"], "x", "x", null);
+
+            ExpectTest(4.81, ["var <int, string> x = 1", "x = 'hello'"], "x", "hello");
+            FailTest(4.82, ["var <int, string> x = 1"], "x = 3.14");
         }
 
         private static void TestGroup5() {

@@ -105,12 +105,23 @@ namespace Bish {
             if (type.nullable && var.value is null) {
                 converted = true;
             }
-            if (type.type == "var" && var.value is not null) {
+            if (type.type == "var" && type.typeArgs.Count > 0) {
+                foreach (BishType subType in type.typeArgs) {
+                    try {
+                        BishVariable result = WeakConvert(subType, var, out int subConvertTimes);
+                        ConvertTimes = subConvertTimes;
+                        result.type = type;
+                        return result;
+                    }
+                    catch (Exception) { }
+                }
+            }
+            if (type.type == "var" && type.typeArgs.Count == 0 && var.value is not null) {
                 value = var.value;
                 converted = true;
                 ConvertTimes += 1;
             }
-            if (type.type == "num") {
+            if (type.type == "num" && type.typeArgs.Count == 0) {
                 if (var.value is double num) {
                     value = num;
                     converted = true;
@@ -121,25 +132,25 @@ namespace Bish {
                     ConvertTimes++;
                 }
             }
-            else if (type.type == "int") {
+            else if (type.type == "int" && type.typeArgs.Count == 0) {
                 if (var.value is int num) {
                     value = num;
                     converted = true;
                 }
             }
-            else if (type.type == "string") {
+            else if (type.type == "string" && type.typeArgs.Count == 0) {
                 if (var.value is string str) {
                     value = str;
                     converted = true;
                 }
             }
-            else if (type.type == "bool") {
+            else if (type.type == "bool" && type.typeArgs.Count == 0) {
                 if (var.value is bool b) {
                     value = b;
                     converted = true;
                 }
             }
-            else if (type.type == "interval") {
+            else if (type.type == "interval" && type.typeArgs.Count == 0) {
                 if (var.value is BishInterval i) {
                     value = i;
                     converted = true;

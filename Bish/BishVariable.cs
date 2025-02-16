@@ -13,10 +13,10 @@ namespace Bish {
             type = new(value, typeNode);
         }
 
-        public BishVariable(string? name, dynamic? value, string typename) {
+        public BishVariable(string? name, dynamic? value, string typeName) {
             this.name = name;
             this.value = value;
-            type = new(value, typename);
+            type = new(value, typeName);
         }
 
         public BishVariable(string? name, BishType type, dynamic? value = null) {

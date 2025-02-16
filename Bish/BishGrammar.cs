@@ -10,7 +10,7 @@ namespace Bish {
             var numberLiteral = new NumberLiteral("numberLiteral");
             var singleString = new StringLiteral("single_string", "'");
             var doubleString = new StringLiteral("double_string", "\"");
-            var rawString = new StringLiteral("raw_string", "@\"",
+            var rawString = new StringLiteral("raw_string", "\"\"\"",
                 StringOptions.AllowsLineBreak | StringOptions.NoEscapes);
 
             var intType = ToTerm("int");

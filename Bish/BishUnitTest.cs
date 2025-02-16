@@ -101,7 +101,7 @@ namespace Bish {
             ExpectTest(1.2, "114.514", 114.514);
             ExpectTest(1.3, "'114\\t514'", "114\t514");
             ExpectTest(1.4, "\"114\\t514\"", "114\t514");
-            ExpectTest(1.5, "@\"114\\t514@\"", "114\\t514");
+            ExpectTest(1.5, "\"\"\"114\\t514\"\"\"", "114\\t514");
         }
 
         private static void TestGroup2() {

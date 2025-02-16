@@ -60,9 +60,11 @@ namespace Bish {
             var triCondition = new NonTerminal("triCondition");
             var assignment = new NonTerminal("assignment");
             var interval = new NonTerminal("interval");
+            var varOriginalTypes = new NonTerminal("varOriginalTypes");
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
+            var varTypeList = new NonTerminal("varTypeList");
             var matchingExpr = new NonTerminal("matchingExpr");
             var matchingAndExpr = new NonTerminal("matchingAndExpr");
             var matchingOrExpr = new NonTerminal("matchingOrExpr");
@@ -119,10 +121,12 @@ namespace Bish {
                 | "(" + assignment + "," + assignment + "]"
                 | "[" + assignment + "," + assignment + ")"
                 | "[" + assignment + "," + assignment + "]";
-            varTypes.Rule = intType | numType | stringType | boolType
+            varOriginalTypes.Rule = intType | numType | stringType | boolType
                 | intervalType | varType | funcType;
+            varTypes.Rule = varOriginalTypes | varOriginalTypes + "<" + varTypeList + ">";
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
+            varTypeList.Rule = varModifiedTypes | varTypeList + "," + varModifiedTypes;
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
             matchingExpr.Rule |= "(" + matchingOrExpr + ")";

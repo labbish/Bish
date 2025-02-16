@@ -372,7 +372,9 @@ namespace Bish {
             ExpectTest(12.55, ["func f = func() => 0"], "f()", 0);
             ExpectTest(12.56, ["func f = func(int x) => x + 1"], "f(0)", 1);
             ExpectTest(12.57, ["def f(int x) => func(int y) => x * y;"], "f(3)(5)", 15);
-            ExpectTest(12.58, ["def f(func x) => func(var a) => x(a) * 2", "def g(int x) => x + 1"], "f(g)(3)", 8);
+            ExpectTest(12.58, ["def f(func x) => func(var a) => x(a) * 2",
+                "def g(int x) => x + 1"], "f(g)(3)", 8);
+            ExpectTest(12.59, ["def f(int x) => x <= 0 ? 1 : x * f(x - 1)"], "f(5)", 120);
         }
 
         public static void Test(int? num = null) {

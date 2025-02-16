@@ -38,6 +38,10 @@ namespace Bish {
 
         public BishVariable Exec(ParseTreeNode node, BishVariable[] args) {
             string name = node.FindTokenAndGetText();
+            if (name == "print") {
+                Console.Write(string.Join(' ', args.Select(arg => arg.ValueString())));
+                return new(null);
+            } //TEMP, for debugging
             var matched = vars.Where(var => var.name == name).ToHashSet();
             var funcs = matched.Where(var => var.value is BishFunc && var.value is not null)
                 .Where(var => var.value!.MatchArgs(args)).ToHashSet();
@@ -48,6 +52,10 @@ namespace Bish {
 
         public BishVariable Set(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
+            return Set(name, value);
+        }
+
+        public BishVariable Set(string name, BishVariable value) {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
@@ -88,6 +96,10 @@ namespace Bish {
 
         public BishVariable NewUnchecked(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
+            return NewUnchecked(name, value);
+        }
+
+        public BishVariable NewUnchecked(string name, BishVariable value) {
             if (name.All(c => c == '_')) return new(null, value.value);
             vars.Add(new BishVariable(name, value.type, value.value));
             return value;

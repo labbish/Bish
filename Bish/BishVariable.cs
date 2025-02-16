@@ -113,7 +113,6 @@ namespace Bish {
 
         public string ValueString() {
             return value switch {
-                string str => $"\"{str}\"",
                 true => "true",
                 false => "false",
                 null => "null",
@@ -122,8 +121,15 @@ namespace Bish {
             };
         }
 
+        public string DebugValueString() {
+            return value switch {
+                string str => $"\"{str}\"",
+                _ => ValueString(),
+            };
+        }
+
         public override string ToString() {
-            return $"var [{name ?? "TEMP"}] with value {ValueString()}, type <{type}>";
+            return $"var [{name ?? "TEMP"}] with value {DebugValueString()}, type <{type}>";
         }
 
         public override bool Equals(object? obj) {

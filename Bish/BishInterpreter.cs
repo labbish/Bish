@@ -521,7 +521,9 @@ namespace Bish {
                     if (f.ChildNodes.Count == 1) func = new(vars, f, args);
                     else func = new(vars, f.ChildNodes[1], args);
                     Outer();
-                    return vars.NewUnchecked(node.ChildNodes[1], new(null, func));
+                    BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null, func));
+                    func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
+                    return newFunc;
                 }
 
                 if (node.ChildNodes.Count == 4

@@ -1,5 +1,4 @@
 ﻿using Irony.Parsing;
-using System.Collections.Generic;
 
 namespace Bish {
 
@@ -26,11 +25,22 @@ namespace Bish {
         public bool MatchArgs(BishVariable[] args);
     }
 
-    internal class BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args)
-        : IBishExecutable {
-        private BishVars VarsFrame = new(vars);
-        private ParseTreeNode node = node;
-        private List<BishArg> args = CheckArgs(args);
+    internal class BishFunc : IBishExecutable {
+        private BishVars VarsFrame;
+        private ParseTreeNode node;
+        private List<BishArg> args;
+
+        public BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args) {
+            VarsFrame = new(vars);
+            this.node = node;
+            this.args = args;
+            HashSet<string> names = [.. args.Select(arg => arg.name)];
+            BishUtils.Assert(names.Count == args.Count, $"Duplicate Argument");
+        }
+
+        public void BindSelf(string name, BishVariable self) {
+            VarsFrame.NewUnchecked(name, self);
+        }
 
         private bool TriviallyToVars(BishVariable[] inArgs,
             out List<(string name, BishVariable value)> values, out string ErrorMsg,
@@ -94,21 +104,25 @@ namespace Bish {
             foreach (var (name, value) in minValues[0].Item1) {
                 interpreter.vars.New(name, value);
             }
-            return interpreter.Evaluate(node);
+            //return interpreter.Evaluate(node);
+            BishVariable result = new(null);
+            Exception? exception = null;
+            var thread = new Thread(() => {
+                try {
+                    result = interpreter.Evaluate(node);
+                }
+                catch (Exception ex) {
+                    exception = ex;
+                }
+            });
+            thread.Start();
+            thread.Join();
+            if (exception is not null) throw exception;
+            return result;
         }
 
         public bool MatchArgs(BishVariable[] inArgs) {
             return ToVars(inArgs, out _, out _);
-        }
-
-        private static List<BishArg> CheckArgs(List<BishArg> args) {
-            List<string> names = [];
-            foreach (BishArg arg in args) {
-                string name = arg.name;
-                if (names.Contains(name)) BishUtils.Error($"Duplicate Arg Name: {name}");
-                names.Add(name);
-            }
-            return args;
         }
 
         public static List<List<int>> GetAllCombinations(int length, int max = 1) {

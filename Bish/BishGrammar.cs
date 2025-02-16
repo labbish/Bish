@@ -1,4 +1,5 @@
 ﻿using Irony.Parsing;
+using System.Diagnostics;
 
 namespace Bish {
 
@@ -38,6 +39,7 @@ namespace Bish {
             var varType = ToTerm("var");
             var funcTerm = ToTerm("func");
             var defTerm = ToTerm("def");
+            var notTerm = ToTerm("not");
             var returnTerm = ToTerm("return");
 
             var stringLiteral = new NonTerminal("stringLiteral");
@@ -123,7 +125,7 @@ namespace Bish {
             matchingExpr.Rule = assignment | varNullableTypes + identifier;
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
             matchingExpr.Rule |= "(" + matchingOrExpr + ")";
-            matchingExpr.Rule |= matchingOrExpr + "!";
+            matchingExpr.Rule |= notTerm + matchingOrExpr;
             matchingAndExpr.Rule = matchingExpr | matchingAndExpr + "&" + matchingExpr;
             matchingOrExpr.Rule = matchingAndExpr | matchingOrExpr + "|" + matchingAndExpr;
             matching.Rule = assignment | assignment + "~" + matchingOrExpr

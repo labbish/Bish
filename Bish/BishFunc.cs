@@ -89,9 +89,9 @@ namespace Bish {
         public BishVariable Exec(BishVariable[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
             bool success = ToVars(inArgs, out var values, out string msg);
+            BishUtils.Assert(values.Count > 0, "No Possible Function Found");
             int minTimes = values.Min(x => x.times);
             var minValues = values.Where(x => x.times == minTimes).ToList();
-            BishUtils.Assert(minValues.Count > 0, "No Possible Function Found");
             BishUtils.Assert(minValues.Count == 1, "More than 1 Possible Function Found");
             if (!success) BishUtils.Error(msg);
             foreach (var (name, value) in minValues[0].Item1) {

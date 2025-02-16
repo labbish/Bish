@@ -1,15 +1,23 @@
 ﻿using Irony.Parsing;
+using System.Diagnostics;
 
 namespace Bish {
 
     internal class BishProgram {
-        private readonly BishGrammar grammar;
-        private Parser parser;
+        private static readonly BishGrammar grammar;
+        private static Parser parser;
         public BishInterpreter bishInterpreter;
 
+        static BishProgram() {
+            Stopwatch watch = new();
+            watch.Start();
+            grammar = new();
+            parser = new(grammar);
+            watch.Stop();
+            Console.WriteLine($"Parser Initialized after {watch.Elapsed.Microseconds:N2}ms");
+        }
+
         public BishProgram() {
-            grammar = new BishGrammar();
-            parser = new Parser(grammar);
             bishInterpreter = new BishInterpreter();
         }
 

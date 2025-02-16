@@ -282,8 +282,8 @@ namespace Bish {
             ExpectGroupTest(10.1, ["1 ~ 0", "1 ~ 1", "1 ~ 2"], [false, true, false]);
             ExpectGroupTest(10.2, ["1 ~ null", "null ~ null"], [false, true]);
             ExpectGroupTest(10.3, ["1 !~ 0", "1 !~ 1", "1 !~ 2"], [true, false, true]);
-            ExpectGroupTest(10.4, ["1 ~ 0!", "1 ~ 1!", "1 ~ 2!"], [true, false, true]);
-            ExpectGroupTest(10.5, ["1 !~ 0!", "1 !~ 1!", "1 !~ 2!"], [false, true, false]);
+            ExpectGroupTest(10.4, ["1 ~ not 0", "1 ~ not 1", "1 ~ not 2"], [true, false, true]);
+            ExpectGroupTest(10.5, ["1 !~ not 0", "1 !~ not 1", "1 !~ not 2"], [false, true, false]);
             ExpectGroupTest(10.6, ["1 ~ <2", "3 ~ <2", "3 ~ >=2", "2 ~ ==2"],
                 [true, false, true, true]);
             ExpectGroupTest(10.7,
@@ -319,7 +319,7 @@ namespace Bish {
             for (int i = 0; i < patterns4.Count; i++) {
                 string pattern = patterns4[i];
                 ExpectTest($"11.4{i + 1}",
-                    ["int x = 3", $"switch(0){{case {pattern}!: {{x = 5;}}}}"], "x", 5);
+                    ["int x = 3", $"switch(0){{case not {pattern}: {{x = 5;}}}}"], "x", 5);
             }
 
             ExpectTest(11.51, ["int x = 3",
@@ -367,6 +367,7 @@ namespace Bish {
             ExpectTest(12.54, ["func f = func() {return 0}"], "f()", 0);
             ExpectTest(12.55, ["func f = func() => 0"], "f()", 0);
             ExpectTest(12.56, ["func f = func(int x) => x + 1"], "f(0)", 1);
+            ExpectTest(12.57, ["def f(int x) => func(int y) => x * y;"], "f(3)(5)", 15);
         }
 
         public static void Test(int? num = null) {

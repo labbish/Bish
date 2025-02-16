@@ -14,7 +14,8 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("funcs (maybe?)");
+            BishUtils.Todo("func calls with arg names");
+            BishUtils.Todo("types as vars");
 
             if (DoUnitTests) BishUnitTest.Test();
 

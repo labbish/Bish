@@ -95,12 +95,13 @@ namespace Bish {
         }
 
         private static void TestGroup1() {
-            TestGroup(1, "types");
+            TestGroup(1, "literals");
 
             ExpectTest(1.1, "114514", 114514);
             ExpectTest(1.2, "114.514", 114.514);
-            ExpectTest(1.3, "'114514'", "114514");
-            ExpectTest(1.4, "\"114514\"", "114514");
+            ExpectTest(1.3, "'114\\t514'", "114\t514");
+            ExpectTest(1.4, "\"114\\t514\"", "114\t514");
+            ExpectTest(1.5, "@\"114\\t514@\"", "114\\t514");
         }
 
         private static void TestGroup2() {
@@ -368,6 +369,7 @@ namespace Bish {
             ExpectTest(12.55, ["func f = func() => 0"], "f()", 0);
             ExpectTest(12.56, ["func f = func(int x) => x + 1"], "f(0)", 1);
             ExpectTest(12.57, ["def f(int x) => func(int y) => x * y;"], "f(3)(5)", 15);
+            ExpectTest(12.58, ["def f(func x) => func(var a) => x(a) * 2", "def g(int x) => x + 1"], "f(g)(3)", 8);
         }
 
         public static void Test(int? num = null) {

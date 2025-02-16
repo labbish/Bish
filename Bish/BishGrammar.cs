@@ -1,5 +1,4 @@
 ﻿using Irony.Parsing;
-using System.Diagnostics;
 
 namespace Bish {
 
@@ -11,6 +10,8 @@ namespace Bish {
             var numberLiteral = new NumberLiteral("numberLiteral");
             var singleString = new StringLiteral("single_string", "'");
             var doubleString = new StringLiteral("double_string", "\"");
+            var rawString = new StringLiteral("raw_string", "@\"",
+                StringOptions.AllowsLineBreak | StringOptions.NoEscapes);
 
             var intType = ToTerm("int");
             var numType = ToTerm("num");
@@ -87,7 +88,7 @@ namespace Bish {
             var funcStatement = new NonTerminal("funcStatement");
             var root = new NonTerminal("root");
 
-            stringLiteral.Rule = singleString | doubleString;
+            stringLiteral.Rule = singleString | doubleString | rawString;
             boolLiteral.Rule = trueLiteral | falseLiteral;
             literal.Rule = stringLiteral | numberLiteral | boolLiteral
                 | nullLiteral | infLiteral | interval | funcValue;

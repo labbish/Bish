@@ -7,9 +7,12 @@ namespace Bish {
         public string name;
         public BishVariable? defaultValue;
 
-        public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null) {
+        public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null)
+            : this(type: new(typeNode), name, defaultValue) { }
+
+        public BishArg(BishType type, string name, BishVariable? defaultValue = null) {
             this.name = name;
-            type = new(typeNode);
+            this.type = type;
             this.defaultValue = defaultValue;
         }
 

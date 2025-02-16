@@ -109,6 +109,9 @@ namespace Bish {
                 };
                 return new BishVariable(null, b);
             }
+            else if (node.Term.Name == "varModifiedTypes") {
+                return new(null, value: new BishType(node), typeName: "type");
+            }
             else if (node.Term.Name == "null") {
                 return new BishVariable(null);
             }
@@ -159,7 +162,8 @@ namespace Bish {
                     throw new BishReturnException(value);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
-                    BishVariable var = new(null, null, typeNode: node.ChildNodes[0]);
+                    BishType type = Evaluate(node.ChildNodes[0]).value!;
+                    BishVariable var = new(name: null, type: type, null);
                     if (var.type.isConst && !var.type.nullable)
                         BishUtils.Error("Const vars must be Initialized if not nullable");
                     return vars.New(node.ChildNodes[1], var);
@@ -242,7 +246,7 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    BishType type = new(node.ChildNodes[0]);
+                    BishType type = Evaluate(node.ChildNodes[0]).value!;
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
                     BishVariable value = BishVars.WeakConvert(type, right);
@@ -566,7 +570,7 @@ namespace Bish {
             }
             else if (expr.ChildNodes.Count == 2) {
                 BishVariable value = Evaluate(node.ChildNodes[0]);
-                var type = new BishType(expr.ChildNodes[0]);
+                BishType type = Evaluate(expr.ChildNodes[0]).value!;
                 BishVariable converted;
                 try {
                     converted = BishVars.WeakConvert(type, value);
@@ -651,13 +655,13 @@ namespace Bish {
         private BishArg ToBishArg(ParseTreeNode node) {
             if (node.ChildNodes.Count == 1) return ToBishArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2) {
-                var type = node.ChildNodes[0];
+                BishType type = Evaluate(node.ChildNodes[0]).value!;
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 return new(type, name);
             }
             if (node.ChildNodes.Count == 4
                 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                var type = node.ChildNodes[0];
+                BishType type = Evaluate(node.ChildNodes[0]).value!;
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 BishVariable defaultValue = Evaluate(node.ChildNodes[3]);
                 return new(type, name, defaultValue);

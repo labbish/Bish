@@ -136,7 +136,7 @@ namespace Bish {
             TestGroup(3, "multiple operations");
 
             ExpectTest(3, "-8/((6-2^3)*4)", 1);
-        }
+        } //Why is this guy still here?
 
         private static void TestGroup4() {
             TestGroup(4, "vars");
@@ -191,6 +191,9 @@ namespace Bish {
 
             ExpectTest(4.81, ["var <int, string> x = 1", "x = 'hello'"], "x", "hello");
             FailTest(4.82, ["var <int, string> x = 1"], "x = 3.14");
+
+            ExpectTest(4.91, ["type T = int", "T x = 2"], "x", 2);
+            FailTest(4.92, ["type T = int"], "T x = 3.14");
         }
 
         private static void TestGroup5() {
@@ -293,6 +296,9 @@ namespace Bish {
             ExpectGroupTest(10.7,
                 ["1 ~ 1 & <2", "1 ~ (>5 & <2)", "1 ~ (>2 | <5) & 1"],
                 [true, false, true]);
+            ExpectGroupTest(10.8, ["type T = num"],
+                ["1 ~ T _", "3.14 ~ T _", "'hi' ~ T _"],
+                [true, true, false]);
         }
 
         public static void TestGroup11() {
@@ -375,6 +381,9 @@ namespace Bish {
             ExpectTest(12.58, ["def f(func x) => func(var a) => x(a) * 2",
                 "def g(int x) => x + 1"], "f(g)(3)", 8);
             ExpectTest(12.59, ["def f(int x) => x <= 0 ? 1 : x * f(x - 1)"], "f(5)", 120);
+
+            ExpectTest(12.61, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2)", 3);
+            FailTest(12.62, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
         }
 
         public static void Test(int? num = null) {

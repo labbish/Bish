@@ -168,6 +168,12 @@ namespace Bish {
                     converted = true;
                 }
             }
+            else if (type.type == "type" && type.typeArgs.Count == 0) {
+                if (var.value is BishType t) {
+                    value = t;
+                    converted = true;
+                }
+            }
             else if (type.type == "func") {
                 if (var.value is BishFunc f) {
                     value = f;

@@ -17,6 +17,7 @@ namespace Bish {
             TypeNames[typeof(bool)] = "bool";
             TypeNames[typeof(BishInterval)] = "interval";
             TypeNames[typeof(BishFunc)] = "func";
+            TypeNames[typeof(BishType)] = "type";
         }
 
         public BishType(dynamic? value = null, string? type = null, bool? nullable = null, bool isConst = false) {

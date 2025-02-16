@@ -51,9 +51,9 @@ namespace Bish {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
-                BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
+                BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
                 BishVariable newVar = new(null, value.value);
-                WeakConvert(var.type, newVar, var.nullable); //might throw
+                WeakConvert(var.type, newVar); //might throw
                 var.value = newVar.value;
                 return new(null, value.value);
             }
@@ -64,9 +64,9 @@ namespace Bish {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
-                BishUtils.Assert(!var.isConst, $"Cannot modify const var: {name}");
+                BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
                 BishVariable newVar = new(null, value.value);
-                WeakConvert(var.type, newVar, var.nullable); //might throw
+                WeakConvert(var.type, newVar); //might throw
                 var.value = newVar.value;
                 return new(null, value.value);
             }
@@ -82,36 +82,35 @@ namespace Bish {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
-            vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
+            vars.Add(new BishVariable(name: name, type: value.type, value: value.value));
             return value;
         }
 
         public BishVariable NewUnchecked(ParseTreeNode node, BishVariable value) {
             string name = node.FindTokenAndGetText();
             if (name.All(c => c == '_')) return new(null, value.value);
-            vars.Add(new BishVariable(name, value.value, value.type, value.nullable, value.isConst));
+            vars.Add(new BishVariable(name, value.type, value.value));
             return value;
         }
 
-        public static BishVariable WeakConvert(string? type, BishVariable var,
-            bool nullable = false) {
-            return WeakConvert(type, var, out _, nullable);
+        public static BishVariable WeakConvert(BishType type, BishVariable var) {
+            return WeakConvert(type, var, out _);
         }
 
-        public static BishVariable WeakConvert(string? type, BishVariable var,
-            out int ConvertTimes, bool nullable = false) {
+        public static BishVariable WeakConvert(BishType type, BishVariable var,
+            out int ConvertTimes) {
             bool converted = false;
             dynamic? value = null;
             ConvertTimes = 0;
-            if (nullable && var.value is null) {
+            if (type.nullable && var.value is null) {
                 converted = true;
             }
-            if (type == "var" && var.value is not null) {
+            if (type.type == "var" && var.value is not null) {
                 value = var.value;
                 converted = true;
                 ConvertTimes += 1;
             }
-            if (type == "num") {
+            if (type.type == "num") {
                 if (var.value is double num) {
                     value = num;
                     converted = true;
@@ -122,56 +121,38 @@ namespace Bish {
                     ConvertTimes++;
                 }
             }
-            else if (type == "int") {
+            else if (type.type == "int") {
                 if (var.value is int num) {
                     value = num;
                     converted = true;
                 }
             }
-            else if (type == "string") {
+            else if (type.type == "string") {
                 if (var.value is string str) {
                     value = str;
                     converted = true;
                 }
             }
-            else if (type == "bool") {
+            else if (type.type == "bool") {
                 if (var.value is bool b) {
                     value = b;
                     converted = true;
                 }
             }
-            else if (type == "interval") {
+            else if (type.type == "interval") {
                 if (var.value is BishInterval i) {
                     value = i;
                     converted = true;
                 }
             }
-            else if (type == "func") {
+            else if (type.type == "func") {
                 if (var.value is BishFunc f) {
                     value = f;
                     converted = true;
                 }
             }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
-            return new BishVariable(null, value, type, nullable);
-        }
-
-        public static (bool, string, bool) CutType(ParseTreeNode node) {
-            var parts = ToPlainStrings(node);
-            bool isConst = false;
-            string type = "";
-            bool nullable = false;
-            if (parts.Last() == "?") {
-                nullable = true;
-                parts = parts[..^1];
-            }
-            if (parts.First() == "const") {
-                isConst = true;
-                parts = parts[1..];
-            }
-            BishUtils.Assert(parts.Count == 1, "Cannot Find Type Info");
-            type = parts[0];
-            return (isConst, type, nullable);
+            return new BishVariable(name: null, type: type, value);
         }
 
         public override string ToString() {
@@ -180,7 +161,7 @@ namespace Bish {
                 + "\n}";
         }
 
-        private static List<string> ToPlainStrings(ParseTreeNode node) {
+        public static List<string> ToPlainStrings(ParseTreeNode node) {
             if (node.ChildNodes.Count == 0) return [node.FindTokenAndGetText()];
             List<string> strings = [];
             foreach (ParseTreeNode child in node.ChildNodes) {

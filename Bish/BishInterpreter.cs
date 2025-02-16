@@ -159,10 +159,9 @@ namespace Bish {
                     throw new BishReturnException(value);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
-                    var (isConst, type, nullable) = BishVars.CutType(node.ChildNodes[0]);
-                    if (isConst && !nullable)
+                    BishVariable var = new(null, null, typeNode: node.ChildNodes[0]);
+                    if (var.type.isConst && !var.type.nullable)
                         BishUtils.Error("Const vars must be Initialized if not nullable");
-                    BishVariable var = new(null, null, type, nullable, isConst);
                     return vars.New(node.ChildNodes[1], var);
                 }
                 if (node.ChildNodes.Count(node => node.FindTokenAndGetText() == "~") == 1) {
@@ -243,11 +242,10 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    var (isConst, type, nullable) = BishVars.CutType(node.ChildNodes[0]);
+                    BishType type = new(node.ChildNodes[0]);
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
-                    BishVariable value = BishVars.WeakConvert(type, right, nullable);
-                    value.isConst = isConst;
+                    BishVariable value = BishVars.WeakConvert(type, right);
                     return vars.New(varName, value);
                 }
                 if (node.ChildNodes.Count == 4
@@ -566,15 +564,14 @@ namespace Bish {
             }
             else if (expr.ChildNodes.Count == 2) {
                 BishVariable value = Evaluate(node.ChildNodes[0]);
-                var (isConst, type, nullable) = BishVars.CutType(expr.ChildNodes[0]);
+                var type = new BishType(expr.ChildNodes[0]);
                 BishVariable converted;
                 try {
-                    converted = BishVars.WeakConvert(type, value, nullable);
+                    converted = BishVars.WeakConvert(type, value);
                 }
                 catch (ArgumentException) {
                     return new(null, false);
                 }
-                converted.isConst = isConst;
                 vars.New(expr.ChildNodes[1], converted);
                 return new(null, true);
             }

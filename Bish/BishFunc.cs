@@ -4,15 +4,13 @@ using System.Collections.Generic;
 namespace Bish {
 
     internal class BishArg {
-        public bool isConst;
-        public string type;
-        public bool nullable;
+        public BishType type;
         public string name;
         public BishVariable? defaultValue;
 
         public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null) {
             this.name = name;
-            (isConst, type, nullable) = BishVars.CutType(typeNode);
+            type = new(typeNode);
             this.defaultValue = defaultValue;
         }
 
@@ -49,8 +47,7 @@ namespace Bish {
                     BishVariable arg = args[i];
                     BishArg expect = expected[i];
                     BishVariable value =
-                        BishVars.WeakConvert(expect.type, arg, out int t, expect.nullable);
-                    value.isConst = expect.isConst;
+                        BishVars.WeakConvert(expect.type, arg, out int t);
                     values.Add((expect.name, value));
                     times += t;
                 }

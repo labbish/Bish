@@ -1,27 +1,28 @@
-﻿namespace Bish {
+﻿using Irony.Parsing;
 
-    internal class BishVariable(string? name, dynamic? value = null, string? type = null, bool? nullable = null, bool isConst = false) {
-        public string? name = name;
-        public dynamic? value = value;
-        public string? type = type ?? GetTypeName(value);
-        public bool nullable = nullable ?? false;
-        public bool isConst = isConst;
+namespace Bish {
 
-        public static readonly Dictionary<Type, string> TypeNames = [];
+    internal class BishVariable {
+        public string? name;
+        public dynamic? value;
+        public BishType type;
 
-        static BishVariable() {
-            TypeNames[typeof(int)] = "int";
-            TypeNames[typeof(double)] = "num";
-            TypeNames[typeof(string)] = "string";
-            TypeNames[typeof(bool)] = "bool";
-            TypeNames[typeof(BishInterval)] = "interval";
-            TypeNames[typeof(BishFunc)] = "func";
+        public BishVariable(string? name, dynamic? value = null, ParseTreeNode? typeNode = null) {
+            this.name = name;
+            this.value = value;
+            type = new(value, typeNode);
         }
 
-        public static string? GetTypeName(dynamic? value) {
-            if (value == null) return null;
-            if (!TypeNames.ContainsKey(value.GetType())) return null;
-            return value == null ? null : TypeNames[value.GetType()];
+        public BishVariable(string? name, dynamic? value, string typename) {
+            this.name = name;
+            this.value = value;
+            type = new(value, typename);
+        }
+
+        public BishVariable(string? name, BishType type, dynamic? value = null) {
+            this.name = name;
+            this.value = value;
+            this.type = type;
         }
 
         public static BishVariable operator +(BishVariable a, BishVariable b) {
@@ -92,12 +93,12 @@
         }
 
         public static BishVariable operator ++(BishVariable a) {
-            BishUtils.Assert(!a.isConst, $"Cannot modify const var: {a.name}");
+            BishUtils.Assert(!a.type.isConst, $"Cannot modify const var: {a.name}");
             return new(null, a.value++);
         }
 
         public static BishVariable operator --(BishVariable a) {
-            BishUtils.Assert(!a.isConst, $"Cannot modify const var: {a.name}");
+            BishUtils.Assert(!a.type.isConst, $"Cannot modify const var: {a.name}");
             return new(null, a.value--);
         }
 
@@ -122,8 +123,7 @@
         }
 
         public override string ToString() {
-            return $"var [{name ?? "TEMP"}] with value {ValueString()},"
-                + $" type <{(isConst ? "const " : "")}{type ?? "(?)"}{(nullable ? "?" : "")}>";
+            return $"var [{name ?? "TEMP"}] with value {ValueString()}, type <{type}>";
         }
 
         public override bool Equals(object? obj) {
@@ -140,7 +140,7 @@
         }
 
         public BishVariable GetNullChecked() {
-            if (nullable || value is not null || name == null) return this;
+            if (type.nullable || value is not null || name == null) return this;
             return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
         }
     }

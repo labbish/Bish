@@ -20,10 +20,12 @@ namespace Bish {
             TypeNames[typeof(BishType)] = "type";
         }
 
-        public BishType(dynamic? value = null, string? type = null, bool? nullable = null, bool isConst = false) {
+        public BishType(dynamic? value = null, string? type = null, bool? nullable = null,
+            bool isConst = false, List<BishType>? typeArgs = null) {
             this.type = type ?? GetTypeName(value);
             this.nullable = nullable ?? false;
             this.isConst = isConst;
+            this.typeArgs = typeArgs ?? [];
         }
 
         public BishType(ParseTreeNode node) {
@@ -81,10 +83,12 @@ namespace Bish {
         }
 
         public override string ToString() {
-            return $"{(isConst ? "const " : "")}{type ?? "(?)"}{(nullable ? "?" : "")}"
+            return (isConst ? "const " : "")
+                + (type ?? "(?)")
                 + (typeArgs.Count > 0 ? "<" : "")
-                + string.Join(',', typeArgs.Select(t => t.ToString()))
-                + (typeArgs.Count > 0 ? ">" : "");
+                + string.Join(',', typeArgs.Select(t => t is null ? "null" : t.ToString()))
+                + (typeArgs.Count > 0 ? ">" : "")
+                + (nullable ? "?" : "");
         }
 
         private static List<List<T>> Split<T>(List<T> list, Predicate<T> predicate) {

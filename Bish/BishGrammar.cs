@@ -86,6 +86,7 @@ namespace Bish {
             var caseBlocks = new NonTerminal("caseBlocks");
             var switchExpr = new NonTerminal("switchExpr");
             var switchStatement = new NonTerminal("switchStatement");
+            var defType = new NonTerminal("defType");
             var funcValue = new NonTerminal("funcValue");
             var funcStateArg = new NonTerminal("funcStateArg");
             var funcStateArgs = new NonTerminal("funcStateArgs");
@@ -161,12 +162,13 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
+            defType.Rule = defTerm | defTerm + "<" + typeValue + ">";
             funcStateArg.Rule = typeValue + identifier
                 | typeValue + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
-            funcStatement.Rule = defTerm + identifier + "(" + (funcStateArgs | Empty) + ")"
+            funcStatement.Rule = defType + identifier + "(" + (funcStateArgs | Empty) + ")"
                 + (structure | "=>" + statement);
-            funcValue.Rule = funcTerm + "(" + (funcStateArgs | Empty) + ")"
+            funcValue.Rule = funcType + "(" + (funcStateArgs | Empty) + ")"
                 + (structure | "=>" + statement);
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 

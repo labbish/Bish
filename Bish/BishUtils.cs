@@ -16,7 +16,7 @@
 
         public static void Todo(string todo) {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"###TODO: {todo}");
+            Console.WriteLine($"### TODO: {todo}");
             Console.ResetColor();
         }
     }

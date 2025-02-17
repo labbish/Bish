@@ -519,22 +519,19 @@ namespace Bish {
                     && node.ChildNodes[0].FindTokenAndGetText() == "def") {
                     var args = ToPlainArgs(node.ChildNodes[3])
                         .Select(ToBishArg).ToList();
+                    BishType? returnType = null;
+                    if (node.ChildNodes[0].ChildNodes.Count == 4)
+                        returnType = new(node.ChildNodes[0].ChildNodes[2]);
                     Inner();
                     var f = node.ChildNodes[5];
                     BishFunc func;
-                    if (f.ChildNodes.Count == 1) func = new(vars, f, args);
-                    else func = new(vars, f.ChildNodes[1], args);
+                    if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType);
+                    else func = new(vars, f.ChildNodes[1], args, returnType);
                     Outer();
-                    BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null, func));
+                    BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
+                        type: new(func, typeArgs: [returnType]), func));
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
                     return newFunc;
-                }
-
-                if (node.ChildNodes.Count == 4
-                    && node.ChildNodes[0].FindTokenAndGetText() == "print") {
-                    var value = Evaluate(node.ChildNodes[2]).value;
-                    Console.Write(value ?? "null");
-                    return new(null);
                 }
 
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name}"

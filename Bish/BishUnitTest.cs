@@ -387,6 +387,13 @@ namespace Bish {
 
             ExpectTest(12.61, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2)", 3);
             FailTest(12.62, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
+
+            ExpectTest(12.71, ["def<int> f() => 0"], "f()", 0);
+            ExpectTest(12.72, ["def<num> f() => 0"], "f()", 0.0);
+            FailTest(12.73, ["def<int> f() => 0.1"], "f()");
+            ExpectTest(12.74, ["func<int> f = func() => 0"], "f()", 0);
+            ExpectTest(12.75, ["func<num> f = func() => 0"], "f()", 0.0);
+            FailTest(12.76, ["func<int> f = func() => 0.1"], "f()");
         }
 
         public static void Test(int? num = null) {

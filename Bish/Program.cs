@@ -14,7 +14,7 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("func typing");
+            //BishUtils.Todo("");
 
             if (DoUnitTests) BishUnitTest.Test();
 

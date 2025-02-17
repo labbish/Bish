@@ -1,6 +1,4 @@
 ﻿using Irony.Parsing;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Bish {
 
@@ -46,13 +44,16 @@ namespace Bish {
         private BishVars VarsFrame;
         private ParseTreeNode node;
         private List<BishArg> args;
+        public BishType? returnType;
 
-        public BishFunc(BishVars vars, ParseTreeNode node, List<BishArg> args) {
+        public BishFunc(BishVars vars, ParseTreeNode node,
+            List<BishArg> args, BishType? returnType = null) {
             VarsFrame = new(vars);
             this.node = node;
             this.args = args;
             HashSet<string> names = [.. args.Select(arg => arg.name)];
             BishUtils.Assert(names.Count == args.Count, $"Duplicate Argument");
+            this.returnType = returnType;
         }
 
         public void BindSelf(string name, BishVariable self) {
@@ -146,7 +147,7 @@ namespace Bish {
             thread.Start();
             thread.Join();
             if (exception is not null) throw exception;
-            return result;
+            return BishVars.WeakConvert(returnType ?? new(null, "var", nullable: true), result);
         }
 
         public bool MatchArgs(BishInArg[] inArgs) {

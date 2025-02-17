@@ -117,6 +117,9 @@ namespace Bish {
             if (type.nullable && var.value is null) {
                 converted = true;
             }
+            if (!type.nullable && var.value is null) {
+                BishUtils.Error("Cannot convert null value to not nullable type");
+            }
             if (type.type == "var" && type.typeArgs.Count > 0) {
                 foreach (BishType subType in type.typeArgs) {
                     try {
@@ -174,9 +177,11 @@ namespace Bish {
                     converted = true;
                 }
             }
-            else if (type.type == "func") {
+            else if (type.type == "func" && type.typeArgs.Count <= 1) {
                 if (var.value is BishFunc f) {
                     value = f;
+                    if (type.typeArgs.Count == 1)
+                        value.returnType = type.typeArgs[0];
                     converted = true;
                 }
             }

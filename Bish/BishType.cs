@@ -4,9 +4,20 @@ namespace Bish {
 
     internal class BishType {
         public string? type = null;
-        public bool nullable = false;
+        public bool _nullable = false;
         public bool isConst = false;
         public List<BishType> typeArgs = [];
+
+        public bool nullable {
+            get { return IsNullable(); }
+            set { _nullable = value; }
+        }
+
+        private bool IsNullable() {
+            if (type == "var" && typeArgs.Count != 0)
+                return typeArgs.Any(T => T.IsNullable());
+            return _nullable;
+        }
 
         public static readonly Dictionary<Type, string> TypeNames = [];
 
@@ -23,17 +34,17 @@ namespace Bish {
         public BishType(dynamic? value = null, string? type = null, bool? nullable = null,
             bool isConst = false, List<BishType>? typeArgs = null) {
             this.type = type ?? GetTypeName(value);
-            this.nullable = nullable ?? false;
+            this._nullable = nullable ?? false;
             this.isConst = isConst;
             this.typeArgs = typeArgs ?? [];
         }
 
         public BishType(ParseTreeNode node) {
-            (isConst, type, nullable, typeArgs) = CutType(node);
+            (isConst, type, _nullable, typeArgs) = CutType(node);
         }
 
         public BishType(List<string> parts) {
-            (isConst, type, nullable, typeArgs) = CutType(parts);
+            (isConst, type, _nullable, typeArgs) = CutType(parts);
         }
 
         public BishType(string name) {
@@ -41,7 +52,7 @@ namespace Bish {
         }
 
         public BishType(dynamic? value, ParseTreeNode? node) {
-            if (node is not null) (isConst, type, nullable, typeArgs) = CutType(node);
+            if (node is not null) (isConst, type, _nullable, typeArgs) = CutType(node);
             if (value is not null) type = GetTypeName(value);
         }
 
@@ -88,7 +99,7 @@ namespace Bish {
                 + (typeArgs.Count > 0 ? "<" : "")
                 + string.Join(',', typeArgs.Select(t => t is null ? "null" : t.ToString()))
                 + (typeArgs.Count > 0 ? ">" : "")
-                + (nullable ? "?" : "");
+                + (_nullable ? "?" : "");
         }
 
         private static List<List<T>> Split<T>(List<T> list, Predicate<T> predicate) {

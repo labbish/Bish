@@ -240,6 +240,8 @@ namespace Bish {
                             "<=" => left <= right,
                             ">" => left > right,
                             ">=" => left >= right,
+                            "&" => left & right,
+                            "|" => left | right,
                             _ => BishUtils.Error($"Unsupported operator: {op}"),
                         };
                     }
@@ -453,7 +455,9 @@ namespace Bish {
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
-                        Outer();
+                        finally {
+                            Outer();
+                        }
                     } while (restart);
                     return result;
                 }
@@ -485,7 +489,9 @@ namespace Bish {
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
-                        Outer();
+                        finally {
+                            Outer();
+                        }
                     } while (restart);
                     return result;
                 }
@@ -584,13 +590,13 @@ namespace Bish {
                 return EvaluateMatching(node, expr.ChildNodes[1]);
             }
             else if (expr.ChildNodes.Count == 3
-                && expr.ChildNodes[1].FindTokenAndGetText() == "&") {
+                && expr.ChildNodes[1].FindTokenAndGetText() == "and") {
                 var left = EvaluateMatching(node, expr.ChildNodes[0]);
                 if (!left.value) return new(null, false);
                 return EvaluateMatching(node, expr.ChildNodes[2]);
             }
             else if (expr.ChildNodes.Count == 3
-                && expr.ChildNodes[1].FindTokenAndGetText() == "|") {
+                && expr.ChildNodes[1].FindTokenAndGetText() == "or") {
                 var left = EvaluateMatching(node, expr.ChildNodes[0]);
                 if (left.value) return new(null, true);
                 return EvaluateMatching(node, expr.ChildNodes[2]);

@@ -189,11 +189,16 @@ namespace Bish {
             ExpectVarTest(4.75, ["var? x"], "x", "x", null);
             ExpectVarTest(4.76, ["var? x = null"], "x", "x", null);
 
-            ExpectTest(4.81, ["var <int, string> x = 1", "x = 'hello'"], "x", "hello");
-            FailTest(4.82, ["var <int, string> x = 1"], "x = 3.14");
+            ExpectTest(4.81, ["var<int, string> x = 1", "x = 'hello'"], "x", "hello");
+            FailTest(4.82, ["var<int, string> x = 1"], "x = 3.14");
+            FailTest(4.83, ["var<int, string> x = 1"], "x = null");
+            ExpectTest(4.84, ["var<int?, string> x"], "x", null);
+            ExpectTest(4.85, ["var<int, string?> x"], "x", null);
 
             ExpectTest(4.91, ["type T = int", "T x = 2"], "x", 2);
             FailTest(4.92, ["type T = int"], "T x = 3.14");
+            ExpectTest(4.93, ["type T = int|string", "T x = 'hello'"], "x", "hello");
+            FailTest(4.94, ["type T = int|string"], "T x = 3.14");
         }
 
         private static void TestGroup5() {
@@ -294,7 +299,7 @@ namespace Bish {
             ExpectGroupTest(10.6, ["1 ~ <2", "3 ~ <2", "3 ~ >=2", "2 ~ ==2"],
                 [true, false, true, true]);
             ExpectGroupTest(10.7,
-                ["1 ~ 1 & <2", "1 ~ (>5 & <2)", "1 ~ (>2 | <5) & 1"],
+                ["1 ~ 1 and <2", "1 ~ (>5 and <2)", "1 ~ (>2 or <5) and 1"],
                 [true, false, true]);
             ExpectGroupTest(10.8, ["type T = num"],
                 ["1 ~ T _", "3.14 ~ T _", "'hi' ~ T _"],
@@ -304,14 +309,14 @@ namespace Bish {
         public static void TestGroup11() {
             TestGroup(11, "switch-cases");
 
-            List<string> patterns1 = ["0", "==0", "<2", ">1|<=2", "0&<2", "int? a", "int _"];
+            List<string> patterns1 = ["0", "==0", "<2", ">1 or <=2", "0 and <2", "int? a", "int _"];
             for (int i = 0; i < patterns1.Count; i++) {
                 string pattern = patterns1[i];
                 ExpectTest($"11.1{i + 1}",
                     ["int x = 3", $"switch(0){{case {pattern}: {{x = 5;}}}}"], "x", 5);
             }
 
-            List<string> patterns2 = ["0&>1", "string _", ">1|3"];
+            List<string> patterns2 = ["0 and >1", "string _", ">1 or 3"];
             for (int i = 0; i < patterns2.Count; i++) {
                 string pattern = patterns2[i];
                 ExpectTest($"11.2{i + 1}",

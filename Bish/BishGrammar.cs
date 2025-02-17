@@ -41,6 +41,8 @@ namespace Bish {
             var funcTerm = ToTerm("func");
             var defTerm = ToTerm("def");
             var notTerm = ToTerm("not");
+            var andTerm = ToTerm("and");
+            var orTerm = ToTerm("or");
             var returnTerm = ToTerm("return");
             var typeType = ToTerm("type");
 
@@ -56,6 +58,8 @@ namespace Bish {
             var term = new NonTerminal("term");
             var expression = new NonTerminal("expression");
             var comparison = new NonTerminal("comparison");
+            var bitAnd = new NonTerminal("bitAnd");
+            var bitOr = new NonTerminal("bitOr");
             var logicAnd = new NonTerminal("logicAnd");
             var logicOr = new NonTerminal("logicOr");
             var triCondition = new NonTerminal("triCondition");
@@ -113,7 +117,9 @@ namespace Bish {
                 | comparison + "==" + expression | comparison + "!=" + expression
                 | comparison + ">" + expression | comparison + ">=" + expression
                 | comparison + "<" + expression | comparison + "<=" + expression;
-            logicAnd.Rule = comparison | logicAnd + "&&" + comparison;
+            bitAnd.Rule = comparison | bitAnd + "&" + comparison;
+            bitOr.Rule = bitAnd | bitOr + "|" + bitAnd;
+            logicAnd.Rule = bitOr | logicAnd + "&&" + bitOr;
             logicOr.Rule = logicAnd | logicOr + "||" + logicAnd;
             triCondition.Rule = logicOr | logicOr + "?" + codeBlocks + ":" + codeBlocks;
             assignment.Rule = triCondition | identifier + "=" + assignment
@@ -135,8 +141,8 @@ namespace Bish {
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
             matchingExpr.Rule |= "(" + matchingOrExpr + ")";
             matchingExpr.Rule |= notTerm + matchingOrExpr;
-            matchingAndExpr.Rule = matchingExpr | matchingAndExpr + "&" + matchingExpr;
-            matchingOrExpr.Rule = matchingAndExpr | matchingOrExpr + "|" + matchingAndExpr;
+            matchingAndExpr.Rule = matchingExpr | matchingAndExpr + andTerm + matchingExpr;
+            matchingOrExpr.Rule = matchingAndExpr | matchingOrExpr + orTerm + matchingAndExpr;
             matching.Rule = assignment | assignment + "~" + matchingOrExpr
                 | assignment + "!" + "~" + matchingOrExpr;
             statement.Rule = matching | typeValue + identifier

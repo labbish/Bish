@@ -1,10 +1,10 @@
 bool steps = true;
 def last (func f) => f();
 def norm (func fx) {
-	if (fx() ~ int _) {return 0};
+	if (fx() ~ null) {return 0};
 	return norm(last(fx)) + 1;
 };
-def f0 () {0};
+def f0 () {};
 def succ (func f) => func() => f;
 func f1 = succ(f0);
 func f2 = succ(f1);
@@ -17,8 +17,8 @@ func f8 = succ(f7);
 func f9 = succ(f8);
 def eq (func fx, func fy) {
 	if (steps) {print("eq", norm(fx), norm(fy), "\n")};
-	if (fx() ~ int _) {return fy() ~ int _};
-	if (fy() ~ int _) {return fx() ~ int _};
+	if (fx() ~ null) {return fy() ~ null};
+	if (fy() ~ null) {return fx() ~ null};
 	return eq (fx(), fy());
 };
 def add (func fx, func fy) {

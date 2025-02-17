@@ -529,7 +529,7 @@ namespace Bish {
                     else func = new(vars, f.ChildNodes[1], args, returnType);
                     Outer();
                     BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
-                        type: new(func, typeArgs: [returnType]), func));
+                        type: new(func, typeArgs: returnType == null ? [] : [returnType]), func));
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
                     return newFunc;
                 }

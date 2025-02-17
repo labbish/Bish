@@ -26,38 +26,38 @@ namespace Bish {
         }
 
         public static BishVariable operator +(BishVariable a, BishVariable b) {
-            return new(null, a.value + b.value);
+            return new(null, value: a.value + b.value);
         }
 
         public static BishVariable operator -(BishVariable a, BishVariable b) {
-            return new(null, a.value - b.value);
+            return new(null, value: a.value - b.value);
         }
 
         public static BishVariable operator +(BishVariable a) {
-            return new(null, +a.value);
+            return new(null, value: +a.value);
         }
 
         public static BishVariable operator -(BishVariable a) {
-            return new(null, -a.value);
+            return new(null, value: -a.value);
         }
 
         public static BishVariable operator *(BishVariable a, BishVariable b) {
-            return new(null, a.value * b.value);
+            return new(null, value: a.value * b.value);
         }
 
         public static BishVariable operator /(BishVariable a, BishVariable b) {
-            return new(null, a.value / b.value);
+            return new(null, value: a.value / b.value);
         }
 
         public static BishVariable operator %(BishVariable a, BishVariable b) {
-            return new(null, a.value % b.value);
+            return new(null, value: a.value % b.value);
         }
 
         public static BishVariable operator ^(BishVariable a, BishVariable b) {
             if (a.value is int && b.value is int) {
-                return new(null, (int)Math.Pow(a.value, b.value));
+                return new(null, value: (int)Math.Pow(a.value, b.value));
             }
-            return new(null, Math.Pow(a.value, b.value));
+            return new(null, value: Math.Pow(a.value, b.value));
         }
 
         public static BishVariable TriCompare(BishVariable a, BishVariable b) {
@@ -65,31 +65,31 @@ namespace Bish {
                 return new(null, 0);
             if (a.value == null || b.value == null)
                 return BishUtils.Error("Cannot Compare Between Null");
-            return new(null, a.value!.CompareTo(b.value!));
+            return new(null, value: a.value!.CompareTo(b.value!));
         }
 
         public static BishVariable operator ==(BishVariable a, BishVariable b) {
-            return new(null, a.value == b.value);
+            return new(null, value: a.value == b.value);
         }
 
         public static BishVariable operator !=(BishVariable a, BishVariable b) {
-            return new(null, a.value != b.value);
+            return new(null, value: a.value != b.value);
         }
 
         public static BishVariable operator <(BishVariable a, BishVariable b) {
-            return new(null, a.value < b.value);
+            return new(null, value: a.value < b.value);
         }
 
         public static BishVariable operator <=(BishVariable a, BishVariable b) {
-            return new(null, a.value <= b.value);
+            return new(null, value: a.value <= b.value);
         }
 
         public static BishVariable operator >(BishVariable a, BishVariable b) {
-            return new(null, a.value > b.value);
+            return new(null, value: a.value > b.value);
         }
 
         public static BishVariable operator >=(BishVariable a, BishVariable b) {
-            return new(null, a.value >= b.value);
+            return new(null, value: a.value >= b.value);
         }
 
         public static BishVariable operator &(BishVariable a, BishVariable b) {
@@ -98,22 +98,22 @@ namespace Bish {
 
         public static BishVariable operator |(BishVariable a, BishVariable b) {
             if (a.value is BishType && b.value is BishType)
-                return new(null, value: new BishType(type: "var", typeArgs: [a.value, b.value]));
+                return new(null, value: a.value | b.value);
             return BishUtils.Error("Bish has no Bit Operators");
         }
 
         public static BishVariable operator ++(BishVariable a) {
             BishUtils.Assert(!a.type.isConst, $"Cannot modify const var: {a.name}");
-            return new(null, a.value++);
+            return new(null, value: a.value++);
         }
 
         public static BishVariable operator --(BishVariable a) {
             BishUtils.Assert(!a.type.isConst, $"Cannot modify const var: {a.name}");
-            return new(null, a.value--);
+            return new(null, value: a.value--);
         }
 
         public static BishVariable operator !(BishVariable a) {
-            return new(null, !a.value);
+            return new(null, value: !a.value);
         }
 
         public BishVariable Exec(BishInArg[] args) {

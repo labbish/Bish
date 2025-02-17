@@ -370,6 +370,9 @@ namespace Bish {
             FailTest(12.44, ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
             ExpectGroupTest(12.45, ["def f(int x = 0, num y = 0) {return x + y}"],
                 ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
+            ExpectGroupTest(12.46, ["def f(int x = 0, int y = 0) {return x - y}"],
+                ["f(x: 1)", "f(y: 1)", "f(x: 2, y: 1)", "f(y: 2, x: 1)",],
+                [1, -1, 1, -1]);
 
             ExpectTest(12.51, ["def f() {return 0}", "func g = f"], "g()", 0);
             ExpectTest(12.52, ["def f() => 0"], "f()", 0);

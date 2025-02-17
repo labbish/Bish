@@ -15,7 +15,6 @@
 
         public static void Main(string[] args) {
             BishUtils.Todo("func typing");
-            BishUtils.Todo("func calls with arg names");
 
             if (DoUnitTests) BishUnitTest.Test();
 

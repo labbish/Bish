@@ -672,7 +672,7 @@ namespace Bish {
         private BishInArg EvaluateArg(ParseTreeNode node) {
             if (node.ChildNodes.Count == 1) return EvaluateArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 3
-                && node.ChildNodes[1].FindTokenAndGetText() == "=")
+                && node.ChildNodes[1].FindTokenAndGetText() == ":")
                 return new(node.ChildNodes[0].FindTokenAndGetText(),
                     Evaluate(node.ChildNodes[2]));
             return new(Evaluate(node));

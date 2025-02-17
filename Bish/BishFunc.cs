@@ -1,4 +1,6 @@
 ﻿using Irony.Parsing;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Bish {
 
@@ -26,6 +28,10 @@ namespace Bish {
         public BishVariable value = value;
 
         public BishInArg(BishVariable value) : this(null, value) {
+        }
+
+        public override string ToString() {
+            return $"{name ?? ""}{(name is null ? "" : ":")}[{value}]";
         }
     }
 
@@ -59,13 +65,22 @@ namespace Bish {
             times = 0;
             values = [];
             ErrorMsg = "";
-            List<BishVariable> args = [.. inArgs.Select(arg => arg.value)];
+            List<BishInArg> args = [.. inArgs];
             expected ??= this.args;
             try {
                 BishUtils.Assert(expected.Count >= args.Count, "Args more than Expected");
                 BishUtils.Assert(expected.Count <= args.Count, "Args less than Expected");
+                List<BishInArg> namedArgs = [.. args.Where(arg => arg.name is not null)];
+                foreach (BishInArg namedArg in namedArgs) {
+                    string name = namedArg.name!;
+                    BishUtils.Assert(expected.Any(arg => arg.name == name),
+                        $"No such Arg: {name}");
+                    args.RemoveAll(arg => arg.name == name);
+                    expected.RemoveAll(arg => arg.name == name);
+                    values.Add((name, namedArg.value));
+                }
                 for (int i = 0; i < args.Count; i++) {
-                    BishVariable arg = args[i];
+                    BishVariable arg = args[i].value;
                     BishArg expect = expected[i];
                     BishVariable value =
                         BishVars.WeakConvert(expect.type, arg, out int t);
@@ -85,7 +100,9 @@ namespace Bish {
             out List<(List<(string name, BishVariable value)>, int times)> values, out string ErrorMsg) {
             values = [];
             ErrorMsg = "";
-            List<BishVariable> args = [.. inArgs.Select(arg => arg.value)];
+            List<BishInArg> namedArgs = [.. inArgs.Where(arg => arg.name is not null)];
+            List<BishInArg> inArgsUnnamed = [.. inArgs.Where(arg => arg.name is null)];
+            List<BishVariable> args = [.. inArgsUnnamed.Select(arg => arg.value)];
             var expected = this.args;
             var defaults = expected.Where(arg => arg.defaultValue is not null).ToList();
             int n = defaults.Count;
@@ -98,8 +115,8 @@ namespace Bish {
                         exp.Remove(defaults[i]);
                         values0.Add((defaults[i].name, defaults[i].defaultValue!));
                     }
-                if (TriviallyToVars([.. inArgs], out var values1, out _, out int t, exp))
-                    values.Add(([.. values1.Concat(values0)], t));
+                bool canConvert = TriviallyToVars([.. inArgs], out var values1, out _, out int t, exp);
+                if (canConvert) values.Add(([.. values1.Concat(values0)], t));
             }
             return values.Count != 0;
         }

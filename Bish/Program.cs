@@ -15,6 +15,7 @@
 
         public static void Main(string[] args) {
             BishUtils.Todo("func matching");
+            BishUtils.Todo("where expression");
             BishUtils.Todo("decorators");
 
             if (DoUnitTests) BishUnitTest.Test();

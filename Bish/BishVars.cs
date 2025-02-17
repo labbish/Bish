@@ -36,10 +36,10 @@ namespace Bish {
             return BishUtils.Error($"Variable not found: {name}");
         }
 
-        public BishVariable Exec(ParseTreeNode node, BishVariable[] args) {
+        public BishVariable Exec(ParseTreeNode node, BishInArg[] args) {
             string name = node.FindTokenAndGetText();
             if (name == "print") {
-                Console.Write(string.Join(' ', args.Select(arg => arg.ValueString())));
+                Console.Write(string.Join(' ', args.Select(arg => arg.value.ValueString())));
                 return new(null);
             } //TEMP, for debugging
             var matched = vars.Where(var => var.name == name).ToHashSet();

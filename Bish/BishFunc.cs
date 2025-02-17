@@ -21,11 +21,19 @@ namespace Bish {
         }
     }
 
+    internal class BishInArg(string? name, BishVariable value) {
+        public string? name = name;
+        public BishVariable value = value;
+
+        public BishInArg(BishVariable value) : this(null, value) {
+        }
+    }
+
     internal interface IBishExecutable {
 
-        public BishVariable Exec(BishVariable[] args);
+        public BishVariable Exec(BishInArg[] args);
 
-        public bool MatchArgs(BishVariable[] args);
+        public bool MatchArgs(BishInArg[] args);
     }
 
     internal class BishFunc : IBishExecutable {
@@ -45,13 +53,13 @@ namespace Bish {
             VarsFrame.NewUnchecked(name, self);
         }
 
-        private bool TriviallyToVars(BishVariable[] inArgs,
+        private bool TriviallyToVars(BishInArg[] inArgs,
             out List<(string name, BishVariable value)> values, out string ErrorMsg,
             out int times, List<BishArg>? expected = null) {
             times = 0;
             values = [];
             ErrorMsg = "";
-            List<BishVariable> args = [.. inArgs];
+            List<BishVariable> args = [.. inArgs.Select(arg => arg.value)];
             expected ??= this.args;
             try {
                 BishUtils.Assert(expected.Count >= args.Count, "Args more than Expected");
@@ -73,11 +81,11 @@ namespace Bish {
             return true;
         }
 
-        private bool ToVars(BishVariable[] inArgs,
+        private bool ToVars(BishInArg[] inArgs,
             out List<(List<(string name, BishVariable value)>, int times)> values, out string ErrorMsg) {
             values = [];
             ErrorMsg = "";
-            List<BishVariable> args = [.. inArgs];
+            List<BishVariable> args = [.. inArgs.Select(arg => arg.value)];
             var expected = this.args;
             var defaults = expected.Where(arg => arg.defaultValue is not null).ToList();
             int n = defaults.Count;
@@ -90,13 +98,13 @@ namespace Bish {
                         exp.Remove(defaults[i]);
                         values0.Add((defaults[i].name, defaults[i].defaultValue!));
                     }
-                if (TriviallyToVars([.. args], out var values1, out _, out int t, exp))
+                if (TriviallyToVars([.. inArgs], out var values1, out _, out int t, exp))
                     values.Add(([.. values1.Concat(values0)], t));
             }
             return values.Count != 0;
         }
 
-        public BishVariable Exec(BishVariable[] inArgs) {
+        public BishVariable Exec(BishInArg[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
             bool success = ToVars(inArgs, out var values, out string msg);
             BishUtils.Assert(values.Count > 0, "No Possible Function Found");
@@ -124,7 +132,7 @@ namespace Bish {
             return result;
         }
 
-        public bool MatchArgs(BishVariable[] inArgs) {
+        public bool MatchArgs(BishInArg[] inArgs) {
             return ToVars(inArgs, out _, out _);
         }
 

@@ -256,10 +256,10 @@ namespace Bish {
                     && node.ChildNodes[1].FindTokenAndGetText() == "("
                     && node.ChildNodes[3].FindTokenAndGetText() == ")") {
                     if (node.ChildNodes[0].Term.Name == "identifier") {
-                        List<BishVariable> args = [];
+                        List<BishInArg> args = [];
                         if (node.ChildNodes[2].ChildNodes.Count != 0)
                             args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
-                            .Select(arg => Evaluate(arg))];
+                            .Select(arg => EvaluateArg(arg))];
                         BishVariable value;
                         try {
                             value = vars.Exec(node.ChildNodes[0], [.. args]);
@@ -270,10 +270,10 @@ namespace Bish {
                         return value;
                     }
                     else {
-                        List<BishVariable> args = [];
+                        List<BishInArg> args = [];
                         if (node.ChildNodes[2].ChildNodes.Count != 0)
                             args = [.. ToPlainArgs(node.ChildNodes[2].ChildNodes[0])
-                            .Select(arg => Evaluate(arg))];
+                            .Select(arg => EvaluateArg(arg))];
                         BishVariable value;
                         try {
                             var func = Evaluate(node.ChildNodes[0]);
@@ -667,6 +667,15 @@ namespace Bish {
                 return new(type, name, defaultValue);
             }
             return BishUtils.Error("Error Arg");
+        }
+
+        private BishInArg EvaluateArg(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 1) return EvaluateArg(node.ChildNodes[0]);
+            if (node.ChildNodes.Count == 3
+                && node.ChildNodes[1].FindTokenAndGetText() == "=")
+                return new(node.ChildNodes[0].FindTokenAndGetText(),
+                    Evaluate(node.ChildNodes[2]));
+            return new(Evaluate(node));
         }
 
         public static ParseTreeNode GetNewNode(string name = "") {

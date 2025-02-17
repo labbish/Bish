@@ -106,7 +106,7 @@ namespace Bish {
             return new BishVariable(null, !a.value);
         }
 
-        public BishVariable Exec(BishVariable[] args) {
+        public BishVariable Exec(BishInArg[] args) {
             if (value is null) BishUtils.Error($"Cannot Execute null");
             return value!.Exec(args);
         }

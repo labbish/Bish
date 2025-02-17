@@ -97,7 +97,7 @@ namespace Bish {
             literal.Rule = stringLiteral | numberLiteral | boolLiteral
                 | nullLiteral | infLiteral | interval | funcValue | varModifiedTypes;
             funcType.Rule = funcTerm;
-            funcCallArg.Rule = assignment;
+            funcCallArg.Rule = assignment | identifier + ":" + assignment;
             funcCallArgs.Rule = funcCallArg | funcCallArgs + "," + funcCallArg;
             funcCall.Rule = identifier + "(" + (funcCallArgs | Empty) + ")";
             factor.Rule = "!" + factor

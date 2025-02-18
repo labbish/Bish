@@ -39,7 +39,18 @@ namespace Bish {
         public BishVariable Exec(ParseTreeNode node, BishInArg[] args) {
             string name = node.FindTokenAndGetText();
             if (name == "print") {
-                Console.Write(string.Join(' ', args.Select(arg => arg.value.ValueString())));
+                List<BishInArg> print = [.. args];
+                string sep = " ";
+                string end = "";
+                if (print.Any(arg => arg.name == "sep")) {
+                    sep = (string)print.Where(arg => arg.name == "sep").First().value.value!;
+                    print.RemoveAll(arg => arg.name == "sep");
+                }
+                if (print.Any(arg => arg.name == "end")) {
+                    end = (string)print.Where(arg => arg.name == "end").First().value.value!;
+                    print.RemoveAll(arg => arg.name == "end");
+                }
+                Console.Write(string.Join(sep, print.Select(arg => arg.value.ValueString())) + end);
                 return new(null);
             } //TEMP, for debugging
             var matched = vars.Where(var => var.name == name).ToHashSet();

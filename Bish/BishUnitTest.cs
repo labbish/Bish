@@ -293,6 +293,9 @@ namespace Bish {
             ExpectGroupTest(10.8, ["type T = num"],
                 ["1 ~ T _", "3.14 ~ T _", "'hi' ~ T _"],
                 [true, true, false]);
+            ExpectGroupTest(10.9, ["def f(int x) => x == 0"],
+                ["1 ~ func f", "0 ~ func f", "0 ~ func func(var _) => false"],
+                [false, true, false]);
         }
 
         public static void TestGroup11() {

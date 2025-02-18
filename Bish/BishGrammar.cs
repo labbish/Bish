@@ -137,6 +137,7 @@ namespace Bish {
             typeValue.Rule = varModifiedTypes | identifier;
             matchingExpr.Rule = assignment | typeValue + identifier;
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
+            matchingExpr.Rule |= funcTerm + assignment;
             matchingExpr.Rule |= "(" + matchingOrExpr + ")";
             matchingExpr.Rule |= notTerm + matchingOrExpr;
             matchingAndExpr.Rule = matchingExpr | matchingAndExpr + andTerm + matchingExpr;

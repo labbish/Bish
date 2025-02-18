@@ -14,7 +14,6 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("func matching");
             BishUtils.Todo("where expression");
             BishUtils.Todo("decorators");
 

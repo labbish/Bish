@@ -568,6 +568,17 @@ namespace Bish {
                 return !EvaluateMatching(node, expr.ChildNodes[1]);
             }
             if (expr.ChildNodes.Count == 2
+                  && expr.ChildNodes[0].FindTokenAndGetText() == "func") {
+                BishVariable ans;
+                if (expr.ChildNodes[1].Term.Name == "identifier")
+                    ans = vars.Exec(expr.ChildNodes[1], [new(Evaluate(node.ChildNodes[0]))]);
+                else {
+                    var func = Evaluate(expr.ChildNodes[1]);
+                    ans = func.Exec([new(Evaluate(node.ChildNodes[0]))]);
+                }
+                return BishVars.WeakConvert(new(type: "bool"), ans);
+            }
+            if (expr.ChildNodes.Count == 2
                   && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
                 node.ChildNodes[1] = expr.ChildNodes[0];
                 node.ChildNodes[2] = expr.ChildNodes[1];

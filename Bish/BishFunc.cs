@@ -45,6 +45,7 @@ namespace Bish {
         private ParseTreeNode node;
         private List<BishArg> args;
         public BishType? returnType;
+        private BishThreadPool pool = new();
 
         public BishFunc(BishVars vars, ParseTreeNode node,
             List<BishArg> args, BishType? returnType = null) {
@@ -133,20 +134,7 @@ namespace Bish {
             foreach (var (name, value) in minValues[0].Item1) {
                 interpreter.vars.New(name, value);
             }
-            //return interpreter.Evaluate(node);
-            BishVariable result = new(null);
-            Exception? exception = null;
-            var thread = new Thread(() => {
-                try {
-                    result = interpreter.Evaluate(node);
-                }
-                catch (Exception ex) {
-                    exception = ex;
-                }
-            });
-            thread.Start();
-            thread.Join();
-            if (exception is not null) throw exception;
+            BishVariable result = pool.GetResult(GetHashCode(), () => interpreter.Evaluate(node))!;
             return BishVars.WeakConvert(returnType ?? new(null, "var", nullable: true), result);
         }
 

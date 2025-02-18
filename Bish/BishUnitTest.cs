@@ -301,7 +301,8 @@ namespace Bish {
         public static void TestGroup11() {
             TestGroup(11, "switch-cases");
 
-            List<string> patterns1 = ["0", "==0", "<2", ">1 or <=2", "0 and <2", "int? a", "int _"];
+            List<string> patterns1 = ["0", "==0", "<2", ">1 or <=2", "0 and <2", "int? a",
+                "int _", "func func(int a) => a <= 3"];
             for (int i = 0; i < patterns1.Count; i++) {
                 string pattern = patterns1[i];
                 ExpectTest($"11.1{i + 1}",

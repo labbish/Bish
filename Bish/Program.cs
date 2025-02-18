@@ -1,6 +1,7 @@
 ﻿namespace Bish {
 
     public class Program {
+        public const int MaxThreadCount = 128;
         public static bool ShowParseTree = false;
         public static bool WholeParseTree = false;
         public static bool ShowErrorStack = false;

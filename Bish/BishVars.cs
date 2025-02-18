@@ -121,9 +121,10 @@ namespace Bish {
                 BishUtils.Error("Cannot convert null value to not nullable type");
             }
             if (type.type == "var" && type.typeArgs.Count > 0) {
-                foreach (BishType subType in type.typeArgs) {
+                BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishType));
+                foreach (BishType? subType in type.typeArgs.Select(arg => arg.value as BishType)) {
                     try {
-                        BishVariable result = WeakConvert(subType, var, out int subConvertTimes);
+                        BishVariable result = WeakConvert(subType!, var, out int subConvertTimes);
                         ConvertTimes = subConvertTimes;
                         result.type = type;
                         return result;
@@ -180,8 +181,10 @@ namespace Bish {
             else if (type.type == "func" && type.typeArgs.Count <= 1) {
                 if (var.value is BishFunc f) {
                     value = f;
-                    if (type.typeArgs.Count == 1)
-                        value.returnType = type.typeArgs[0];
+                    if (type.typeArgs.Count == 1) {
+                        BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishType));
+                        value.returnType = type.typeArgs[0].value;
+                    }
                     converted = true;
                 }
             }

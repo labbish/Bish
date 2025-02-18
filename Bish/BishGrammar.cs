@@ -69,7 +69,6 @@ namespace Bish {
             var varTypes = new NonTerminal("varTypes");
             var varNullableTypes = new NonTerminal("varNullableTypes");
             var varModifiedTypes = new NonTerminal("varModifiedTypes");
-            var varTypeList = new NonTerminal("varTypeList");
             var typeValue = new NonTerminal("typeValue");
             var matchingExpr = new NonTerminal("matchingExpr");
             var matchingAndExpr = new NonTerminal("matchingAndExpr");
@@ -132,10 +131,9 @@ namespace Bish {
                 | "[" + assignment + "," + assignment + "]";
             varOriginalTypes.Rule = intType | numType | stringType | boolType
                 | intervalType | varType | funcType | typeType;
-            varTypes.Rule = varOriginalTypes | varOriginalTypes + "<" + varTypeList + ">";
+            varTypes.Rule = varOriginalTypes | varOriginalTypes + "[" + funcCallArgs + "]";
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
-            varTypeList.Rule = varModifiedTypes | varTypeList + "," + varModifiedTypes;
             typeValue.Rule = varModifiedTypes | identifier;
             matchingExpr.Rule = assignment | typeValue + identifier;
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
@@ -168,7 +166,7 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
-            defType.Rule = defTerm | defTerm + "<" + typeValue + ">";
+            defType.Rule = defTerm | defTerm + "[" + typeValue + "]";
             funcStateArg.Rule = typeValue + identifier
                 | typeValue + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;

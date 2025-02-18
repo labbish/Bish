@@ -55,7 +55,7 @@ namespace Bish {
         }
 
         public BishVariable Interpret(ParseTree parseTree) {
-            if (parseTree.Root == null) return BishUtils.Error("Parse tree is empty.");
+            if (parseTree.Root is null) return BishUtils.Error("Parse tree is empty.");
             var ans = Evaluate(parseTree.Root, true);
             watch.Stop();
             if (Program.ShowEvaluateSteps)
@@ -72,8 +72,8 @@ namespace Bish {
             steps++;
             watch.Start();
 
-            if (node == null) return new BishVariable(null);
-            if (node.Term == null) return new BishVariable(null);
+            if (node is null) return new BishVariable(null);
+            if (node.Term is null) return new BishVariable(null);
             else if (node.ChildNodes.Count == 3 && node.ChildNodes[1].FindTokenAndGetText() == ";") {
                 Evaluate(node.ChildNodes[0]);
                 return Evaluate(node.ChildNodes[2]);
@@ -88,7 +88,7 @@ namespace Bish {
             }
             else if (node.Term is NumberLiteral) {
                 var str = node.Token.Value.ToString();
-                BishUtils.Assert(str != null, "NumberLiteral is Null");
+                BishUtils.Assert(str is not null, "NumberLiteral is Null");
                 dynamic value;
                 if (str!.Contains('.')) value = double.Parse(str!);
                 else value = int.Parse(str!);
@@ -96,12 +96,12 @@ namespace Bish {
             }
             else if (node.Term is StringLiteral) {
                 var str = node.Token.Value.ToString();
-                BishUtils.Assert(str != null, "StringLiteral is Null");
+                BishUtils.Assert(str is not null, "StringLiteral is Null");
                 return new BishVariable(null, str!);
             }
             else if (node.Term.Name == "boolLiteral") {
                 var str = node.FindTokenAndGetText();
-                BishUtils.Assert(str != null, "BoolLiteral is Null");
+                BishUtils.Assert(str is not null, "BoolLiteral is Null");
                 bool b = str switch {
                     "true" => true,
                     "false" => false,
@@ -110,7 +110,8 @@ namespace Bish {
                 return new BishVariable(null, b);
             }
             else if (node.Term.Name == "varModifiedTypes") {
-                return new(null, value: new BishType(node), typeName: "type");
+                BishType type = EvaluateType(node);
+                return new(null, value: type, typeName: "type");
             }
             else if (node.Term.Name == "null") {
                 return new BishVariable(null);
@@ -299,7 +300,7 @@ namespace Bish {
                         ")" => false,
                         _ => null,
                     };
-                    BishUtils.Assert(left != null && right != null, $"Wrong Interval");
+                    BishUtils.Assert(left is not null && right is not null, $"Wrong Interval");
                     double from = (double)Evaluate(node.ChildNodes[1]).value;
                     double to = (double)Evaluate(node.ChildNodes[3]).value;
                     return new(null, new BishInterval(left!.Value, from, right!.Value, to), "interval");
@@ -334,13 +335,13 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[4]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if ((jump.tag != null)
+                                    if ((jump.tag is not null)
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                 }
                             }
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != null) throw;
+                            if (jump.tag is not null) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
@@ -359,13 +360,13 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[5]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if ((jump.tag != null && jump.tag != tag)
+                                    if ((jump.tag is not null && jump.tag != tag)
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                 }
                             }
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != tag && jump.tag != null) throw;
+                            if (jump.tag != tag && jump.tag is not null) throw;
                             if (jump.pos == BishJumpException.Position.START) restart = true;
                         }
                     } while (restart);
@@ -382,14 +383,14 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[1]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if (jump.tag != null
+                                    if (jump.tag is not null
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                 }
                             }
                             while (Evaluate(node.ChildNodes[4]).value);
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != null) throw;
+                            if (jump.tag is not null) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
@@ -408,14 +409,14 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[2]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if ((jump.tag != null && jump.tag != tag)
+                                    if ((jump.tag is not null && jump.tag != tag)
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                 }
                             }
                             while (Evaluate(node.ChildNodes[5]).value);
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != null && jump.tag != tag) throw;
+                            if (jump.tag is not null && jump.tag != tag) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
@@ -444,14 +445,14 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[8]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if (jump.tag != null
+                                    if (jump.tag is not null
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                     Evaluate(add);
                                 }
                             }
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != null || jump.pos == BishJumpException.Position.NEXT) throw;
+                            if (jump.tag is not null || jump.pos == BishJumpException.Position.NEXT) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
                         }
@@ -477,14 +478,14 @@ namespace Bish {
                                     result = EvaluateInScope(node.ChildNodes[9]);
                                 }
                                 catch (BishJumpException jump) {
-                                    if ((jump.tag != null && jump.tag != tag)
+                                    if ((jump.tag is not null && jump.tag != tag)
                                         || jump.pos != BishJumpException.Position.NEXT) throw;
                                     Evaluate(add);
                                 }
                             }
                         }
                         catch (BishJumpException jump) {
-                            if (jump.tag != null && jump.tag != tag
+                            if (jump.tag is not null && jump.tag != tag
                                  || jump.pos == BishJumpException.Position.NEXT) throw;
                             if (jump.pos == BishJumpException.Position.START)
                                 restart = true;
@@ -527,7 +528,7 @@ namespace Bish {
                         .Select(ToBishArg).ToList();
                     BishType? returnType = null;
                     if (node.ChildNodes[0].ChildNodes.Count == 4)
-                        returnType = new(node.ChildNodes[0].ChildNodes[2]);
+                        returnType = EvaluateType(node.ChildNodes[0].ChildNodes[2]);
                     Inner();
                     var f = node.ChildNodes[5];
                     BishFunc func;
@@ -535,7 +536,8 @@ namespace Bish {
                     else func = new(vars, f.ChildNodes[1], args, returnType);
                     Outer();
                     BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
-                        type: new(func, typeArgs: returnType == null ? [] : [returnType]), func));
+                        type: new(func, typeArgs: returnType is null ? [] :
+                        [new(null, value: returnType)]), func));
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
                     return newFunc;
                 }
@@ -673,7 +675,9 @@ namespace Bish {
         }
 
         private BishInArg EvaluateArg(ParseTreeNode node) {
-            if (node.ChildNodes.Count == 1) return EvaluateArg(node.ChildNodes[0]);
+            if (node.ChildNodes.Count == 1
+                && node.Term.Name != "assignment")
+                return EvaluateArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 3
                 && node.ChildNodes[1].FindTokenAndGetText() == ":")
                 return new(node.ChildNodes[0].FindTokenAndGetText(),
@@ -681,11 +685,40 @@ namespace Bish {
             return new(Evaluate(node));
         }
 
+        private BishType EvaluateType(ParseTreeNode node) {
+            if (node.Term.Name == "varOriginalTypes")
+                return new(type: node.FindTokenAndGetText());
+            if (node.ChildNodes.Count == 1) return EvaluateType(node.ChildNodes[0]);
+            if (node.ChildNodes.Count == 2
+                && node.ChildNodes[0].FindTokenAndGetText() == "const") {
+                BishType sub = EvaluateType(node.ChildNodes[1]);
+                sub.isConst = true;
+                return sub;
+            }
+            if (node.ChildNodes.Count == 2
+                && node.ChildNodes[1].FindTokenAndGetText() == "?") {
+                BishType sub = EvaluateType(node.ChildNodes[0]);
+                sub.nullable = true;
+                return sub;
+            }
+            if (node.ChildNodes.Count == 4
+                && node.ChildNodes[1].FindTokenAndGetText() == "["
+                && node.ChildNodes[3].FindTokenAndGetText() == "]") {
+                BishType sub = EvaluateType(node.ChildNodes[0]);
+                List<ParseTreeNode> args = ToPlainArgs(node.ChildNodes[2]);
+                List<BishVariable> typeArgs =
+                    [.. args.Select(EvaluateArg).Select(arg => arg.value)];
+                sub.typeArgs = typeArgs;
+                return sub;
+            }
+            return BishUtils.Error("Cannot Evaluate Type");
+        }
+
         public static ParseTreeNode GetNewNode(string name = "") {
             Type type = typeof(ParseTreeNode);
             ConstructorInfo? constructor =
                 type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, [], []);
-            if (constructor == null) return BishUtils.Error("Constructor not Found");
+            if (constructor is null) return BishUtils.Error("Constructor not Found");
             var node = (ParseTreeNode)constructor.Invoke(null);
             node.Term = new NonTerminal(name);
             return node;

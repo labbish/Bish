@@ -39,7 +39,7 @@ namespace Bish {
                     Console.WriteLine($"Result: {Parse(input)}");
                 }
                 catch (BishJumpException jump) {
-                    if (jump.tag != null) throw;
+                    if (jump.tag is not null) throw;
                     else BishUtils.Error($"No loops found");
                 }
             }
@@ -54,9 +54,9 @@ namespace Bish {
         }
 
         public static void PrintParseTree(ParseTreeNode node, int level = 0) {
-            if (node == null) return;
-            var isErrorNode = node.Term == null || node.Term.Name == "<error>";
-            var name = node.Term == null ? "<error>" : node.Term.Name;
+            if (node is null) return;
+            var isErrorNode = node.Term is null || node.Term.Name == "<error>";
+            var name = node.Term is null ? "<error>" : node.Term.Name;
             if (node.ChildNodes.Count != 1 || Program.WholeParseTree) {
                 Console.Write($"{new string('·', level * 2)}");
                 Console.ForegroundColor = ConsoleColor.DarkBlue;

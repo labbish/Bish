@@ -7,13 +7,7 @@ namespace Bish {
         public dynamic? value;
         public BishType type;
 
-        public BishVariable(string? name, dynamic? value = null, ParseTreeNode? typeNode = null) {
-            this.name = name;
-            this.value = value;
-            type = new(value, typeNode);
-        }
-
-        public BishVariable(string? name, dynamic? value, string typeName) {
+        public BishVariable(string? name, dynamic? value = null, string? typeName = null) {
             this.name = name;
             this.value = value;
             type = new(value, typeName);
@@ -61,9 +55,9 @@ namespace Bish {
         }
 
         public static BishVariable TriCompare(BishVariable a, BishVariable b) {
-            if (a.value == null && b.value == null)
+            if (a.value is null && b.value is null)
                 return new(null, 0);
-            if (a.value == null || b.value == null)
+            if (a.value is null || b.value is null)
                 return BishUtils.Error("Cannot Compare Between Null");
             return new(null, value: a.value!.CompareTo(b.value!));
         }
@@ -156,7 +150,7 @@ namespace Bish {
         }
 
         public BishVariable GetNullChecked() {
-            if (type.nullable || value is not null || name == null) return this;
+            if (type.nullable || value is not null || name is null) return this;
             return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
         }
     }

@@ -189,11 +189,11 @@ namespace Bish {
             ExpectVarTest(4.75, ["var? x"], "x", "x", null);
             ExpectVarTest(4.76, ["var? x = null"], "x", "x", null);
 
-            ExpectTest(4.81, ["var<int, string> x = 1", "x = 'hello'"], "x", "hello");
-            FailTest(4.82, ["var<int, string> x = 1"], "x = 3.14");
-            FailTest(4.83, ["var<int, string> x = 1"], "x = null");
-            ExpectTest(4.84, ["var<int?, string> x"], "x", null);
-            ExpectTest(4.85, ["var<int, string?> x"], "x", null);
+            ExpectTest(4.81, ["var[int, string] x = 1", "x = 'hello'"], "x", "hello");
+            FailTest(4.82, ["var[int, string] x = 1"], "x = 3.14");
+            FailTest(4.83, ["var[int, string] x = 1"], "x = null");
+            ExpectTest(4.84, ["var[int?, string] x"], "x", null);
+            ExpectTest(4.85, ["var[int, string?] x"], "x", null);
 
             ExpectTest(4.91, ["type T = int", "T x = 2"], "x", 2);
             FailTest(4.92, ["type T = int"], "T x = 3.14");
@@ -393,29 +393,29 @@ namespace Bish {
             ExpectTest(12.61, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2)", 3);
             FailTest(12.62, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
 
-            ExpectTest(12.71, ["def<int> f() => 0"], "f()", 0);
-            ExpectTest(12.72, ["def<num> f() => 0"], "f()", 0.0);
-            FailTest(12.73, ["def<int> f() => 0.1"], "f()");
-            ExpectTest(12.74, ["func<int> f = func() => 0"], "f()", 0);
-            ExpectTest(12.75, ["func<num> f = func() => 0"], "f()", 0.0);
-            FailTest(12.76, ["func<int> f = func() => 0.1"], "f()");
+            ExpectTest(12.71, ["def[int] f() => 0"], "f()", 0);
+            ExpectTest(12.72, ["def[num] f() => 0"], "f()", 0.0);
+            FailTest(12.73, ["def[int] f() => 0.1"], "f()");
+            ExpectTest(12.74, ["func[int] f = func() => 0"], "f()", 0);
+            ExpectTest(12.75, ["func[num] f = func() => 0"], "f()", 0.0);
+            FailTest(12.76, ["func[int] f = func() => 0.1"], "f()");
         }
 
         public static void Test(int? num = null) {
             try {
-                if (num == null || num == 0) TestGroup0();
-                if (num == null || num == 1) TestGroup1();
-                if (num == null || num == 2) TestGroup2();
-                if (num == null || num == 3) TestGroup3();
-                if (num == null || num == 4) TestGroup4();
-                if (num == null || num == 5) TestGroup5();
-                if (num == null || num == 6) TestGroup6();
-                if (num == null || num == 7) TestGroup7();
-                if (num == null || num == 8) TestGroup8();
-                if (num == null || num == 9) TestGroup9();
-                if (num == null || num == 10) TestGroup10();
-                if (num == null || num == 11) TestGroup11();
-                if (num == null || num == 12) TestGroup12();
+                if (num is null || num == 0) TestGroup0();
+                if (num is null || num == 1) TestGroup1();
+                if (num is null || num == 2) TestGroup2();
+                if (num is null || num == 3) TestGroup3();
+                if (num is null || num == 4) TestGroup4();
+                if (num is null || num == 5) TestGroup5();
+                if (num is null || num == 6) TestGroup6();
+                if (num is null || num == 7) TestGroup7();
+                if (num is null || num == 8) TestGroup8();
+                if (num is null || num == 9) TestGroup9();
+                if (num is null || num == 10) TestGroup10();
+                if (num is null || num == 11) TestGroup11();
+                if (num is null || num == 12) TestGroup12();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

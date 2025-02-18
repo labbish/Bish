@@ -342,63 +342,67 @@ namespace Bish {
         public static void TestGroup12() {
             TestGroup(12, "funcs");
 
-            ExpectTest(12.11, ["def f() {0}"], "f()", 0);
-            ExpectTest(12.12, ["def f() {return 0}"], "f()", 0);
-            ExpectTest(12.13, ["def f(int x) {return x}"], "f(0)", 0);
-            ExpectTest(12.14, ["int a = 0", "def f() {return a}"], "f()", 0);
-            ExpectTest(12.15, ["int a = 1", "def f() {return a}", "a = 0"], "f()", 0);
-            ExpectTest(12.16, ["int a = 1", "def f() {a = 0}", "f()"], "a", 0);
+            ExpectTest("12.1.1", ["def f() {0}"], "f()", 0);
+            ExpectTest("12.1.2", ["def f() {return 0}"], "f()", 0);
+            ExpectTest("12.1.3", ["def f(int x) {return x}"], "f(0)", 0);
+            ExpectTest("12.1.4", ["int a = 0", "def f() {return a}"], "f()", 0);
+            ExpectTest("12.1.5", ["int a = 1", "def f() {return a}", "a = 0"], "f()", 0);
+            ExpectTest("12.1.6", ["int a = 1", "def f() {a = 0}", "f()"], "a", 0);
 
-            FailTest(12.21, ["def f(int x) {x}"], "f(null)");
-            ExpectTest(12.22, ["def f(int? x) {x}"], "f(null)", null);
-            FailTest(12.23, ["def f(const int x) {x = 1}"], "f(0)");
-            ExpectTest(12.24, ["int a = 0", "def f(int x) {x = 1}", "f(a)"], "a", 0);
-            FailTest(12.25, ["def f() {int x = 1}"], "x");
+            FailTest("12.2.1", ["def f(int x) {x}"], "f(null)");
+            ExpectTest("12.2.2", ["def f(int? x) {x}"], "f(null)", null);
+            FailTest("12.2.3", ["def f(const int x) {x = 1}"], "f(0)");
+            ExpectTest("12.2.4", ["int a = 0", "def f(int x) {x = 1}", "f(a)"], "a", 0);
+            FailTest("12.2.5", ["def f() {int x = 1}"], "x");
 
-            ExpectTest(12.31, ["def f() {return 0}", "def f(int _) {return 1}"], "f()", 0);
-            ExpectTest(12.32, ["def f() {return 1}", "def f(int _) {return 0}"], "f(1)", 0);
-            FailTest(12.33, ["def f() {return 1}", "def f() {return 0}"], "f()");
+            ExpectTest("12.3.1", ["def f() {return 0}", "def f(int _) {return 1}"], "f()", 0);
+            ExpectTest("12.3.2", ["def f() {return 1}", "def f(int _) {return 0}"], "f(1)", 0);
+            FailTest("12.3.3", ["def f() {return 1}", "def f() {return 0}"], "f()");
 
-            ExpectGroupTest(12.41, ["def f(int x = 0) {return x}"],
+            ExpectGroupTest("12.4.1", ["def f(int x = 0) {return x}"],
                 ["f()", "f(1)"], [0, 1]);
-            ExpectGroupTest(12.42, ["def f(int x = 0, int y) {return x + y}"],
+            ExpectGroupTest("12.4.2", ["def f(int x = 0, int y) {return x + y}"],
                 ["f(1)", "f(1, 1)"], [1, 2]);
-            ExpectGroupTest(12.43, ["def f(int x = 0, int y = 0) {return x + y}"],
+            ExpectGroupTest("12.4.3", ["def f(int x = 0, int y = 0) {return x + y}"],
                 ["f()", "f(1, 1)"], [0, 2]);
-            FailTest(12.44, ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
-            ExpectGroupTest(12.45, ["def f(int x = 0, num y = 0) {return x + y}"],
+            FailTest("12.44", ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
+            ExpectGroupTest("12.4.5", ["def f(int x = 0, num y = 0) {return x + y}"],
                 ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
-            ExpectGroupTest(12.46, ["def f(int x = 0, int y = 0) {return x - y}"],
+            ExpectGroupTest("12.4.6", ["def f(int x = 0, int y = 0) {return x - y}"],
                 ["f(x: 1)", "f(y: 1)", "f(x: 2, y: 1)", "f(y: 2, x: 1)",],
                 [1, -1, 1, -1]);
 
-            ExpectTest(12.51, ["def f() {return 0}", "func g = f"], "g()", 0);
-            ExpectTest(12.52, ["def f() => 0"], "f()", 0);
-            ExpectTest(12.53, ["def f(int x) => x + 1"], "f(0)", 1);
-            ExpectTest(12.54, ["func f = func() {return 0}"], "f()", 0);
-            ExpectTest(12.55, ["func f = func() => 0"], "f()", 0);
-            ExpectTest(12.56, ["func f = func(int x) => x + 1"], "f(0)", 1);
-            ExpectTest(12.57, ["def f(int x) => func(int y) => x * y;"], "f(3)(5)", 15);
-            ExpectTest(12.58, ["def f(func x) => func(var a) => x(a) * 2",
+            ExpectTest("12.5.1", ["def f() {return 0}", "func g = f"], "g()", 0);
+            ExpectTest("12.5.2", ["def f() => 0"], "f()", 0);
+            ExpectTest("12.5.3", ["def f(int x) => x + 1"], "f(0)", 1);
+            ExpectTest("12.5.4", ["func f = func() {return 0}"], "f()", 0);
+            ExpectTest("12.5.5", ["func f = func() => 0"], "f()", 0);
+            ExpectTest("12.5.6", ["func f = func(int x) => x + 1"], "f(0)", 1);
+            ExpectTest("12.5.7", ["def f(int x) => func(int y) => x * y;"], "f(3)(5)", 15);
+            ExpectTest("12.5.8", ["def f(func x) => func(var a) => x(a) * 2",
                 "def g(int x) => x + 1"], "f(g)(3)", 8);
-            ExpectTest(12.59, ["def f(int x) => x <= 0 ? 1 : x * f(x - 1)"], "f(5)", 120);
+            ExpectTest("12.5.9", ["def f(int x) => x <= 0 ? 1 : x * f(x - 1)"], "f(5)", 120);
 
-            ExpectTest(12.61, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2)", 3);
-            FailTest(12.62, ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
+            ExpectTest("12.6.1", ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2)", 3);
+            FailTest("12.6.2", ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
 
-            ExpectTest(12.71, ["def[int] f() => 0"], "f()", 0);
-            ExpectTest(12.72, ["def[num] f() => 0"], "f()", 0.0);
-            FailTest(12.73, ["def[int] f() => 0.1"], "f()");
-            ExpectTest(12.74, ["func[int] f = func() => 0"], "f()", 0);
-            ExpectTest(12.75, ["func[num] f = func() => 0"], "f()", 0.0);
-            FailTest(12.76, ["func[int] f = func() => 0.1"], "f()");
+            ExpectTest("12.7.1", ["def[int] f() => 0"], "f()", 0);
+            ExpectTest("12.7.2", ["def[num] f() => 0"], "f()", 0.0);
+            FailTest("12.7.3", ["def[int] f() => 0.1"], "f()");
+            ExpectTest("12.7.4", ["func[int] f = func() => 0"], "f()", 0);
+            ExpectTest("12.7.5", ["func[num] f = func() => 0"], "f()", 0.0);
+            FailTest("12.7.6", ["func[int] f = func() => 0.1"], "f()");
 
-            ExpectTest(12.81, ["def f(int x) where(x == 0) => x"], "f(0)", 0);
-            FailTest(12.82, ["def f(int x) where(x == 0) => x"], "f(1)");
-            ExpectTest(12.83, ["func f = func(int x) where(x == 0) => x"], "f(0)", 0);
-            FailTest(12.84, ["func f = func(int x) where(x == 0) => x"], "f(1)");
-            ExpectTest(12.85, ["int x = 0", "def g() {x = 1; true}",
+            ExpectTest("12.8.1", ["def f(int x) where(x == 0) => x"], "f(0)", 0);
+            FailTest("12.8.2", ["def f(int x) where(x == 0) => x"], "f(1)");
+            ExpectTest("12.8.3", ["func f = func(int x) where(x == 0) => x"], "f(0)", 0);
+            FailTest("12.8.4", ["func f = func(int x) where(x == 0) => x"], "f(1)");
+            ExpectTest("12.8.5", ["int x = 0", "def g() {x = 1; true}",
                 "def f() where(g()) => 0", "f()"], "x", 1);
+
+            FailTest("12.9.1", ["def f() => 0"], "f = 0");
+            ExpectTest("12.9.2", ["def f() => 0", "f = func() => 1"], "f()", 1);
+            FailTest("12.9.3", ["const def f() => 0"], "f = func() => 1");
         }
 
         public static void TestGroup13() {

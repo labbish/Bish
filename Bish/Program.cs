@@ -15,7 +15,6 @@
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            BishUtils.Todo("const funcs");
             BishUtils.Todo("decorators");
 
             if (DoUnitTests) BishUnitTest.Test();

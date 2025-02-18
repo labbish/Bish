@@ -511,7 +511,8 @@ namespace Bish {
                 }
 
                 if (node.ChildNodes.Count == 5
-                    && node.ChildNodes[0].FindTokenAndGetText() == "func") {
+                    && node.ChildNodes[0].Term.Name == "funcStateType") {
+                    var (isConst, returnType) = EvaluateFuncType(node.ChildNodes[0]);
                     var args = ToPlainArgs(node.ChildNodes[2])
                         .Select(ToBishArg).ToList();
                     Inner();
@@ -526,12 +527,10 @@ namespace Bish {
                     return new(null, func);
                 }
                 if (node.ChildNodes.Count == 6
-                    && node.ChildNodes[0].FindTokenAndGetText() == "def") {
+                    && node.ChildNodes[0].Term.Name == "defStateType") {
+                    var (isConst, returnType) = EvaluateFuncType(node.ChildNodes[0]);
                     var args = ToPlainArgs(node.ChildNodes[3])
                         .Select(ToBishArg).ToList();
-                    BishType? returnType = null;
-                    if (node.ChildNodes[0].ChildNodes.Count == 4)
-                        returnType = EvaluateType(node.ChildNodes[0].ChildNodes[2]);
                     Inner();
                     var f = node.ChildNodes[5];
                     ParseTreeNode? where = null;
@@ -543,7 +542,7 @@ namespace Bish {
                     Outer();
                     BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
                         type: new(func, typeArgs: returnType is null ? [] :
-                        [new(null, value: returnType)]), func));
+                        [new(null, value: returnType)], isConst: isConst), func));
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
                     return newFunc;
                 }
@@ -730,6 +729,29 @@ namespace Bish {
                 return sub;
             }
             return BishUtils.Error("Cannot Evaluate Type");
+        }
+
+        private (bool isConst, BishType? returnType) EvaluateFuncType(ParseTreeNode node) {
+            if (node.ChildNodes.Count == 0
+                && (node.Term.Name == "def" || node.Term.Name == "func")) {
+                return (false, null);
+            }
+            if (node.ChildNodes.Count == 1) {
+                return EvaluateFuncType(node.ChildNodes[0]);
+            }
+            if (node.ChildNodes.Count == 2
+                && node.ChildNodes[0].FindTokenAndGetText() == "const") {
+                var (_, returnType) = EvaluateFuncType(node.ChildNodes[1]);
+                return (true, returnType);
+            }
+            if (node.ChildNodes.Count == 4
+                && node.ChildNodes[1].FindTokenAndGetText() == "["
+                && node.ChildNodes[3].FindTokenAndGetText() == "]") {
+                var (isConst, _) = EvaluateFuncType(node.ChildNodes[0]);
+                BishType? returnType = Evaluate(node.ChildNodes[2]).value;
+                return (isConst, returnType);
+            }
+            return BishUtils.Error("Wrong Func Type");
         }
 
         public static ParseTreeNode GetNewNode(string name = "") {

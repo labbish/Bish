@@ -392,6 +392,13 @@ namespace Bish {
             ExpectTest(12.74, ["func[int] f = func() => 0"], "f()", 0);
             ExpectTest(12.75, ["func[num] f = func() => 0"], "f()", 0.0);
             FailTest(12.76, ["func[int] f = func() => 0.1"], "f()");
+
+            ExpectTest(12.81, ["def f(int x) where(x == 0) => x"], "f(0)", 0);
+            FailTest(12.82, ["def f(int x) where(x == 0) => x"], "f(1)");
+            ExpectTest(12.83, ["func f = func(int x) where(x == 0) => x"], "f(0)", 0);
+            FailTest(12.84, ["func f = func(int x) where(x == 0) => x"], "f(1)");
+            ExpectTest(12.85, ["int x = 0", "def g() {x = 1; true}",
+                "def f() where(g()) => 0", "f()"], "x", 1);
         }
 
         public static void TestGroup13() {

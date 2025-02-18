@@ -516,9 +516,12 @@ namespace Bish {
                         .Select(ToBishArg).ToList();
                     Inner();
                     var f = node.ChildNodes[4];
+                    ParseTreeNode? where = null;
+                    if (node.ChildNodes[3].ChildNodes.Count == 5)
+                        where = node.ChildNodes[3].ChildNodes[3];
                     BishFunc func;
-                    if (f.ChildNodes.Count == 1) func = new(vars, f, args);
-                    else func = new(vars, f.ChildNodes[1], args);
+                    if (f.ChildNodes.Count == 1) func = new(vars, f, args, where: where);
+                    else func = new(vars, f.ChildNodes[1], args, where: where);
                     Outer();
                     return new(null, func);
                 }
@@ -531,9 +534,12 @@ namespace Bish {
                         returnType = EvaluateType(node.ChildNodes[0].ChildNodes[2]);
                     Inner();
                     var f = node.ChildNodes[5];
+                    ParseTreeNode? where = null;
+                    if (node.ChildNodes[4].ChildNodes.Count == 5)
+                        where = node.ChildNodes[4].ChildNodes[3];
                     BishFunc func;
-                    if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType);
-                    else func = new(vars, f.ChildNodes[1], args, returnType);
+                    if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType, where);
+                    else func = new(vars, f.ChildNodes[1], args, returnType, where);
                     Outer();
                     BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
                         type: new(func, typeArgs: returnType is null ? [] :

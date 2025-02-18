@@ -2,11 +2,11 @@
 
     internal class BishThreadPool {
         private const int MaxThreadCount = Program.MaxThreadCount;
-        private readonly List<int> threads = [];
+        private int count = 0;
 
-        public T? GetResult<T>(int hash, Func<T> func) {
-            CheckThreadCount(hash);
-            threads.Add(hash);
+        public T? GetResult<T>(Func<T> func) {
+            CheckThreadCount();
+            count++;
             T? result = default;
             Exception? exception = null;
             Thread thread = new(() => {
@@ -19,13 +19,12 @@
             });
             thread.Start();
             thread.Join();
-            threads.Remove(hash);
+            count--;
             if (exception is not null) throw exception;
             return result;
         }
 
-        private void CheckThreadCount(int hash) {
-            int count = threads.Where(thread => thread == hash).Count();
+        private void CheckThreadCount() {
             if (count > MaxThreadCount)
                 throw new BishThreadOverflowException($"Thread Overflow: Found {MaxThreadCount} Same Threads");
         }

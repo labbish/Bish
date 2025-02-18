@@ -41,20 +41,24 @@ namespace Bish {
     }
 
     internal class BishFunc : IBishExecutable {
+        private BishThreadPool pool = new();
+
         private BishVars VarsFrame;
         private ParseTreeNode node;
         private List<BishArg> args;
         public BishType? returnType;
-        private BishThreadPool pool = new();
+        private ParseTreeNode? where;
 
         public BishFunc(BishVars vars, ParseTreeNode node,
-            List<BishArg> args, BishType? returnType = null) {
+            List<BishArg> args, BishType? returnType = null,
+            ParseTreeNode? where = null) {
             VarsFrame = new(vars);
             this.node = node;
             this.args = args;
             HashSet<string> names = [.. args.Select(arg => arg.name)];
             BishUtils.Assert(names.Count == args.Count, $"Duplicate Argument");
             this.returnType = returnType;
+            this.where = where;
         }
 
         public void BindSelf(string name, BishVariable self) {
@@ -126,6 +130,7 @@ namespace Bish {
         public BishVariable Exec(BishInArg[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
             bool success = ToVars(inArgs, out var values, out string msg);
+            values = [.. values.Where(x => WhereCheck(x.Item1))];
             BishUtils.Assert(values.Count > 0, "No Possible Function Found");
             int minTimes = values.Min(x => x.times);
             var minValues = values.Where(x => x.times == minTimes).ToList();
@@ -134,8 +139,17 @@ namespace Bish {
             foreach (var (name, value) in minValues[0].Item1) {
                 interpreter.vars.New(name, value);
             }
-            BishVariable result = pool.GetResult(GetHashCode(), () => interpreter.Evaluate(node))!;
+            BishVariable result = pool.GetResult(() => interpreter.Evaluate(node))!;
             return BishVars.WeakConvert(returnType ?? new(null, "var", nullable: true), result);
+        }
+
+        private bool WhereCheck(List<(string name, BishVariable value)> vars) {
+            if (where is null) return true;
+            BishInterpreter interpreter = new(VarsFrame);
+            foreach (var (name, value) in vars) {
+                interpreter.vars.New(name, value);
+            }
+            return interpreter.Evaluate(where).value;
         }
 
         public bool MatchArgs(BishInArg[] inArgs) {

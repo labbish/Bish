@@ -45,6 +45,7 @@ namespace Bish {
             var orTerm = ToTerm("or");
             var returnTerm = ToTerm("return");
             var typeType = ToTerm("type");
+            var whereTerm = ToTerm("where");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -171,9 +172,11 @@ namespace Bish {
             funcStateArg.Rule = typeValue + identifier
                 | typeValue + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
-            funcStatement.Rule = defType + identifier + "(" + (funcStateArgs | Empty) + ")"
+            funcStatement.Rule = defType + identifier + "(" + (funcStateArgs | Empty)
+                + (")" | ")" + whereTerm + "(" + sentence + ")")
                 + (structure | "=>" + statement);
-            funcValue.Rule = funcType + "(" + (funcStateArgs | Empty) + ")"
+            funcValue.Rule = funcType + "(" + (funcStateArgs | Empty)
+                + (")" | ")" + whereTerm + "(" + sentence + ")")
                 + (structure | "=>" + statement);
             root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
 

@@ -709,6 +709,7 @@ namespace Bish {
                 List<BishVariable> typeArgs =
                     [.. args.Select(EvaluateArg).Select(arg => arg.value)];
                 sub.typeArgs = typeArgs;
+                sub.Simplify();
                 return sub;
             }
             return BishUtils.Error("Cannot Evaluate Type");

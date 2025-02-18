@@ -188,17 +188,6 @@ namespace Bish {
             FailTest(4.74, ["var x = 1"], "x = null");
             ExpectVarTest(4.75, ["var? x"], "x", "x", null);
             ExpectVarTest(4.76, ["var? x = null"], "x", "x", null);
-
-            ExpectTest(4.81, ["var[int, string] x = 1", "x = 'hello'"], "x", "hello");
-            FailTest(4.82, ["var[int, string] x = 1"], "x = 3.14");
-            FailTest(4.83, ["var[int, string] x = 1"], "x = null");
-            ExpectTest(4.84, ["var[int?, string] x"], "x", null);
-            ExpectTest(4.85, ["var[int, string?] x"], "x", null);
-
-            ExpectTest(4.91, ["type T = int", "T x = 2"], "x", 2);
-            FailTest(4.92, ["type T = int"], "T x = 3.14");
-            ExpectTest(4.93, ["type T = int|string", "T x = 'hello'"], "x", "hello");
-            FailTest(4.94, ["type T = int|string"], "T x = 3.14");
         }
 
         private static void TestGroup5() {
@@ -401,6 +390,26 @@ namespace Bish {
             FailTest(12.76, ["func[int] f = func() => 0.1"], "f()");
         }
 
+        public static void TestGroup13() {
+            TestGroup(13, "types");
+
+            ExpectTest(13.11, ["var[int, string] x = 1", "x = 'hello'"], "x", "hello");
+            FailTest(13.12, ["var[int, string] x = 1"], "x = 3.14");
+            FailTest(13.13, ["var[int, string] x = 1"], "x = null");
+            ExpectTest(13.14, ["var[int?, string] x"], "x", null);
+            ExpectTest(13.15, ["var[int, string?] x"], "x", null);
+
+            ExpectTest(13.21, ["type T = int", "T x = 2"], "x", 2);
+            FailTest(13.22, ["type T = int"], "T x = 3.14");
+            ExpectTest(13.23, ["type T = int|string", "T x = 'hello'"], "x", "hello");
+            FailTest(13.24, ["type T = int|string"], "T x = 3.14");
+
+            SameTest(13.31, "var[int]", "int");
+            SameTest(13.32, "var[int?]", "int?");
+            SameTest(13.33, "var[int?]", "var[int]?");
+            SameTest(13.34, "var[int?, var[string|var[num], int], num]", "num|string|int?");
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num is null || num == 0) TestGroup0();
@@ -416,6 +425,7 @@ namespace Bish {
                 if (num is null || num == 10) TestGroup10();
                 if (num is null || num == 11) TestGroup11();
                 if (num is null || num == 12) TestGroup12();
+                if (num is null || num == 13) TestGroup13();
 
                 if (Program.StopIfTestFinished) {
                     Console.ForegroundColor = ConsoleColor.Cyan;

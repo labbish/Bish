@@ -1,4 +1,7 @@
-﻿namespace Bish {
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+namespace Bish {
 
     internal class BishUtils {
 
@@ -10,13 +13,16 @@
             throw new ArgumentException(message);
         }
 
-        public static dynamic NotImplemented() {
-            return Error("Function Not Implemented");
+        public static dynamic NotImplemented([CallerMemberName] string caller = "") {
+            var stackTrace = new StackTrace();
+            var methodInfo = stackTrace.GetFrame(1)?.GetMethod();
+            var className = methodInfo?.DeclaringType?.Name;
+            return Error($"Function '{className}.{caller}' Not Implemented");
         }
 
         public static void Todo(string todo) {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"### TODO: {todo}");
+            Console.WriteLine($"###TODO: {todo}");
             Console.ResetColor();
         }
     }

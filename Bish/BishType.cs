@@ -16,7 +16,7 @@ namespace Bish {
         private bool IsNullable() {
             if (type == "var" && typeArgs.Count != 0) {
                 BishUtils.Assert(typeArgs.All(arg => arg.value is BishType));
-                return typeArgs.Any(T => T.value!.IsNullable());
+                return _nullable || typeArgs.Any(T => T.value!.IsNullable());
             }
             return _nullable;
         }
@@ -42,11 +42,6 @@ namespace Bish {
             Simplify();
         }
 
-        public BishType(string name) {
-            type = name;
-            Simplify();
-        }
-
         public static string? GetTypeName(dynamic? value) {
             if (value is null) return null;
             if (!TypeNames.ContainsKey(value.GetType())) return null;
@@ -58,18 +53,37 @@ namespace Bish {
                 [new(null, value: a), new(null, value: b)]).Simplify();
         }
 
-        public static BishVariable operator ==(BishType a, BishType b) {
+        public static bool operator ==(BishType a, BishType b) {
             a.Simplify();
             b.Simplify();
-            return BishUtils.NotImplemented();
-            return new(null, value: a.type == b.type && a.typeArgs == b.typeArgs);
+            if (a.typeArgs.Count != b.typeArgs.Count) return false;
+            if (!(a.type == b.type && a.nullable == b.nullable && a.isConst == b.isConst))
+                return false;
+            if (a.type == "var") {
+                BishUtils.Assert(a.typeArgs.All(arg => arg.value is BishType));
+                BishUtils.Assert(b.typeArgs.All(arg => arg.value is BishType));
+                List<BishVariable> args1 = [.. a.typeArgs];
+                List<BishVariable> args2 = [.. b.typeArgs];
+                while (args1.Count != 0) {
+                    BishVariable arg1 = args1[0];
+                    List<BishVariable> found = [.. args2.Where(arg => (arg == arg1).value)];
+                    if (found.Count != 1) return false;
+                    args1.Remove(arg1);
+                    args2.Remove(found[0]);
+                }
+                return true;
+            }
+            int count = a.typeArgs.Count;
+            for (int i = 0; i < count; i++)
+                if ((a.typeArgs[i] != b.typeArgs[i]).value) return false;
+            return true;
         }
 
-        public static BishVariable operator !=(BishType a, BishType b) {
-            return BishUtils.NotImplemented();
+        public static bool operator !=(BishType a, BishType b) {
+            return !(a == b);
         }
 
-        private BishType Simplify() {
+        public BishType Simplify() {
             if (type == "var" && typeArgs.Count > 0) {
                 BishUtils.Assert(typeArgs.All(arg => arg.value is BishType));
                 List<BishType> types = PossibleTypes(this);
@@ -86,6 +100,12 @@ namespace Bish {
                     foreach (BishType? type in typeArgs.Select(arg => arg.value as BishType))
                         type!._nullable = true;
             }
+            if (type == "var" && typeArgs.Count == 1) {
+                BishType sub = (typeArgs[0].value as BishType)!;
+                nullable = nullable || sub.nullable;
+                type = sub.type;
+                typeArgs = [];
+            }
             return this;
         }
 
@@ -93,8 +113,10 @@ namespace Bish {
             if (T.type == "var" && T.typeArgs.Count > 0) {
                 BishUtils.Assert(T.typeArgs.All(arg => arg.value is BishType));
                 List<BishType> ans = [];
-                foreach (BishType? sub in T.typeArgs.Select(arg => arg.value as BishType))
+                foreach (BishType? sub in T.typeArgs.Select(arg => arg.value as BishType)) {
+                    sub!.nullable = sub!.nullable || T.nullable;
                     ans.AddRange(PossibleTypes(sub!));
+                }
                 return ans;
             }
             return [T];
@@ -103,9 +125,9 @@ namespace Bish {
         public override string ToString() {
             return (isConst ? "const " : "")
                 + (type ?? "(?)")
-                + (typeArgs.Count > 0 ? "<" : "")
+                + (typeArgs.Count > 0 ? "[" : "")
                 + string.Join(',', typeArgs.Select(t => t is null ? "null" : t.ValueString()))
-                + (typeArgs.Count > 0 ? ">" : "")
+                + (typeArgs.Count > 0 ? "]" : "")
                 + (_nullable ? "?" : "");
         }
 

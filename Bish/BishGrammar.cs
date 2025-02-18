@@ -90,6 +90,7 @@ namespace Bish {
             var caseBlocks = new NonTerminal("caseBlocks");
             var switchExpr = new NonTerminal("switchExpr");
             var switchStatement = new NonTerminal("switchStatement");
+            var decorator = new NonTerminal("decorator");
             var defType = new NonTerminal("defType");
             var defConstType = new NonTerminal("defConstType");
             var defStateType = new NonTerminal("defStateType");
@@ -171,13 +172,14 @@ namespace Bish {
             caseBlocks.Rule = caseBlock | caseBlocks + caseBlock;
             switchExpr.Rule = assignment | assignment + "!";
             switchStatement.Rule = switchTerm + "(" + switchExpr + ")" + "{" + caseBlocks + "}";
+            decorator.Rule = "@" + assignment;
             defType.Rule = defTerm | defTerm + "[" + typeValue + "]";
             funcStateArg.Rule = typeValue + identifier
                 | typeValue + identifier + "=" + assignment;
             funcStateArgs.Rule = funcStateArg | funcStateArgs + "," + funcStateArg;
             defConstType.Rule = defType | constModifier + defType;
-            defStateType.Rule = defConstType;
-            funcStateType.Rule = funcType;
+            defStateType.Rule = defConstType | decorator + defStateType;
+            funcStateType.Rule = funcType | decorator + funcStateType;
             funcStatement.Rule = defStateType + identifier + "(" + (funcStateArgs | Empty)
                 + (")" | ")" + whereTerm + "(" + sentence + ")")
                 + (structure | "=>" + statement);

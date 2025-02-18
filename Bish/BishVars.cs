@@ -61,16 +61,17 @@ namespace Bish {
             return BishUtils.Error($"Function not found: {name}");
         }
 
-        public BishVariable Set(ParseTreeNode node, BishVariable value) {
+        public BishVariable Set(ParseTreeNode node, BishVariable value, bool checkConst = true) {
             string name = node.FindTokenAndGetText();
-            return Set(name, value);
+            return Set(name, value, checkConst);
         }
 
-        public BishVariable Set(string name, BishVariable value) {
+        public BishVariable Set(string name, BishVariable value, bool checkConst = true) {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
-                BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
+                if (checkConst)
+                    BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
                 BishVariable newVar = new(null, value.value);
                 WeakConvert(var.type, newVar); //might throw
                 var.value = newVar.value;

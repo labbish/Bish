@@ -512,7 +512,7 @@ namespace Bish {
 
                 if (node.ChildNodes.Count == 5
                     && node.ChildNodes[0].Term.Name == "funcStateType") {
-                    var (isConst, returnType) = EvaluateFuncType(node.ChildNodes[0]);
+                    var (isConst, returnType, decorators) = EvaluateFuncType(node.ChildNodes[0]);
                     var args = ToPlainArgs(node.ChildNodes[2])
                         .Select(ToBishArg).ToList();
                     Inner();
@@ -523,12 +523,15 @@ namespace Bish {
                     BishFunc func;
                     if (f.ChildNodes.Count == 1) func = new(vars, f, args, where: where);
                     else func = new(vars, f.ChildNodes[1], args, where: where);
+                    foreach (BishVariable decorator in decorators) {
+                        func = decorator.Exec([new(new(null, func))]).value!;
+                    }
                     Outer();
                     return new(null, func);
                 }
                 if (node.ChildNodes.Count == 6
                     && node.ChildNodes[0].Term.Name == "defStateType") {
-                    var (isConst, returnType) = EvaluateFuncType(node.ChildNodes[0]);
+                    var (isConst, returnType, decorators) = EvaluateFuncType(node.ChildNodes[0]);
                     var args = ToPlainArgs(node.ChildNodes[3])
                         .Select(ToBishArg).ToList();
                     Inner();
@@ -544,6 +547,11 @@ namespace Bish {
                         type: new(func, typeArgs: returnType is null ? [] :
                         [new(null, value: returnType)], isConst: isConst), func));
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
+                    foreach (BishVariable decorator in decorators) {
+                        vars.Set(node.ChildNodes[1],
+                            decorator.Exec([new(newFunc)]), checkConst: false);
+                        newFunc = vars.Get(node.ChildNodes[1]);
+                    }
                     return newFunc;
                 }
 
@@ -731,25 +739,32 @@ namespace Bish {
             return BishUtils.Error("Cannot Evaluate Type");
         }
 
-        private (bool isConst, BishType? returnType) EvaluateFuncType(ParseTreeNode node) {
+        private (bool isConst, BishType? returnType, List<BishVariable> decorators)
+            EvaluateFuncType(ParseTreeNode node) {
             if (node.ChildNodes.Count == 0
                 && (node.Term.Name == "def" || node.Term.Name == "func")) {
-                return (false, null);
+                return (false, null, []);
             }
             if (node.ChildNodes.Count == 1) {
                 return EvaluateFuncType(node.ChildNodes[0]);
             }
             if (node.ChildNodes.Count == 2
                 && node.ChildNodes[0].FindTokenAndGetText() == "const") {
-                var (_, returnType) = EvaluateFuncType(node.ChildNodes[1]);
-                return (true, returnType);
+                var (_, returnType, decorators) = EvaluateFuncType(node.ChildNodes[1]);
+                return (true, returnType, decorators);
+            }
+            if (node.ChildNodes.Count == 2
+                && node.ChildNodes[0].Term.Name == "decorator") {
+                var (isConst, returnType, decorators) = EvaluateFuncType(node.ChildNodes[1]);
+                BishVariable decorator = Evaluate(node.ChildNodes[0].ChildNodes[1]);
+                return (isConst, returnType, [.. decorators.Concat([decorator])]);
             }
             if (node.ChildNodes.Count == 4
                 && node.ChildNodes[1].FindTokenAndGetText() == "["
                 && node.ChildNodes[3].FindTokenAndGetText() == "]") {
-                var (isConst, _) = EvaluateFuncType(node.ChildNodes[0]);
+                var (isConst, _, decorators) = EvaluateFuncType(node.ChildNodes[0]);
                 BishType? returnType = Evaluate(node.ChildNodes[2]).value;
-                return (isConst, returnType);
+                return (isConst, returnType, decorators);
             }
             return BishUtils.Error("Wrong Func Type");
         }

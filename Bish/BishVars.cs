@@ -22,17 +22,13 @@ namespace Bish {
             return vars.GetEnumerator();
         }
 
-        public BishVariable Get(ParseTreeNode node) {
+        public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
-            foreach (BishVariable var in matched) return var.GetNullChecked();
-            return BishUtils.Error($"Variable not found: {name}");
-        }
-
-        public BishVariable GetUnchecked(ParseTreeNode node) {
-            string name = node.FindTokenAndGetText();
-            var matched = vars.Where(var => var.name == name).ToHashSet();
-            foreach (BishVariable var in matched) return var;
+            foreach (BishVariable var in matched) {
+                if (checkNull) return var.GetNullChecked();
+                else return var;
+            }
             return BishUtils.Error($"Variable not found: {name}");
         }
 
@@ -61,12 +57,14 @@ namespace Bish {
             return BishUtils.Error($"Function not found: {name}");
         }
 
-        public BishVariable Set(ParseTreeNode node, BishVariable value, bool checkConst = true) {
+        public BishVariable Set(ParseTreeNode node, BishVariable value,
+            bool checkConst = true, bool checkExist = true) {
             string name = node.FindTokenAndGetText();
-            return Set(name, value, checkConst);
+            return Set(name, value, checkConst, checkExist);
         }
 
-        public BishVariable Set(string name, BishVariable value, bool checkConst = true) {
+        public BishVariable Set(string name, BishVariable value,
+            bool checkConst = true, bool checkExist = true) {
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
@@ -77,43 +75,22 @@ namespace Bish {
                 var.value = newVar.value;
                 return new(null, value.value);
             }
-            return BishUtils.Error($"Variable not found: {name}");
-        }
-
-        public BishVariable SetIfExist(string name, BishVariable value) {
-            if (name.All(c => c == '_')) return new(null, value.value);
-            var matched = vars.Where(var => var.name == name).ToHashSet();
-            foreach (BishVariable var in matched) {
-                BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
-                BishVariable newVar = new(null, value.value);
-                WeakConvert(var.type, newVar); //might throw
-                var.value = newVar.value;
-                return new(null, value.value);
-            }
+            if (checkExist) return BishUtils.Error($"Variable not found: {name}");
             return new(null);
         }
 
-        public BishVariable New(ParseTreeNode node, BishVariable value) {
+        public BishVariable New(ParseTreeNode node, BishVariable value, bool checkExist = true) {
             string name = node.FindTokenAndGetText();
-            return New(name, value);
+            return New(name, value, checkExist);
         }
 
-        public BishVariable New(string name, BishVariable value) {
+        public BishVariable New(string name, BishVariable value, bool checkExist = true) {
             if (name.All(c => c == '_')) return new(null, value.value);
-            var matched = vars.Where(var => var.name == name).ToHashSet();
-            BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
+            if (checkExist) {
+                var matched = vars.Where(var => var.name == name).ToHashSet();
+                BishUtils.Assert(matched.Count == 0, $"Var {name} already exists");
+            }
             vars.Add(new BishVariable(name: name, type: value.type, value: value.value));
-            return value;
-        }
-
-        public BishVariable NewUnchecked(ParseTreeNode node, BishVariable value) {
-            string name = node.FindTokenAndGetText();
-            return NewUnchecked(name, value);
-        }
-
-        public BishVariable NewUnchecked(string name, BishVariable value) {
-            if (name.All(c => c == '_')) return new(null, value.value);
-            vars.Add(new BishVariable(name, value.type, value.value));
             return value;
         }
 

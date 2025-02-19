@@ -365,7 +365,7 @@ namespace Bish {
                 ["f(1)", "f(1, 1)"], [1, 2]);
             ExpectGroupTest("12.4.3", ["def f(int x = 0, int y = 0) {return x + y}"],
                 ["f()", "f(1, 1)"], [0, 2]);
-            FailTest("12.44", ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
+            FailTest("12.4.4", ["def f(int x = 0, int y = 0) {return x + y}"], "f(1)");
             ExpectGroupTest("12.4.5", ["def f(int x = 0, num y = 0) {return x + y}"],
                 ["f()", "f(0.1)", "f(1)", "f(1, 1)"], [0, 0.1, 1, 2]);
             ExpectGroupTest("12.4.6", ["def f(int x = 0, int y = 0) {return x - y}"],
@@ -399,10 +399,20 @@ namespace Bish {
             FailTest("12.8.4", ["func f = func(int x) where(x == 0) => x"], "f(1)");
             ExpectTest("12.8.5", ["int x = 0", "def g() {x = 1; true}",
                 "def f() where(g()) => 0", "f()"], "x", 1);
+            ExpectTest("12.8.6", ["def f(int x) where(x == 0) => x",
+                "def f(int x) => 1"], "f(1)", 1);
 
             FailTest("12.9.1", ["def f() => 0"], "f = 0");
             ExpectTest("12.9.2", ["def f() => 0", "f = func() => 1"], "f()", 1);
             FailTest("12.9.3", ["const def f() => 0"], "f = func() => 1");
+
+            ExpectTest("12.10.1", ["def a(func f) => func() => f() + 1",
+                "@a def f() => 1"], "f()", 2);
+            ExpectTest("12.10.2", ["def a(func f) => func() => f() + 1",
+                "@a @a def f() => 1"], "f()", 3);
+            ExpectTest("12.10.3", ["def a(func f) => func() => f() + 1",
+                "def b(func f) => func() => f() * 2",
+                "@a @b def f() => 1"], "f()", 3);
         }
 
         public static void TestGroup13() {

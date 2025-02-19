@@ -543,9 +543,9 @@ namespace Bish {
                     if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType, where);
                     else func = new(vars, f.ChildNodes[1], args, returnType, where);
                     Outer();
-                    BishVariable newFunc = vars.NewUnchecked(node.ChildNodes[1], new(null,
-                        type: new(func, typeArgs: returnType is null ? [] :
-                        [new(null, value: returnType)], isConst: isConst), func));
+                    BishVariable newFunc = vars.New(node.ChildNodes[1], new(null, type: new(func,
+                        typeArgs: returnType is null ? [] : [new(null, value: returnType)],
+                        isConst: isConst), func), checkExist: false);
                     func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
                     foreach (BishVariable decorator in decorators) {
                         vars.Set(node.ChildNodes[1],

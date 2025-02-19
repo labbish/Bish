@@ -62,7 +62,7 @@ namespace Bish {
         }
 
         public void BindSelf(string name, BishVariable self) {
-            VarsFrame.NewUnchecked(name, self);
+            VarsFrame.New(name, self, checkExist: false);
         }
 
         private bool TriviallyToVars(BishInArg[] inArgs,
@@ -124,13 +124,13 @@ namespace Bish {
                 bool canConvert = TriviallyToVars([.. inArgs], out var values1, out _, out int t, exp);
                 if (canConvert) values.Add(([.. values1.Concat(values0)], t));
             }
+            values = [.. values.Where(x => WhereCheck(x.Item1))];
             return values.Count != 0;
         }
 
         public BishVariable Exec(BishInArg[] inArgs) {
             BishInterpreter interpreter = new(VarsFrame);
             bool success = ToVars(inArgs, out var values, out string msg);
-            values = [.. values.Where(x => WhereCheck(x.Item1))];
             BishUtils.Assert(values.Count > 0, "No Possible Function Found");
             int minTimes = values.Min(x => x.times);
             var minValues = values.Where(x => x.times == minTimes).ToList();

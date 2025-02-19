@@ -392,6 +392,7 @@ namespace Bish {
             ExpectTest("12.7.4", ["func[int] f = func() => 0"], "f()", 0);
             ExpectTest("12.7.5", ["func[num] f = func() => 0"], "f()", 0.0);
             FailTest("12.7.6", ["func[int] f = func() => 0.1"], "f()");
+            FailTest("12.7.7", ["def f() => 0", "def f(int _) => 1"], "f");
 
             ExpectTest("12.8.1", ["def f(int x) where(x == 0) => x"], "f(0)", 0);
             FailTest("12.8.2", ["def f(int x) where(x == 0) => x"], "f(1)");

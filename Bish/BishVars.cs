@@ -25,11 +25,10 @@ namespace Bish {
         public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
             string name = node.FindTokenAndGetText();
             var matched = vars.Where(var => var.name == name).ToHashSet();
-            foreach (BishVariable var in matched) {
-                if (checkNull) return var.GetNullChecked();
-                else return var;
-            }
-            return BishUtils.Error($"Variable not found: {name}");
+            var values = matched.Select(var => checkNull ? var.GetNullChecked() : var).ToHashSet();
+            BishUtils.Assert(values.Count <= 1, $"Multiple variables found: {name}");
+            BishUtils.Assert(values.Count > 0, $"Variable not found: {name}");
+            return values.First();
         }
 
         public BishVariable Exec(ParseTreeNode node, BishInArg[] args) {

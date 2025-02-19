@@ -178,8 +178,11 @@ namespace Bish {
                     if (node.ChildNodes.Count == 4
                         && node.ChildNodes[1].FindTokenAndGetText() == "!"
                         && node.ChildNodes[2].FindTokenAndGetText() == "~") {
-                        node.ChildNodes.RemoveAt(1);
-                        return !Evaluate(node);
+                        var newNode = GetNewNode();
+                        newNode.ChildNodes.Add(node.ChildNodes[0]);
+                        newNode.ChildNodes.Add(node.ChildNodes[2]);
+                        newNode.ChildNodes.Add(node.ChildNodes[3]);
+                        return !Evaluate(newNode);
                     }
                 }
                 if (node.ChildNodes.Count == 3
@@ -577,8 +580,11 @@ namespace Bish {
             }
             if (expr.ChildNodes.Count == 2
                   && expr.ChildNodes[0].FindTokenAndGetText() == "not") {
-                node.ChildNodes[2] = expr.ChildNodes[1];
-                return !EvaluateMatching(node, expr.ChildNodes[1]);
+                var newNode = GetNewNode();
+                newNode.ChildNodes.Add(node.ChildNodes[0]);
+                newNode.ChildNodes.Add(node.ChildNodes[1]);
+                newNode.ChildNodes.Add(expr.ChildNodes[1]);
+                return !EvaluateMatching(newNode, expr.ChildNodes[1]);
             }
             if (expr.ChildNodes.Count == 2
                   && expr.ChildNodes[0].FindTokenAndGetText() == "func") {
@@ -593,9 +599,13 @@ namespace Bish {
             }
             if (expr.ChildNodes.Count == 2
                   && BishGrammar.MatchableOperators.Contains(expr.ChildNodes[0].FindTokenAndGetText())) {
-                node.ChildNodes[1] = expr.ChildNodes[0];
-                node.ChildNodes[2] = expr.ChildNodes[1];
-                return Evaluate(node);
+                var newNode = GetNewNode();
+                newNode.ChildNodes.Add(node.ChildNodes[0]);
+                newNode.ChildNodes.Add(expr.ChildNodes[0]);
+                newNode.ChildNodes.Add(expr.ChildNodes[1]);
+                //node.ChildNodes[1] = expr.ChildNodes[0];
+                //node.ChildNodes[2] = expr.ChildNodes[1];
+                return Evaluate(newNode);
             }
             else if (expr.ChildNodes.Count == 2) {
                 BishVariable value = Evaluate(node.ChildNodes[0]);

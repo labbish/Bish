@@ -1,0 +1,22 @@
+def pair(var? v0, var? v1) => func (bool b) => (b ? v1 : v0);
+def first(func node) => node(false);
+def second(func node) => node(true);
+def node(int value, func? next) => pair(value, next);
+def node(int value) => node(value, null);
+def add_front(func list, int value) {
+	var newNode = node(value, list);
+	return newNode;
+};
+def for_each(func? list, func f) {
+	print("w\n");
+	if (list !~ null){
+		f(first(list));
+		for_each(second(list), f);
+	}
+};
+
+var list = node(3);
+list = add_front(list, 2);
+list = add_front(list, 1);
+list = add_front(list, 0);
+for_each(list, func(int x) => print(x));

@@ -153,7 +153,7 @@ namespace Bish {
                 | typeValue + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
-            sentence.Rule = Empty | statement | jump | continueTerm | returnTerm + statement;
+            sentence.Rule = Empty | statement | jump | continueTerm | returnTerm | returnTerm + statement;
             sentences.Rule = root | sentence | sentences + ";" + root;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";

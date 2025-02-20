@@ -358,6 +358,7 @@ namespace Bish {
             ExpectTest("12.3.1", ["def f() {return 0}", "def f(int _) {return 1}"], "f()", 0);
             ExpectTest("12.3.2", ["def f() {return 1}", "def f(int _) {return 0}"], "f(1)", 0);
             FailTest("12.3.3", ["def f() {return 1}", "def f() {return 0}"], "f()");
+            ExpectTest("12.3.4", ["def f() {return}"], "f()", null);
 
             ExpectGroupTest("12.4.1", ["def f(int x = 0) {return x}"],
                 ["f()", "f(1)"], [0, 1]);

@@ -119,6 +119,9 @@ namespace Bish {
             else if (node.Term.Name == "inf") {
                 return new BishVariable(null, double.PositiveInfinity);
             }
+            else if (node.ChildNodes.Count == 0
+                && node.FindTokenAndGetText() == "return")
+                throw new BishReturnException(new(null));
             else if (node.Term is NonTerminal) {
                 if (node.ChildNodes.Count == 0) return new BishVariable(null);
                 if (node.ChildNodes.Count == 1

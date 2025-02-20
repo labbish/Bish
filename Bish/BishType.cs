@@ -1,6 +1,4 @@
-﻿using Irony.Parsing;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishType {
         public string? type = null;

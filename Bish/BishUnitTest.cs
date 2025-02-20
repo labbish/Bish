@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishUnitTest {
 

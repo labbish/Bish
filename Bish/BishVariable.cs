@@ -116,19 +116,36 @@
                 false => "false",
                 null => "null",
                 BishFunc => "[func]",
-                _ => $"{value}",
+                _ => value.ToString(),
             };
         }
 
         public string DebugValueString() {
             return value switch {
-                string str => $"\"{str}\"",
+                string str => $"\"{AntiEscape(str)}\"",
                 _ => ValueString(),
             };
         }
 
         public override string ToString() {
             return $"var [{name ?? "TEMP"}] with value {DebugValueString()}, type <{type}>";
+        }
+
+        private static string AntiEscape(string str) {
+            string s = str;
+            s = s.Replace("\\", "\\\\");
+            s = s.Replace("\a", "\\a");
+            s = s.Replace("\b", "\\b");
+            s = s.Replace("\e", "\\e");
+            s = s.Replace("\f", "\\f");
+            s = s.Replace("\n", "\\n");
+            s = s.Replace("\r", "\\r");
+            s = s.Replace("\t", "\\t");
+            s = s.Replace("\v", "\\v");
+            s = s.Replace("\'", "\\\'");
+            s = s.Replace("\"", "\\\"");
+            s = s.Replace("\0", "\\0");
+            return s;
         }
 
         public override bool Equals(object? obj) {

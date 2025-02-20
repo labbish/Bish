@@ -1,4 +1,10 @@
-﻿namespace Bish {
+﻿global using Irony.Parsing;
+global using System.Reflection;
+global using System.Diagnostics;
+global using System.Collections;
+global using System.Runtime.CompilerServices;
+
+namespace Bish {
 
     public class Program {
         public const int MaxThreadCount = 128;

@@ -1,7 +1,4 @@
-﻿using Irony.Parsing;
-using System.Collections;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishVars : IEnumerable<BishVariable> {
         public HashSet<BishVariable> vars;

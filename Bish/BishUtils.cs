@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishUtils {
 

@@ -1,6 +1,4 @@
-﻿using Irony.Parsing;
-
-namespace Bish {
+﻿namespace Bish {
 
     public class BishGrammar : Grammar {
         public static readonly List<string> MatchableOperators = ["==", "!=", "<", "<=", ">", ">="];

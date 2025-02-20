@@ -1,7 +1,4 @@
-﻿using Irony.Parsing;
-using System.Diagnostics;
-using System.Reflection;
-
+﻿
 namespace Bish {
 
     internal class BishInterpreter {

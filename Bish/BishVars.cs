@@ -10,6 +10,10 @@ namespace Bish {
             vars = [];
         }
 
+        public void Clear() {
+            vars = [];
+        }
+
         public BishVars(BishVars original) {
             vars = [.. original.vars];
         }

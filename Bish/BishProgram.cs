@@ -14,7 +14,7 @@ namespace Bish {
             grammar = new();
             parser = new(grammar);
             watch.Stop();
-            Console.WriteLine($"Parser Initialized after {watch.Elapsed.Microseconds:N2}ms");
+            Console.WriteLine($"Parser Initialized after {watch.Elapsed.TotalMilliseconds:N2}ms");
         }
 
         public BishProgram() {

@@ -33,6 +33,7 @@
                 else if (input == "time") ShowEvaluateTime = !ShowEvaluateTime;
                 else if (input == "steps") ShowEvaluateSteps = !ShowEvaluateSteps;
                 else if (input == "depth") ShowVarsStackDepth = !ShowVarsStackDepth;
+                else if (input == "clear") program.bishInterpreter.vars.Clear();
                 else if (inputs.Length == 2 && inputs[0] == "test") {
                     if (int.TryParse(inputs[1], out int num)) BishUnitTest.Test(num);
                 }

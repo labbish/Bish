@@ -21,13 +21,14 @@ def eq (func fx, func fy) {
 	if (fy() ~ null) {return fx() ~ null};
 	return eq (fx(), fy());
 };
+def eq0 (func fx) => (fx() ~ null);
 def add (func fx, func fy) {
 	if (steps) {print("add", norm(fx), norm(fy), "\n")};
-	if (eq(fx, f0)) {return fy};
+	if (eq0(fx)) {return fy};
 	return succ(add(last(fx), fy));
 };
 def mul (func fx, func fy) {
 	if (steps) {print("mul", norm(fx), norm(fy), "\n")};
-	if (eq(fx, f0)) {return f0};
+	if (eq0(fx)) {return f0};
 	return add(mul(last(fx), fy), fy);
 };

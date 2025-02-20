@@ -1,14 +1,12 @@
-﻿using System.Text;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishSingleInterval {
         public bool fromPoint; //is close
-        public double from;
+        public BishNum from;
         public bool toPoint; //is close
-        public double to;
+        public BishNum to;
 
-        public BishSingleInterval(bool fromP, double from, bool toP, double to) {
+        public BishSingleInterval(bool fromP, BishNum from, bool toP, BishNum to) {
             BishUtils.Assert(from <= to, "Interval Length cannot be Negative");
             fromPoint = fromP;
             this.from = from;
@@ -23,14 +21,14 @@ namespace Bish {
             to = other.to;
         }
 
-        public static bool operator <(double x, BishSingleInterval I) {
+        public static bool operator <(BishNum x, BishSingleInterval I) {
             if (I.from < x && x < I.to) return true;
             if (x == I.from && I.fromPoint) return true;
             if (x == I.to && I.toPoint) return true;
             return false;
         }
 
-        public static bool operator >(double _, BishSingleInterval __) {
+        public static bool operator >(BishNum _, BishSingleInterval __) {
             return BishUtils.Error();
         }
 
@@ -81,7 +79,7 @@ namespace Bish {
         }
 
         public static bool Intersect(BishSingleInterval i1, BishSingleInterval i2) {
-            double a1 = i1.from, a2 = i2.from, b1 = i1.to, b2 = i2.to;
+            BishNum a1 = i1.from, a2 = i2.from, b1 = i1.to, b2 = i2.to;
             if (a1 == b2 && !i1.fromPoint && !i2.toPoint) return false;
             if (a2 == b1 && !i1.toPoint && !i2.fromPoint) return false;
             if (b1 < a2 || b2 < a1) return false;
@@ -144,7 +142,7 @@ namespace Bish {
             intervals = [interval];
         }
 
-        public BishInterval(bool fromP, double from, bool toP, double to) {
+        public BishInterval(bool fromP, BishNum from, bool toP, BishNum to) {
             intervals = [new(fromP, from, toP, to)];
         }
 
@@ -156,12 +154,12 @@ namespace Bish {
             return new BishInterval(interval);
         }
 
-        public static bool operator <(double x, BishInterval I) {
+        public static bool operator <(BishNum x, BishInterval I) {
             foreach (var interval in I.intervals) if (x < interval) return true;
             return false;
         }
 
-        public static bool operator >(double _, BishInterval __) {
+        public static bool operator >(BishNum _, BishInterval __) {
             return BishUtils.Error("operator > is not implemented for (num, interval)");
         }
 

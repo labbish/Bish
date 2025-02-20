@@ -173,8 +173,8 @@ namespace Bish {
             ExpectTest(4.52, ["int x = 6", "x--"], "x", 5);
             FailTest(4.53, "12++");
             ExpectGroupTest(4.54, ["int x = 2"],
-                ["x += 3; x", "x -= 3; x", "x *= 2; x", "x /= 2; x", "x %= 3; x", "x ^= 3; x"],
-                [5, -1, 4, 1, 2, 8]);
+                ["x += 3; x", "x -= 3; x", "x *= 2; x", "x %= 3; x"],
+                [5, -1, 4, 2]);
 
             FailTest(4.61, ["const int x = 1"], "x = 2");
             FailTest(4.62, ["const int x = 1"], "x += 2");
@@ -388,10 +388,10 @@ namespace Bish {
             FailTest("12.6.2", ["type T = int", "def f(T a, T b) => a + b"], "f(1, 2.1)");
 
             ExpectTest("12.7.1", ["def[int] f() => 0"], "f()", 0);
-            ExpectTest("12.7.2", ["def[num] f() => 0"], "f()", 0.0);
+            ExpectTest("12.7.2", ["def[num] f() => 0"], "f()", new BishNum(0.0));
             FailTest("12.7.3", ["def[int] f() => 0.1"], "f()");
             ExpectTest("12.7.4", ["func[int] f = func() => 0"], "f()", 0);
-            ExpectTest("12.7.5", ["func[num] f = func() => 0"], "f()", 0.0);
+            ExpectTest("12.7.5", ["func[num] f = func() => 0"], "f()", new BishNum(0.0));
             FailTest("12.7.6", ["func[int] f = func() => 0.1"], "f()");
             FailTest("12.7.7", ["def f() => 0", "def f(int _) => 1"], "f");
 

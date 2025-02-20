@@ -25,7 +25,7 @@ namespace Bish {
 
         static BishType() {
             TypeNames[typeof(BishInt)] = "int";
-            TypeNames[typeof(double)] = "num";
+            TypeNames[typeof(BishNum)] = "num";
             TypeNames[typeof(string)] = "string";
             TypeNames[typeof(bool)] = "bool";
             TypeNames[typeof(BishInterval)] = "interval";

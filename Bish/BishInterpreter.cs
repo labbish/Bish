@@ -90,7 +90,7 @@ namespace Bish {
                 var str = node.Token.Value.ToString();
                 BishUtils.Assert(str is not null, "NumberLiteral is Null");
                 dynamic value;
-                if (str!.Contains('.')) value = double.Parse(str!);
+                if (str!.Contains('.')) value = BishNum.Parse(str!);
                 else value = BishInt.Parse(str!);
                 return new BishVariable(null, value);
             }
@@ -307,8 +307,8 @@ namespace Bish {
                         _ => null,
                     };
                     BishUtils.Assert(left is not null && right is not null, $"Wrong Interval");
-                    double from = (double)Evaluate(node.ChildNodes[1]).value;
-                    double to = (double)Evaluate(node.ChildNodes[3]).value;
+                    BishNum from = (BishNum)Evaluate(node.ChildNodes[1]).value!;
+                    BishNum to = (BishNum)Evaluate(node.ChildNodes[3]).value!;
                     return new(null, new BishInterval(left!.Value, from, right!.Value, to), "interval");
                 }
                 if (node.ChildNodes.Count == 5

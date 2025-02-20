@@ -46,10 +46,7 @@
         }
 
         public static BishVariable operator ^(BishVariable a, BishVariable b) {
-            if (a.value is int && b.value is int) {
-                return new(null, value: (int)Math.Pow(a.value, b.value));
-            }
-            return new(null, value: Math.Pow(a.value, b.value));
+            return new(null, value: a.value ^ b.value);
         }
 
         public static BishVariable TriCompare(BishVariable a, BishVariable b) {

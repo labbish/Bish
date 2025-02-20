@@ -130,11 +130,11 @@ namespace Bish {
                 ConvertTimes += 1;
             }
             if (type.type == "num" && type.typeArgs.Count == 0) {
-                if (var.value is double num) {
+                if (var.value is BishNum num) {
                     value = num;
                     converted = true;
                 }
-                else if (var.value is int i) {
+                else if (var.value is BishInt i) {
                     value = i;
                     converted = true;
                     ConvertTimes++;

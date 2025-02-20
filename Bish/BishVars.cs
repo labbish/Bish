@@ -135,7 +135,7 @@ namespace Bish {
                     converted = true;
                 }
                 else if (var.value is BishInt i) {
-                    value = i;
+                    value = (BishNum)i;
                     converted = true;
                     ConvertTimes++;
                 }

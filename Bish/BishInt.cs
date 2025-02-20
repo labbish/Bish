@@ -11,6 +11,13 @@
             return new(value);
         }
 
+        public static explicit operator BishInt(BishNum value) {
+            if (double.IsPositiveInfinity(value.value)) return Inf;
+            if (double.IsNegativeInfinity(value.value)) return -Inf;
+            if (double.IsNaN(value.value)) return NaN;
+            return new((int)value.value);
+        }
+
         private static int Sign(int x) {
             if (x > 0) return 1;
             if (x == 0) return 0;
@@ -61,16 +68,23 @@
             return new(a.value * b.value);
         }
 
-        public static BishNum operator /(BishInt a, BishInt b) {
+        public static dynamic operator /(BishInt a, BishInt b) {
+            if (a % b == 0) return new BishInt(a.value / b.value);
             return (BishNum)a / (BishNum)b;
         }
 
         public static BishInt operator %(BishInt a, BishInt b) {
+            if (a.isNaN || b.isNaN) return NaN;
+            if (a.isInf && !b.isInf) return a;
+            if (!a.isInf && b.isInf) return a;
+            if (a.isInf && b.isInf) return NaN;
             return new(a.value % b.value);
         }
 
-        public static BishNum operator ^(BishInt a, BishInt b) {
-            return (BishNum)a ^ (BishNum)b;
+        public static dynamic operator ^(BishInt a, BishInt b) {
+            BishNum result = (BishNum)a ^ (BishNum)b;
+            if (b >= 0) return (BishInt)result;
+            return result;
         }
 
         public static BishInt operator ++(BishInt a) {

@@ -24,7 +24,7 @@ namespace Bish {
         public static readonly Dictionary<Type, string> TypeNames = [];
 
         static BishType() {
-            TypeNames[typeof(int)] = "int";
+            TypeNames[typeof(BishInt)] = "int";
             TypeNames[typeof(double)] = "num";
             TypeNames[typeof(string)] = "string";
             TypeNames[typeof(bool)] = "bool";

@@ -20,23 +20,23 @@ namespace Bish {
             this.vars = scope.currentVars;
         }
 
-        private void showDepth(string msg) {
+        private void ShowDepth(string msg) {
             if (Program.ShowVarsStackDepth)
                 Console.WriteLine($"{msg} {new string('#', scope.Depth() * 2)}");
         }
 
         private void Inner() {
-            showDepth(">>");
+            ShowDepth(">>");
             scope.Inner();
             vars = scope.currentVars;
-            showDepth(">>");
+            ShowDepth(">>");
         }
 
         private void Outer() {
-            showDepth("<<");
+            ShowDepth("<<");
             scope.Outer();
             vars = scope.currentVars;
-            showDepth("<<");
+            ShowDepth("<<");
         }
 
         private BishVariable EvaluateInScope(ParseTreeNode parseTree) {
@@ -91,7 +91,7 @@ namespace Bish {
                 BishUtils.Assert(str is not null, "NumberLiteral is Null");
                 dynamic value;
                 if (str!.Contains('.')) value = double.Parse(str!);
-                else value = int.Parse(str!);
+                else value = BishInt.Parse(str!);
                 return new BishVariable(null, value);
             }
             else if (node.Term is StringLiteral) {
@@ -117,7 +117,7 @@ namespace Bish {
                 return new BishVariable(null);
             }
             else if (node.Term.Name == "inf") {
-                return new BishVariable(null, double.PositiveInfinity);
+                return new BishVariable(null, BishInt.Inf);
             }
             else if (node.ChildNodes.Count == 0
                 && node.FindTokenAndGetText() == "return")

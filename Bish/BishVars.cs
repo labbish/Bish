@@ -141,7 +141,7 @@ namespace Bish {
                 }
             }
             else if (type.type == "int" && type.typeArgs.Count == 0) {
-                if (var.value is int num) {
+                if (var.value is BishInt num) {
                     value = num;
                     converted = true;
                 }

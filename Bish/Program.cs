@@ -47,7 +47,7 @@ namespace Bish {
                     ExecuteFile(inputs[1]);
                 else if (input == "vars")
                     Console.WriteLine($"vars = {program.bishInterpreter.vars}");
-                else program.Run(input);
+                else program.Run(input + "\n");
             }
         }
 
@@ -55,7 +55,7 @@ namespace Bish {
             try {
                 filename = Trim(filename);
                 string content = File.ReadAllText(filename);
-                program.Run(content);
+                program.Run(content + "\n");
             }
             catch (Exception ex) {
                 Console.WriteLine($"Cannot Read File {filename}: {ex.Message}");

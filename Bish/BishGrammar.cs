@@ -4,6 +4,9 @@
         public static readonly List<string> MatchableOperators = ["==", "!=", "<", "<=", ">", ">="];
 
         public BishGrammar() {
+            var singleComment = new CommentTerminal("singleComment", "//", "\n");
+            var multiComment = new CommentTerminal("multiComment", "/*", "*/");
+
             var identifier = new IdentifierTerminal("identifier");
             var numberLiteral = new NumberLiteral("numberLiteral");
             var singleString = new StringLiteral("single_string", "'");
@@ -151,8 +154,10 @@
                 | typeValue + identifier + "=" + matching;
             jumpPos.Rule = endPos | startPos | nextPos;
             jump.Rule = jumpTerm + jumpPos + "[" + identifier + "]" | jumpTerm + jumpPos;
-            sentence.Rule = Empty | statement | jump | continueTerm | returnTerm | returnTerm + statement;
-            sentences.Rule = root | sentence | sentences + ";" + root;
+            sentence.Rule = Empty | statement | jump | continueTerm
+                | returnTerm | returnTerm + statement;
+            sentences.Rule = root | sentence | sentences + ";" + root
+                | singleComment + sentence | multiComment + sentence;
             structure.Rule = "{" + sentences + "}";
             codeBlocks.Rule = sentences | "{" + sentences + "}";
             ifStatement.Rule = codeBlocks | ifTerm + "(" + sentence + ")" + structure

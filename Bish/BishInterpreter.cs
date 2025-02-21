@@ -1,5 +1,4 @@
-﻿
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishInterpreter {
         public BishScope scope;
@@ -53,6 +52,7 @@ namespace Bish {
 
         public BishVariable Interpret(ParseTree parseTree) {
             if (parseTree.Root is null) return BishUtils.Error("Parse tree is empty.");
+            ClearComments(parseTree.Root);
             var ans = Evaluate(parseTree.Root, true);
             watch.Stop();
             if (Program.ShowEvaluateSteps)
@@ -62,6 +62,15 @@ namespace Bish {
                     + $"Average Cost {watch.Elapsed.TotalMilliseconds / steps:N2} ms");
             watch.Reset();
             return ans;
+        }
+
+        public static void ClearComments(ParseTreeNode node) {
+            List<ParseTreeNode> removes = [];
+            foreach (ParseTreeNode child in node.ChildNodes)
+                if (child.Term.Name == "singleComment" || child.Term.Name == "multiComment")
+                    removes.Add(child);
+            foreach (ParseTreeNode remove in removes) node.ChildNodes.Remove(remove);
+            foreach (ParseTreeNode child in node.ChildNodes) ClearComments(child);
         }
 
         public BishVariable Evaluate(ParseTreeNode node, bool isRoot = false) {

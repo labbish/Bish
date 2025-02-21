@@ -16,6 +16,13 @@
             this.vars = scope.currentVars;
         }
 
+        public static BishInterpreter GetInterpreter(BishVars vars) {
+            BishInterpreter interpreter = new();
+            interpreter.scope = BishScope.GetScope(vars);
+            interpreter.vars = interpreter.scope.currentVars;
+            return interpreter;
+        }
+
         private void ShowDepth(string msg) {
             if (Program.ShowVarsStackDepth)
                 Console.WriteLine($"{msg} {new string('#', scope.Depth() * 2)}");
@@ -570,7 +577,8 @@
                 if (node.ChildNodes.Count == 5
                     && node.ChildNodes[0].FindTokenAndGetText() == "class") {
                     string name = node.ChildNodes[1].FindTokenAndGetText();
-                    BishType type = EvaluateClass(name, node.ChildNodes[3]);
+                    BishType type = new(name);
+                    EvaluateInClass(type, node.ChildNodes[3]);
                     BishVariable typeVar = new(name, value: type);
                     vars.New(name, typeVar);
                     return vars.Get(name);
@@ -797,8 +805,21 @@
             return BishUtils.Error("Wrong Func Type");
         }
 
-        private BishType EvaluateClass(string name, ParseTreeNode node) {
-            return BishUtils.NotImplemented();
+        private void EvaluateInClass(BishType type, ParseTreeNode node) {
+            var interpreter = GetInterpreter(type.members);
+            if (node.ChildNodes.Count == 0) return;
+            else if (node.ChildNodes.Count == 1) EvaluateInClass(type, node.ChildNodes[0]);
+            else if (node.ChildNodes.Count == 3
+                && node.ChildNodes[1].FindTokenAndGetText() == ";") {
+                EvaluateInClass(type, node.ChildNodes[0]);
+                EvaluateInClass(type, node.ChildNodes[2]);
+            }
+            else if (node.Term.Name == "classVarStatement") {
+                var newNode = CopyNode(node, "statement");
+                interpreter.Evaluate(newNode);
+            }
+            else BishUtils.Error("In-Class Expression Not Supported");
+            //BishUtils.NotImplemented();
         }
 
         public static ParseTreeNode GetNewNode(string name = "") {
@@ -808,6 +829,12 @@
             if (constructor is null) return BishUtils.Error("Constructor not Found");
             var node = (ParseTreeNode)constructor.Invoke(null);
             node.Term = new NonTerminal(name);
+            return node;
+        }
+
+        public static ParseTreeNode CopyNode(ParseTreeNode from, string name = "") {
+            var node = GetNewNode(name);
+            foreach (var child in from.ChildNodes) node.ChildNodes.Add(child);
             return node;
         }
     }

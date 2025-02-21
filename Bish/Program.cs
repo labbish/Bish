@@ -47,6 +47,13 @@ namespace Bish {
                     ExecuteFile(inputs[1]);
                 else if (input == "vars")
                     Console.WriteLine($"vars = {program.bishInterpreter.vars}");
+                else if (inputs.Length == 2 && inputs[0] == "vars") {
+                    var value = program.bishInterpreter.vars.Get(inputs[1]).value;
+                    if (value is BishType type)
+                        Console.WriteLine($"vars = {type.members}");
+                    if (value is BishFunc func)
+                        Console.WriteLine($"vars = {func.varsFrame}");
+                }
                 else program.Run(input + "\n");
             }
         }

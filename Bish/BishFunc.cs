@@ -1,5 +1,4 @@
-﻿
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishArg {
         public BishTypeInfo type;
@@ -42,7 +41,7 @@ namespace Bish {
     internal class BishFunc : IBishExecutable {
         private BishThreadPool pool = new();
 
-        private BishVars VarsFrame;
+        public BishVars varsFrame;
         private ParseTreeNode node;
         private List<BishArg> args;
         public BishTypeInfo? returnType;
@@ -51,7 +50,7 @@ namespace Bish {
         public BishFunc(BishVars vars, ParseTreeNode node,
             List<BishArg> args, BishTypeInfo? returnType = null,
             ParseTreeNode? where = null) {
-            VarsFrame = new(vars);
+            varsFrame = new(vars);
             this.node = node;
             this.args = args;
             HashSet<string> names = [.. args.Select(arg => arg.name)];
@@ -61,7 +60,7 @@ namespace Bish {
         }
 
         public void BindSelf(string name, BishVariable self) {
-            VarsFrame.New(name, self, checkExist: false);
+            varsFrame.New(name, self, checkExist: false);
         }
 
         private bool TriviallyToVars(BishInArg[] inArgs,
@@ -128,7 +127,7 @@ namespace Bish {
         }
 
         public BishVariable Exec(BishInArg[] inArgs) {
-            BishInterpreter interpreter = new(VarsFrame);
+            BishInterpreter interpreter = new(varsFrame);
             bool success = ToVars(inArgs, out var values, out string msg);
             BishUtils.Assert(values.Count > 0, "No Possible Function Found");
             int minTimes = values.Min(x => x.times);
@@ -144,7 +143,7 @@ namespace Bish {
 
         private bool WhereCheck(List<(string name, BishVariable value)> vars) {
             if (where is null) return true;
-            BishInterpreter interpreter = new(VarsFrame);
+            BishInterpreter interpreter = new(varsFrame);
             foreach (var (name, value) in vars) {
                 interpreter.vars.New(name, value);
             }

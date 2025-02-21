@@ -15,6 +15,13 @@
             currentVars = VarsStack[^1];
         }
 
+        public static BishScope GetScope(BishVars vars) {
+            BishScope scope = new();
+            scope.VarsStack = [vars];
+            scope.currentVars = scope.VarsStack[^1];
+            return scope;
+        }
+
         public void Inner() {
             VarsStack.Add(new(currentVars));
             currentVars = VarsStack[^1];

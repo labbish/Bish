@@ -1,5 +1,6 @@
 ﻿namespace Bish {
-    internal class BishType {
-        private BishVars members = new();
+    internal class BishType(string name) {
+        public string name = name;
+        public BishVars members = new();
     }
 }

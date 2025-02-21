@@ -28,7 +28,9 @@
             TypeNames[typeof(bool)] = "bool";
             TypeNames[typeof(BishInterval)] = "interval";
             TypeNames[typeof(BishFunc)] = "func";
+            TypeNames[typeof(BishType)] = "type";
             TypeNames[typeof(BishTypeInfo)] = "type";
+            //Well if you think this needs fixing You're right
         }
 
         public BishTypeInfo(dynamic? value = null, string? type = null, bool? nullable = null,

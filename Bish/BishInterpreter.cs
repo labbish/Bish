@@ -202,6 +202,12 @@
                     }
                 }
                 if (node.ChildNodes.Count == 3
+                    && node.ChildNodes[1].FindTokenAndGetText() == ".") {
+                    dynamic? value = Evaluate(node.ChildNodes[0]).value;
+                    string member = node.ChildNodes[2].FindTokenAndGetText();
+                    return BishUtils.NotImplemented();
+                }
+                if (node.ChildNodes.Count == 3
                     && node.ChildNodes[0].FindTokenAndGetText() == "("
                     && node.ChildNodes[2].FindTokenAndGetText() == ")")
                     return Evaluate(node.ChildNodes[1]);
@@ -815,8 +821,7 @@
                 EvaluateInClass(type, node.ChildNodes[2]);
             }
             else if (node.Term.Name == "classVarStatement") {
-                var newNode = CopyNode(node, "statement");
-                interpreter.Evaluate(newNode);
+                interpreter.Evaluate(CopyNode(node, "statement"));
             }
             else BishUtils.Error("In-Class Expression Not Supported");
             //BishUtils.NotImplemented();

@@ -118,7 +118,8 @@
             factor.Rule = "!" + factor
                 | "+" + factor | "-" + factor | factor + "++" | factor + "--"
                 | literal | identifier | "(" + codeBlocks + ")" | funcCall
-                | statement + "(" + (funcCallArgs | Empty) + ")";
+                | statement + "(" + (funcCallArgs | Empty) + ")"
+                | statement + "." + identifier;
             powerExpr.Rule = factor | powerExpr + "^" + factor;
             term.Rule = powerExpr | term + "*" + powerExpr | term + "/" + powerExpr
                 | term + "%" + powerExpr;

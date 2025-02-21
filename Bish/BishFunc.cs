@@ -2,14 +2,14 @@
 namespace Bish {
 
     internal class BishArg {
-        public BishType type;
+        public BishTypeInfo type;
         public string name;
         public BishVariable? defaultValue;
 
         public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null)
             : this(type: new(typeNode), name, defaultValue) { }
 
-        public BishArg(BishType type, string name, BishVariable? defaultValue = null) {
+        public BishArg(BishTypeInfo type, string name, BishVariable? defaultValue = null) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
@@ -45,11 +45,11 @@ namespace Bish {
         private BishVars VarsFrame;
         private ParseTreeNode node;
         private List<BishArg> args;
-        public BishType? returnType;
+        public BishTypeInfo? returnType;
         private ParseTreeNode? where;
 
         public BishFunc(BishVars vars, ParseTreeNode node,
-            List<BishArg> args, BishType? returnType = null,
+            List<BishArg> args, BishTypeInfo? returnType = null,
             ParseTreeNode? where = null) {
             VarsFrame = new(vars);
             this.node = node;

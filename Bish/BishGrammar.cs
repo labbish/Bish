@@ -47,6 +47,7 @@
             var returnTerm = ToTerm("return");
             var typeType = ToTerm("type");
             var whereTerm = ToTerm("where");
+            var classTerm = ToTerm("class");
 
             var stringLiteral = new NonTerminal("stringLiteral");
             var boolLiteral = new NonTerminal("boolLiteral");
@@ -100,6 +101,10 @@
             var funcStateArg = new NonTerminal("funcStateArg");
             var funcStateArgs = new NonTerminal("funcStateArgs");
             var funcStatement = new NonTerminal("funcStatement");
+            var classVarStatement = new NonTerminal("classVarStatement");
+            var classSentence = new NonTerminal("classSentence");
+            var classSentences = new NonTerminal("classSentences");
+            var classStatement = new NonTerminal("classStatement");
             var root = new NonTerminal("root");
 
             stringLiteral.Rule = singleString | doubleString | rawString;
@@ -189,7 +194,13 @@
             funcValue.Rule = funcStateType + "(" + (funcStateArgs | Empty)
                 + (")" | ")" + whereTerm + "(" + sentence + ")")
                 + (structure | "=>" + statement);
-            root.Rule = ifStatement | loopStatement | switchStatement | funcStatement;
+            classVarStatement.Rule = typeValue + identifier
+                | typeValue + identifier + "=" + matching;
+            classSentence.Rule = Empty | classVarStatement;
+            classSentences.Rule = classSentence | classSentence + ";" + classSentences;
+            classStatement.Rule = classTerm + identifier + "{" + classSentences + "}";
+            root.Rule = ifStatement | loopStatement | switchStatement
+                | funcStatement | classStatement;
 
             Root = root;
         }

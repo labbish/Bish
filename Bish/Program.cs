@@ -21,7 +21,7 @@ namespace Bish {
         private static BishProgram program = new();
 
         public static void Main(string[] args) {
-            //BishUtils.Todo("decorators");
+            BishUtils.Todo("classes");
 
             if (DoUnitTests) BishUnitTest.Test();
 

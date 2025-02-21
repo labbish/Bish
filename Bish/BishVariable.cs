@@ -3,7 +3,7 @@
     internal class BishVariable {
         public string? name;
         public dynamic? value;
-        public BishType type;
+        public BishTypeInfo type;
 
         public BishVariable(string? name, dynamic? value = null, string? typeName = null) {
             this.name = name;
@@ -11,7 +11,7 @@
             type = new(value, typeName);
         }
 
-        public BishVariable(string? name, BishType type, dynamic? value = null) {
+        public BishVariable(string? name, BishTypeInfo type, dynamic? value = null) {
             this.name = name;
             this.value = value;
             this.type = type;
@@ -86,7 +86,7 @@
         }
 
         public static BishVariable operator |(BishVariable a, BishVariable b) {
-            if (a.value is BishType && b.value is BishType)
+            if (a.value is BishTypeInfo && b.value is BishTypeInfo)
                 return new(null, value: a.value | b.value);
             return BishUtils.Error("Bish has no Bit Operators");
         }

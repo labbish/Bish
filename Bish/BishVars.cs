@@ -25,6 +25,10 @@
 
         public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
             string name = node.FindTokenAndGetText();
+            return Get(name);
+        }
+
+        public BishVariable Get(string name, bool checkNull = true) {
             var matched = vars.Where(var => var.name == name).ToHashSet();
             var values = matched.Select(var => checkNull ? var.GetNullChecked() : var).ToHashSet();
             BishUtils.Assert(values.Count <= 1, $"Multiple variables found: {name}");
@@ -94,11 +98,11 @@
             return value;
         }
 
-        public static BishVariable WeakConvert(BishType type, BishVariable var) {
+        public static BishVariable WeakConvert(BishTypeInfo type, BishVariable var) {
             return WeakConvert(type, var, out _);
         }
 
-        public static BishVariable WeakConvert(BishType type, BishVariable var,
+        public static BishVariable WeakConvert(BishTypeInfo type, BishVariable var,
             out int ConvertTimes) {
             bool converted = false;
             dynamic? value = null;
@@ -110,8 +114,8 @@
                 BishUtils.Error("Cannot convert null value to not nullable type");
             }
             if (type.type == "var" && type.typeArgs.Count > 0) {
-                BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishType));
-                foreach (BishType? subType in type.typeArgs.Select(arg => arg.value as BishType)) {
+                BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishTypeInfo));
+                foreach (BishTypeInfo? subType in type.typeArgs.Select(arg => arg.value as BishTypeInfo)) {
                     try {
                         BishVariable result = WeakConvert(subType!, var, out int subConvertTimes);
                         ConvertTimes = subConvertTimes;
@@ -162,7 +166,7 @@
                 }
             }
             else if (type.type == "type" && type.typeArgs.Count == 0) {
-                if (var.value is BishType t) {
+                if (var.value is BishTypeInfo t) {
                     value = t;
                     converted = true;
                 }
@@ -171,7 +175,7 @@
                 if (var.value is BishFunc f) {
                     value = f;
                     if (type.typeArgs.Count == 1) {
-                        BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishType));
+                        BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishTypeInfo));
                         value.returnType = type.typeArgs[0].value;
                     }
                     converted = true;

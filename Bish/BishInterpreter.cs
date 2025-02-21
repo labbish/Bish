@@ -116,7 +116,7 @@
                 return new BishVariable(null, b);
             }
             else if (node.Term.Name == "varModifiedTypes") {
-                BishType type = EvaluateType(node);
+                BishTypeInfo type = EvaluateType(node);
                 return new(null, value: type, typeName: "type");
             }
             else if (node.Term.Name == "null") {
@@ -172,7 +172,7 @@
                     throw new BishReturnException(value);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
-                    BishType type = Evaluate(node.ChildNodes[0]).value!;
+                    BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
                     BishVariable var = new(name: null, type: type, null);
                     if (var.type.isConst && !var.type.nullable)
                         BishUtils.Error("Const vars must be Initialized if not nullable");
@@ -261,7 +261,7 @@
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    BishType type = Evaluate(node.ChildNodes[0]).value!;
+                    BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
                     BishVariable value = BishVars.WeakConvert(type, right);
@@ -567,6 +567,15 @@
                     return newFunc;
                 }
 
+                if (node.ChildNodes.Count == 5
+                    && node.ChildNodes[0].FindTokenAndGetText() == "class") {
+                    string name = node.ChildNodes[1].FindTokenAndGetText();
+                    BishType type = EvaluateClass(name, node.ChildNodes[3]);
+                    BishVariable typeVar = new(name, value: type);
+                    vars.New(name, typeVar);
+                    return vars.Get(name);
+                }
+
                 return BishUtils.Error($"Unsupported NonTerminal with name {node.Term.Name}"
                     + $" and child count of {node.ChildNodes.Count}");
             }
@@ -618,7 +627,7 @@
             }
             else if (expr.ChildNodes.Count == 2) {
                 BishVariable value = Evaluate(node.ChildNodes[0]);
-                BishType type = Evaluate(expr.ChildNodes[0]).value!;
+                BishTypeInfo type = Evaluate(expr.ChildNodes[0]).value!;
                 BishVariable converted;
                 try {
                     converted = BishVars.WeakConvert(type, value);
@@ -703,13 +712,13 @@
         private BishArg ToBishArg(ParseTreeNode node) {
             if (node.ChildNodes.Count == 1) return ToBishArg(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2) {
-                BishType type = Evaluate(node.ChildNodes[0]).value!;
+                BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 return new(type, name);
             }
             if (node.ChildNodes.Count == 4
                 && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                BishType type = Evaluate(node.ChildNodes[0]).value!;
+                BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
                 string name = node.ChildNodes[1].FindTokenAndGetText();
                 BishVariable defaultValue = Evaluate(node.ChildNodes[3]);
                 return new(type, name, defaultValue);
@@ -728,26 +737,26 @@
             return new(Evaluate(node));
         }
 
-        private BishType EvaluateType(ParseTreeNode node) {
+        private BishTypeInfo EvaluateType(ParseTreeNode node) {
             if (node.Term.Name == "varOriginalTypes")
                 return new(type: node.FindTokenAndGetText());
             if (node.ChildNodes.Count == 1) return EvaluateType(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2
                 && node.ChildNodes[0].FindTokenAndGetText() == "const") {
-                BishType sub = EvaluateType(node.ChildNodes[1]);
+                BishTypeInfo sub = EvaluateType(node.ChildNodes[1]);
                 sub.isConst = true;
                 return sub;
             }
             if (node.ChildNodes.Count == 2
                 && node.ChildNodes[1].FindTokenAndGetText() == "?") {
-                BishType sub = EvaluateType(node.ChildNodes[0]);
+                BishTypeInfo sub = EvaluateType(node.ChildNodes[0]);
                 sub.nullable = true;
                 return sub;
             }
             if (node.ChildNodes.Count == 4
                 && node.ChildNodes[1].FindTokenAndGetText() == "["
                 && node.ChildNodes[3].FindTokenAndGetText() == "]") {
-                BishType sub = EvaluateType(node.ChildNodes[0]);
+                BishTypeInfo sub = EvaluateType(node.ChildNodes[0]);
                 List<ParseTreeNode> args = ToPlainArgs(node.ChildNodes[2]);
                 List<BishVariable> typeArgs =
                     [.. args.Select(EvaluateArg).Select(arg => arg.value)];
@@ -758,7 +767,7 @@
             return BishUtils.Error("Cannot Evaluate Type");
         }
 
-        private (bool isConst, BishType? returnType, List<BishVariable> decorators)
+        private (bool isConst, BishTypeInfo? returnType, List<BishVariable> decorators)
             EvaluateFuncType(ParseTreeNode node) {
             if (node.ChildNodes.Count == 0
                 && (node.Term.Name == "def" || node.Term.Name == "func")) {
@@ -782,10 +791,14 @@
                 && node.ChildNodes[1].FindTokenAndGetText() == "["
                 && node.ChildNodes[3].FindTokenAndGetText() == "]") {
                 var (isConst, _, decorators) = EvaluateFuncType(node.ChildNodes[0]);
-                BishType? returnType = Evaluate(node.ChildNodes[2]).value;
+                BishTypeInfo? returnType = Evaluate(node.ChildNodes[2]).value;
                 return (isConst, returnType, decorators);
             }
             return BishUtils.Error("Wrong Func Type");
+        }
+
+        private BishType EvaluateClass(string name, ParseTreeNode node) {
+            return BishUtils.NotImplemented();
         }
 
         public static ParseTreeNode GetNewNode(string name = "") {

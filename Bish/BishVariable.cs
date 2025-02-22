@@ -1,6 +1,6 @@
 ﻿namespace Bish {
 
-    internal class BishVariable {
+    internal class BishVariable : ICloneable {
         public string? name;
         public dynamic? value;
         public BishTypeInfo type;
@@ -164,6 +164,11 @@
         public BishVariable GetNullChecked() {
             if (type.nullable || value is not null || name is null) return this;
             return BishUtils.Error($"Var [{name ?? "TEMP"}] is Null but not Nullable");
+        }
+
+        public object Clone() {
+            if (value is ICloneable) return new BishVariable(name, type, value.Clone());
+            return new BishVariable(name, type, value);
         }
     }
 }

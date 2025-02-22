@@ -8,9 +8,11 @@ namespace Bish {
 
     public class Program {
         public const int MaxThreadCount = 128;
+        public static bool ShowVarUsing = false;
         public static bool ShowParseTree = false;
         public static bool WholeParseTree = false;
         public static bool ShowErrorStack = false;
+        public static bool ShowVarObjectID = false;
         public static bool ShowEvaluateTime = false;
         public static bool ShowEvaluateSteps = false;
         public static bool ShowVarsStackDepth = false;
@@ -33,7 +35,9 @@ namespace Bish {
                 string[] inputs = input.Split(' ');
                 if (input == "end") break;
                 else if (input == "test") BishUnitTest.Test();
+                else if (input == "use") ShowVarUsing = !ShowVarUsing;
                 else if (input == "tree") ShowParseTree = !ShowParseTree;
+                else if (input == "id") ShowVarObjectID = !ShowVarObjectID;
                 else if (input == "whole") WholeParseTree = !WholeParseTree;
                 else if (input == "stack") ShowErrorStack = !ShowErrorStack;
                 else if (input == "time") ShowEvaluateTime = !ShowEvaluateTime;
@@ -48,13 +52,16 @@ namespace Bish {
                 else if (input == "vars")
                     Console.WriteLine($"vars = {program.bishInterpreter.vars}");
                 else if (inputs.Length == 2 && inputs[0] == "vars") {
-                    var value = program.bishInterpreter.vars.Get(inputs[1]).value;
-                    if (value is BishObject obj)
-                        Console.WriteLine($"vars = {obj.members}");
-                    if (value is BishType type)
-                        Console.WriteLine($"vars = {type.members}");
-                    if (value is BishFunc func)
-                        Console.WriteLine($"vars = {func.varsFrame}");
+                    try {
+                        var value = program.Parse(inputs[1]).value;
+                        if (value is BishObject obj)
+                            Console.WriteLine($"vars = {obj.members}");
+                        if (value is BishType type)
+                            Console.WriteLine($"vars = {type.members}");
+                        if (value is BishFunc func)
+                            Console.WriteLine($"vars = {func.varsFrame}");
+                    }
+                    catch (Exception) { }
                 }
                 else program.Run(input + "\n");
             }

@@ -22,5 +22,9 @@
             Console.WriteLine($"###TODO: {todo}");
             Console.ResetColor();
         }
+
+        public static long GetID(object obj) {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
     }
 }

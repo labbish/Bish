@@ -1,10 +1,14 @@
 ﻿namespace Bish {
 
-    internal class BishVars : IEnumerable<BishVariable> {
+    internal class BishVars : IEnumerable<BishVariable>, ICloneable {
         public HashSet<BishVariable> vars;
 
         public BishVars() {
             vars = [];
+        }
+
+        private BishVars(HashSet<BishVariable> vars) {
+            this.vars = vars;
         }
 
         public void Clear() {
@@ -15,12 +19,21 @@
             vars = [.. original.vars];
         }
 
+        public object Clone() {
+            return new BishVars([.. vars.Select(var => var.Clone() as BishVariable)]);
+        }
+
         public IEnumerator<BishVariable> GetEnumerator() {
             return vars.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
             return vars.GetEnumerator();
+        }
+
+        private static void VarLog(string msg, BishVariable var) {
+            if (Program.ShowVarUsing) Console.WriteLine($"{msg}: {var.name}"
+                + (Program.ShowVarObjectID ? $" [ID={BishUtils.GetID(var)}]" : ""));
         }
 
         public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
@@ -33,6 +46,7 @@
             var values = matched.Select(var => checkNull ? var.GetNullChecked() : var).ToHashSet();
             BishUtils.Assert(values.Count <= 1, $"Multiple variables found: {name}");
             BishUtils.Assert(values.Count > 0, $"Variable not found: {name}");
+            VarLog("Get", values.First());
             return values.First();
         }
 
@@ -66,7 +80,10 @@
             } //TEMP, for debugging
             var funcs = GetMatchingFuncs(name, args);
             BishUtils.Assert(funcs.Count <= 1, $"Multiple Functions found: {name}");
-            foreach (BishVariable func in funcs) return func.Exec(args);
+            foreach (BishVariable func in funcs) {
+                VarLog("Exec", func);
+                return func.Exec(args);
+            }
             return BishUtils.Error($"Function not found: {name}");
         }
 
@@ -81,6 +98,7 @@
             if (name.All(c => c == '_')) return new(null, value.value);
             var matched = vars.Where(var => var.name == name).ToHashSet();
             foreach (BishVariable var in matched) {
+                VarLog("Set", var);
                 if (checkConst)
                     BishUtils.Assert(!var.type.isConst, $"Cannot modify const var: {name}");
                 BishVariable newVar = new(null, value.value);
@@ -200,7 +218,9 @@
 
         public override string ToString() {
             return "{\n  "
-                + string.Join("\n  ", vars.Select(var => $"{var.name}: {var.ValueString()}"))
+                + string.Join("\n  ",
+                vars.Select(var => $"{var.name}: {var.ValueString()}"
+                + (Program.ShowVarObjectID ? $" [ID={BishUtils.GetID(var)}]" : "")))
                 + "\n}";
         }
 

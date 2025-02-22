@@ -42,10 +42,15 @@
         }
 
         public BishVariable Exec(BishInArg[] args) {
-            BishVariable var = new(null, type: this, value: new BishObject(this, new(members)));
-            var.value!.members.Exec(name, args);
+            BishVariable var = new(null, type: this,
+                value: new BishObject(this, (BishVars)members.Clone()!));
+            ((BishObject)var.value!).members.Exec(name, args);
             return var;
-        } //BUG: members needs deep copy
+        }
+
+        //BUG: class X{int x=0;def X(int a){x=a;}}; X x=X(3)
+        //So the reason is that func objects saves a shallow copy of class members
+        //Might be solving it by replacing those vars-frames
 
         public bool MatchArgs(BishInArg[] args) {
             return members.GetMatchingFuncs(name, args).Count != 0;

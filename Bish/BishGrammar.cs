@@ -197,7 +197,7 @@
                 + (structure | "=>" + statement);
             classVarStatement.Rule = typeValue + identifier
                 | typeValue + identifier + "=" + matching;
-            classSentence.Rule = Empty | classVarStatement;
+            classSentence.Rule = Empty | classVarStatement | funcStatement;
             classSentences.Rule = classSentence | classSentence + ";" + classSentences;
             classStatement.Rule = classTerm + identifier + "{" + classSentences + "}";
             root.Rule = ifStatement | loopStatement | switchStatement

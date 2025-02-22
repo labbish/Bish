@@ -638,8 +638,6 @@ namespace Bish {
                 newNode.ChildNodes.Add(node.ChildNodes[0]);
                 newNode.ChildNodes.Add(expr.ChildNodes[0]);
                 newNode.ChildNodes.Add(expr.ChildNodes[1]);
-                //node.ChildNodes[1] = expr.ChildNodes[0];
-                //node.ChildNodes[2] = expr.ChildNodes[1];
                 return Evaluate(newNode);
             }
             else if (expr.ChildNodes.Count == 2) {
@@ -817,7 +815,7 @@ namespace Bish {
             return BishUtils.Error("Wrong Func Type");
         }
 
-        private void EvaluateInClass(BishType type, ParseTreeNode node) {
+        private static void EvaluateInClass(BishType type, ParseTreeNode node) {
             var interpreter = GetInterpreter(type.members);
             if (node.ChildNodes.Count == 0) return;
             else if (node.ChildNodes.Count == 1) EvaluateInClass(type, node.ChildNodes[0]);
@@ -828,6 +826,9 @@ namespace Bish {
             }
             else if (node.Term.Name == "classVarStatement") {
                 interpreter.Evaluate(CopyNode(node, "statement"));
+            }
+            else if (node.Term.Name == "funcStatement") {
+                interpreter.Evaluate(node);
             }
             else BishUtils.Error("In-Class Expression Not Supported");
             //BishUtils.NotImplemented();

@@ -1,7 +1,7 @@
 ﻿namespace Bish {
 
     internal class BishTypeInfo {
-        public string? type = null;
+        public BishType? type = null;
         public bool _nullable = false;
         public bool isConst = false;
         public List<BishVariable> typeArgs = [];
@@ -19,18 +19,17 @@
             return _nullable;
         }
 
-        public static readonly Dictionary<Type, string> TypeNames = [];
+        public static readonly Dictionary<Type, BishType> BuiltInTypes = [];
 
         static BishTypeInfo() {
-            TypeNames[typeof(BishInt)] = "int";
-            TypeNames[typeof(BishNum)] = "num";
-            TypeNames[typeof(string)] = "string";
-            TypeNames[typeof(bool)] = "bool";
-            TypeNames[typeof(BishInterval)] = "interval";
-            TypeNames[typeof(BishFunc)] = "func";
-            TypeNames[typeof(BishType)] = "type";
-            TypeNames[typeof(BishTypeInfo)] = "type";
-            //Well if you think this needs fixing You're right
+            BuiltInTypes[typeof(BishInt)] = "int";
+            BuiltInTypes[typeof(BishNum)] = "num";
+            BuiltInTypes[typeof(string)] = "string";
+            BuiltInTypes[typeof(bool)] = "bool";
+            BuiltInTypes[typeof(BishInterval)] = "interval";
+            BuiltInTypes[typeof(BishFunc)] = "func";
+            BuiltInTypes[typeof(BishType)] = "type";
+            BuiltInTypes[typeof(BishTypeInfo)] = "type";
         }
 
         public BishTypeInfo(dynamic? value = null, string? type = null, bool? nullable = null,
@@ -44,8 +43,8 @@
 
         public static string? GetTypeName(dynamic? value) {
             if (value is null) return null;
-            if (!TypeNames.ContainsKey(value.GetType())) return null;
-            return value is null ? null : TypeNames[value.GetType()];
+            if (!BuiltInTypes.ContainsKey(value.GetType())) return null;
+            return value is null ? null : BuiltInTypes[value.GetType()];
         }
 
         public static BishTypeInfo operator |(BishTypeInfo a, BishTypeInfo b) {

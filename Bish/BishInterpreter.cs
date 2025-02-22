@@ -1,4 +1,6 @@
-﻿namespace Bish {
+﻿using System.Reflection;
+
+namespace Bish {
 
     internal class BishInterpreter {
         public BishScope scope;
@@ -205,7 +207,8 @@
                     && node.ChildNodes[1].FindTokenAndGetText() == ".") {
                     dynamic? value = Evaluate(node.ChildNodes[0]).value;
                     string member = node.ChildNodes[2].FindTokenAndGetText();
-                    return BishUtils.NotImplemented();
+                    if (value is BishType type) return type!.members.Get(member);
+                    return BishUtils.Error("Invalid Member");
                 }
                 if (node.ChildNodes.Count == 3
                     && node.ChildNodes[0].FindTokenAndGetText() == "("
@@ -752,7 +755,10 @@
         }
 
         private BishTypeInfo EvaluateType(ParseTreeNode node) {
-            if (node.Term.Name == "varOriginalTypes")
+            if (node.Term.Name == "identifier")
+                return (BishType)vars.Get(node).value!;
+            if (node.Term.Name == "varOriginalTypes"
+                && node.ChildNodes[0].Term.Name != "identifier")
                 return new(type: node.FindTokenAndGetText());
             if (node.ChildNodes.Count == 1) return EvaluateType(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2

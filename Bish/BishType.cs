@@ -43,7 +43,7 @@
 
         public BishVariable Exec(BishInArg[] args) {
             BishVariable var = new(null, type: this,
-                value: new BishObject(this, (BishVars)members.Clone()!));
+                value: new BishObject(this, (BishVars)members.Clone()));
             ((BishObject)var.value!).members.Exec(name, args);
             return var;
         }

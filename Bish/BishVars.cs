@@ -1,4 +1,6 @@
-﻿namespace Bish {
+﻿using System;
+
+namespace Bish {
 
     internal class BishVars : IEnumerable<BishVariable>, ICloneable {
         public HashSet<BishVariable> vars;
@@ -20,8 +22,33 @@
         }
 
         public object Clone() {
-            return new BishVars([.. vars.Select(var => var.Clone() as BishVariable)]);
+            BishVars ans = new(this);
+            Dictionary<BishVariable, BishVariable> mapping
+                = ans.vars.ToDictionary(var => var, var => (BishVariable)var.Clone());
+            ans.Map(mapping);
+            return ans;
         }
+
+        public static BishVars? GetVars(BishVariable var) {
+            return var.value switch {
+                BishObject obj => obj.members,
+                BishType type => type.members,
+                BishTypeInfo type => type.type?.members,
+                BishFunc func => func.varsFrame,
+                _ => null,
+            };
+        }
+
+        private void Map(Dictionary<BishVariable, BishVariable> mapping) {
+            BishVars ans = new([.. vars.Select(var =>
+            mapping.TryGetValue(var, out BishVariable? value) ? value : var)]);
+            foreach (BishVariable var in ans) {
+                if (mapping.ContainsKey(var)) continue;
+                BishVars? vars = GetVars(var);
+                if (vars is null) continue;
+                vars.Map(mapping);
+            }
+        } //Problems with func self-containing
 
         public IEnumerator<BishVariable> GetEnumerator() {
             return vars.GetEnumerator();
@@ -38,7 +65,7 @@
 
         public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
             string name = node.FindTokenAndGetText();
-            return Get(name);
+            return Get(name, checkNull);
         }
 
         public BishVariable Get(string name, bool checkNull = true) {

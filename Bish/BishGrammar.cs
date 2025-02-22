@@ -142,11 +142,11 @@
                 | "[" + assignment + "," + assignment + ")"
                 | "[" + assignment + "," + assignment + "]";
             varOriginalTypes.Rule = intType | numType | stringType | boolType
-                | intervalType | varType | funcType | typeType;
+                | intervalType | varType | funcType | typeType | identifier;
             varTypes.Rule = varOriginalTypes | varOriginalTypes + "[" + funcCallArgs + "]";
             varNullableTypes.Rule = varTypes | varTypes + "?";
             varModifiedTypes.Rule = varNullableTypes | constModifier + varNullableTypes;
-            typeValue.Rule = varModifiedTypes | identifier;
+            typeValue.Rule = varModifiedTypes;
             matchingExpr.Rule = assignment | typeValue + identifier;
             foreach (var op in MatchableOperators) matchingExpr.Rule |= op + assignment;
             matchingExpr.Rule |= funcTerm + assignment;

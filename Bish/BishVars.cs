@@ -36,8 +36,19 @@
             return values.First();
         }
 
+        public HashSet<BishVariable> GetMatchingFuncs(string name, BishInArg[] args) {
+            return [..vars
+                .Where(var => var.name == name)
+                .Where(var => var.value is IBishExecutable && var.value is not null)
+                .Where(var => var.value!.MatchArgs(args))];
+        }
+
         public BishVariable Exec(ParseTreeNode node, BishInArg[] args) {
             string name = node.FindTokenAndGetText();
+            return Exec(name, args);
+        }
+
+        public BishVariable Exec(string name, BishInArg[] args) {
             if (name == "print") {
                 List<BishInArg> print = [.. args];
                 string sep = " ";
@@ -53,9 +64,7 @@
                 Console.Write(string.Join(sep, print.Select(arg => arg.value.ValueString())) + end);
                 return new(null);
             } //TEMP, for debugging
-            var matched = vars.Where(var => var.name == name).ToHashSet();
-            var funcs = matched.Where(var => var.value is BishFunc && var.value is not null)
-                .Where(var => var.value!.MatchArgs(args)).ToHashSet();
+            var funcs = GetMatchingFuncs(name, args);
             BishUtils.Assert(funcs.Count <= 1, $"Multiple Functions found: {name}");
             foreach (BishVariable func in funcs) return func.Exec(args);
             return BishUtils.Error($"Function not found: {name}");
@@ -180,6 +189,10 @@
                     }
                     converted = true;
                 }
+            }
+            else if (type.type == var.type.type) {
+                value = var.value;
+                converted = true;
             }
             BishUtils.Assert(converted, $"Cannot convert [{var}] into type {type}");
             return new BishVariable(name: null, type: type, value);

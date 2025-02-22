@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishInterpreter {
         public BishScope scope;
@@ -125,8 +123,12 @@ namespace Bish {
                 return new BishVariable(null, b);
             }
             else if (node.Term.Name == "varModifiedTypes") {
-                BishTypeInfo type = EvaluateType(node);
-                return new(null, value: type, typeName: "type");
+                dynamic value = EvaluateType(node);
+                if (value is BishTypeInfo typeInfo)
+                    return new(null, value: typeInfo, typeName: "type");
+                if (value is BishType type)
+                    return new(null, value: type, typeName: "type");
+                return value;
             }
             else if (node.Term.Name == "null") {
                 return new BishVariable(null);
@@ -181,7 +183,7 @@ namespace Bish {
                     throw new BishReturnException(value);
                 }
                 if (node.ChildNodes.Count == 2 && node.Term.Name == "statement") {
-                    BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
+                    BishTypeInfo type = EvaluateType(node.ChildNodes[0]);
                     BishVariable var = new(name: null, type: type, null);
                     if (var.type.isConst && !var.type.nullable)
                         BishUtils.Error("Const vars must be Initialized if not nullable");
@@ -208,6 +210,7 @@ namespace Bish {
                     dynamic? value = Evaluate(node.ChildNodes[0]).value;
                     string member = node.ChildNodes[2].FindTokenAndGetText();
                     if (value is BishType type) return type!.members.Get(member);
+                    if (value is BishObject obj) return obj!.members.Get(member);
                     return BishUtils.Error("Invalid Member");
                 }
                 if (node.ChildNodes.Count == 3
@@ -277,7 +280,7 @@ namespace Bish {
                 }
                 if (node.ChildNodes.Count == 4
                     && node.ChildNodes[2].FindTokenAndGetText() == "=") {
-                    BishTypeInfo type = Evaluate(node.ChildNodes[0]).value!;
+                    BishTypeInfo type = EvaluateType(node.ChildNodes[0]);
                     ParseTreeNode varName = node.ChildNodes[1];
                     BishVariable right = Evaluate(node.ChildNodes[3]);
                     BishVariable value = BishVars.WeakConvert(type, right);
@@ -752,12 +755,16 @@ namespace Bish {
             return new(Evaluate(node));
         }
 
-        private BishTypeInfo EvaluateType(ParseTreeNode node) {
-            if (node.Term.Name == "identifier")
-                return (BishType)vars.Get(node).value!;
+        private dynamic EvaluateType(ParseTreeNode node) {
+            if (node.Term.Name == "identifier") {
+                dynamic var = vars.Get(node);
+                if (var.value is BishTypeInfo typeInfo) return typeInfo;
+                if (var.value is BishType type) return type;
+                return var;
+            }
             if (node.Term.Name == "varOriginalTypes"
                 && node.ChildNodes[0].Term.Name != "identifier")
-                return new(type: node.FindTokenAndGetText());
+                return new BishTypeInfo(type: node.FindTokenAndGetText());
             if (node.ChildNodes.Count == 1) return EvaluateType(node.ChildNodes[0]);
             if (node.ChildNodes.Count == 2
                 && node.ChildNodes[0].FindTokenAndGetText() == "const") {
@@ -831,7 +838,6 @@ namespace Bish {
                 interpreter.Evaluate(node);
             }
             else BishUtils.Error("In-Class Expression Not Supported");
-            //BishUtils.NotImplemented();
         }
 
         public static ParseTreeNode GetNewNode(string name = "") {

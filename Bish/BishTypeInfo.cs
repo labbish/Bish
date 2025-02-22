@@ -43,6 +43,7 @@
 
         public static string? GetTypeName(dynamic? value) {
             if (value is null) return null;
+            if (value is BishObject obj) return obj.type.name;
             if (!BuiltInTypes.ContainsKey(value.GetType())) return null;
             return value is null ? null : BuiltInTypes[value.GetType()];
         }

@@ -434,6 +434,12 @@
             SameTest(13.34, "var[int?, var[string|var[num], int], num]", "num|string|int?");
         }
 
+        public static void TestGroup14() {
+            TestGroup(14, "classes");
+
+            //class X{int x=0; def X(int a) {x=a;}; def f() => x;}; X x = X(3)
+        }
+
         public static void Test(int? num = null) {
             try {
                 if (num is null || num == 0) TestGroup0();

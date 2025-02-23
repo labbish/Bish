@@ -25,8 +25,6 @@ namespace Bish {
             BishVars ans = new(this);
             Dictionary<BishVariable, BishVariable> mapping
                 = ans.vars.ToDictionary(var => var, var => (BishVariable)var.Clone());
-            foreach (var map in mapping)
-                Console.WriteLine($"{BishUtils.GetID(map.Key)} => {BishUtils.GetID(map.Value)}");
             ans.Map(mapping);
             return ans;
         }

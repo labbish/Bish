@@ -591,7 +591,13 @@
                     && node.ChildNodes[0].FindTokenAndGetText() == "class") {
                     string name = node.ChildNodes[1].FindTokenAndGetText();
                     BishType type = new(name);
-                    EvaluateInClass(type, node.ChildNodes[3]);
+                    Inner();
+                    try {
+                        EvaluateInClass(type, node.ChildNodes[3]);
+                    }
+                    finally {
+                        Outer();
+                    }
                     BishVariable typeVar = new(name, value: type);
                     vars.New(name, typeVar);
                     return vars.Get(name);

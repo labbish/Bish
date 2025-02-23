@@ -1,6 +1,6 @@
 ﻿namespace Bish {
 
-    internal class BishFunc : IBishExecutable {
+    internal class BishFunc : IBishExecutable, ICloneable {
         private BishThreadPool pool = new();
 
         public BishVars varsFrame;
@@ -23,6 +23,10 @@
 
         public void BindSelf(BishVariable self) {
             varsFrame.vars.Add(self);
+        }
+
+        public object Clone() {
+            return new BishFunc(new(varsFrame), node, args, returnType, where);
         }
 
         private bool TriviallyToVars(BishInArg[] inArgs,

@@ -48,7 +48,7 @@
             return var;
         }
 
-        //BUG: class X{int x=0;def X(int a){x=a;}}; X x=X(3)
+        //BUG: class X{int x=0;def X(int a){x=a;};def f()=>x;}; X x=X(3)
         //So the reason is that func objects saves a shallow copy of class members
         //Might be solving it by replacing those vars-frames
 

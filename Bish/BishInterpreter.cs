@@ -574,15 +574,16 @@
                     if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType, where);
                     else func = new(vars, f.ChildNodes[1], args, returnType, where);
                     Outer();
-                    BishVariable newFunc = vars.New(node.ChildNodes[1], new(null, type: new(func,
-                        typeArgs: returnType is null ? [] : [new(null, value: returnType)],
-                        isConst: isConst), func), checkExist: false);
-                    func.BindSelf(node.ChildNodes[1].FindTokenAndGetText(), newFunc);
+                    vars.vars.Add(new(node.ChildNodes[1].FindTokenAndGetText(),
+                        type: new(func, typeArgs: returnType is null ? [] : [new(null, value: returnType)],
+                        isConst: isConst), func));
+                    BishVariable newFunc = vars.Get(node.ChildNodes[1]);
                     foreach (BishVariable decorator in decorators) {
                         vars.Set(node.ChildNodes[1],
                             decorator.Exec([new(newFunc)]), checkConst: false);
                         newFunc = vars.Get(node.ChildNodes[1]);
                     }
+                    func.BindSelf(newFunc);
                     return newFunc;
                 }
 

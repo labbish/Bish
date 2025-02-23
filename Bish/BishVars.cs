@@ -25,6 +25,8 @@ namespace Bish {
             BishVars ans = new(this);
             Dictionary<BishVariable, BishVariable> mapping
                 = ans.vars.ToDictionary(var => var, var => (BishVariable)var.Clone());
+            foreach (var map in mapping)
+                Console.WriteLine($"{BishUtils.GetID(map.Key)} => {BishUtils.GetID(map.Value)}");
             ans.Map(mapping);
             return ans;
         }
@@ -39,15 +41,19 @@ namespace Bish {
             };
         }
 
-        private void Map(Dictionary<BishVariable, BishVariable> mapping) {
+        private void Map(Dictionary<BishVariable, BishVariable> mapping,
+            List<BishVariable>? origins = null) {
+            origins ??= [];
             BishVars ans = new([.. vars.Select(var =>
             mapping.TryGetValue(var, out BishVariable? value) ? value : var)]);
             foreach (BishVariable var in ans) {
-                if (mapping.ContainsKey(var)) continue;
+                if (origins.Any(mapping.ContainsValue)
+                    && mapping.ContainsValue(var)) continue;
                 BishVars? vars = GetVars(var);
                 if (vars is null) continue;
-                vars.Map(mapping);
+                vars.Map(mapping, [.. origins.Concat([var])]);
             }
+            vars = ans.vars;
         } //Problems with func self-containing
 
         public IEnumerator<BishVariable> GetEnumerator() {

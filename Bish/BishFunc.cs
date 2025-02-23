@@ -21,8 +21,8 @@
             this.where = where;
         }
 
-        public void BindSelf(string name, BishVariable self) {
-            varsFrame.New(name, self, checkExist: false);
+        public void BindSelf(BishVariable self) {
+            varsFrame.vars.Add(self);
         }
 
         private bool TriviallyToVars(BishInArg[] inArgs,

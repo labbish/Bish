@@ -160,7 +160,7 @@
                             "+" => +value,
                             "-" => -value,
                             "!" => !value,
-                            _ => BishUtils.Error(),
+                            _ => BishUtils.Impossible(),
                         };
                     }
                 }
@@ -234,7 +234,7 @@
                             "/=" => vars.Set(name, vars.Get(name) / right),
                             "%=" => vars.Set(name, vars.Get(name) % right),
                             "^=" => vars.Set(name, vars.Get(name) ^ right),
-                            _ => BishUtils.Error(),
+                            _ => BishUtils.Impossible(),
                         };
                     }
                 }

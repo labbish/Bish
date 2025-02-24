@@ -1,4 +1,6 @@
-﻿namespace Bish {
+﻿using System;
+
+namespace Bish {
 
     internal class BishSingleInterval {
         public bool fromPoint; //is close
@@ -29,7 +31,7 @@
         }
 
         public static bool operator >(BishNum _, BishSingleInterval __) {
-            return BishUtils.Error();
+            return BishUtils.Error("operator > is not implemented for (num, interval)");
         }
 
         public static bool operator <=(BishSingleInterval I1, BishSingleInterval I2) {
@@ -39,7 +41,7 @@
         }
 
         public static bool operator >=(BishSingleInterval _, BishSingleInterval __) {
-            return BishUtils.Error();
+            return BishUtils.Error("operator >= is not implemented for (interval, interval)");
         }
 
         public bool IsEmpty() {
@@ -87,7 +89,6 @@
         }
 
         public static BishSingleInterval operator +(BishSingleInterval i1, BishSingleInterval i2) {
-            //if (!Intersect(i1, i2)) return BishUtils.Error();
             BishSingleInterval ans = new(Empty);
             if (i1.from < i2.from) {
                 ans.from = i1.from;
@@ -169,7 +170,7 @@
         }
 
         public static bool operator >=(BishSingleInterval _, BishInterval __) {
-            return BishUtils.Error();
+            return BishUtils.Error("operator >= is not implemented for (interval, interval)");
         }
 
         public static bool operator <=(BishInterval I1, BishInterval I2) {

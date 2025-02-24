@@ -21,8 +21,7 @@
         }
 
         public static bool operator ==(BishType? a, BishType? b) {
-            if (a is null) return false;
-            if (b is null) return false;
+            if (a is null || b is null) return false;
             return a.name == b.name;
         } //TEMP
 

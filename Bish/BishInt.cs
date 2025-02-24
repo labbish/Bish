@@ -22,7 +22,7 @@
             if (x > 0) return 1;
             if (x == 0) return 0;
             if (x < 0) return -1;
-            return BishUtils.Error();
+            return BishUtils.Impossible();
         }
 
         public static bool operator ==(BishInt a, BishInt b) {
@@ -144,7 +144,7 @@
             if (this > other) return 1;
             if (this == other) return 0;
             if (this < other) return -1;
-            return BishUtils.Error();
+            return BishUtils.Impossible();
         }
     }
 }

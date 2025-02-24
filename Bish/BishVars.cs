@@ -16,7 +16,7 @@
             if (builtIn) InitBuiltIns();
         }
 
-        private BishVars(HashSet<BishVariable> vars) : this() {
+        private BishVars(HashSet<BishVariable> vars) : this(builtIn: false) {
             AddFrom(vars);
         }
 
@@ -243,7 +243,8 @@
         public override string ToString() {
             return "{\n  "
                 + string.Join("\n  ",
-                vars.Select(var => $"{var.name}: {var.ValueString()}"
+                vars.Where(var => !var.builtIn || Program.ShowBuiltInObject)
+                .Select(var => $"{var.name}: {var.ValueString()}"
                 + (Program.ShowVarObjectID ? $" [ID={BishUtils.GetID(var)}]" : "")))
                 + "\n}";
         }

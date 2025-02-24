@@ -14,6 +14,7 @@ namespace Bish {
         public static bool ShowErrorStack = false;
         public static bool ShowVarObjectID = false;
         public static bool ShowEvaluateTime = false;
+        public static bool ShowBuiltInObject = false;
         public static bool ShowEvaluateSteps = false;
         public static bool ShowVarsStackDepth = false;
         public static readonly bool DoUnitTests = false;
@@ -43,6 +44,7 @@ namespace Bish {
                 else if (input == "time") ShowEvaluateTime = !ShowEvaluateTime;
                 else if (input == "steps") ShowEvaluateSteps = !ShowEvaluateSteps;
                 else if (input == "depth") ShowVarsStackDepth = !ShowVarsStackDepth;
+                else if (input == "builtin") ShowBuiltInObject = !ShowBuiltInObject;
                 else if (input == "clear") program.bishInterpreter.vars.Clear();
                 else if (inputs.Length == 2 && inputs[0] == "test") {
                     if (int.TryParse(inputs[1], out int num)) BishUnitTest.Test(num);

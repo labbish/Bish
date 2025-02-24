@@ -23,7 +23,7 @@
             Console.ResetColor();
         }
 
-        public static long GetID(object obj) {
+        public static int GetID(object obj) {
             return RuntimeHelpers.GetHashCode(obj);
         }
     }

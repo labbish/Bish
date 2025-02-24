@@ -4,17 +4,22 @@
         public string? name;
         public dynamic? value;
         public BishTypeInfo type;
+        public bool builtIn = false;
 
-        public BishVariable(string? name, dynamic? value = null, string? typeName = null) {
+        public BishVariable(string? name, dynamic? value = null,
+            string? typeName = null, bool builtIn = false) {
             this.name = name;
             this.value = value;
             type = new(value, typeName);
+            this.builtIn = builtIn;
         }
 
-        public BishVariable(string? name, BishTypeInfo type, dynamic? value = null) {
+        public BishVariable(string? name, BishTypeInfo type,
+            dynamic? value = null, bool builtIn = false) {
             this.name = name;
             this.value = value;
             this.type = type;
+            this.builtIn = builtIn;
         }
 
         public static BishVariable operator +(BishVariable a, BishVariable b) {
@@ -115,7 +120,6 @@
                 true => "true",
                 false => "false",
                 null => "null",
-                BishFunc => "[func]",
                 _ => value.ToString(),
             };
         }

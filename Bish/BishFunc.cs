@@ -129,5 +129,9 @@
                     ans.Add([.. list, i]);
             return ans;
         }
+
+        public override string ToString() {
+            return "[Func]";
+        }
     }
 }

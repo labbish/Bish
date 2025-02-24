@@ -13,6 +13,10 @@
         public bool MatchArgs(BishInArg[] args) {
             return matching(args);
         }
+
+        public override string ToString() {
+            return "[Built-in Func]";
+        }
     }
 
     internal class BishBuiltInFuncs {
@@ -42,7 +46,7 @@
 
         public static HashSet<BishVariable> GetBuiltIns() {
             return [
-                new("print", type: "func", value: print),
+                new("print", type: "func", value: print, builtIn: true),
                 ];
         }
     }

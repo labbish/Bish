@@ -28,6 +28,7 @@
             BuiltInTypes[typeof(bool)] = "bool";
             BuiltInTypes[typeof(BishInterval)] = "interval";
             BuiltInTypes[typeof(BishFunc)] = "func";
+            BuiltInTypes[typeof(BishBuiltInFunc)] = "func";
             BuiltInTypes[typeof(BishType)] = "type";
             BuiltInTypes[typeof(BishTypeInfo)] = "type";
         }
@@ -39,6 +40,10 @@
             this.isConst = isConst;
             this.typeArgs = typeArgs ?? [];
             Simplify();
+        }
+
+        public static implicit operator BishTypeInfo(string? name) {
+            return new(type: name);
         }
 
         public static string? GetTypeName(dynamic? value) {

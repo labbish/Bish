@@ -2,7 +2,7 @@
 
     internal class BishType(string name) : IBishExecutable {
         public string name = name;
-        public BishVars members = new();
+        public BishVars members = new(builtIn: false);
 
         public static implicit operator BishType(string name) {
             return new(name);

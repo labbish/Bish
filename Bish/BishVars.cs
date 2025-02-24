@@ -1,20 +1,28 @@
-﻿using System;
-
-namespace Bish {
+﻿namespace Bish {
 
     internal class BishVars : IEnumerable<BishVariable>, ICloneable {
         public HashSet<BishVariable> vars;
 
-        public BishVars() {
-            vars = [];
+        private void AddFrom(HashSet<BishVariable> other) {
+            vars = [.. vars.Concat(other)];
         }
 
-        private BishVars(HashSet<BishVariable> vars) {
-            this.vars = vars;
+        private void InitBuiltIns() {
+            AddFrom(BishBuiltInFuncs.GetBuiltIns());
+        }
+
+        public BishVars(bool builtIn = true) {
+            vars = [];
+            if (builtIn) InitBuiltIns();
+        }
+
+        private BishVars(HashSet<BishVariable> vars) : this() {
+            AddFrom(vars);
         }
 
         public void Clear() {
             vars = [];
+            InitBuiltIns();
         }
 
         public BishVars(BishVars original) {
@@ -94,21 +102,6 @@ namespace Bish {
         }
 
         public BishVariable Exec(string name, BishInArg[] args) {
-            if (name == "print") {
-                List<BishInArg> print = [.. args];
-                string sep = " ";
-                string end = "";
-                if (print.Any(arg => arg.name == "sep")) {
-                    sep = (string)print.Where(arg => arg.name == "sep").First().value.value!;
-                    print.RemoveAll(arg => arg.name == "sep");
-                }
-                if (print.Any(arg => arg.name == "end")) {
-                    end = (string)print.Where(arg => arg.name == "end").First().value.value!;
-                    print.RemoveAll(arg => arg.name == "end");
-                }
-                Console.Write(string.Join(sep, print.Select(arg => arg.value.ValueString())) + end);
-                return new(null);
-            } //TEMP, for debugging
             var funcs = GetMatchingFuncs(name, args);
             BishUtils.Assert(funcs.Count <= 1, $"Multiple Functions found: {name}");
             foreach (BishVariable func in funcs) {
@@ -230,7 +223,7 @@ namespace Bish {
                 }
             }
             else if (type.type == "func" && type.typeArgs.Count <= 1) {
-                if (var.value is BishFunc f) {
+                if (var.value is IBishExecutable f) {
                     value = f;
                     if (type.typeArgs.Count == 1) {
                         BishUtils.Assert(type.typeArgs.All(arg => arg.value is BishTypeInfo));

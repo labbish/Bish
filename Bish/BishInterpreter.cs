@@ -110,7 +110,7 @@
             else if (node.Term is StringLiteral) {
                 var str = node.Token.Value.ToString();
                 BishUtils.Assert(str is not null, "StringLiteral is Null");
-                return new BishVariable(null, str!);
+                return new BishVariable(null, value: str!);
             }
             else if (node.Term.Name == "boolLiteral") {
                 var str = node.FindTokenAndGetText();

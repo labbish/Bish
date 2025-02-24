@@ -75,13 +75,16 @@
                 + (Program.ShowVarObjectID ? $" [ID={BishUtils.GetID(var)}]" : ""));
         }
 
-        public BishVariable Get(ParseTreeNode node, bool checkNull = true) {
+        public BishVariable Get(ParseTreeNode node, bool checkNull = true,
+            List<BishVariable>? except = null) {
             string name = node.FindTokenAndGetText();
-            return Get(name, checkNull);
+            return Get(name, checkNull, except);
         }
 
-        public BishVariable Get(string name, bool checkNull = true) {
-            var matched = vars.Where(var => var.name == name).ToHashSet();
+        public BishVariable Get(string name, bool checkNull = true,
+            List<BishVariable>? except = null) {
+            except ??= [];
+            var matched = vars.Where(var => var.name == name && !except.Contains(var)).ToHashSet();
             var values = matched.Select(var => checkNull ? var.GetNullChecked() : var).ToHashSet();
             BishUtils.Assert(values.Count <= 1, $"Multiple variables found: {name}");
             BishUtils.Assert(values.Count > 0, $"Variable not found: {name}");
@@ -89,20 +92,25 @@
             return values.First();
         }
 
-        public HashSet<BishVariable> GetMatchingFuncs(string name, BishInArg[] args) {
+        public HashSet<BishVariable> GetMatchingFuncs(string name, BishInArg[] args,
+            List<IBishExecutable>? except = null) {
             return [..vars
                 .Where(var => var.name == name)
                 .Where(var => var.value is IBishExecutable && var.value is not null)
+                .Where(var => !(except??[]).Contains(var.value))
                 .Where(var => var.value!.MatchArgs(args))];
         }
 
-        public BishVariable Exec(ParseTreeNode node, BishInArg[] args) {
+        public BishVariable Exec(ParseTreeNode node, BishInArg[] args,
+            List<IBishExecutable>? except = null) {
             string name = node.FindTokenAndGetText();
-            return Exec(name, args);
+            return Exec(name, args, except);
         }
 
-        public BishVariable Exec(string name, BishInArg[] args) {
-            var funcs = GetMatchingFuncs(name, args);
+        public BishVariable Exec(string name, BishInArg[] args,
+            List<IBishExecutable>? except = null) {
+            except ??= [];
+            var funcs = GetMatchingFuncs(name, args, except);
             BishUtils.Assert(funcs.Count <= 1, $"Multiple Functions found: {name}");
             foreach (BishVariable func in funcs) {
                 VarLog("Exec", func);

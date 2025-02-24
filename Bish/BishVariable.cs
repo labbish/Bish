@@ -171,8 +171,8 @@
         }
 
         public object Clone() {
-            if (value is ICloneable) return new BishVariable(name, type, value.Clone());
-            return new BishVariable(name, type, value);
+            if (value is ICloneable) return new BishVariable(name, type: type, value: value.Clone());
+            return new BishVariable(name, type: type, value: value);
         }
     }
 }

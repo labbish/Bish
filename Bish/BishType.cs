@@ -4,6 +4,10 @@
         public string name = name;
         public BishVars members = new(builtIn: false);
 
+        public void BindSelf(BishVariable self) {
+            members.vars.Add(self);
+        } //BUG: class X{def X(){}}
+
         public static implicit operator BishType(string name) {
             return new(name);
         }
@@ -44,12 +48,12 @@
         public BishVariable Exec(BishInArg[] args) {
             BishVariable var = new(null, type: this,
                 value: new BishObject(this, (BishVars)members.Clone()));
-            ((BishObject)var.value!).members.Exec(name, args);
+            ((BishObject)var.value!).members.Exec(name, args, except: [this]);
             return var;
         }
 
         public bool MatchArgs(BishInArg[] args) {
-            return members.GetMatchingFuncs(name, args).Count != 0;
+            return members.GetMatchingFuncs(name, args, [this]).Count != 0;
         }
     }
 }

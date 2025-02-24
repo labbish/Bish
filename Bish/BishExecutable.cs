@@ -1,18 +1,13 @@
 ﻿namespace Bish {
 
-    internal class BishArg {
-        public BishTypeInfo type;
-        public string name;
-        public BishVariable? defaultValue;
+    internal class BishArg
+        (BishTypeInfo type, string name, BishVariable? defaultValue = null) {
+        public BishTypeInfo type = type;
+        public string name = name;
+        public BishVariable? defaultValue = defaultValue;
 
         public BishArg(ParseTreeNode typeNode, string name, BishVariable? defaultValue = null)
             : this(type: new(typeNode), name, defaultValue) { }
-
-        public BishArg(BishTypeInfo type, string name, BishVariable? defaultValue = null) {
-            this.name = name;
-            this.type = type;
-            this.defaultValue = defaultValue;
-        }
 
         public override string ToString() {
             return $"{type} {name}";

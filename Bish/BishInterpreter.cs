@@ -207,10 +207,13 @@
                 }
                 if (node.ChildNodes.Count == 3
                     && node.ChildNodes[1].FindTokenAndGetText() == ".") {
-                    dynamic? value = Evaluate(node.ChildNodes[0]).value;
+                    BishVariable var = Evaluate(node.ChildNodes[0]);
+                    dynamic? value = var.value;
                     string member = node.ChildNodes[2].FindTokenAndGetText();
-                    if (value is BishType type) return type!.members.Get(member);
-                    if (value is BishObject obj) return obj!.members.Get(member);
+                    if (value is BishType type)
+                        return type!.members.Get(member, except: [var]);
+                    if (value is BishObject obj)
+                        return obj!.members.Get(member, except: [var, new(null, value: obj.type)]);
                     return BishUtils.Error("Invalid Member");
                 }
                 if (node.ChildNodes.Count == 3
@@ -574,10 +577,10 @@
                     if (f.ChildNodes.Count == 1) func = new(vars, f, args, returnType, where);
                     else func = new(vars, f.ChildNodes[1], args, returnType, where);
                     Outer();
-                    vars.vars.Add(new(node.ChildNodes[1].FindTokenAndGetText(),
+                    BishVariable newFunc = new(node.ChildNodes[1].FindTokenAndGetText(),
                         type: new(func, typeArgs: returnType is null ? [] : [new(null, value: returnType)],
-                        isConst: isConst), func));
-                    BishVariable newFunc = vars.Get(node.ChildNodes[1]);
+                        isConst: isConst), func);
+                    vars.vars.Add(newFunc);
                     foreach (BishVariable decorator in decorators) {
                         vars.Set(node.ChildNodes[1],
                             decorator.Exec([new(newFunc)]), checkConst: false);
@@ -591,6 +594,9 @@
                     && node.ChildNodes[0].FindTokenAndGetText() == "class") {
                     string name = node.ChildNodes[1].FindTokenAndGetText();
                     BishType type = new(name);
+                    BishVariable typeVar = new(name, value: type);
+                    vars.New(name, typeVar);
+                    type.BindSelf(vars.Get(name));
                     Inner();
                     try {
                         EvaluateInClass(type, node.ChildNodes[3]);
@@ -598,8 +604,6 @@
                     finally {
                         Outer();
                     }
-                    BishVariable typeVar = new(name, value: type);
-                    vars.New(name, typeVar);
                     return vars.Get(name);
                 }
 

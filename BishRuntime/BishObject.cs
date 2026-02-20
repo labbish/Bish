@@ -16,6 +16,7 @@ public class BishObject(BishType? type = null)
     public BishType Type
     {
         get => field ?? DefaultType;
+        set;
     } = type;
 
     public readonly Dictionary<string, BishObject> Members = [];
@@ -26,7 +27,7 @@ public class BishObject(BishType? type = null)
     }
 
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
-        TryGetMember(name, mode) ?? throw new BishNoSuchMemberException(this, name);
+        TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
 
     protected virtual List<BishObject> LookupChain => [this];
 
@@ -62,14 +63,15 @@ public class BishObject(BishType? type = null)
         return TryCallHook("hook_Set", [new BishString(name), value]) ?? (Members[name] = value);
     }
 
-    public BishObject DelMember(string name) => TryDelMember(name) ?? throw new BishNoSuchMemberException(this, name);
+    public BishObject DelMember(string name) =>
+        TryDelMember(name) ?? throw BishException.OfAttribute("delete", this, name);
 
     public BishObject? TryDelMember(string name)
     {
         return Members.Remove(name, out var member) ? member : TryCallHook("hook_Del", [new BishString(name)]);
     }
 
-    public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw new BishNotCallableException(this);
+    public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
 
     public virtual BishObject? TryCall(List<BishObject> args)
     {
@@ -81,13 +83,11 @@ public class BishObject(BishType? type = null)
         return $"[Object {Type.Name}]";
     }
 
+    // Well perhaps an ugly solution: see ObjectMethodTest.TestSpecialBindMethod
     [Builtin]
-    public static BishString ToString(BishObject obj)
-    {
-        return new BishString(obj.ToString());
-    }
+    public static BishString ToString([DefaultNull] BishObject? obj) => new(obj?.ToString() ?? "[Type]");
 
-    static BishObject() => BuiltinBinder.Bind<BishObject>();
+    static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
 public class BishType(string name, BishType[]? parents = null) : BishObject
@@ -113,6 +113,7 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
     public BishObject CreateInstance(List<BishObject> args)
     {
         var instance = TryCallHook("hook_Create", []) ?? new BishObject(this);
+        instance.Type = this; // TODO: do we really want this?
         instance.TryCallHook("hook_Init", args);
         return instance;
     }
@@ -137,6 +138,6 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("type");
-    
-    static BishType() => BuiltinBinder.Bind<BishType>();
+
+    static BishType() => BishBuiltinBinder.Bind<BishType>();
 }

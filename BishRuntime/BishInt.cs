@@ -8,7 +8,6 @@ public class BishInt(int value) : BishObject
 
     public new static readonly BishType StaticType = new("int");
     
-    
     [Builtin("hook")]
     public static BishInt Create() => new(0);
 
@@ -23,5 +22,5 @@ public class BishInt(int value) : BishObject
 
     public override string ToString() => Value.ToString();
 
-    static BishInt() => BuiltinBinder.Bind<BishInt>();
+    static BishInt() => BishBuiltinBinder.Bind<BishInt>();
 }

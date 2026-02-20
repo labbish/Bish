@@ -2,7 +2,7 @@
 
 public class BishNull : BishObject
 {
-    private BishNull()
+    internal BishNull()
     {
     }
 
@@ -17,20 +17,21 @@ public class BishNull : BishObject
         return "null";
     }
 
-    // TODO: singleton
     [Builtin("hook")]
     public static BishNull Create() => Instance;
 
     [Builtin("hook")]
-    public static BishObject Get(BishNull self, BishString name) => throw new BishNullAccessException(name.Value);
+    public static BishObject Get(BishNull self, BishString name) =>
+        throw BishException.OfNull("get", name.Value);
 
     [Builtin("hook")]
     public static BishObject Set(BishNull self, BishString name, BishObject _) =>
-        throw new BishNullAccessException(name.Value);
+        throw BishException.OfNull("set", name.Value);
 
     [Builtin("hook")]
-    public static BishObject Del(BishNull self, BishString name) => throw new BishNullAccessException(name.Value);
+    public static BishObject Del(BishNull self, BishString name) =>
+        throw BishException.OfNull("delete", name.Value);
 
     // TODO: equality?
-    static BishNull() => BuiltinBinder.Bind<BishNull>();
+    static BishNull() => BishBuiltinBinder.Bind<BishNull>();
 }

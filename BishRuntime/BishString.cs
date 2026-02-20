@@ -16,5 +16,5 @@ public class BishString(string value) : BishObject
         return Value;
     }
 
-    static BishString() => BuiltinBinder.Bind<BishString>();
+    static BishString() => BishBuiltinBinder.Bind<BishString>();
 }

@@ -13,5 +13,5 @@ public class BishBool(bool value) : BishObject
 
     public override string ToString() => Value ? "true" : "false";
 
-    static BishBool() => BuiltinBinder.Bind<BishBool>();
+    static BishBool() => BishBuiltinBinder.Bind<BishBool>();
 }

@@ -15,5 +15,5 @@ public class BishNum(double value) : BishObject
 
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
-    static BishNum() => BuiltinBinder.Bind<BishNum>();
+    static BishNum() => BishBuiltinBinder.Bind<BishNum>();
 }

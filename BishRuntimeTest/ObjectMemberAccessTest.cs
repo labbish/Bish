@@ -39,7 +39,7 @@ public class ObjectMemberAccessTest : Test
     {
         T1.GetMember("a").Should().BeEquivalentTo(new BishInt(0));
         T1.GetMember("b").Should().BeEquivalentTo(new BishInt(0));
-        Action(() => T1.GetMember("c")).Should().Throw<BishNoSuchMemberException>();
+        Action(() => T1.GetMember("c")).Should().Excepts(BishError.AttributeErrorType);
         T2.GetMember("a").Should().BeEquivalentTo(new BishInt(1));
         T2.GetMember("b").Should().BeEquivalentTo(new BishInt(0));
         T2.GetMember("c").Should().BeEquivalentTo(new BishInt(1));
@@ -88,7 +88,7 @@ public class ObjectMemberAccessTest : Test
     public void TestDelMember()
     {
         T2.DelMember("a").Should().BeEquivalentTo(new BishInt(1));
-        Action(() => X.DelMember("b")).Should().Throw<BishNoSuchMemberException>();
+        Action(() => X.DelMember("b")).Should().Excepts(BishError.AttributeErrorType);
         X.DelMember("c").Should().BeEquivalentTo(new BishInt(2));
         
         T1.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));

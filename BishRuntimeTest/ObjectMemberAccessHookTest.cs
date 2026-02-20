@@ -42,11 +42,11 @@ public class ObjectMemberAccessHookTest : Test
     public void TestNullAccess()
     {
         var n = BishNull.StaticType.CreateInstance([]);
-        Action(() => n.TryGetMember("")).Should().Throw<BishNullAccessException>();
-        Action(() => n.GetMember("")).Should().Throw<BishNullAccessException>();
-        Action(() => n.SetMember("", n)).Should().Throw<BishNullAccessException>();
-        Action(() => n.TryDelMember("")).Should().Throw<BishNullAccessException>();
-        Action(() => n.DelMember("")).Should().Throw<BishNullAccessException>();
+        Action(() => n.TryGetMember("")).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.GetMember("")).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.SetMember("", n)).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.TryDelMember("")).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.DelMember("")).Should().Excepts(BishError.NullErrorType);
     }
 }
 
@@ -68,5 +68,5 @@ file class T : BishObject
     [Builtin("hook")]
     public static BishString Del(T self, BishString name) => new("del");
 
-    static T() => BuiltinBinder.Bind<T>();
+    static T() => BishBuiltinBinder.Bind<T>();
 }

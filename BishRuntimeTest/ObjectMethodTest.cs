@@ -22,15 +22,14 @@ public class ObjectMethodTest : Test
         Inject();
         new BishInt(0).TryCall([]).Should().BeNull();
         X.TryCall([]).Should().BeEquivalentTo(new BishInt(0));
-        Action(() => X.TryCall([BishNull.Instance])).Should().Throw<BishArgumentException>();
+        Action(() => X.TryCall([BishNull.Instance])).Should().Excepts(BishError.ArgumentErrorType);
         X.GetMember("f").TryCall([]).Should().BeEquivalentTo(new BishInt(1));
         X.GetMember("f").TryCall([BishNull.Instance]).Should().BeEquivalentTo(new BishInt(1));
-        Action(() => X.GetMember("g").TryCall([])).Should().Throw<BishArgumentException>();
-        Action(() => X.GetMember("g").TryCall([BishNull.Instance])).Should()
-            .Throw<BishArgumentException>().WithInnerException<BishTypeException>();
-        Action(() => T.StaticType.GetMember("g").TryCall([])).Should().Throw<BishArgumentException>();
+        Action(() => X.GetMember("g").TryCall([])).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => X.GetMember("g").TryCall([BishNull.Instance])).Should().Excepts(BishError.TypeErrorType);
+        Action(() => T.StaticType.GetMember("g").TryCall([])).Should().Excepts(BishError.ArgumentErrorType);
         Action(() => T.StaticType.GetMember("g").TryCall([BishNull.Instance, X])).Should()
-            .Throw<BishArgumentException>().WithInnerException<BishTypeException>();
+            .Excepts(BishError.TypeErrorType);
         X.GetMember("toString").TryCall([]).Should().BeEquivalentTo(new BishString("T(x)"));
         T.StaticType.GetMember("getName").TryCall([]).Should().BeEquivalentTo(new BishString("T"));
     }
@@ -39,19 +38,28 @@ public class ObjectMethodTest : Test
     public void TestMethodCall()
     {
         Inject();
-        Action(() => new BishInt(0).Call([])).Should().Throw<BishNotCallableException>();
+        Action(() => new BishInt(0).Call([])).Should().Excepts(BishError.TypeErrorType);
         X.Call([]).Should().BeEquivalentTo(new BishInt(0));
-        Action(() => X.Call([BishNull.Instance])).Should().Throw<BishArgumentException>();
+        Action(() => X.Call([BishNull.Instance])).Should().Excepts(BishError.ArgumentErrorType);
         X.GetMember("f").Call([]).Should().BeEquivalentTo(new BishInt(1));
         X.GetMember("f").Call([BishNull.Instance]).Should().BeEquivalentTo(new BishInt(1));
-        Action(() => X.GetMember("g").Call([])).Should().Throw<BishArgumentException>();
-        Action(() => X.GetMember("g").Call([BishNull.Instance])).Should()
-            .Throw<BishArgumentException>().WithInnerException<BishTypeException>();
-        Action(() => T.StaticType.GetMember("g").Call([])).Should().Throw<BishArgumentException>();
+        Action(() => X.GetMember("g").Call([])).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => X.GetMember("g").Call([BishNull.Instance])).Should().Excepts(BishError.TypeErrorType);
+        Action(() => T.StaticType.GetMember("g").Call([])).Should().Excepts(BishError.ArgumentErrorType);
         Action(() => T.StaticType.GetMember("g").Call([BishNull.Instance, X])).Should()
-            .Throw<BishArgumentException>().WithInnerException<BishTypeException>();
+            .Excepts(BishError.TypeErrorType);
         X.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("T(x)"));
         T.StaticType.GetMember("getName").Call([]).Should().BeEquivalentTo(new BishString("T"));
+    }
+
+    [Fact]
+    public void TestSpecialBindMethod()
+    {
+        var x = new BishInt(1);
+        x.Type.GetMember("toString").Call([x]).Should().BeEquivalentTo(new BishString("1"));
+        x.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("1"));
+        BishNull.Instance.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("null"));
+        x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("[Type]"));
     }
 }
 
@@ -87,7 +95,7 @@ file class T(string tag) : BishObject
     [Builtin("op")]
     public static BishInt Call(T self) => new(0);
 
-    static T() => BuiltinBinder.Bind<T>();
+    static T() => BishBuiltinBinder.Bind<T>();
 
     public override string ToString()
     {

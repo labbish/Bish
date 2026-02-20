@@ -1,8 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.ExceptionServices;
-using JetBrains.Annotations;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 // TODO: maybe support rest args (after we have an builtin list)
 // `Type` will only be used by builtin functions
@@ -20,7 +16,7 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
     {
         var repeat = args.GroupBy(arg => arg.Name)
             .Where(g => g.Count() > 1).Select(g => g.Key).FirstOrDefault();
-        if (repeat is not null) throw BishArgumentException.OfDefineRepeat(repeat);
+        if (repeat is not null) throw BishException.OfArgument_DefineRepeat(repeat);
 
         var metDefault = false;
         for (var i = 0; i < args.Count; i++)
@@ -28,7 +24,7 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
             var arg = args[i];
             if (arg.Default is not null) metDefault = true;
             if (metDefault && arg.Default is null)
-                throw BishArgumentException.OfDefineDefault(i, arg);
+                throw BishException.OfArgument_DefineDefault(i, arg.Name);
         }
 
         return args;
@@ -36,14 +32,14 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
 
     public List<BishObject> Match(List<BishObject> args)
     {
-        var minArgs = Args.Count(arg => arg.Default is not null);
-        if (args.Count > Args.Count) throw BishArgumentException.OfCount(minArgs, Args.Count, args.Count);
+        var minArgs = Args.Count(arg => arg.Default is null);
+        if (args.Count > Args.Count) throw BishException.OfArgument_Count(minArgs, Args.Count, args.Count);
         return Args.Select((arg, i) =>
         {
             var got = args.ElementAtOrDefault(i);
             if (got is not null)
-                return got.Type.CanAssignTo(arg.Type) ? got : throw BishArgumentException.OfType(got, arg.Type);
-            return arg.Default ?? throw BishArgumentException.OfCount(minArgs, Args.Count, args.Count);
+                return got.Type.CanAssignTo(arg.Type) ? got : throw BishException.OfType_Argument(got, arg.Type);
+            return arg.Default ?? throw BishException.OfArgument_Count(minArgs, Args.Count, args.Count);
         }).ToList();
     }
 
@@ -63,61 +59,9 @@ public class BishMethod(List<BishArg> inArgs, Func<List<BishObject>, BishObject>
 {
     public BishFunc Bind(BishObject self)
     {
-        if (Args.Count == 0) throw BishArgumentException.OfBind(this, self);
+        if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         return self.Type.CanAssignTo(Args[0].Type)
             ? new BishFunc(Args.Skip(1).ToList(), args => Func([self, ..args]))
-            : throw new BishTypeException(self, Args[0].Type);
-    }
-}
-
-[MeansImplicitUse]
-[AttributeUsage(AttributeTargets.Method)]
-public class BuiltinAttribute(string? prefix = null) : Attribute
-{
-    public string? Prefix => prefix;
-
-    private static string ToLower(string name) => name == "" ? name : char.ToLower(name[0]) + name[1..];
-
-    public string GetName(string name) => Prefix is null ? ToLower(name) : $"{Prefix}_{name}";
-}
-
-public static class BuiltinBinder
-{
-    public static void Bind<TObject>() where TObject : BishObject
-    {
-        var type = typeof(TObject);
-        var staticType = StaticType(type);
-        foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
-        {
-            var attr = method.GetCustomAttribute<BuiltinAttribute>();
-            if (attr != null) staticType.Members[attr.GetName(method.Name)] = Builtin(method);
-        }
-    }
-
-    public static BishMethod Builtin(MethodInfo method)
-    {
-        // TODO: optional args?
-        var inArgs = method.GetParameters()
-            .Select(info => new BishArg(info.Name!, StaticType(info.ParameterType)))
-            .ToList();
-        return new BishMethod(inArgs, args => (BishObject)method.InvokeRaw(null, args.Cast<object>().ToArray())!);
-    }
-
-    public static BishType StaticType(Type type)
-    {
-        return (BishType)type.GetField("StaticType")!.GetValue(null)!;
-    }
-
-    public static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
-    {
-        try
-        {
-            return method.Invoke(obj, parameters);
-        }
-        catch (TargetInvocationException exception)
-        {
-            ExceptionDispatchInfo.Capture(exception.InnerException!).Throw();
-            throw; // Make compiler happy
-        }
+            : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 }

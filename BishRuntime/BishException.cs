@@ -1,47 +1,80 @@
 ﻿namespace BishRuntime;
 
-public class BishException(string? message = null, BishException? inner = null) : Exception(message, inner); // TODO
-
-public class BishArgumentException(string? message = null, BishException? inner = null) : BishException(message, inner)
+public class BishException(BishError error) : Exception($"[{error.Type.Name}] {error.Message}")
 {
-    public static BishArgumentException General(string argName) => new($"Failed to match argument {argName}");
+    public BishError Error => error;
     
-    public static BishArgumentException OfDefineDefault(int pos, BishArg arg) => 
-        new($"Required argument {arg.Name} at position {pos} cannot be after optional parameters");
-    
-    public static BishArgumentException OfDefineRepeat(string name) => 
-        new($"Trying to define function with repeated argument {name}");
+    public static BishException Create(BishType errorType, string message, Dictionary<string, BishObject> data)
+    {
+        var error = (BishError)errorType.CreateInstance([new BishString(message)]);
+        foreach (var (key, value) in data)
+            error.SetMember(key, value);
+        return new BishException(error);
+    }
 
-    public static BishArgumentException OfBind(BishMethod method, BishObject self) =>
-        new($"Cannot bind {self} to {method} because {method} takes no argument");
+    public static BishException OfNull(string op, string name) => Create(BishError.NullErrorType,
+        $"Cannot {op} member {name} on null", new Dictionary<string, BishObject>
+        {
+            ["operation"] = new BishString(op),
+            ["name"] = new BishString(name)
+        });
 
-    public static BishArgumentException OfCount(int min, int max, int got) =>
-        new($"Wrong argument count: expected {(min == max ? min : $"{min}~{max}")}, got {got}");
-    
-    public static BishArgumentException OfType(BishObject obj, BishType type) => 
-        new("Wrong argument type", new BishTypeException(obj, type));
-}
+    public static BishException OfAttribute(string op, BishObject obj, string name) =>
+        Create(BishError.AttributeErrorType, $"No such member: trying to {op} {name} on {obj}",
+            new Dictionary<string, BishObject>
+            {
+                ["operation"] = new BishString(op),
+                ["object"] = obj,
+                ["name"] = new BishString(name)
+            });
 
-public class BishTypeException(BishObject obj, BishType type)
-    : BishException($"Wrong type: expected {type}, got {obj.Type}")
-{
-    public BishObject Obj => obj;
-    public BishType Type => type;
-}
+    public static BishException OfType(string message, Dictionary<string, BishObject> data) =>
+        Create(BishError.TypeErrorType, message, data);
 
-public class BishNoSuchMemberException(BishObject obj, string name)
-    : BishException($"No such member: {name} on object {obj}")
-{
-    public BishObject Obj => obj;
-    public string Name => name;
-}
+    public static BishException OfType_NotCallable(BishObject obj) => OfType($"Cannot call {obj}",
+        new Dictionary<string, BishObject>
+        {
+            ["object"] = obj
+        });
 
-public class BishNotCallableException(BishObject obj) : BishException($"{obj} is not callable")
-{
-    public BishObject Obj => obj;
-}
+    public static BishException OfType_Argument(BishObject obj, BishType expect) =>
+        OfType($"Expect argument to be {expect}, found {obj}", new Dictionary<string, BishObject>
+        {
+            ["object"] = obj,
+            ["expect"] = expect
+        });
 
-public class BishNullAccessException(string name) : BishException($"Accessing member {name} on null")
-{
-    public string Name => name;
+    public static BishException OfArgument(string message, Dictionary<string, BishObject> data) =>
+        Create(BishError.ArgumentErrorType, message, data);
+
+    public static BishException OfArgument_DefineRepeat(string name) => OfArgument(
+        $"Found repeated argument {name} while defining function", new Dictionary<string, BishObject>
+        {
+            ["name"] = new BishString(name)
+        });
+
+    public static BishException OfArgument_DefineDefault(int index, string name) => OfArgument(
+        $"Found required argument {name} at index {index}, after some optional argument, while defining function",
+        new Dictionary<string, BishObject>
+        {
+            ["index"] = new BishInt(index),
+            ["name"] = new BishString(name)
+        });
+
+    public static BishException OfArgument_Count(int min, int max, int count) => OfArgument(
+        $"Wrong argument count: expected {(min == max ? min : $"{min}~{max}")}, got {count}",
+        new Dictionary<string, BishObject>
+        {
+            ["min"] = new BishInt(min),
+            ["max"] = new BishInt(max),
+            ["count"] = new BishInt(count)
+        });
+
+    public static BishException OfArgument_Bind(BishMethod method, BishObject obj) => OfArgument(
+        $"Cannot bind {obj} to {method} because {method} takes no argument",
+        new Dictionary<string, BishObject>
+        {
+            ["method"] = method,
+            ["object"] = obj
+        });
 }

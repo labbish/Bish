@@ -4,7 +4,8 @@
 public enum BishLookupMode
 {
     None = 0,
-    NoHook = 1
+    NoHook = 1,
+    NotFromType = 2
 }
 
 public class BishObject(BishType? type = null)
@@ -29,21 +30,53 @@ public class BishObject(BishType? type = null)
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
 
-    protected virtual List<BishObject> LookupChain => [this];
+    protected virtual List<BishObject> LookupChain => [];
 
+    /**
+     * Here's the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
+     * @GetFromType = (if not NotFromType mode) Incursively get on Type [NoHook, NotFromType, bind]
+     * 1. Members of self
+     * 2. (If this is a type) @GetFromType [ignore exceptions]
+     * 3. (Only non-empty for types) Members on the lookup chain
+     * 4. @GetFromType
+     * 5. (If not NoHook mode) Call hook_Get
+     */
     public BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
         List<BishObject>? excludes = null)
     {
         excludes ??= [];
         if (excludes.Contains(this)) return null;
+
+        BishObject? GetFromType() => mode.HasFlag(BishLookupMode.NotFromType)
+            ? null
+            : TryBind(Type.TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes));
+
+        // Step 1
+        if (Members.TryGetValue(name, out var value)) return value;
+        excludes.Add(this);
+
+        // Step 2
+        if (this is BishType)
+        {
+            try
+            {
+                var member = GetFromType();
+                if (member is not null) return member;
+            }
+            catch (BishException)
+            {
+            }
+        }
+
+        // Step 3
         foreach (var obj in LookupChain.Where(obj => !excludes.Contains(obj)))
         {
             if (obj.Members.TryGetValue(name, out var member)) return member;
             excludes.Add(obj);
         }
 
-        return TryBind(Type.TryGetMember(name, mode | BishLookupMode.NoHook, excludes)) ??
-               (mode.HasFlag(BishLookupMode.NoHook) ? null : TryCallGetHook(name));
+        // Step 4 & 5
+        return GetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : TryCallGetHook(name));
     }
 
     private BishObject? TryCallGetHook(string name, List<BishObject>? excludes = null)
@@ -83,9 +116,8 @@ public class BishObject(BishType? type = null)
         return $"[Object {Type.Name}]";
     }
 
-    // Well perhaps an ugly solution: see ObjectMethodTest.TestSpecialBindMethod
     [Builtin]
-    public static BishString ToString([DefaultNull] BishObject? obj) => new(obj?.ToString() ?? "[Type]");
+    public static BishString ToString(BishObject obj) => new(obj.ToString());
 
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
@@ -99,7 +131,7 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         get => [..field, BishObject.StaticType];
     } = parents ?? [];
 
-    protected override List<BishObject> LookupChain => LinearParents([]).ToList<BishObject>();
+    protected override List<BishObject> LookupChain => LinearParents([]).Skip(1).ToList<BishObject>();
 
     public List<BishType> LinearParents(List<BishType> current)
     {

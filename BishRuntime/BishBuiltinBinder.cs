@@ -24,8 +24,7 @@ public static class BishBuiltinBinder
     {
         var type = typeof(TObject);
         var staticType = StaticType(type);
-        foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                               BindingFlags.FlattenHierarchy))
+        foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
         {
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
             if (attr == null) continue;

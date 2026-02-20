@@ -34,12 +34,38 @@ public static class BishBuiltinBinder
 
     public static BishMethod Builtin(MethodInfo method)
     {
-        var inArgs = method.GetParameters()
+        var parameters = method.GetParameters();
+        var inArgs = parameters
             .Select(info => new BishArg(info.Name!, StaticType(info.ParameterType), Default(info)))
             .ToList();
         return new BishMethod(inArgs,
             args => (BishObject)method.InvokeRaw(null,
-                args.Select(arg => ReferenceEquals(arg, DefaultNull) ? null : arg).Cast<object>().ToArray())!);
+                args.Select((arg, i) =>
+                        ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))
+                    .ToArray())!);
+    }
+
+    public static object ConvertImplicit(object obj, Type target)
+    {
+        if (target.IsInstanceOfType(obj)) return obj;
+        var source = obj.GetType();
+        var method = source.GetImplicitConversionMethod(source, target) ??
+                     target.GetImplicitConversionMethod(source, target);
+        // We don't throw a BishException because it is user's responsibility to be aware of their bindings' correctness
+        return method?.Invoke(null, [obj]) ?? throw new InvalidOperationException();
+    }
+
+    private static MethodInfo? GetImplicitConversionMethod(this Type type, Type source, Type target)
+    {
+        return type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(mi =>
+            {
+                var parameters = mi.GetParameters();
+                return mi.Name == "op_Implicit"
+                       && mi.ReturnType == target
+                       && parameters.Length == 1
+                       && parameters[0].ParameterType.IsAssignableFrom(source);
+            });
     }
 
     // It's really strange that this works fine on nullable args
@@ -48,7 +74,7 @@ public static class BishBuiltinBinder
     private static BishObject? Default(ParameterInfo info) =>
         info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : DefaultNull;
 
-    public static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
+    private static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
     {
         try
         {

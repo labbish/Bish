@@ -4,8 +4,8 @@
 public enum BishLookupMode
 {
     None = 0,
-    NoHook = 1,
-    NotFromType = 2
+    NoHook = 1 << 0,
+    NotFromType = 1 << 1
 }
 
 public class BishObject(BishType? type = null)
@@ -33,13 +33,16 @@ public class BishObject(BishType? type = null)
     protected virtual List<BishObject> LookupChain => [];
 
     /**
-     * Here's the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
-     * @GetFromType = (if not NotFromType mode) Incursively get on Type [NoHook, NotFromType, bind]
+     * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
+     * @GetFromType = (If not NotFromType mode) Incursively get on Type [NoHook, NotFromType, bind]
      * 1. Members of self
      * 2. (If this is a type) @GetFromType [ignore exceptions]
      * 3. (Only non-empty for types) Members on the lookup chain
      * 4. @GetFromType
      * 5. (If not NoHook mode) Call hook_Get
+     *
+     * ...And fun fact: Python used a simpler order, so that int.__str__(1) works but int.__str__() don't.
+     * But we prefer class methods (e.g. obj.toString()) to free functions (e.g. str(obj)), so this works better here.
      */
     public BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
         List<BishObject>? excludes = null)
@@ -58,14 +61,8 @@ public class BishObject(BishType? type = null)
         // Step 2
         if (this is BishType)
         {
-            try
-            {
-                var member = GetFromType();
-                if (member is not null) return member;
-            }
-            catch (BishException)
-            {
-            }
+            var member = BishException.Ignored(GetFromType);
+            if (member is not null) return member;
         }
 
         // Step 3
@@ -152,6 +149,8 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
 
     public bool CanAssignTo(BishType other, HashSet<BishObject>? excludes = null)
     {
+        // Special case here
+        if (this == BishInt.StaticType && other == BishNum.StaticType) return true;
         excludes ??= [];
         if (excludes.Contains(this)) return false;
         if (this == other) return true;

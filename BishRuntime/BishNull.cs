@@ -32,6 +32,5 @@ public class BishNull : BishObject
     public static BishObject Del(BishNull self, BishString name) =>
         throw BishException.OfNull("delete", name.Value);
 
-    // TODO: equality?
     static BishNull() => BishBuiltinBinder.Bind<BishNull>();
 }

@@ -3,7 +3,7 @@ using FluentAssertions;
 
 namespace BishRuntimeTest;
 
-public class ObjectMethodTest : Test
+public class MethodTest : Test
 {
     public readonly BishObject X = T.StaticType.CreateInstance([new BishString("x")]);
 

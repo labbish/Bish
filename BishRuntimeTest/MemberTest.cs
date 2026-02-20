@@ -3,12 +3,12 @@ using FluentAssertions;
 
 namespace BishRuntimeTest;
 
-public class ObjectMemberAccessTest : Test
+public class MemberTest : Test
 {
     public readonly BishType T1, T2;
     public readonly BishObject X;
 
-    public ObjectMemberAccessTest()
+    public MemberTest()
     {
         T1 = new BishType("T1");
         T1.Members.Add("a", new BishInt(0));

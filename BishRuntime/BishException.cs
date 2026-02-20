@@ -3,7 +3,19 @@
 public class BishException(BishError error) : Exception($"[{error.Type.Name}] {error.Message}")
 {
     public BishError Error => error;
-    
+
+    public static T? Ignored<T>(Func<T?> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (BishException)
+        {
+            return default;
+        }
+    }
+
     public static BishException Create(BishType errorType, string message, Dictionary<string, BishObject> data)
     {
         var error = (BishError)errorType.CreateInstance([new BishString(message)]);
@@ -42,6 +54,13 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
         {
             ["object"] = obj,
             ["expect"] = expect
+        });
+
+    public static BishException OfType_Operator(string name, List<BishObject> args) => OfType(
+        $"Cannot apply operator {name} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
+        new Dictionary<string, BishObject>
+        {
+            ["name"] = new BishString(name) // TODO: record the arg types after we have an builtin list
         });
 
     public static BishException OfArgument(string message, Dictionary<string, BishObject> data) =>

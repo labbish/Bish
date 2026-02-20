@@ -3,11 +3,11 @@ using FluentAssertions;
 
 namespace BishRuntimeTest;
 
-public class ObjectMemberAccessHookTest : Test
+public class MemberHookTest : Test
 {
     public BishObject X;
 
-    public ObjectMemberAccessHookTest()
+    public MemberHookTest()
     {
         X = T.StaticType.CreateInstance([]);
         X.Members.Add("a", new BishInt(0));

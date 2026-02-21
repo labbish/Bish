@@ -43,6 +43,14 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
         }).ToList();
     }
 
+    public BishFunc Bind(BishObject self)
+    {
+        if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
+        return self.Type.CanAssignTo(Args[0].Type)
+            ? new BishFunc(Args.Skip(1).ToList(), args => Func([self, ..args]))
+            : throw BishException.OfType_Argument(self, Args[0].Type);
+    }
+
     public override BishObject TryCall(List<BishObject> args) => Func(Match(args));
 
     public override BishType DefaultType => StaticType;
@@ -52,16 +60,5 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
     public override string ToString()
     {
         return "[Function]";
-    }
-}
-
-public class BishMethod(List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishFunc(inArgs, func)
-{
-    public BishFunc Bind(BishObject self)
-    {
-        if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
-        return self.Type.CanAssignTo(Args[0].Type)
-            ? new BishFunc(Args.Skip(1).ToList(), args => Func([self, ..args]))
-            : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 }

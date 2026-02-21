@@ -82,7 +82,7 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
             ["count"] = new BishInt(count)
         });
 
-    public static BishException OfArgument_Bind(BishMethod method, BishObject obj) => OfArgument(
+    public static BishException OfArgument_Bind(BishFunc method, BishObject obj) => OfArgument(
         $"Cannot bind {obj} to {method} because {method} takes no argument",
         new Dictionary<string, BishObject>
         {

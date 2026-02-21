@@ -36,13 +36,13 @@ public static class BishBuiltinBinder
         }
     }
 
-    public static BishMethod Builtin(MethodInfo method)
+    public static BishFunc Builtin(MethodInfo method)
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
             .Select(info => new BishArg(info.Name!, StaticType(info.ParameterType), Default(info)))
             .ToList();
-        return new BishMethod(inArgs,
+        return new BishFunc(inArgs,
             args => (BishObject)method.InvokeRaw(null,
                 args.Select((arg, i) =>
                         ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))

@@ -34,7 +34,7 @@ public class BishObject(BishType? type = null)
 
     /**
      * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
-     * @GetFromType = (If not NotFromType mode) Incursively get on Type [NoHook, NotFromType, bind]
+     * @GetFromType = (If not NotFromType mode) Recursively get on Type [NoHook, NotFromType, bind]
      * 1. Members of self
      * 2. (If this is a type) @GetFromType [ignore exceptions]
      * 3. (Only non-empty for types) Members on the lookup chain
@@ -86,7 +86,7 @@ public class BishObject(BishType? type = null)
         return Type.TryCallGetHook(name, excludes);
     }
 
-    private BishObject? TryBind(BishObject? member) => member is BishMethod method ? method.Bind(this) : member;
+    private BishObject? TryBind(BishObject? member) => member is BishFunc method ? method.Bind(this) : member;
 
     public BishObject SetMember(string name, BishObject value)
     {
@@ -140,6 +140,7 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         foreach (var parent in Parents)
             results.AddRange(parent.LinearParents(results));
         return results;
+        // TODO: maybe an MRO
     }
 
     public BishObject CreateInstance(List<BishObject> args)

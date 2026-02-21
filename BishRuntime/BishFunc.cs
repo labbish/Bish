@@ -7,6 +7,7 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
     public BishType Type => DefType ?? BishObject.StaticType;
 }
 
+// With inArgs=null it means to bypass the default check logic
 public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
 {
     public List<BishArg> Args => CheckedArgs(inArgs);

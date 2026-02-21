@@ -2,7 +2,7 @@
 
 public class BishString(string value) : BishObject
 {
-    public string Value => value;
+    public string Value { get; private set; } = value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("string");
@@ -10,6 +10,13 @@ public class BishString(string value) : BishObject
     
     [Builtin("hook")]
     public static BishString Create() => new("");
+
+    [Builtin("hook")]
+    public static BishNull Init(BishString self, [DefaultNull] BishString? other)
+    {
+        self.Value = other?.Value ?? "";
+        return BishNull.Instance;
+    }
 
     public override string ToString() => Value;
     

@@ -12,9 +12,9 @@ public class BishError(string message) : BishObject
     public static BishError Create() => new("");
 
     [Builtin("hook")]
-    public static BishObject Init(BishError self, BishString message)
+    public static BishObject Init(BishError self, [DefaultNull] BishString? message)
     {
-        self.Message = message.Value;
+        self.Message = message?.Value ?? "";
         return BishNull.Instance;
     }
 

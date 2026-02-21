@@ -4,7 +4,7 @@ namespace BishRuntime;
 
 public class BishNum(double value) : BishObject
 {
-    public double Value => value;
+    public double Value { get; private set; } = value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("num");
@@ -12,6 +12,13 @@ public class BishNum(double value) : BishObject
 
     [Builtin("hook")]
     public static BishNum Create() => new(0);
+    
+    [Builtin("hook")]
+    public static BishNull Init(BishNum self, [DefaultNull] BishNum? other)
+    {
+        self.Value = other?.Value ?? 0;
+        return BishNull.Instance;
+    }
 
     [Builtin("op")]
     public static BishNum Pos(BishNum a) => new(+a.Value);

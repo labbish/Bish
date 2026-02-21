@@ -171,7 +171,6 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         // TODO: maybe an MRO
     }
 
-    // TODO: create instance by calling the type?
     public BishObject CreateInstance(List<BishObject> args)
     {
         var instance = TryCallHook("hook_Create", []) ?? new BishObject(this);
@@ -179,6 +178,8 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         instance.TryCallHook("hook_Init", args);
         return instance;
     }
+
+    public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
 
     public bool CanAssignTo(BishType other, HashSet<BishObject>? excludes = null)
     {
@@ -208,5 +209,8 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         type.GetField("StaticType")?.GetValue(null) as BishType ??
         throw new ArgumentException($"Cannot find field `StaticType` on type {type}");
 
-    static BishType() => BishBuiltinBinder.Bind<BishType>();
+    static BishType()
+    {
+        BishBuiltinBinder.Bind<BishType>();
+    }
 }

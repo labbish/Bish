@@ -2,7 +2,7 @@
 
 public class BishInt(int value) : BishObject
 {
-    public int Value => value;
+    public int Value { get; private set; } = value;
 
     public override BishType DefaultType => StaticType;
 
@@ -10,6 +10,13 @@ public class BishInt(int value) : BishObject
 
     [Builtin("hook")]
     public static BishInt Create() => new(0);
+
+    [Builtin("hook")]
+    public static BishNull Init(BishInt self, [DefaultNull] BishInt? other)
+    {
+        self.Value = other?.Value ?? 0;
+        return BishNull.Instance;
+    }
 
     [Builtin("op")]
     public static BishInt Pos(BishInt a) => new(+a.Value);

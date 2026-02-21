@@ -11,6 +11,7 @@ public class MethodTest : Test
     public void TestObjectInitialization()
     {
         X.Should().BeEquivalentTo(new T("x"));
+        T.StaticType.Call([new BishString("y")]).Should().BeEquivalentTo(new T("y"));
     }
 
     [Fact]

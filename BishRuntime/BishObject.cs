@@ -5,7 +5,8 @@ public enum BishLookupMode
 {
     None = 0,
     NoHook = 1 << 0,
-    NotFromType = 1 << 1
+    NotFromType = 1 << 1,
+    NoBind = 1 << 2
 }
 
 public class BishObject(BishType? type = null)
@@ -34,7 +35,7 @@ public class BishObject(BishType? type = null)
 
     /**
      * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
-     * @GetFromType = (If not NotFromType mode) Recursively get on Type [NoHook, NotFromType, bind]
+     * @GetFromType = (If not NotFromType mode) Recursively get on Type [NoHook, NotFromType, bind (if not NoBind mode)]
      * 1. Members of self
      * 2. (If this is a type) @GetFromType [ignore exceptions]
      * 3. (Only non-empty for types) Members on the lookup chain
@@ -52,7 +53,8 @@ public class BishObject(BishType? type = null)
 
         BishObject? GetFromType() => mode.HasFlag(BishLookupMode.NotFromType)
             ? null
-            : TryBind(Type.TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes));
+            : TryBind(Type.TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes),
+                mode.HasFlag(BishLookupMode.NoBind));
 
         // Step 1
         if (Members.TryGetValue(name, out var value)) return value;
@@ -86,7 +88,8 @@ public class BishObject(BishType? type = null)
         return Type.TryCallGetHook(name, excludes);
     }
 
-    private BishObject? TryBind(BishObject? member) => member is BishFunc method ? method.Bind(this) : member;
+    private BishObject? TryBind(BishObject? member, bool noBind) =>
+        noBind ? member : member is BishFunc method ? method.Bind(this) : member;
 
     public BishObject SetMember(string name, BishObject value)
     {
@@ -119,6 +122,31 @@ public class BishObject(BishType? type = null)
     [Builtin("op")]
     public static BishBool Eq(BishObject a, BishObject b) => new(ReferenceEquals(a, b));
 
+    [Builtin("op")]
+    public static BishBool Neq(BishObject a, BishObject b) => BishOperator.Call("op_Eq", [a, b]) switch
+    {
+        BishBool eq => new BishBool(!eq.Value),
+        { } result => throw BishException.OfType_ComparingOperator(a, "==", b, result, BishBool.StaticType)
+    };
+
+    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_Cmp", [a, b]) switch
+    {
+        BishInt cmp => cmp.Value,
+        { } result => throw BishException.OfType_ComparingOperator(a, "<=>", b, result, BishInt.StaticType)
+    };
+
+    [Builtin("op")]
+    public static BishBool Lt(BishObject a, BishObject b) => new(Compare(a, b) < 0);
+
+    [Builtin("op")]
+    public static BishBool Le(BishObject a, BishObject b) => new(Compare(a, b) <= 0);
+
+    [Builtin("op")]
+    public static BishBool Gt(BishObject a, BishObject b) => new(Compare(a, b) > 0);
+
+    [Builtin("op")]
+    public static BishBool Ge(BishObject a, BishObject b) => new(Compare(a, b) >= 0);
+
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
@@ -143,6 +171,7 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         // TODO: maybe an MRO
     }
 
+    // TODO: create instance by calling the type?
     public BishObject CreateInstance(List<BishObject> args)
     {
         var instance = TryCallHook("hook_Create", []) ?? new BishObject(this);

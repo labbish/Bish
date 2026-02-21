@@ -1,7 +1,4 @@
-﻿using BishRuntime;
-using FluentAssertions;
-
-namespace BishRuntimeTest;
+﻿namespace BishRuntimeTest;
 
 public class MethodTest : Test
 {

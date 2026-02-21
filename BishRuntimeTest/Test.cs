@@ -1,4 +1,5 @@
-﻿using BishRuntime;
+﻿global using BishRuntime;
+global using FluentAssertions;
 using FluentAssertions.Specialized;
 
 namespace BishRuntimeTest;

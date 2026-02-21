@@ -56,6 +56,18 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
             ["expect"] = expect
         });
 
+    public static BishException OfType_ComparingOperator(BishObject left, string op, BishObject right,
+        BishObject result, BishType expect)
+        => OfType($"Expect result of {left} {op} {right} to be ${expect.Name}, found {result}",
+            new Dictionary<string, BishObject>
+            {
+                ["left"] = left,
+                ["right"] = right,
+                ["operator"] = new BishString(op),
+                ["result"] = result,
+                ["expect"] = expect
+            });
+
     public static BishException OfArgument(string message, Dictionary<string, BishObject> data) =>
         Create(BishError.ArgumentErrorType, message, data);
 
@@ -90,10 +102,10 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
             ["object"] = obj
         });
 
-    public static BishException OfArgument_Operator(string name, List<BishObject> args) => OfArgument(
-        $"Cannot apply operator {name} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
+    public static BishException OfArgument_Operator(string op, List<BishObject> args) => OfArgument(
+        $"Cannot apply operator {op} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
         new Dictionary<string, BishObject>
         {
-            ["name"] = new BishString(name) // TODO: record the arg types after we have an builtin list
+            ["operator"] = new BishString(op) // TODO: record the arg types after we have an builtin list
         });
 }

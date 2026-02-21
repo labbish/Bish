@@ -116,6 +116,9 @@ public class BishObject(BishType? type = null)
     [Builtin]
     public static BishString ToString(BishObject obj) => new(obj.ToString());
 
+    [Builtin("op")]
+    public static BishBool Eq(BishObject a, BishObject b) => new(ReferenceEquals(a, b));
+
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
@@ -163,7 +166,8 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
         return $"[Type {Name}]";
     }
 
-    [Builtin]
+    // TODO: maybe make it a getter (after we have it)
+    [Builtin(special: false)]
     public static BishString GetName(BishType type) => new(type.Name);
 
     public override BishType DefaultType => StaticType;

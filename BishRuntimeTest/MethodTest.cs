@@ -71,10 +71,10 @@ file class T(string tag) : BishObject
 
     public new static readonly BishType StaticType = new("T");
 
-    [Builtin]
+    [Builtin(special: false)]
     public static BishInt F(T self) => new(0);
 
-    [Builtin]
+    [Builtin(special: false)]
     public static BishInt G(T self, T _) => new(0);
 
     [Builtin("hook")]

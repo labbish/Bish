@@ -56,13 +56,6 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
             ["expect"] = expect
         });
 
-    public static BishException OfType_Operator(string name, List<BishObject> args) => OfType(
-        $"Cannot apply operator {name} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
-        new Dictionary<string, BishObject>
-        {
-            ["name"] = new BishString(name) // TODO: record the arg types after we have an builtin list
-        });
-
     public static BishException OfArgument(string message, Dictionary<string, BishObject> data) =>
         Create(BishError.ArgumentErrorType, message, data);
 
@@ -95,5 +88,12 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
         {
             ["method"] = method,
             ["object"] = obj
+        });
+
+    public static BishException OfArgument_Operator(string name, List<BishObject> args) => OfArgument(
+        $"Cannot apply operator {name} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
+        new Dictionary<string, BishObject>
+        {
+            ["name"] = new BishString(name) // TODO: record the arg types after we have an builtin list
         });
 }

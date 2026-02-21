@@ -6,9 +6,10 @@ namespace BishRuntime;
 
 [MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]
-public class BuiltinAttribute(string? prefix = null) : Attribute
+public class BuiltinAttribute(string? prefix = null, bool special = true) : Attribute
 {
     public string? Prefix => prefix;
+    public bool Special => special;
 
     private static string ToLower(string name) => name == "" ? name : char.ToLower(name[0]) + name[1..];
 
@@ -28,7 +29,10 @@ public static class BishBuiltinBinder
         {
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
             if (attr == null) continue;
-            staticType.Members[attr.GetName(method.Name)] = Builtin(method);
+            var name = attr.GetName(method.Name);
+            var func = Builtin(method);
+            if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
+            staticType.Members[name] = func;
         }
     }
 

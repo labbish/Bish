@@ -39,7 +39,7 @@ public class BishNum(double value) : BishObject
 
     [Builtin(special: false)]
     public static BishNum Abs(BishNum a) => new(Math.Abs(a.Value));
-    
+
     [Builtin(special: false)]
     public static BishInt Sign(BishNum a) => new(Math.Sign(a.Value));
 
@@ -51,7 +51,7 @@ public class BishNum(double value) : BishObject
 
     [Builtin(special: false)]
     public static BishInt Round(BishNum a) => new((int)Math.Round(a.Value));
-    
+
     // TODO: some more math methods
 
     public static implicit operator BishNum(BishInt x) => new(x.Value);
@@ -61,7 +61,7 @@ public class BishNum(double value) : BishObject
     [Builtin("op")]
     // ReSharper disable once CompareOfFloatsByEqualityOperator
     public static BishBool Eq(BishNum a, BishNum b) => new(a.Value == b.Value);
-    
+
     [Builtin("op")]
     public static BishInt Cmp(BishNum a, BishNum b) => new(a.Value.CompareTo(b.Value));
 

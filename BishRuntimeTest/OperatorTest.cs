@@ -34,6 +34,8 @@ public class OperatorTest : Test
         BishOperator.Call("op_Eq", [new BishInt(1), new BishNum(1)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Eq", [new BishNum(1), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Eq", [new BishInt(1), new BishNum(1.1)]).Should().BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Eq", [new BishObject(), new BishObject()]).Should().BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Eq", [new BishInt(1), new BishString("")]).Should().BeEquivalentTo(new BishBool(false));
     }
 
     [Fact]
@@ -41,19 +43,19 @@ public class OperatorTest : Test
     {
         BishOperator.Call("op_Neq", [new BishInt(1), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Neq", [new BishInt(1), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(true));
-        
+
         BishOperator.Call("op_Lt", [new BishInt(1), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Lt", [new BishInt(2), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Lt", [new BishInt(2), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(false));
-        
+
         BishOperator.Call("op_Le", [new BishInt(1), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Le", [new BishInt(2), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Le", [new BishInt(2), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(false));
-        
+
         BishOperator.Call("op_Gt", [new BishInt(1), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Gt", [new BishInt(2), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Gt", [new BishInt(2), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(true));
-        
+
         BishOperator.Call("op_Ge", [new BishInt(1), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Ge", [new BishInt(2), new BishInt(2)]).Should().BeEquivalentTo(new BishBool(true));
         BishOperator.Call("op_Ge", [new BishInt(2), new BishInt(1)]).Should().BeEquivalentTo(new BishBool(true));

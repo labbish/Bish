@@ -63,4 +63,22 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Cmp", [new BishNum(2), new BishNum(3)]).Should().BeOfType<BishInt>()
             .Which.Value.Should().BeNegative();
     }
+
+    [Fact]
+    public void TestBool()
+    {
+        BishBool.StaticType.CreateInstance([]).Should().BeEquivalentTo(new BishBool(false));
+        
+        BishOperator.Call("op_Invert", [new BishBool(false)]).Should().BeEquivalentTo(new BishBool(true));
+        BishOperator.Call("op_Invert", [new BishBool(true)]).Should().BeEquivalentTo(new BishBool(false));
+        
+        BishOperator.Call("op_Eq", [new BishBool(false), new BishBool(false)]).Should()
+            .BeEquivalentTo(new BishBool(true));
+        BishOperator.Call("op_Eq", [new BishBool(false), new BishBool(true)]).Should()
+            .BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Eq", [new BishBool(true), new BishBool(false)]).Should()
+            .BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Eq", [new BishBool(true), new BishBool(true)]).Should()
+            .BeEquivalentTo(new BishBool(true));
+    }
 }

@@ -120,20 +120,20 @@ public class BishObject(BishType? type = null)
     public static BishString ToString(BishObject obj) => new(obj.ToString());
 
     [Builtin("op")]
-    public static BishBool Eq(BishObject a, BishObject b) => new(ReferenceEquals(a, b));
+    public static BishBool Eq(BishObject a, BishObject b) => new(a == b);
+
+    public T ExpectToBe<T>(string expr) where T : BishObject => this switch
+    {
+        T t => t,
+        { } result => throw BishException.OfType_Expect(expr, result, BishType.GetStaticType(typeof(T)))
+    };
 
     [Builtin("op")]
-    public static BishBool Neq(BishObject a, BishObject b) => BishOperator.Call("op_Eq", [a, b]) switch
-    {
-        BishBool eq => new BishBool(!eq.Value),
-        { } result => throw BishException.OfType_ComparingOperator(a, "==", b, result, BishBool.StaticType)
-    };
+    public static BishBool Neq(BishObject a, BishObject b) =>
+        BishBool.Invert(BishOperator.Call("op_Eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}"));
 
-    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_Cmp", [a, b]) switch
-    {
-        BishInt cmp => cmp.Value,
-        { } result => throw BishException.OfType_ComparingOperator(a, "<=>", b, result, BishInt.StaticType)
-    };
+    private static int Compare(BishObject a, BishObject b) =>
+        BishOperator.Call("op_Cmp", [a, b]).ExpectToBe<BishInt>($"{a} <=> {b}").Value;
 
     [Builtin("op")]
     public static BishBool Lt(BishObject a, BishObject b) => new(Compare(a, b) < 0);
@@ -203,6 +203,10 @@ public class BishType(string name, BishType[]? parents = null) : BishObject
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("type");
+
+    internal static BishType GetStaticType(Type type) =>
+        type.GetField("StaticType")?.GetValue(null) as BishType ??
+        throw new ArgumentException($"Cannot find field `StaticType` on type {type}");
 
     static BishType() => BishBuiltinBinder.Bind<BishType>();
 }

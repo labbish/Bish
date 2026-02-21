@@ -24,7 +24,7 @@ public static class BishBuiltinBinder
     public static void Bind<TObject>() where TObject : BishObject
     {
         var type = typeof(TObject);
-        var staticType = StaticType(type);
+        var staticType = BishType.GetStaticType(type);
         foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
         {
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
@@ -40,7 +40,7 @@ public static class BishBuiltinBinder
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
-            .Select(info => new BishArg(info.Name!, StaticType(info.ParameterType), Default(info)))
+            .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info)))
             .ToList();
         return new BishFunc(inArgs,
             args => (BishObject)method.InvokeRaw(null,
@@ -71,9 +71,6 @@ public static class BishBuiltinBinder
                        && parameters[0].ParameterType.IsAssignableFrom(source);
             });
     }
-
-    // It's really strange that this works fine on nullable args
-    public static BishType StaticType(Type type) => (BishType)type.GetField("StaticType")!.GetValue(null)!;
 
     private static BishObject? Default(ParameterInfo info) =>
         info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : DefaultNull;

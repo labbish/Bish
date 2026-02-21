@@ -56,14 +56,12 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
             ["expect"] = expect
         });
 
-    public static BishException OfType_ComparingOperator(BishObject left, string op, BishObject right,
+    public static BishException OfType_Expect(string expr,
         BishObject result, BishType expect)
-        => OfType($"Expect result of {left} {op} {right} to be ${expect.Name}, found {result}",
+        => OfType($"Expect result of {expr} to be ${expect.Name}, found {result}",
             new Dictionary<string, BishObject>
             {
-                ["left"] = left,
-                ["right"] = right,
-                ["operator"] = new BishString(op),
+                ["expression"] = new BishString(expr),
                 ["result"] = result,
                 ["expect"] = expect
             });

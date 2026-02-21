@@ -27,11 +27,16 @@ public static class BishOperator
         new("op_Lt", 2, "<"),
         new("op_Le", 2, "<="),
         new("op_Gt", 2, ">"),
-        new("op_Ge", 2, ">=")
+        new("op_Ge", 2, ">="),
+        new("op_Invert", 1, "~")
+        // TODO: impl. and, or & not with a toBool or something like this?
     ];
 
-    public static BishObject? TryCall(string name, List<BishObject> args)
+    public static BishObject? TryCall(string name, List<BishObject> args, bool noSpecial = false)
     {
+        // This is for builtin comparing like 1 == "2"
+        if (!noSpecial && name == "op_Eq")
+            return BishException.Ignored(() => TryCall(name, args, true)) ?? new BishBool(false);
         return args.Select(arg =>
                 BishException.Ignored(() => arg.Type.GetMember(name, BishLookupMode.NoBind).TryCall(args)))
             .FirstOrDefault(result => result is not null);
@@ -45,7 +50,8 @@ public static class BishOperator
         const string tip = "; consider add `special: false` if this is intended.";
         var special = SpecialMethods.FirstOrDefault(s => s.Name == name);
         if (special is null) throw new ArgumentException($"'{name}' is not a special name" + tip);
+        var opName = special.Op is null ? name : $"{name} (operator {special.Op})";
         if (special.Argc is not null && special.Argc != func.Args.Count)
-            throw new ArgumentException($"${special.Name} expects {special.Argc} args, found {func.Args.Count}" + tip);
+            throw new ArgumentException($"{opName} expects {special.Argc} args, found {func.Args.Count}" + tip);
     }
 }

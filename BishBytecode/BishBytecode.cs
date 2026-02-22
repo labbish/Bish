@@ -91,8 +91,8 @@ public record BishBytecodeCall(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var args = frame.Stack.Pop(Argc).Reversed();
         var func = frame.Stack.Pop();
+        var args = frame.Stack.Pop(Argc).Reversed();
         frame.Stack.Push(func.Call(args));
     }
 }

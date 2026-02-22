@@ -26,8 +26,8 @@ public class FuncTest : Test
             new BishBytecodeDef("f"),
             
             // x1 := f(3)
-            new BishBytecodeGet("f"),
             new BishBytecodeInt(3),
+            new BishBytecodeGet("f"),
             new BishBytecodeCall(1),
             new BishBytecodeDef("x1"),
             
@@ -36,8 +36,8 @@ public class FuncTest : Test
             new BishBytecodeSet("a"),
             
             // x2 := f(5)
-            new BishBytecodeGet("f"),
             new BishBytecodeInt(5),
+            new BishBytecodeGet("f"),
             new BishBytecodeCall(1),
             new BishBytecodeDef("x2")
         ], Scope);
@@ -106,7 +106,6 @@ public class FuncTest : Test
             new BishBytecodeInt(1),
             new BishBytecodeOp("op_Sub", 2),
             new BishBytecodeGet("f"),
-            new BishBytecodeSwap(),
             new BishBytecodeCall(1),
             new BishBytecodeGet("n"),
             new BishBytecodeOp("op_Mul", 2),
@@ -118,8 +117,8 @@ public class FuncTest : Test
             new BishBytecodeDef("f"),
             
             // f(4)
-            new BishBytecodeGet("f"),
             new BishBytecodeInt(4),
+            new BishBytecodeGet("f"),
             new BishBytecodeCall(1)
         ], Scope);
         frame.Execute();

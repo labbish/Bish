@@ -14,9 +14,9 @@ public class CallTest : Test
     {
         var frame = new BishFrame([
             // f(1, 2)
-            new BishBytecodeGet("f"),
             new BishBytecodeInt(1),
             new BishBytecodeInt(2),
+            new BishBytecodeGet("f"),
             new BishBytecodeCall(2)
         ], Scope);
         frame.Execute();
@@ -28,10 +28,10 @@ public class CallTest : Test
     {
         var frame = new BishFrame([
             // f(1, 2, 3)
-            new BishBytecodeGet("f"),
             new BishBytecodeInt(1),
             new BishBytecodeInt(2),
             new BishBytecodeInt(3),
+            new BishBytecodeGet("f"),
             new BishBytecodeCall(3)
         ], Scope);
         frame.Execute();

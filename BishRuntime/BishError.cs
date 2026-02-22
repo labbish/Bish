@@ -18,7 +18,10 @@ public class BishError(string message) : BishObject
         return BishNull.Instance;
     }
 
-    public override string ToString() => Message;
+    public override string ToString()
+    {
+        return $"[{Type.Name}] {Message}";
+    }
 
     static BishError() => BishBuiltinBinder.Bind<BishError>();
 

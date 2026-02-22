@@ -1,6 +1,6 @@
 ﻿namespace BishRuntime;
 
-public class BishException(BishError error) : Exception($"[{error.Type.Name}] {error.Message}")
+public class BishException(BishError error) : Exception(error.ToString())
 {
     public BishError Error => error;
 

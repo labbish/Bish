@@ -33,6 +33,8 @@ public class BishInt(int value) : BishObject
     [Builtin("op")]
     public static BishInt Mul(BishInt a, BishInt b) => new(a.Value * b.Value);
 
+    // TODO: handle zero division
+
     [Builtin("op")]
     public static BishNum Div(BishInt a, BishInt b) => new((double)a.Value / b.Value);
 

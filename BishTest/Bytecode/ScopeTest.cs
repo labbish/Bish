@@ -6,7 +6,7 @@ public class ScopeTest : Test
 
     public ScopeTest()
     {
-        Inner = new BishScope();
+        Inner = BishScope.Globals();
         Inner.DefVar("a", new BishInt(0));
         Inner.DefVar("b", new BishInt(0));
 

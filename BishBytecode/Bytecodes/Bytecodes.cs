@@ -105,31 +105,48 @@ public record Outer : BishBytecode
         frame.Scope = frame.Scope.Outer ?? throw new ArgumentException("No outer scope");
 }
 
+public static class Jumper
+{
+    extension(BishFrame frame)
+    {
+        public int TagPos(string tag)
+        {
+            var pos = frame.Bytecodes.FindIndex(x => x.Tag == tag);
+            return pos == -1 ? throw new ArgumentException($"No such tag: {tag}") : pos;
+        }
+
+        public void JumpToTag(string tag)
+        {
+            frame.Ip = frame.TagPos(tag);
+        }
+    }
+}
+
 public record Jump(string GoalTag) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var pos = frame.Bytecodes.FindIndex(x => x.Tag == GoalTag);
-        if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
-        frame.Ip = pos;
+        frame.JumpToTag(GoalTag);
     }
 }
 
-public record JumpIf(string GoalTag) : Jump(GoalTag)
+public record JumpIf(string GoalTag) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value) base.Execute(frame);
+        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value)
+            frame.JumpToTag(GoalTag);
     }
 }
 
-public record JumpIfNot(string GoalTag) : Jump(GoalTag)
+public record JumpIfNot(string GoalTag) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (!BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value) base.Execute(frame);
+        if (!BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value)
+            frame.JumpToTag(GoalTag);
     }
 }
 
@@ -149,21 +166,50 @@ public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
 
 public record EndTag(string Name) : Nop;
 
+public static class TagSlicer
+{
+    [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
+    public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, List<BishBytecode> Code)
+        where TStart : StartTag<TEnd> where TEnd : EndTag
+    {
+        public BishFrame Execute(BishFrame frame, BishObject? stackTop = null)
+        {
+            var inner = new BishFrame(Code, new BishScope(frame.Scope), frame);
+            if (stackTop is not null) inner.Stack.Push(stackTop);
+            inner.Execute();
+            return inner;
+        }
+    }
+
+    extension(BishFrame frame)
+    {
+        public CodeSlice<TStart, TEnd>? TrySlice<TStart, TEnd>(string name)
+            where TStart : StartTag<TEnd> where TEnd : EndTag
+        {
+            var startPos = frame.Bytecodes.FindIndex(x => x is TStart start && start.Name == name);
+            if (startPos == -1) return null;
+            var start = (TStart)frame.Bytecodes[startPos];
+            var endPos = start.EndPos(frame, startPos);
+            var end = (TEnd)frame.Bytecodes[endPos];
+            var code = frame.Bytecodes[(startPos + 1)..endPos];
+            return new CodeSlice<TStart, TEnd>(startPos, start, endPos, end, code);
+        }
+
+        public CodeSlice<TStart, TEnd> Slice<TStart, TEnd>(string name)
+            where TStart : StartTag<TEnd> where TEnd : EndTag
+        {
+            return frame.TrySlice<TStart, TEnd>(name) ??
+                   throw new ArgumentException($"Start tag named {name} not found");
+        }
+    }
+}
+
 public abstract record TagBased<TStart, TEnd>(string Name)
     : BishBytecode where TStart : StartTag<TEnd> where TEnd : EndTag
 {
-    [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
-    public record CodeSlice(int StartPos, TStart Start, int EndPos, TEnd End, List<BishBytecode> Code);
-
-    protected CodeSlice Slice(BishFrame frame)
+    public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame)
     {
-        var startPos = frame.Bytecodes.FindIndex(x => x is TStart start && start.Name == Name);
-        if (startPos == -1) throw new ArgumentException($"Start tag named {Name} not found");
-        var start = (TStart)frame.Bytecodes[startPos];
-        var endPos = start.EndPos(frame, startPos);
-        var end = (TEnd)frame.Bytecodes[endPos];
-        var code = frame.Bytecodes[(startPos + 1)..endPos];
-        return new CodeSlice(startPos, start, endPos, end, code);
+        return frame.Slice<TStart, TEnd>(Name);
     }
 }
 
@@ -222,14 +268,77 @@ public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart,
     public override void Execute(BishFrame frame)
     {
         var slice = Slice(frame);
-        var scope = new BishScope(frame.Scope.CreateInner());
-        var inner = new BishFrame(slice.Code, scope, frame);
-        inner.Execute();
+        var inner = slice.Execute(frame);
         var parents = frame.Stack.Pop(ParentCount).Reversed()
             .Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList();
         var type = new BishType(Name, parents);
-        foreach (var (key, value) in scope.Vars)
-            type.SetMember(key, value);
+        foreach (var (key, value) in inner.Scope.Vars) type.SetMember(key, value);
         frame.Stack.Push(type);
     }
 }
+
+public record Throw : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        throw new BishException(frame.Stack.Pop().ExpectToBe<BishError>("thrown error"));
+    }
+}
+
+public record TryStart(string Name) : StartTag<TryEnd>(Name)
+{
+    public override void Execute(BishFrame frame)
+    {
+        var trySlice = frame.Slice<TryStart, TryEnd>(Name);
+        var catchSlice = frame.TrySlice<CatchStart, CatchEnd>(Name);
+        var finallySlice = frame.TrySlice<FinallyStart, FinallyEnd>(Name);
+
+        void HandledFinally(BishFrame? blockFrame = null)
+        {
+            var result = blockFrame?.ReturnValue;
+            if (finallySlice is null)
+            {
+                frame.ReturnValue = result;
+                return;
+            }
+
+            var finallyFrame = finallySlice.Execute(frame);
+            frame.ReturnValue = finallyFrame.ReturnValue ?? result;
+        }
+
+        try
+        {
+            HandledFinally(trySlice.Execute(frame));
+        }
+        catch (BishException tryException)
+        {
+            if (catchSlice is null)
+            {
+                HandledFinally();
+                throw;
+            }
+
+            try
+            {
+                HandledFinally(catchSlice.Execute(frame, tryException.Error));
+            }
+            catch (BishException)
+            {
+                HandledFinally();
+                throw;
+            }
+        }
+
+        base.Execute(frame); // Jumps to TryEnd
+    }
+}
+
+public record TryEnd(string Name) : EndTag(Name);
+
+public record CatchStart(string Name) : StartTag<CatchEnd>(Name);
+
+public record CatchEnd(string Name) : EndTag(Name);
+
+public record FinallyStart(string Name) : StartTag<FinallyEnd>(Name);
+
+public record FinallyEnd(string Name) : EndTag(Name);

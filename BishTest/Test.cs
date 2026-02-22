@@ -13,7 +13,7 @@ public class Test
 
 public static class BishExceptionAssertion
 {
-    public static void Excepts<TDelegate, TAssertions>(
+    public static ExceptionAssertions<BishException> Excepts<TDelegate, TAssertions>(
         this DelegateAssertions<TDelegate, TAssertions> assertions, BishType errorType)
         where TDelegate : Delegate
         where TAssertions : DelegateAssertions<TDelegate, TAssertions>

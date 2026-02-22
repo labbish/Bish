@@ -21,6 +21,10 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
             {
                 bytecode.Execute(this);
             }
+            catch (BishException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);

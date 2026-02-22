@@ -2,7 +2,7 @@
 
 public class FuncTest : Test
 {
-    public BishScope Scope = new();
+    public readonly BishScope Scope = BishScope.Globals();
 
     [Fact]
     public void TestFunc()

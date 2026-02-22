@@ -2,7 +2,7 @@
 
 public class ScopeDepthTest : Test
 {
-    public readonly BishScope Scope = new();
+    public readonly BishScope Scope = BishScope.Globals();
 
     public ScopeDepthTest() => Scope.DefVar("a", new BishInt(0));
 

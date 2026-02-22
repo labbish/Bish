@@ -2,7 +2,7 @@
 
 public class MemberTest : Test
 {
-    public readonly BishScope Scope = new();
+    public readonly BishScope Scope = BishScope.Globals();
 
     public MemberTest()
     {

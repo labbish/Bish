@@ -37,8 +37,13 @@ public class BishScope(BishScope? outer = null)
             ["string"] = BishBool.StaticType,
             ["true"] = new BishBool(true),
             ["false"] = new BishBool(false),
-            ["null"] = BishNull.Instance // TODO: maybe make these const
-            // TODO: error types?
+            ["null"] = BishNull.Instance, // TODO: maybe make these const
+            ["Error"] = BishError.StaticType,
+            ["AttributeError"] = BishError.AttributeErrorType,
+            ["ArgumentError"] = BishError.ArgumentErrorType,
+            ["TypeError"] = BishError.TypeErrorType,
+            ["NullError"] = BishError.NullErrorType,
+            ["NameError"] = BishError.NameErrorType
         }
     };
 }

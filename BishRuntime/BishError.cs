@@ -4,6 +4,9 @@ public class BishError(string message) : BishObject
 {
     public string Message = message;
 
+    // For now, it only stores the function names, from inner to outer.
+    public List<string> StackTrace = [];
+
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Error");
@@ -20,7 +23,8 @@ public class BishError(string message) : BishObject
 
     public override string ToString()
     {
-        return $"[{Type.Name}] {Message}";
+        return $"[{Type.Name}] {Message}" +
+               string.Join("", StackTrace.Select(funcName => $"\n  at function {funcName}"));
     }
 
     static BishError() => BishBuiltinBinder.Bind<BishError>();

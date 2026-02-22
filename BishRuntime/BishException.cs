@@ -1,8 +1,9 @@
 ﻿namespace BishRuntime;
 
-public class BishException(BishError error) : Exception(error.ToString())
+public class BishException(BishError error) : Exception
 {
     public BishError Error => error;
+    public override string Message => Error.ToString();
 
     public static T? Ignored<T>(Func<T?> func)
     {

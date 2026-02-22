@@ -201,5 +201,43 @@ public class ErrorTest : Test
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
     }
 
-    // TODO: tests on returning and throwing within try-catch-finally blocks
+    [Fact]
+    public void TestStackTrace()
+    {
+        var frame = new BishFrame([
+            new Bytecodes.FuncStart("f", []),
+            new Bytecodes.Inner(),
+            new Bytecodes.String("error"),
+            new Bytecodes.Get("Error"),
+            new Bytecodes.Call(1),
+            new Bytecodes.Throw(),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.MakeFunc("f"),
+            new Bytecodes.Def("f"),
+
+            new Bytecodes.FuncStart("g", []),
+            new Bytecodes.Inner(),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(0),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("g"),
+            new Bytecodes.MakeFunc("g"),
+            new Bytecodes.Def("g"),
+
+            new Bytecodes.FuncStart("h", []),
+            new Bytecodes.Inner(),
+            new Bytecodes.Get("g"),
+            new Bytecodes.Call(0),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("h"),
+            new Bytecodes.MakeFunc("h"),
+            new Bytecodes.Def("h"),
+
+            new Bytecodes.Get("h"),
+            new Bytecodes.Call(0)
+        ]);
+        Action(() => frame.Execute()).Should().Excepts(BishError.StaticType)
+            .Which.Error.StackTrace.Should().BeEquivalentTo(["f", "g", "h"]);
+    }
 }

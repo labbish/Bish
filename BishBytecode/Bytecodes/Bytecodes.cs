@@ -233,7 +233,15 @@ public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, F
                 // The first argument is in the top
                 foreach (var arg in args.Reversed())
                     inner.Stack.Push(arg);
-                return inner.Execute();
+                try
+                {
+                    return inner.Execute();
+                }
+                catch (BishException e)
+                {
+                    e.Error.StackTrace.Add(Name);
+                    throw;
+                }
             }));
     }
 }

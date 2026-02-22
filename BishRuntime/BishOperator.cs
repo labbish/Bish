@@ -42,6 +42,7 @@ public static class BishOperator
             .FirstOrDefault(result => result is not null);
     }
 
+    // TODO: wrap the inner error(s)
     public static BishObject Call(string name, List<BishObject> args) =>
         TryCall(name, args) ?? throw BishException.OfArgument_Operator(name, args);
 

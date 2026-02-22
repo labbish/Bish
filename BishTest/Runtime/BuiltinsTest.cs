@@ -14,6 +14,7 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Div", [new BishInt(3), new BishInt(2)]).Should().BeEquivalentTo(new BishNum(1.5));
         BishOperator.Call("op_Mod", [new BishInt(3), new BishInt(2)]).Should().BeEquivalentTo(new BishInt(1));
         BishOperator.Call("op_Mod", [new BishInt(-3), new BishInt(2)]).Should().BeEquivalentTo(new BishInt(-1));
+        Action(() => BishOperator.Call("op_Mod", [new BishInt(3), new BishInt(0)])).Should().Throw();
         BishOperator.Call("op_Pow", [new BishInt(3), new BishInt(2)]).Should().BeEquivalentTo(new BishNum(9));
         new BishInt(3).GetMember("abs").Call([]).Should().BeEquivalentTo(new BishInt(3));
         new BishInt(0).GetMember("abs").Call([]).Should().BeEquivalentTo(new BishInt(0));

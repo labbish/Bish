@@ -33,13 +33,14 @@ public class BishInt(int value) : BishObject
     [Builtin("op")]
     public static BishInt Mul(BishInt a, BishInt b) => new(a.Value * b.Value);
 
-    // TODO: handle zero division
-
     [Builtin("op")]
     public static BishNum Div(BishInt a, BishInt b) => new((double)a.Value / b.Value);
 
     [Builtin("op")]
-    public static BishInt Mod(BishInt a, BishInt b) => new(a.Value % b.Value);
+    public static BishInt Mod(BishInt a, BishInt b)
+    {
+        return b.Value != 0 ? new BishInt(a.Value % b.Value) : throw BishException.OfZeroDivision();
+    }
 
     [Builtin("op")]
     public static BishNum Pow(BishInt a, BishInt b) => new(Math.Pow(a.Value, b.Value));

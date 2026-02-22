@@ -113,4 +113,9 @@ public class BishException(BishError error) : Exception
         {
             ["name"] = new BishString(name)
         });
+
+    public static BishException OfZeroDivision()
+    {
+        return Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
+    }
 }

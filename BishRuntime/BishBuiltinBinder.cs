@@ -35,7 +35,7 @@ public static class BishBuiltinBinder
             staticType.Members[name] = func;
         }
     }
-    
+
     public static BishFunc Builtin(Delegate method) => Builtin(method.Method);
 
     public static BishFunc Builtin(MethodInfo method)

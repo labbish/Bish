@@ -51,7 +51,7 @@ public class MemberTest : Test
         T2.SetMember("a", new BishInt(3));
         X.SetMember("b", new BishInt(4));
         X.SetMember("c", new BishInt(5));
-        
+
         T1.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("b").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("c").Should().BeNull();
@@ -69,7 +69,7 @@ public class MemberTest : Test
         T2.TryDelMember("a").Should().BeEquivalentTo(new BishInt(1));
         X.TryDelMember("b").Should().BeNull();
         X.TryDelMember("c").Should().BeEquivalentTo(new BishInt(2));
-        
+
         T1.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("b").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("c").Should().BeNull();
@@ -87,7 +87,7 @@ public class MemberTest : Test
         T2.DelMember("a").Should().BeEquivalentTo(new BishInt(1));
         Action(() => X.DelMember("b")).Should().Excepts(BishError.AttributeErrorType);
         X.DelMember("c").Should().BeEquivalentTo(new BishInt(2));
-        
+
         T1.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("b").Should().BeEquivalentTo(new BishInt(0));
         T1.TryGetMember("c").Should().BeNull();

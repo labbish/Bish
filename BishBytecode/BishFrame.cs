@@ -17,9 +17,18 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
         while (Ip < Bytecodes.Count)
         {
             var bytecode = Bytecodes[Ip++];
-            bytecode.Execute(this);
+            try
+            {
+                bytecode.Execute(this);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);
+            }
+
             if (ReturnValue is not null) return ReturnValue;
         }
+
         return BishNull.Instance;
     }
 }

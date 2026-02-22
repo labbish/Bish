@@ -22,7 +22,7 @@ public class MemberTest : Test
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(1));
     }
-    
+
     [Fact]
     public void TestSetMember()
     {
@@ -36,7 +36,7 @@ public class MemberTest : Test
         frame.Stack.Should().BeEmpty();
         frame.Scope.GetVar("x").GetMember("a").Should().BeEquivalentTo(new BishInt(0));
     }
-    
+
     [Fact]
     public void TestDelMember()
     {

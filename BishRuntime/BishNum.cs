@@ -12,7 +12,7 @@ public class BishNum(double value) : BishObject
 
     [Builtin("hook")]
     public static BishNum Create() => new(0);
-    
+
     [Builtin("hook")]
     public static BishNull Init(BishNum self, [DefaultNull] BishNum? other)
     {
@@ -71,7 +71,7 @@ public class BishNum(double value) : BishObject
 
     [Builtin("op")]
     public static BishInt Cmp(BishNum a, BishNum b) => new(a.Value.CompareTo(b.Value));
-    
+
     [Builtin("op")]
     public static BishBool Bool(BishNum a) => new(a.Value != 0);
 

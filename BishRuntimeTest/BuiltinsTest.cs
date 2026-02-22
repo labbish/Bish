@@ -29,6 +29,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Cmp", [new BishInt(3), new BishInt(3)]).Should().BeEquivalentTo(new BishInt(0));
         BishOperator.Call("op_Cmp", [new BishInt(2), new BishInt(3)]).Should().BeOfType<BishInt>()
             .Which.Value.Should().BeNegative();
+        BishOperator.Call("op_Bool", [new BishInt(0)]).Should().BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Bool", [new BishInt(3)]).Should().BeEquivalentTo(new BishBool(true));
     }
 
     [Fact]
@@ -62,6 +64,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Cmp", [new BishNum(3), new BishNum(3)]).Should().BeEquivalentTo(new BishInt(0));
         BishOperator.Call("op_Cmp", [new BishNum(2), new BishNum(3)]).Should().BeOfType<BishInt>()
             .Which.Value.Should().BeNegative();
+        BishOperator.Call("op_Bool", [new BishNum(0)]).Should().BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Bool", [new BishNum(3)]).Should().BeEquivalentTo(new BishBool(true));
     }
 
     [Fact]
@@ -80,5 +84,8 @@ public class BuiltinsTest : Test
             .BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Eq", [new BishBool(true), new BishBool(true)]).Should()
             .BeEquivalentTo(new BishBool(true));
+        
+        BishOperator.Call("op_Bool", [new BishBool(false)]).Should().BeEquivalentTo(new BishBool(false));
+        BishOperator.Call("op_Bool", [new BishBool(false)]).Should().BeEquivalentTo(new BishBool(false));
     }
 }

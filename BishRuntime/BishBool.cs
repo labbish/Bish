@@ -19,12 +19,15 @@ public class BishBool(bool value) : BishObject
     }
     
     [Builtin("op")]
-    public static BishBool Invert(BishBool b) => new(!b.Value);
+    public static BishBool Invert(BishBool a) => new(!a.Value);
 
     [Builtin("op")]
     public static BishBool Eq(BishBool a, BishBool b) => new(a.Value == b.Value);
 
     public override string ToString() => Value ? "true" : "false";
+    
+    [Builtin("op")]
+    public static BishBool Bool(BishBool a) => new(a.Value);
 
     static BishBool() => BishBuiltinBinder.Bind<BishBool>();
 }

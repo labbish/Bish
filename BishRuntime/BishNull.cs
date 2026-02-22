@@ -31,6 +31,9 @@ public class BishNull : BishObject
     [Builtin("hook")]
     public static BishObject Del(BishNull self, BishString name) =>
         throw BishException.OfNull("delete", name.Value);
+    
+    [Builtin("op")]
+    public static BishBool Bool(BishNull a) => new(false);
 
     static BishNull() => BishBuiltinBinder.Bind<BishNull>();
 }

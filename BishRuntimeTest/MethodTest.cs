@@ -63,6 +63,7 @@ public class MethodTest : Test
 
 file class T(string tag) : BishObject
 {
+    // ReSharper disable once MemberCanBePrivate.Local
     public string Tag = tag;
 
     public override BishType DefaultType => StaticType;

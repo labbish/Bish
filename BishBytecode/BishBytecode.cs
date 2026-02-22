@@ -4,7 +4,27 @@ namespace BishBytecode;
 
 public abstract record BishBytecode
 {
+    public string? Tag;
+
     public abstract void Execute(BishFrame frame);
+
+    public BishBytecode Tagged(string tag)
+    {
+        Tag = tag;
+        return this;
+    }
+}
+
+public record BishBytecodeNop : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+    }
+}
+
+public record BishBytecodePop : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Pop();
 }
 
 public record BishBytecodeInt(int Value) : BishBytecode
@@ -72,6 +92,41 @@ public record BishBytecodeCall(int Argc) : BishBytecode
         frame.Stack.Push(func.Call(args));
     }
 }
+
+public record BishBytecodeInner : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Scope = frame.Scope.CreateInner();
+}
+
+public record BishBytecodeOuter : BishBytecode
+{
+    public override void Execute(BishFrame frame) =>
+        frame.Scope = frame.Scope.Outer ?? throw new ArgumentException("No outer scope");
+}
+
+public record BishBytecodeJump(string GoalTag) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var pos = frame.FindTag(GoalTag);
+        if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
+        frame.Ip = pos;
+    }
+}
+
+public record BishBytecodeJumpIf(string GoalTag, bool Reverse = false) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var result = frame.Stack.Pop();
+        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value == Reverse) return;
+        var pos = frame.FindTag(GoalTag);
+        if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
+        frame.Ip = pos;
+    }
+}
+
+public record BishBytecodeJumpIfNot(string GoalTag) : BishBytecodeJumpIf(GoalTag, Reverse: true);
 
 public record BishBytecodeCopy : BishBytecode
 {

@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace BishRuntime;
 
 [Flags]
 public enum BishLookupMode
@@ -6,7 +8,8 @@ public enum BishLookupMode
     None = 0,
     NoHook = 1 << 0,
     NotFromType = 1 << 1,
-    NoBind = 1 << 2
+    NoBind = 1 << 2,
+    NoGetter = 1 << 3
 }
 
 public class BishObject(BishType? type = null)
@@ -25,7 +28,7 @@ public class BishObject(BishType? type = null)
 
     public BishObject? TryCallHook(string name, List<BishObject> args)
     {
-        return TryGetMember(name, BishLookupMode.NoHook)?.TryCall(args);
+        return TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
     }
 
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
@@ -36,9 +39,9 @@ public class BishObject(BishType? type = null)
     /**
      * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
      * @GetFromType = (If not NotFromType mode) Recursively get on Type [NoHook, NotFromType, bind (if not NoBind mode)]
-     * 1. Members of self
+     * 1. Members (including getter) of self
      * 2. (If this is a type) @GetFromType [ignore exceptions]
-     * 3. (Only non-empty for types) Members on the lookup chain
+     * 3. (Only non-empty for types) Members (including getter) on the lookup chain
      * 4. @GetFromType
      * 5. (If not NoHook mode) Call hook_Get
      *
@@ -56,9 +59,16 @@ public class BishObject(BishType? type = null)
             : TryBind(Type.TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes),
                 mode.HasFlag(BishLookupMode.NoBind));
 
+        bool TryGetFromMember(BishObject obj, [NotNullWhen(true)] out BishObject? member)
+        {
+            excludes.Add(obj);
+            member = obj.Members.GetValueOrDefault(name) ??
+                     (mode.HasFlag(BishLookupMode.NoGetter) ? null : obj.TryCallHook($"hook_Get_{name}", []));
+            return member is not null;
+        }
+
         // Step 1
-        if (Members.TryGetValue(name, out var value)) return value;
-        excludes.Add(this);
+        if (TryGetFromMember(this, out var result)) return result;
 
         // Step 2
         if (this is BishType)
@@ -69,10 +79,8 @@ public class BishObject(BishType? type = null)
 
         // Step 3
         foreach (var obj in LookupChain.Where(obj => !excludes.Contains(obj)))
-        {
-            if (obj.Members.TryGetValue(name, out var member)) return member;
-            excludes.Add(obj);
-        }
+            if (TryGetFromMember(obj, out var member))
+                return member;
 
         // Step 4 & 5
         return GetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : TryCallGetHook(name));
@@ -93,7 +101,8 @@ public class BishObject(BishType? type = null)
 
     public BishObject SetMember(string name, BishObject value)
     {
-        return TryCallHook("hook_Set", [new BishString(name), value]) ?? (Members[name] = value);
+        return TryCallHook("hook_Set", [new BishString(name), value]) ??
+               TryCallHook($"hook_Set_{name}", [value]) ?? (Members[name] = value);
     }
 
     public BishObject DelMember(string name) =>
@@ -101,7 +110,9 @@ public class BishObject(BishType? type = null)
 
     public BishObject? TryDelMember(string name)
     {
-        return Members.Remove(name, out var member) ? member : TryCallHook("hook_Del", [new BishString(name)]);
+        return TryCallHook($"hook_Del_{name}", []) ?? (Members.Remove(name, out var member)
+            ? member
+            : TryCallHook("hook_Del", [new BishString(name)]));
     }
 
     public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
@@ -197,9 +208,11 @@ public class BishType(string name, List<BishType>? parents = null) : BishObject
         return $"[Type {Name}]";
     }
 
-    // TODO: maybe make it a getter (after we have it)
-    [Builtin(special: false)]
-    public static BishString GetName(BishType type) => new(type.Name);
+    [Builtin("hook")]
+    public static BishString Get_name(BishType type)
+    {
+        return new BishString(type.Name);
+    }
 
     public override BishType DefaultType => StaticType;
 

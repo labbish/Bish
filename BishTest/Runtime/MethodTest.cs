@@ -29,7 +29,7 @@ public class MethodTest : Test
         Action(() => T.StaticType.GetMember("g").TryCall([BishNull.Instance, X])).Should()
             .Excepts(BishError.TypeErrorType);
         X.GetMember("toString").TryCall([]).Should().BeEquivalentTo(new BishString("T(x)"));
-        T.StaticType.GetMember("getName").TryCall([]).Should().BeEquivalentTo(new BishString("T"));
+        T.StaticType.GetMember("name").Should().BeEquivalentTo(new BishString("T"));
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class MethodTest : Test
         Action(() => T.StaticType.GetMember("g").Call([BishNull.Instance, X])).Should()
             .Excepts(BishError.TypeErrorType);
         X.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("T(x)"));
-        T.StaticType.GetMember("getName").Call([]).Should().BeEquivalentTo(new BishString("T"));
+        T.StaticType.GetMember("name").Should().BeEquivalentTo(new BishString("T"));
     }
 
     [Fact]

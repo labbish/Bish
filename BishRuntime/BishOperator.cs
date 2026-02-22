@@ -1,8 +1,40 @@
-﻿namespace BishRuntime;
+﻿using System.Text.RegularExpressions;
 
-public record SpecialMethod(string Name, int? Argc, string? Op = null, Func<BishObject>? Default = null);
+namespace BishRuntime;
 
-public static class BishOperator
+public class Pattern
+{
+    private readonly object _pattern;
+
+    private Pattern(object pattern)
+    {
+        _pattern = pattern;
+    }
+
+    public static implicit operator Pattern(string pattern)
+    {
+        return new Pattern(pattern);
+    }
+
+    public static implicit operator Pattern(Regex pattern)
+    {
+        return new Pattern(pattern);
+    }
+
+    public bool Match(string name)
+    {
+        return _pattern switch
+        {
+            string pattern => pattern == name,
+            Regex pattern => pattern.IsMatch(name),
+            _ => throw new ArgumentException("Invalid pattern")
+        };
+    }
+}
+
+public record SpecialMethod(Pattern NamePattern, int? Argc, string? Op = null, Func<BishObject>? Default = null);
+
+public static partial class BishOperator
 {
     internal static readonly List<SpecialMethod> SpecialMethods =
     [
@@ -29,7 +61,10 @@ public static class BishOperator
         new("op_Gt", 2, ">"),
         new("op_Ge", 2, ">="),
         new("op_Invert", 1, "~"),
-        new("op_Bool", 1, "bool", () => new BishBool(true))
+        new("op_Bool", 1, "bool", () => new BishBool(true)),
+        new(GetterRegex(), 1),
+        new(SetterRegex(), 2),
+        new(DellerRegex(), 1)
     ];
 
     public static BishObject? TryCall(string name, List<BishObject> args, bool noSpecial = false)
@@ -46,7 +81,10 @@ public static class BishOperator
     public static BishObject Call(string name, List<BishObject> args) =>
         TryCall(name, args) ?? throw BishException.OfArgument_Operator(name, args);
 
-    public static SpecialMethod? GetSpecialMethod(string name) => SpecialMethods.FirstOrDefault(s => s.Name == name);
+    public static SpecialMethod? GetSpecialMethod(string name)
+    {
+        return SpecialMethods.FirstOrDefault(s => s.NamePattern.Match(name));
+    }
 
     internal static void CheckSpecialMethod(string name, BishFunc func)
     {
@@ -57,4 +95,13 @@ public static class BishOperator
         if (special.Argc is not null && special.Argc != func.Args.Count)
             throw new ArgumentException($"{opName} expects {special.Argc} args, found {func.Args.Count}" + tip);
     }
+
+    [GeneratedRegex("hook_Get_[A-Za-z_]+")]
+    private static partial Regex GetterRegex();
+
+    [GeneratedRegex("hook_Set_[A-Za-z_]+")]
+    private static partial Regex SetterRegex();
+
+    [GeneratedRegex("hook_Del_[A-Za-z_]+")]
+    private static partial Regex DellerRegex();
 }

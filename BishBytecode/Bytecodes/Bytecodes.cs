@@ -114,18 +114,23 @@ public record Jump(string GoalTag) : BishBytecode
     }
 }
 
-public record JumpIf(string GoalTag, bool Reverse = false) : Jump(GoalTag)
+public record JumpIf(string GoalTag) : Jump(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (BishOperator.Call("op_Bool", [result])
-                .ExpectToBe<BishBool>("condition").Value == Reverse) return;
-        base.Execute(frame);
+        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value) base.Execute(frame);
     }
 }
 
-public record JumpIfNot(string GoalTag) : JumpIf(GoalTag, Reverse: true);
+public record JumpIfNot(string GoalTag) : Jump(GoalTag)
+{
+    public override void Execute(BishFrame frame)
+    {
+        var result = frame.Stack.Pop();
+        if (!BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value) base.Execute(frame);
+    }
+}
 
 // Used as a tag
 // TODO: support optional args?
@@ -133,13 +138,14 @@ public record FuncStart(string Name, List<string> Args) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var pos = EndPos(frame, frame.Ip);
-        if (pos == -1) throw new ArgumentException($"Function definition does not end: {Name}");
-        frame.Ip = pos;
+        frame.Ip = EndPos(frame, frame.Ip);
     }
 
-    public int EndPos(BishFrame frame, int pos) =>
-        frame.Bytecodes.FindIndex(pos, x => x is FuncEnd end && end.Name == Name);
+    public int EndPos(BishFrame frame, int pos)
+    {
+        var end = frame.Bytecodes.FindIndex(pos, x => x is FuncEnd end && end.Name == Name);
+        return end == -1 ? throw new ArgumentException($"Function definition does not end: {Name}") : end;
+    }
 }
 
 // Used as a tag

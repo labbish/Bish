@@ -75,6 +75,10 @@ public class BishNum(double value) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishNum a) => new(a.Value != 0);
 
-    // TODO: maybe some math consts? (e.g. e, PI)
-    static BishNum() => BishBuiltinBinder.Bind<BishNum>();
+    static BishNum()
+    {
+        BishBuiltinBinder.Bind<BishNum>();
+        StaticType.SetMember("PI", new BishNum(Math.PI));
+        StaticType.SetMember("E", new BishNum(Math.E));
+    }
 }

@@ -66,6 +66,10 @@ public class BuiltinsTest : Test
             .Which.Value.Should().BeNegative();
         BishOperator.Call("op_Bool", [new BishNum(0)]).Should().BeEquivalentTo(new BishBool(false));
         BishOperator.Call("op_Bool", [new BishNum(3)]).Should().BeEquivalentTo(new BishBool(true));
+        BishNum.StaticType.GetMember("E").Should().BeOfType<BishNum>()
+            .Which.Value.Should().BeApproximately(Math.E, 1e-5);
+        BishNum.StaticType.GetMember("PI").Should().BeOfType<BishNum>()
+            .Which.Value.Should().BeApproximately(Math.PI, 1e-5);
     }
 
     [Fact]

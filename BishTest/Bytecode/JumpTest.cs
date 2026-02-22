@@ -36,4 +36,41 @@ public class JumpTest : Test
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(condition ? 1 : 2));
         frame.Stack.Should().BeEmpty();
     }
+
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 6)]
+    [InlineData(100, 5050)]
+    public void TestLoop(int n, int sum)
+    {
+        var frame = new BishFrame([
+            new Bytecodes.Int(n),
+            new Bytecodes.Def("n"),
+            // i := 1
+            new Bytecodes.Int(1),
+            new Bytecodes.Def("i"),
+            // s := 0
+            new Bytecodes.Int(0),
+            new Bytecodes.Def("s"),
+            // do {
+            new Bytecodes.Nop().Tagged("start"),
+            // s = s + i
+            new Bytecodes.Get("s"),
+            new Bytecodes.Get("i"),
+            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Set("s"),
+            // i = i + 1
+            new Bytecodes.Get("i"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Set("i"),
+            // } while (i <= n)
+            new Bytecodes.Get("i"),
+            new Bytecodes.Get("n"),
+            new Bytecodes.Op("op_Le", 2),
+            new Bytecodes.JumpIf("start")
+        ]);
+        frame.Execute();
+        frame.Scope.GetVar("s").Should().BeEquivalentTo(new BishInt(sum));
+    }
 }

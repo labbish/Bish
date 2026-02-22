@@ -5,7 +5,7 @@ public class FuncTest : Test
     public BishScope Scope = new();
 
     [Fact]
-    public void TestFunc1()
+    public void TestFunc()
     {
         var frame = new BishFrame([
             // a := 1
@@ -47,7 +47,7 @@ public class FuncTest : Test
     }
 
     [Fact]
-    public void TestFunc2()
+    public void TestFuncVar()
     {
         var frame = new BishFrame([
             // f := () => {...}

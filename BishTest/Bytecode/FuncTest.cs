@@ -9,37 +9,37 @@ public class FuncTest : Test
     {
         var frame = new BishFrame([
             // a := 1
-            new BishBytecodeInt(1),
-            new BishBytecodeDef("a"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Def("a"),
             
             // f := x => x - a
-            new BishBytecodeFuncStart("f", ["x"]),
-            new BishBytecodeInner(),
-            // new BishBytecodeSet("x"),
-            // new BishBytecodeGet("x"),
-            new BishBytecodeGet("a"),
-            new BishBytecodeOp("op_Sub", 2),
-            new BishBytecodeRet(),
-            new BishBytecodeOuter(),
-            new BishBytecodeFuncEnd("f"),
-            new BishBytecodeMakeFunc("f"),
-            new BishBytecodeDef("f"),
+            new Bytecodes.FuncStart("f", ["x"]),
+            new Bytecodes.Inner(),
+            // new Bytecodes.Set("x"),
+            // new Bytecodes.Get("x"),
+            new Bytecodes.Get("a"),
+            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Ret(),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.MakeFunc("f"),
+            new Bytecodes.Def("f"),
             
             // x1 := f(3)
-            new BishBytecodeInt(3),
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(1),
-            new BishBytecodeDef("x1"),
+            new Bytecodes.Int(3),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(1),
+            new Bytecodes.Def("x1"),
             
             // a = 2
-            new BishBytecodeInt(2),
-            new BishBytecodeSet("a"),
+            new Bytecodes.Int(2),
+            new Bytecodes.Set("a"),
             
             // x2 := f(5)
-            new BishBytecodeInt(5),
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(1),
-            new BishBytecodeDef("x2")
+            new Bytecodes.Int(5),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(1),
+            new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
         Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(2));
@@ -51,34 +51,34 @@ public class FuncTest : Test
     {
         var frame = new BishFrame([
             // f := () => {...}
-            new BishBytecodeFuncStart("f", []),
-            new BishBytecodeInner(),
+            new Bytecodes.FuncStart("f", []),
+            new Bytecodes.Inner(),
             // x := 2
-            new BishBytecodeInt(2),
-            new BishBytecodeDef("x"),
+            new Bytecodes.Int(2),
+            new Bytecodes.Def("x"),
             // x = x + 1
-            new BishBytecodeGet("x"),
-            new BishBytecodeInt(1),
-            new BishBytecodeOp("op_Add", 2),
-            new BishBytecodeSet("x"),
+            new Bytecodes.Get("x"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Set("x"),
             // return x
-            new BishBytecodeGet("x"),
-            new BishBytecodeRet(),
+            new Bytecodes.Get("x"),
+            new Bytecodes.Ret(),
             
-            new BishBytecodeOuter(),
-            new BishBytecodeFuncEnd("f"),
-            new BishBytecodeMakeFunc("f"),
-            new BishBytecodeDef("f"),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.MakeFunc("f"),
+            new Bytecodes.Def("f"),
             
             // x1 := f()
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(0),
-            new BishBytecodeDef("x1"),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(0),
+            new Bytecodes.Def("x1"),
             
             // x2 := f()
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(0),
-            new BishBytecodeDef("x2")
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(0),
+            new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
         Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(3));
@@ -90,36 +90,36 @@ public class FuncTest : Test
     {
         var frame = new BishFrame([
             // f := () => {...}
-            new BishBytecodeFuncStart("f", ["n"]),
-            new BishBytecodeInner(),
-            new BishBytecodeDef("n"),
+            new Bytecodes.FuncStart("f", ["n"]),
+            new Bytecodes.Inner(),
+            new Bytecodes.Def("n"),
             // if (n <= 0)
-            new BishBytecodeGet("n"),
-            new BishBytecodeInt(0),
-            new BishBytecodeOp("op_Le", 2),
-            new BishBytecodeJumpIfNot("tag"),
+            new Bytecodes.Get("n"),
+            new Bytecodes.Int(0),
+            new Bytecodes.Op("op_Le", 2),
+            new Bytecodes.JumpIfNot("tag"),
             // return 1
-            new BishBytecodeInt(1),
-            new BishBytecodeRet(),
+            new Bytecodes.Int(1),
+            new Bytecodes.Ret(),
             // return f(n - 1) * n
-            new BishBytecodeGet("n").Tagged("tag"),
-            new BishBytecodeInt(1),
-            new BishBytecodeOp("op_Sub", 2),
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(1),
-            new BishBytecodeGet("n"),
-            new BishBytecodeOp("op_Mul", 2),
-            new BishBytecodeRet(),
+            new Bytecodes.Get("n").Tagged("tag"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(1),
+            new Bytecodes.Get("n"),
+            new Bytecodes.Op("op_Mul", 2),
+            new Bytecodes.Ret(),
             
-            new BishBytecodeOuter(),
-            new BishBytecodeFuncEnd("f"),
-            new BishBytecodeMakeFunc("f"),
-            new BishBytecodeDef("f"),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.MakeFunc("f"),
+            new Bytecodes.Def("f"),
             
             // f(4)
-            new BishBytecodeInt(4),
-            new BishBytecodeGet("f"),
-            new BishBytecodeCall(1)
+            new Bytecodes.Int(4),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(1)
         ], Scope);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(24));

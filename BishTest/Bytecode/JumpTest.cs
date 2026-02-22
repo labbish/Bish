@@ -6,9 +6,9 @@ public class JumpTest : Test
     public void TestJump()
     {
         var frame = new BishFrame([
-            new BishBytecodeJump("tag"),
-            new BishBytecodeInt(1),
-            new BishBytecodeInt(2).Tagged("tag")
+            new Bytecodes.Jump("tag"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Int(2).Tagged("tag")
         ]);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(2));
@@ -22,15 +22,15 @@ public class JumpTest : Test
     {
         var frame = new BishFrame([
             // condition ? 1 : 2
-            new BishBytecodeGet(condition ? "true" : "false"),
-            new BishBytecodeCopy(),
-            new BishBytecodeJumpIf("if"),
-            new BishBytecodeJumpIfNot("else"),
-            new BishBytecodePop().Tagged("if"),
-            new BishBytecodeInt(1),
-            new BishBytecodeJump("end"),
-            new BishBytecodeInt(2).Tagged("else"),
-            new BishBytecodeNop().Tagged("end")
+            new Bytecodes.Get(condition ? "true" : "false"),
+            new Bytecodes.Copy(),
+            new Bytecodes.JumpIf("if"),
+            new Bytecodes.JumpIfNot("else"),
+            new Bytecodes.Pop().Tagged("if"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Jump("end"),
+            new Bytecodes.Int(2).Tagged("else"),
+            new Bytecodes.Nop().Tagged("end")
         ]);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(condition ? 1 : 2));

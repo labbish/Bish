@@ -10,14 +10,14 @@ public class ScopeDepthTest : Test
     public void TestScope()
     {
         var frame = new BishFrame([
-            new BishBytecodeInner(),
+            new Bytecodes.Inner(),
             // a := 1
-            new BishBytecodeInt(1),
-            new BishBytecodeDef("a"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Def("a"),
             // b := 2
-            new BishBytecodeInt(2),
-            new BishBytecodeDef("b"),
-            new BishBytecodeOuter()
+            new Bytecodes.Int(2),
+            new Bytecodes.Def("b"),
+            new Bytecodes.Outer()
         ], Scope);
         frame.Execute();
         Scope.TryGetVar("a").Should().BeEquivalentTo(new BishInt(0));

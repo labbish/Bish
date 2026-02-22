@@ -1,6 +1,7 @@
 ﻿global using BishRuntime;
 global using BishBytecode;
 global using FluentAssertions;
+global using Bytecodes = BishBytecode.Bytecodes;
 using FluentAssertions.Specialized;
 
 namespace BishTest;

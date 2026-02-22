@@ -16,8 +16,8 @@ public class MemberTest : Test
     public void TestGetMember()
     {
         var frame = new BishFrame([
-            new BishBytecodeGet("x"),
-            new BishBytecodeGetMember("a")
+            new Bytecodes.Get("x"),
+            new Bytecodes.GetMember("a")
         ], Scope);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(1));
@@ -28,9 +28,9 @@ public class MemberTest : Test
     {
         var frame = new BishFrame([
             // x.a = 0
-            new BishBytecodeInt(0),
-            new BishBytecodeGet("x"),
-            new BishBytecodeSetMember("a")
+            new Bytecodes.Int(0),
+            new Bytecodes.Get("x"),
+            new Bytecodes.SetMember("a")
         ], Scope);
         frame.Execute();
         frame.Stack.Should().BeEmpty();
@@ -41,8 +41,8 @@ public class MemberTest : Test
     public void TestDelMember()
     {
         var frame = new BishFrame([
-            new BishBytecodeGet("x"),
-            new BishBytecodeDelMember("a")
+            new Bytecodes.Get("x"),
+            new Bytecodes.DelMember("a")
         ], Scope);
         frame.Execute();
         frame.Stack.Should().BeEmpty();

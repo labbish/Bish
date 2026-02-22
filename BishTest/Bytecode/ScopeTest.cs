@@ -19,9 +19,9 @@ public class ScopeTest : Test
     public void TestGet()
     {
         var frame = new BishFrame([
-            new BishBytecodeGet("c"),
-            new BishBytecodeGet("b"),
-            new BishBytecodeGet("a")
+            new Bytecodes.Get("c"),
+            new Bytecodes.Get("b"),
+            new Bytecodes.Get("a")
         ], Outer);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(1)); // a
@@ -34,11 +34,11 @@ public class ScopeTest : Test
     {
         var frame = new BishFrame([
             // b := 2
-            new BishBytecodeInt(2),
-            new BishBytecodeDef("b"),
+            new Bytecodes.Int(2),
+            new Bytecodes.Def("b"),
             // c := 2
-            new BishBytecodeInt(2),
-            new BishBytecodeDef("c")
+            new Bytecodes.Int(2),
+            new Bytecodes.Def("c")
         ], Outer);
         frame.Execute();
         Inner.TryGetVar("a").Should().BeEquivalentTo(new BishInt(0));
@@ -54,11 +54,11 @@ public class ScopeTest : Test
     {
         var frame = new BishFrame([
             // b = 2
-            new BishBytecodeInt(2),
-            new BishBytecodeSet("b"),
+            new Bytecodes.Int(2),
+            new Bytecodes.Set("b"),
             // c = 2
-            new BishBytecodeInt(2),
-            new BishBytecodeSet("c")
+            new Bytecodes.Int(2),
+            new Bytecodes.Set("c")
         ], Outer);
         frame.Execute();
         Inner.TryGetVar("a").Should().BeEquivalentTo(new BishInt(0));
@@ -73,7 +73,7 @@ public class ScopeTest : Test
     public void TestDel()
     {
         var frame = new BishFrame([
-            new BishBytecodeDel("a")
+            new Bytecodes.Del("a")
         ], Outer);
         frame.Execute();
         Inner.TryGetVar("a").Should().BeEquivalentTo(new BishInt(0));

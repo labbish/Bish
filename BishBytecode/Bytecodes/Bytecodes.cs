@@ -1,4 +1,5 @@
-﻿using BishRuntime;
+﻿using System.Diagnostics.CodeAnalysis;
+using BishRuntime;
 
 namespace BishBytecode.Bytecodes;
 
@@ -132,9 +133,7 @@ public record JumpIfNot(string GoalTag) : Jump(GoalTag)
     }
 }
 
-// Used as a tag
-// TODO: support optional args?
-public record FuncStart(string Name, List<string> Args) : BishBytecode
+public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
 {
     public override void Execute(BishFrame frame)
     {
@@ -143,26 +142,45 @@ public record FuncStart(string Name, List<string> Args) : BishBytecode
 
     public int EndPos(BishFrame frame, int pos)
     {
-        var end = frame.Bytecodes.FindIndex(pos, x => x is FuncEnd end && end.Name == Name);
-        return end == -1 ? throw new ArgumentException($"Function definition does not end: {Name}") : end;
+        var end = frame.Bytecodes.FindIndex(pos, x => x is TEnd end && end.Name == Name);
+        return end == -1 ? throw new ArgumentException($"Start tag without ending: {Name}") : end;
     }
 }
 
-// Used as a tag
-public record FuncEnd(string Name) : Nop;
+public record EndTag(string Name) : Nop;
 
-public record MakeFunc(string Name) : BishBytecode
+public abstract record TagBased<TStart, TEnd>(string Name)
+    : BishBytecode where TStart : StartTag<TEnd> where TEnd : EndTag
+{
+    [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
+    public record CodeSlice(int StartPos, TStart Start, int EndPos, TEnd End, List<BishBytecode> Code);
+
+    protected CodeSlice Slice(BishFrame frame)
+    {
+        var startPos = frame.Bytecodes.FindIndex(x => x is TStart start && start.Name == Name);
+        if (startPos == -1) throw new ArgumentException($"Start tag named {Name} not found");
+        var start = (TStart)frame.Bytecodes[startPos];
+        var endPos = start.EndPos(frame, startPos);
+        var end = (TEnd)frame.Bytecodes[endPos];
+        var code = frame.Bytecodes[(startPos + 1)..endPos];
+        return new CodeSlice(startPos, start, endPos, end, code);
+    }
+}
+
+// TODO: support optional args?
+public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name);
+
+public record FuncEnd(string Name) : EndTag(Name);
+
+public record MakeFunc(string Name) : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
-        var i = frame.Bytecodes.FindIndex(x => x is FuncStart start && start.Name == Name);
-        var start = (FuncStart)frame.Bytecodes[i];
-        var j = start.EndPos(frame, i);
-        var code = frame.Bytecodes[(i + 1)..j];
+        var slice = Slice(frame);
         var scope = frame.Scope;
-        frame.Stack.Push(new BishFunc(start.Args.Select(arg => new BishArg(arg)).ToList(), args =>
+        frame.Stack.Push(new BishFunc(slice.Start.Args.Select(arg => new BishArg(arg)).ToList(), args =>
         {
-            var inner = new BishFrame(code, scope, frame);
+            var inner = new BishFrame(slice.Code, scope, frame);
             // The first argument is in the top
             foreach (var arg in args.Reversed())
                 inner.Stack.Push(arg);
@@ -189,5 +207,25 @@ public record Swap : BishBytecode
         var second = frame.Stack.Pop();
         frame.Stack.Push(first);
         frame.Stack.Push(second);
+    }
+}
+
+public record ClassStart(string Name) : StartTag<ClassEnd>(Name);
+
+public record ClassEnd(string Name) : EndTag(Name);
+
+// TODO: class extending?
+public record MakeClass(string Name) : TagBased<ClassStart, ClassEnd>(Name)
+{
+    public override void Execute(BishFrame frame)
+    {
+        var slice = Slice(frame);
+        var scope = new BishScope(frame.Scope.CreateInner());
+        var inner = new BishFrame(slice.Code, scope, frame);
+        inner.Execute();
+        var type = new BishType(Name);
+        foreach (var (key, value) in scope.Vars)
+            type.SetMember(key, value);
+        frame.Stack.Push(type);
     }
 }

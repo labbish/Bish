@@ -6,10 +6,14 @@ namespace BishBytecode.Bytecodes;
 
 public static partial class BytecodeParser
 {
+    // Reserved for user-defined bytecodes in other assemblies
+    // ReSharper disable once CollectionNeverUpdated.Global
+    public static readonly Dictionary<string, Type> Mappings = [];
+
     public static string ToString(BishBytecode bytecode)
     {
         var type = bytecode.GetType();
-        var name = ToCodeName(type.Name);
+        var name = Mappings.FirstOrDefault(pair => pair.Value == type).Key ?? ToCodeName(type.Name);
         var args = Args(type);
         return name + " " + string.Join(" ",
             args.Select(arg => ArgToString(type.GetProperty(arg.Name)!.GetValue(bytecode)!)));
@@ -18,9 +22,10 @@ public static partial class BytecodeParser
     public static BishBytecode FromString(string code)
     {
         var parts = code.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var name = ToClassName(parts[0]);
-        var type = typeof(BytecodeParser).Assembly.GetType($"{typeof(BytecodeParser).Namespace}.{name}") ??
-                   throw new ArgumentException($"Invalid bytecode type {name} for BytecodeParser");
+        var type =
+            Mappings.GetValueOrDefault(parts[0]) ??
+            typeof(BytecodeParser).Assembly.GetType($"{typeof(BytecodeParser).Namespace}.{ToClassName(parts[0])}") ??
+            throw new ArgumentException($"Invalid bytecode type {parts[0]} for BytecodeParser");
         var args = Args(type);
         return (BishBytecode)type.GetConstructors().First()
             .Invoke(args.Select((arg, i) => ArgFromString(arg.Type, parts[i + 1])).ToArray());

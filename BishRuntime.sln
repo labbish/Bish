@@ -2,7 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishRuntime", "BishRuntime\BishRuntime.csproj", "{A75655EA-1799-43F0-9555-4B2A98E86990}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishRuntimeTest", "BishRuntimeTest\BishRuntimeTest.csproj", "{0092EA54-3145-4497-8EFA-34E626737597}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishTest", "BishTest\BishTest.csproj", "{0092EA54-3145-4497-8EFA-34E626737597}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishBytecode", "BishBytecode\BishBytecode.csproj", "{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +20,9 @@ Global
 		{0092EA54-3145-4497-8EFA-34E626737597}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0092EA54-3145-4497-8EFA-34E626737597}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0092EA54-3145-4497-8EFA-34E626737597}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

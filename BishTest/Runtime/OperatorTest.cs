@@ -1,4 +1,4 @@
-﻿namespace BishRuntimeTest;
+﻿namespace BishTest.Runtime;
 
 public class OperatorTest : Test
 {

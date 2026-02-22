@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BishBytecode\BishBytecode.csproj" />
       <ProjectReference Include="..\BishRuntime\BishRuntime.csproj" />
     </ItemGroup>
 

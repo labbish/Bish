@@ -1,8 +1,9 @@
 ﻿global using BishRuntime;
+global using BishBytecode;
 global using FluentAssertions;
 using FluentAssertions.Specialized;
 
-namespace BishRuntimeTest;
+namespace BishTest;
 
 public class Test
 {

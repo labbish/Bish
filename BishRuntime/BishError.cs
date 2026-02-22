@@ -26,4 +26,5 @@ public class BishError(string message) : BishObject
     public static readonly BishType ArgumentErrorType = new("ArgumentError", [StaticType]);
     public static readonly BishType TypeErrorType = new("TypeError", [StaticType]);
     public static readonly BishType NullErrorType = new("NullError", [StaticType]);
+    public static readonly BishType NameErrorType = new("NameError", [StaticType]);
 }

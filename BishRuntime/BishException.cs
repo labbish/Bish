@@ -106,4 +106,10 @@ public class BishException(BishError error) : Exception($"[{error.Type.Name}] {e
         {
             ["operator"] = new BishString(op) // TODO: record the arg types after we have an builtin list
         });
+
+    public static BishException OfName(string name) => Create(BishError.NameErrorType,
+        $"Name {name} is not defined", new Dictionary<string, BishObject>
+        {
+            ["name"] = new BishString(name)
+        });
 }

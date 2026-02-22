@@ -55,4 +55,24 @@ public class ClassTest : Test
         Scope.GetVar("c").GetMember("x").Should().BeEquivalentTo(new BishInt(1));
         Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
     }
+
+    [Fact]
+    public void TestClassInherit()
+    {
+        var t1 = new BishType("T1");
+        var t2 = new BishType("T2");
+        Scope.DefVar("T1", t1);
+        Scope.DefVar("T2", t2);
+        var frame = new BishFrame([
+            new Bytecodes.ClassStart("C"),
+            new Bytecodes.ClassEnd("C"),
+            new Bytecodes.Get("T1"),
+            new Bytecodes.Get("T2"),
+            new Bytecodes.MakeClass("C", 2),
+            new Bytecodes.Def("C")
+        ], Scope);
+        frame.Execute();
+        Scope.GetVar("C").Should().BeOfType<BishType>().Which.Parents
+            .Should().Equal(t1, t2, BishObject.StaticType);
+    }
 }

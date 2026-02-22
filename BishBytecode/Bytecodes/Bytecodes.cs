@@ -167,25 +167,28 @@ public abstract record TagBased<TStart, TEnd>(string Name)
     }
 }
 
-// TODO: support optional args?
 public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name);
 
 public record FuncEnd(string Name) : EndTag(Name);
 
-public record MakeFunc(string Name) : TagBased<FuncStart, FuncEnd>(Name)
+public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
         var slice = Slice(frame);
         var scope = frame.Scope;
-        frame.Stack.Push(new BishFunc(slice.Start.Args.Select(arg => new BishArg(arg)).ToList(), args =>
-        {
-            var inner = new BishFrame(slice.Code, scope, frame);
-            // The first argument is in the top
-            foreach (var arg in args.Reversed())
-                inner.Stack.Push(arg);
-            return inner.Execute();
-        }));
+        var defaults = frame.Stack.Pop(DefaultArgc);
+        frame.Stack.Push(new BishFunc(
+            slice.Start.Args.Reversed().Select((arg, i) => new BishArg(arg, null, defaults.ElementAtOrDefault(i)))
+                .ToList().Reversed(),
+            args =>
+            {
+                var inner = new BishFrame(slice.Code, scope, frame);
+                // The first argument is in the top
+                foreach (var arg in args.Reversed())
+                    inner.Stack.Push(arg);
+                return inner.Execute();
+            }));
     }
 }
 
@@ -214,8 +217,7 @@ public record ClassStart(string Name) : StartTag<ClassEnd>(Name);
 
 public record ClassEnd(string Name) : EndTag(Name);
 
-// TODO: class extending?
-public record MakeClass(string Name) : TagBased<ClassStart, ClassEnd>(Name)
+public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart, ClassEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
@@ -223,7 +225,9 @@ public record MakeClass(string Name) : TagBased<ClassStart, ClassEnd>(Name)
         var scope = new BishScope(frame.Scope.CreateInner());
         var inner = new BishFrame(slice.Code, scope, frame);
         inner.Execute();
-        var type = new BishType(Name);
+        var parents = frame.Stack.Pop(ParentCount).Reversed()
+            .Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList();
+        var type = new BishType(Name, parents);
         foreach (var (key, value) in scope.Vars)
             type.SetMember(key, value);
         frame.Stack.Push(type);

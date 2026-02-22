@@ -150,11 +150,11 @@ public class BishObject(BishType? type = null)
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
-public class BishType(string name, BishType[]? parents = null) : BishObject
+public class BishType(string name, List<BishType>? parents = null) : BishObject
 {
     public readonly string Name = name;
 
-    public BishType[] Parents
+    public List<BishType> Parents
     {
         get => [..field, BishObject.StaticType];
     } = parents ?? [];

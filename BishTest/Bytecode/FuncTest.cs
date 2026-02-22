@@ -192,4 +192,36 @@ public class FuncTest : Test
         Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(1));
         Scope.GetVar("x2").Should().BeEquivalentTo(new BishInt(2));
     }
+
+    [Theory]
+    [InlineData(3, 2, 1, 5)]
+    [InlineData(3, 2, 6)]
+    [InlineData(3, 3)]
+    public void TestDefaultArgs(params int[] argsResult)
+    {
+        if (argsResult is not [.. var args, var result])
+            throw new ArgumentException("TestDefaultArgs requires arguments");
+        var frame = new BishFrame([
+            // f := (x, y = 1, z = 0) => x * y - z
+            new Bytecodes.FuncStart("f", ["x", "y", "z"]),
+            new Bytecodes.Inner(),
+            new Bytecodes.Op("op_Mul", 2),
+            new Bytecodes.Swap(),
+            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Ret(),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.Int(1),
+            new Bytecodes.Int(0),
+            new Bytecodes.MakeFunc("f", 2),
+            new Bytecodes.Def("f"),
+
+            ..args.Select(x => new Bytecodes.Int(x)),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(args.Length),
+            new Bytecodes.Def("ans")
+        ], Scope);
+        frame.Execute();
+        Scope.GetVar("ans").Should().BeEquivalentTo(new BishInt(result));
+    }
 }

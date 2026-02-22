@@ -1,5 +1,6 @@
 ﻿namespace BishRuntime;
 
+// TODO: Complete this
 public class BishString(string value) : BishObject
 {
     public string Value { get; private set; } = value;

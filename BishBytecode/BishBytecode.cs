@@ -27,6 +27,11 @@ public record BishBytecodePop : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Pop();
 }
 
+public record BishBytecodeEmpty : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Clear();
+}
+
 public record BishBytecodeInt(int Value) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishInt(Value));
@@ -82,14 +87,22 @@ public record BishBytecodeDelMember(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Pop().DelMember(Name);
 }
 
-// The args should be pushed in reversed order
 public record BishBytecodeCall(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var args = frame.Stack.Pop(Argc);
+        var args = frame.Stack.Pop(Argc).Reversed();
         var func = frame.Stack.Pop();
         frame.Stack.Push(func.Call(args));
+    }
+}
+
+public record BishBytecodeOp(string Op, int Argc) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var args = frame.Stack.Pop(Argc).Reversed();
+        frame.Stack.Push(BishOperator.Call(Op, args));
     }
 }
 
@@ -108,27 +121,80 @@ public record BishBytecodeJump(string GoalTag) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var pos = frame.FindTag(GoalTag);
+        var pos = frame.Bytecodes.FindIndex(x => x.Tag == GoalTag);
         if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
         frame.Ip = pos;
     }
 }
 
-public record BishBytecodeJumpIf(string GoalTag, bool Reverse = false) : BishBytecode
+public record BishBytecodeJumpIf(string GoalTag, bool Reverse = false) : BishBytecodeJump(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value == Reverse) return;
-        var pos = frame.FindTag(GoalTag);
-        if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
-        frame.Ip = pos;
+        if (BishOperator.Call("op_Bool", [result])
+                .ExpectToBe<BishBool>("condition").Value == Reverse) return;
+        base.Execute(frame);
     }
 }
 
 public record BishBytecodeJumpIfNot(string GoalTag) : BishBytecodeJumpIf(GoalTag, Reverse: true);
 
+// Used as a tag
+// TODO: support optional args?
+public record BishBytecodeFuncStart(string Name, List<string> Args) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var pos = EndPos(frame, frame.Ip);
+        if (pos == -1) throw new ArgumentException($"Function definition does not end: {Name}");
+        frame.Ip = pos;
+    }
+
+    public int EndPos(BishFrame frame, int pos) =>
+        frame.Bytecodes.FindIndex(pos, x => x is BishBytecodeFuncEnd end && end.Name == Name);
+}
+
+// Used as a tag
+public record BishBytecodeFuncEnd(string Name) : BishBytecodeNop;
+
+public record BishBytecodeMakeFunc(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var i = frame.Bytecodes.FindIndex(x => x is BishBytecodeFuncStart start && start.Name == Name);
+        var start = (BishBytecodeFuncStart)frame.Bytecodes[i];
+        var j = start.EndPos(frame, i);
+        var code = frame.Bytecodes[(i + 1)..j];
+        var scope = frame.Scope;
+        frame.Stack.Push(new BishFunc(start.Args.Select(arg => new BishArg(arg)).ToList(), args =>
+        {
+            var inner = new BishFrame(code, scope, frame);
+            // The first argument is in the top
+            foreach (var arg in args.Reversed())
+                inner.Stack.Push(arg);
+            return inner.Execute();
+        }));
+    }
+}
+
+public record BishBytecodeRet : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.ReturnValue = frame.Stack.Pop();
+}
+
 public record BishBytecodeCopy : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Peek());
+}
+
+public record BishBytecodeSwap : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var first = frame.Stack.Pop();
+        var second = frame.Stack.Pop();
+        frame.Stack.Push(first);
+        frame.Stack.Push(second);
+    }
 }

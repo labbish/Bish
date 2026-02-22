@@ -10,25 +10,33 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
     public List<BishBytecode> Bytecodes => bytecodes;
     public int Ip;
 
-    public void Execute()
+    public BishObject? ReturnValue;
+
+    public BishObject Execute()
     {
         while (Ip < Bytecodes.Count)
         {
             var bytecode = Bytecodes[Ip++];
             bytecode.Execute(this);
+            if (ReturnValue is not null) return ReturnValue;
         }
+        return BishNull.Instance;
     }
-
-    public int FindTag(string tag) => bytecodes.FindIndex(x => x.Tag == tag);
 }
 
-public static class StackHelper
+public static class Helper
 {
     public static List<T> Pop<T>(this Stack<T> stack, int count)
     {
         List<T> list = [];
         for (var i = 0; i < count; i++)
             list.Add(stack.Pop());
+        return list;
+    }
+
+    public static List<T> Reversed<T>(this List<T> list)
+    {
+        list.Reverse();
         return list;
     }
 }

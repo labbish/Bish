@@ -64,7 +64,11 @@ public static partial class BishOperator
         new("op_Bool", 1, "bool", () => new BishBool(true)),
         new(GetterRegex(), 1),
         new(SetterRegex(), 2),
-        new(DellerRegex(), 1)
+        new(DellerRegex(), 1),
+        new("op_GetIndex", 2, "[]"),
+        new("op_SetIndex", 3, "[]"),
+        new("op_DelIndex", 2, "[]"),
+        new("op_Iter", 1, "iter")
     ];
 
     public static BishObject? TryCall(string name, List<BishObject> args, bool noSpecial = false)

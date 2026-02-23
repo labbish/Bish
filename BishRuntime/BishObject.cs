@@ -175,7 +175,7 @@ public partial class BishType(string name, List<BishType>? parents = null) : Bis
         return this == other || LookupChain.Contains(other);
     }
 
-    public override string ToString() => $"[Type {Name}]";
+    public override string ToString() => Name;
 
     [Builtin("hook")]
     public static BishString Get_name(BishType type) => new(type.Name);

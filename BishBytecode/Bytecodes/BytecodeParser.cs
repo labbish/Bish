@@ -22,10 +22,11 @@ public static partial class BytecodeParser
     public static BishBytecode FromString(string code)
     {
         var parts = code.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var first = parts[0].ToUpper();
         var type =
-            Mappings.GetValueOrDefault(parts[0]) ??
-            typeof(BytecodeParser).Assembly.GetType($"{typeof(BytecodeParser).Namespace}.{ToClassName(parts[0])}") ??
-            throw new ArgumentException($"Invalid bytecode type {parts[0]} for BytecodeParser");
+            Mappings.GetValueOrDefault(first) ??
+            typeof(BytecodeParser).Assembly.GetType($"{typeof(BytecodeParser).Namespace}.{ToClassName(first)}") ??
+            throw new ArgumentException($"Invalid bytecode type {first} for BytecodeParser");
         var args = Args(type);
         return (BishBytecode)type.GetConstructors().First()
             .Invoke(args.Select((arg, i) => ArgFromString(arg.Type, parts[i + 1])).ToArray());
@@ -67,7 +68,9 @@ public static partial class BytecodeParser
         return type.GetConstructors().First().GetParameters().Select(p => (p.ParameterType, p.Name!)).ToList();
     }
 
-    private static string ToCodeName(string className) => string.IsNullOrEmpty(className) ? className : CodeNameRegex().Replace(className, "_$1").ToUpper();
+    private static string ToCodeName(string className) => string.IsNullOrEmpty(className)
+        ? className
+        : CodeNameRegex().Replace(className, "_$1").ToUpper();
 
     private static string ToClassName(string codeName)
     {

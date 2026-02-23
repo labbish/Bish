@@ -5,8 +5,7 @@ public class BishStackLayer(BishFunc func, List<BishObject> args)
     public BishFunc Func => func;
     public List<BishObject> Args => args;
 
-    public override string ToString() =>
-        $"{Func.Name}({string.Join(", ", Func.Args)}), calling with ({string.Join(", ", Args)})";
+    public override string ToString() => $"{Func}, calling with ({string.Join(", ", Args)})";
 }
 
 public class BishError(string message) : BishObject

@@ -15,6 +15,7 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
     public string Name => name;
     public List<BishArg> Args => CheckedArgs(inArgs);
     public Func<List<BishObject>, BishObject> Func => func;
+    public BishObject? BoundSelf;
 
     public static List<BishArg> CheckedArgs(List<BishArg> args)
     {
@@ -51,7 +52,7 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
     {
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         return self.Type.CanAssignTo(Args[0].Type)
-            ? new BishFunc(Name, Args.Skip(1).ToList(), args => Func([self, ..args]))
+            ? new BishFunc(Name, Args.Skip(1).ToList(), args => Func([self, ..args])) { BoundSelf = self }
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 
@@ -72,5 +73,6 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
 
     public new static readonly BishType StaticType = new("func");
 
-    public override string ToString() => "[Function]";
+    public override string ToString() =>
+        (BoundSelf is null ? "Function" : $"Bound function [self={BoundSelf}]") + $" {Name}({string.Join(", ", Args)})";
 }

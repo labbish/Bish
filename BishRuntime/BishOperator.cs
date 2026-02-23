@@ -62,19 +62,30 @@ public static partial class BishOperator
         new("op_Iter", 1, "iter")
     ];
 
-    public static BishObject? TryCall(string name, List<BishObject> args, bool noSpecial = false)
+    public static BishObject? TryCall(string name, List<BishObject> args) =>
+        BishException.Ignored(() => Call(name, args));
+
+    public static BishObject Call(string name, List<BishObject> args, bool noSpecial = false)
     {
         var special = GetSpecialMethod(name);
         if (!noSpecial && special?.Default is not null)
-            return BishException.Ignored(() => TryCall(name, args, true)) ?? special.Default();
-        return args.Select(arg =>
-                BishException.Ignored(() => arg.Type.GetMember(name, BishLookupMode.NoBind).TryCall(args)))
-            .FirstOrDefault(result => result is not null);
-    }
+            return BishException.Ignored(() => Call(name, args, true)) ?? special.Default();
 
-    // TODO: wrap the inner error(s)
-    public static BishObject Call(string name, List<BishObject> args) =>
-        TryCall(name, args) ?? throw BishException.OfArgument_Operator(name, args);
+        List<BishError> errors = [];
+        foreach (var arg in args)
+        {
+            try
+            {
+                return arg.Type.GetMember(name, BishLookupMode.NoBind).Call(args);
+            }
+            catch (BishException e)
+            {
+                errors.Add(e.Error);
+            }
+        }
+
+        throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
+    }
 
     public static SpecialMethod? GetSpecialMethod(string name)
     {

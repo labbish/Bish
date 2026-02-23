@@ -1,11 +1,21 @@
 ﻿namespace BishRuntime;
 
+public class BishStackLayer(BishFunc func, List<BishObject> args)
+{
+    public BishFunc Func => func;
+    public List<BishObject> Args => args;
+
+    public override string ToString() =>
+        $"{Func.Name}({string.Join(", ", Func.Args)}), calling with ({string.Join(", ", Args)})";
+}
+
 public class BishError(string message) : BishObject
 {
     public string Message = message;
 
-    // For now, it only stores the function names, from inner to outer.
-    public List<string> StackTrace = [];
+    // From inner to outer
+    public readonly List<BishStackLayer> StackTrace = [];
+    public List<BishError> Causes = [];
 
     public override BishType DefaultType => StaticType;
 
@@ -19,8 +29,13 @@ public class BishError(string message) : BishObject
 
     public override string ToString()
     {
+        var cause = Causes.Count == 0
+            ? ""
+            : "\nCaused by: " + string.Join("",
+                Causes.Select(cause =>
+                    "\n" + string.Join("\n", cause.ToString().Split("\n").Select(line => "  " + line))));
         return $"[{Type.Name}] {Message}" +
-               string.Join("", StackTrace.Select(funcName => $"\n  at function {funcName}"));
+               string.Join("", StackTrace.Select(funcName => $"\n  at {funcName}")) + cause;
     }
 
     static BishError() => BishBuiltinBinder.Bind<BishError>();

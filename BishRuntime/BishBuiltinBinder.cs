@@ -30,21 +30,21 @@ public static class BishBuiltinBinder
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
             if (attr == null) continue;
             var name = attr.GetName(method.Name);
-            var func = Builtin(method);
+            var func = Builtin(name, method);
             if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
             staticType.Members[name] = func;
         }
     }
 
-    public static BishFunc Builtin(Delegate method) => Builtin(method.Method);
+    public static BishFunc Builtin(string name, Delegate method) => Builtin(name, method.Method);
 
-    public static BishFunc Builtin(MethodInfo method)
+    public static BishFunc Builtin(string name, MethodInfo method)
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
             .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info)))
             .ToList();
-        return new BishFunc(inArgs,
+        return new BishFunc(name, inArgs,
             args => (BishObject?)method.InvokeRaw(null,
                 args.Select((arg, i) =>
                         ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))
@@ -107,12 +107,12 @@ public static class BishBuiltinIteratorBinder
                            info.Name == "Next" && info.GetCustomAttribute<IterAttribute>() is not null) ??
                    throw new ArgumentException($"Cannot find method `Next` on type {type}");
         var staticType = BishType.GetStaticType(type);
-        staticType.SetMember("hook_Create", new BishFunc([], _ =>
+        staticType.SetMember("hook_Create", new BishFunc("hook_Create", [], _ =>
             throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_Iter() instead", [])));
         staticType.SetMember("next",
-            new BishFunc([new BishArg("iter", staticType)],
+            new BishFunc("next", [new BishArg("iter", staticType)],
                 args => (BishObject?)next.Invoke(args[0], []) ?? throw BishException.OfIteratorStop()));
-        staticType.SetMember("op_Iter", new BishFunc([new BishArg("self", staticType)],
-            args => args[0]));
+        staticType.SetMember("op_Iter", new BishFunc("op_Iter",
+            [new BishArg("self", staticType)], args => args[0]));
     }
 }

@@ -17,6 +17,12 @@ public class BishException(BishError error) : Exception
         }
     }
 
+    public BishException CausedBy(params List<BishError> causes)
+    {
+        Error.Causes = causes;
+        return this;
+    }
+
     public static BishException Create(BishType errorType, string message, Dictionary<string, BishObject> data)
     {
         var error = (BishError)errorType.CreateInstance([new BishString(message)]);
@@ -102,10 +108,12 @@ public class BishException(BishError error) : Exception
         });
 
     public static BishException OfArgument_Operator(string op, List<BishObject> args) => OfArgument(
-        $"Cannot apply operator {op} on type(s) {string.Join(", ", args.Select(arg => arg.Type.Name))}",
+        $"Cannot apply operator {op} on type{(args.Count > 1 ? "s" : "")} " +
+        string.Join(", ", args.Select(arg => arg.Type.Name)),
         new Dictionary<string, BishObject>
         {
-            ["operator"] = new BishString(op) // TODO: record the arg types after we have an builtin list
+            ["operator"] = new BishString(op),
+            ["arguments"] = new BishList(args.ToList())
         });
 
     public static BishException OfArgument_IndexOutOfBound(int length, int index) => OfArgument(

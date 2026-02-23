@@ -219,7 +219,7 @@ public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, F
         var slice = Slice(frame);
         var scope = frame.Scope;
         var defaults = frame.Stack.Pop(DefaultArgc);
-        frame.Stack.Push(new BishFunc(
+        frame.Stack.Push(new BishFunc(Name,
             slice.Start.Args.Reversed().Select((arg, i) => new BishArg(arg, null, defaults.ElementAtOrDefault(i)))
                 .ToList().Reversed(),
             args =>
@@ -228,15 +228,7 @@ public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, F
                 // The first argument is in the top
                 foreach (var arg in args.Reversed())
                     inner.Stack.Push(arg);
-                try
-                {
-                    return inner.Execute();
-                }
-                catch (BishException e)
-                {
-                    e.Error.StackTrace.Add(Name);
-                    throw;
-                }
+                return inner.Execute();
             }));
     }
 }

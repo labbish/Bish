@@ -5,7 +5,7 @@ public class MethodTest : Test
     public readonly BishObject X = T.StaticType.CreateInstance([S("x")]);
 
     private void Inject() =>
-        X.Members.Add("f", new BishFunc([new BishArg("_", Default: Null)], _ => I(1)));
+        X.Members.Add("f", new BishFunc("f", [new BishArg("_", Default: Null)], _ => I(1)));
 
     [Fact]
     public void TestObjectInitialization()

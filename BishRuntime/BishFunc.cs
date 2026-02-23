@@ -5,11 +5,14 @@
 public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null)
 {
     public BishType Type => DefType ?? BishObject.StaticType;
+
+    public override string ToString() =>
+        (DefType is null ? "" : DefType.Name + " ") + Name + (Default is null ? "" : "=" + Default);
 }
 
-// With inArgs=null it means to bypass the default check logic
-public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
+public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
 {
+    public string Name => name;
     public List<BishArg> Args => CheckedArgs(inArgs);
     public Func<List<BishObject>, BishObject> Func => func;
 
@@ -48,11 +51,22 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
     {
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         return self.Type.CanAssignTo(Args[0].Type)
-            ? new BishFunc(Args.Skip(1).ToList(), args => Func([self, ..args]))
+            ? new BishFunc(Name, Args.Skip(1).ToList(), args => Func([self, ..args]))
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 
-    public override BishObject TryCall(List<BishObject> args) => Func(Match(args));
+    public override BishObject TryCall(List<BishObject> args)
+    {
+        try
+        {
+            return Func(Match(args));
+        }
+        catch (BishException e)
+        {
+            e.Error.StackTrace.Add(new BishStackLayer(this, args));
+            throw;
+        }
+    }
 
     public override BishType DefaultType => StaticType;
 

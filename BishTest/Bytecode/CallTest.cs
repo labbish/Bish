@@ -4,7 +4,7 @@ public class CallTest : Test
 {
     public readonly BishScope Scope = BishScope.Globals();
 
-    public CallTest() => Scope.DefVar("f", BishBuiltinBinder.Builtin(F));
+    public CallTest() => Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
 
     public static BishInt F(BishInt a, BishInt b, [DefaultNull] BishInt? c) =>
         new(a.Value + b.Value * 10 + (c?.Value ?? 0) * 100);

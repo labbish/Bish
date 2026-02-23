@@ -2,7 +2,7 @@
 
 public class MemberHookTest : Test
 {
-    public readonly BishObject X = T.StaticType.CreateInstance([]), Y = U.StaticType.CreateInstance([]);
+    public readonly BishObject X = T1.StaticType.CreateInstance([]), Y = T2.StaticType.CreateInstance([]);
 
     public MemberHookTest()
     {
@@ -66,28 +66,28 @@ public class MemberHookTest : Test
     }
 }
 
-file class T : BishObject
+file class T1 : BishObject
 {
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("T");
 
     [Builtin("hook")]
-    public static T Create() => new();
+    public static T1 Create() => new();
 
     [Builtin("hook")]
-    public static BishString Get(T self, BishString name) => new("get");
+    public static BishString Get(T1 self, BishString name) => new("get");
 
     [Builtin("hook")]
-    public static BishString Set(T self, BishString name, BishObject value) => new("set");
+    public static BishString Set(T1 self, BishString name, BishObject value) => new("set");
 
     [Builtin("hook")]
-    public static BishString Del(T self, BishString name) => new("del");
+    public static BishString Del(T1 self, BishString name) => new("del");
 
-    static T() => BishBuiltinBinder.Bind<T>();
+    static T1() => BishBuiltinBinder.Bind<T1>();
 }
 
-file class U : BishObject
+file class T2 : BishObject
 {
     public int A;
 
@@ -96,19 +96,19 @@ file class U : BishObject
     public new static readonly BishType StaticType = new("U");
 
     [Builtin("hook")]
-    public static U Create() => new();
+    public static T2 Create() => new();
 
     [Builtin("hook")]
-    public static BishInt Get_a(U self) => new(self.A);
+    public static BishInt Get_a(T2 self) => new(self.A);
 
     [Builtin("hook")]
-    public static void Set_a(U self, BishInt value) => self.A = value.Value;
+    public static void Set_a(T2 self, BishInt value) => self.A = value.Value;
 
     [Builtin("hook")]
-    public static BishNull Del_a(U self) => BishNull.Instance;
+    public static BishNull Del_a(T2 self) => BishNull.Instance;
 
-    static U()
+    static T2()
     {
-        BishBuiltinBinder.Bind<U>();
+        BishBuiltinBinder.Bind<T2>();
     }
 }

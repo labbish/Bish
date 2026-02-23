@@ -26,12 +26,13 @@ public class BishObject(BishType? type = null)
 
     public readonly Dictionary<string, BishObject> Members = [];
 
-    public BishObject? TryCallHook(string name, List<BishObject> args) => TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
+    public BishObject? TryCallHook(string name, List<BishObject> args) =>
+        TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
 
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
 
-    protected virtual List<BishObject> LookupChain => [];
+    public virtual List<BishObject> LookupChain => [];
 
     /**
      * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
@@ -148,26 +149,14 @@ public class BishObject(BishType? type = null)
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
-public class BishType(string name, List<BishType>? parents = null) : BishObject
+public partial class BishType(string name, List<BishType>? parents = null) : BishObject
 {
     public readonly string Name = name;
 
-    public List<BishType> Parents
-    {
-        get => [..field, BishObject.StaticType];
-    } = parents ?? [];
+    public readonly List<BishType> Parents = parents ?? [];
 
-    protected override List<BishObject> LookupChain => LinearParents([]).Skip(1).ToList<BishObject>();
-
-    public List<BishType> LinearParents(List<BishType> current)
-    {
-        if (current.Contains(this)) return [];
-        List<BishType> results = [this];
-        foreach (var parent in Parents)
-            results.AddRange(parent.LinearParents(results));
-        return results;
-        // TODO: maybe an MRO
-    }
+    public override List<BishObject> LookupChain =>
+        GetMRO().Concat([BishObject.StaticType]).Skip(1).ToList<BishObject>();
 
     public BishObject CreateInstance(List<BishObject> args)
     {
@@ -179,15 +168,11 @@ public class BishType(string name, List<BishType>? parents = null) : BishObject
 
     public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
 
-    public bool CanAssignTo(BishType other, HashSet<BishObject>? excludes = null)
+    public bool CanAssignTo(BishType other)
     {
         // Special case here
         if (this == BishInt.StaticType && other == BishNum.StaticType) return true;
-        excludes ??= [];
-        if (excludes.Contains(this)) return false;
-        if (this == other) return true;
-        excludes.Add(this);
-        return Parents.Any(parent => parent.CanAssignTo(other, excludes));
+        return this == other || LookupChain.Contains(other);
     }
 
     public override string ToString() => $"[Type {Name}]";

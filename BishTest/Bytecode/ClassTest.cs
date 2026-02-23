@@ -59,8 +59,8 @@ public class ClassTest : Test
     [Fact]
     public void TestClassInherit()
     {
-        var t1 = new BishType("T1");
-        var t2 = new BishType("T2");
+        var t1 = T("T1");
+        var t2 = T("T2");
         Scope.DefVar("T1", t1);
         Scope.DefVar("T2", t2);
         var frame = new BishFrame([
@@ -72,7 +72,6 @@ public class ClassTest : Test
             new Bytecodes.Def("C")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("C").Should().BeOfType<BishType>().Which.Parents
-            .Should().Equal(t1, t2, BishObject.StaticType);
+        Scope.GetVar("C").Should().BeOfType<BishType>().Which.Parents.Should().Equal(t1, t2);
     }
 }

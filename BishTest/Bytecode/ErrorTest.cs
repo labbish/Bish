@@ -237,7 +237,7 @@ public class ErrorTest : Test
             new Bytecodes.Get("h"),
             new Bytecodes.Call(0)
         ]);
-        Action(() => frame.Execute()).Should().Excepts(BishError.StaticType)
-            .Which.Error.StackTrace.Should().BeEquivalentTo("f", "g", "h");
+        Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.StackTrace
+            .Select(layer => layer.Func.Name).Should().BeEquivalentTo("f", "g", "h");
     }
 }

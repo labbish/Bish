@@ -19,6 +19,8 @@ public class Test
     protected static BishRange R(params int[] args) =>
         (BishRange)BishRange.StaticType.CreateInstance(args.Select(I).ToList<BishObject>());
 
+    protected static BishType T(string name, params List<BishType> parents) => new(name, parents);
+
     protected static readonly BishNull Null = BishNull.Instance;
 }
 

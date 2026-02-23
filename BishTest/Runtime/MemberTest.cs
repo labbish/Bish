@@ -7,10 +7,10 @@ public class MemberTest : Test
 
     public MemberTest()
     {
-        T1 = new BishType("T1");
+        T1 = T("T1");
         T1.Members.Add("a", I(0));
         T1.Members.Add("b", I(0));
-        T2 = new BishType("T2", [T1]);
+        T2 = T("T2", [T1]);
         T2.Members.Add("a", I(1));
         T2.Members.Add("c", I(1));
         X = new BishObject(T2);

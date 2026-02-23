@@ -125,6 +125,14 @@ public class BishException(BishError error) : Exception
         }
     );
 
+    public static BishException OfArgument_MRO(BishType type) => OfArgument(
+        $"Cannot create Consistent MRO for {type}",
+        new Dictionary<string, BishObject>
+        {
+            ["type"] = type
+        }
+    );
+
     public static BishException OfName(string name) => Create(BishError.NameErrorType,
         $"Name {name} is not defined", new Dictionary<string, BishObject>
         {

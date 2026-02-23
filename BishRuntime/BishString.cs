@@ -42,12 +42,14 @@ public class BishString(string value) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishString a) => new(a.Value != "");
 
-    private int CheckedIndex(int index) => index >= -Value.Length && index < Value.Length
-        ? index < 0 ? Value.Length + index : index
-        : throw BishException.OfArgument_IndexOutOfBound(this, index);
-
     [Builtin("op")]
-    public static BishString GetIndex(BishString a, BishInt b) => new(a.Value[a.CheckedIndex(b.Value)]);
+    public static BishString GetIndex(BishString self, BishObject x) => x switch
+    {
+        BishInt index => new BishString(self.Value[index.Value.Regularize(self.Value.Length)]),
+        BishRange range => new BishString(string.Join("",
+            range.Regularize(self.Value.Length).ToInts().Select(i => GetIndex(self, i)))),
+        _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
+    };
 
     [Builtin("op")]
     public static BishStringIterator Iter(BishString self) => new(self.Value);

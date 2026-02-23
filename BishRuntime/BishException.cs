@@ -108,12 +108,12 @@ public class BishException(BishError error) : Exception
             ["operator"] = new BishString(op) // TODO: record the arg types after we have an builtin list
         });
 
-    public static BishException OfArgument_IndexOutOfBound(BishObject obj, int index) => OfArgument(
-        $"Index out of bound: accessing index {index} on {obj}",
+    public static BishException OfArgument_IndexOutOfBound(int length, int index) => OfArgument(
+        $"Index out of bound: accessing index {index} with length {length}",
         new Dictionary<string, BishObject>
         {
             ["index"] = new BishInt(index),
-            ["object"] = obj
+            ["length"] = new BishInt(length)
         }
     );
 

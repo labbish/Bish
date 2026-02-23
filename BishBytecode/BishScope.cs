@@ -2,10 +2,12 @@
 
 namespace BishBytecode;
 
-public class BishScope(BishScope? outer = null)
+public class BishScope
 {
-    public BishScope? Outer => outer;
+    public readonly BishScope? Outer;
     public readonly Dictionary<string, BishObject> Vars = [];
+
+    internal BishScope(BishScope? outer = null) => Outer = outer;
 
     public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
 
@@ -35,6 +37,8 @@ public class BishScope(BishScope? outer = null)
             ["num"] = BishNum.StaticType,
             ["bool"] = BishBool.StaticType,
             ["string"] = BishBool.StaticType,
+            ["list"] = BishList.StaticType,
+            ["range"] = BishRange.StaticType,
             ["true"] = new BishBool(true),
             ["false"] = new BishBool(false),
             ["null"] = BishNull.Instance, // TODO: maybe make these const
@@ -43,7 +47,9 @@ public class BishScope(BishScope? outer = null)
             ["ArgumentError"] = BishError.ArgumentErrorType,
             ["TypeError"] = BishError.TypeErrorType,
             ["NullError"] = BishError.NullErrorType,
-            ["NameError"] = BishError.NameErrorType
+            ["NameError"] = BishError.NameErrorType,
+            ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
+            ["IterationStop"] = BishError.IteratorStopType
         }
     };
 }

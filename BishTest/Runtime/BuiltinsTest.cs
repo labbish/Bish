@@ -131,18 +131,31 @@ public class BuiltinsTest : Test
         range.GetMember("next").Call([]).Should().BeEquivalentTo(I(4));
         range.GetMember("next").Call([]).Should().BeEquivalentTo(I(7));
         Action(() => range.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
+
         range.GetMember("start").Should().BeEquivalentTo(I(1));
         range.GetMember("end").Should().BeEquivalentTo(I(10));
         range.GetMember("step").Should().BeEquivalentTo(I(3));
+
+        var reversed = BishRange.StaticType.CreateInstance([I(10), I(1), I(-3)]);
+        reversed.GetMember("next").Call([]).Should().BeEquivalentTo(I(10));
+        reversed.GetMember("next").Call([]).Should().BeEquivalentTo(I(7));
+        reversed.GetMember("next").Call([]).Should().BeEquivalentTo(I(4));
+        Action(() => reversed.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
+
         BishRange.StaticType.CreateInstance([I(1), I(10), I(1)]).Should()
             .BeEquivalentTo(BishRange.StaticType.CreateInstance([I(1), I(10)]));
+        BishRange.StaticType.CreateInstance([I(0), I(10), I(1)]).Should()
+            .BeEquivalentTo(BishRange.StaticType.CreateInstance([I(10)]));
+
+        Action(() => BishRange.StaticType.CreateInstance([I(0), I(0), I(0)])).Should()
+            .Excepts(BishError.ArgumentErrorType);
     }
 
     [Fact]
     public void TestList()
     {
         BishList.StaticType.CreateInstance([]).Should().BeEquivalentTo(new BishList([]));
-        
+
         var a = I(0);
         var b = S("x");
         var c = B(true);
@@ -172,5 +185,32 @@ public class BuiltinsTest : Test
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(c);
         Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
         l.Should().BeEquivalentTo(L(a, b, c));
+
+        BishList.StaticType.CreateInstance([BishRange.StaticType.CreateInstance([I(5)])]).Should()
+            .BeEquivalentTo(L(I(0), I(1), I(2), I(3), I(4)));
+    }
+
+    [Fact]
+    public void TestRangeIndex()
+    {
+        var s = S("0123456789");
+        BishOperator.Call("op_GetIndex", [s, R(2, 7)]).Should().BeEquivalentTo(S("23456"));
+        BishOperator.Call("op_GetIndex", [s, R(5, -2)]).Should().BeEquivalentTo(S("567"));
+        BishOperator.Call("op_GetIndex", [s, R(2, -1, 2)]).Should().BeEquivalentTo(S("2468"));
+        BishOperator.Call("op_GetIndex", [s, R(8, 3, -1)]).Should().BeEquivalentTo(S("87654"));
+
+        var l = L(I(0), I(1), I(2), I(3), I(4), I(5), I(6), I(7), I(8), I(9));
+        BishOperator.Call("op_GetIndex", [l, R(2, 7)]).Should().BeEquivalentTo(L(I(2), I(3), I(4), I(5), I(6)));
+        BishOperator.Call("op_GetIndex", [l, R(5, -2)]).Should().BeEquivalentTo(L(I(5), I(6), I(7)));
+        BishOperator.Call("op_GetIndex", [l, R(2, -1, 2)]).Should().BeEquivalentTo(L(I(2), I(4), I(6), I(8)));
+        BishOperator.Call("op_GetIndex", [l, R(8, 3, -1)]).Should().BeEquivalentTo(L(I(8), I(7), I(6), I(5), I(4)));
+        
+        BishOperator.Call("op_SetIndex", [l, R(2, 7), L(Null, Null, Null)]).Should().BeEquivalentTo(L(Null, Null, Null));
+        l.Should().BeEquivalentTo(L(I(0), I(1), Null, Null, Null, I(7), I(8), I(9)));
+        BishOperator.Call("op_SetIndex", [l, R(6, 0, -2), L(S("a"), S("b"), S("c"))]);
+        l.Should().BeEquivalentTo(L(I(0), I(1), S("c"), Null, S("b"), I(7), S("a"), I(9)));
+        
+        BishOperator.Call("op_DelIndex", [l, R(1, 8, 3)]).Should().BeEquivalentTo(L(I(1), S("b"), I(9)));
+        l.Should().BeEquivalentTo(L(I(0), S("c"), Null, I(7), S("a")));
     }
 }

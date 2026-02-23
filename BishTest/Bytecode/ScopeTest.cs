@@ -2,17 +2,17 @@
 
 public class ScopeTest : Test
 {
-    public readonly BishScope Inner, Outer;
+    public readonly BishScope Outer, Inner;
 
     public ScopeTest()
     {
-        Inner = BishScope.Globals();
-        Inner.DefVar("a", I(0));
-        Inner.DefVar("b", I(0));
+        Outer = BishScope.Globals();
+        Outer.DefVar("a", I(0));
+        Outer.DefVar("b", I(0));
 
-        Outer = new BishScope(Inner);
-        Outer.DefVar("a", I(1));
-        Outer.DefVar("c", I(1));
+        Inner = Outer.CreateInner();
+        Inner.DefVar("a", I(1));
+        Inner.DefVar("c", I(1));
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class ScopeTest : Test
             new Bytecodes.Get("c"),
             new Bytecodes.Get("b"),
             new Bytecodes.Get("a")
-        ], Outer);
+        ], Inner);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(I(1)); // a
         frame.Stack.Pop().Should().BeEquivalentTo(I(0)); // b
@@ -39,14 +39,14 @@ public class ScopeTest : Test
             // c := 2
             new Bytecodes.Int(2),
             new Bytecodes.Def("c")
-        ], Outer);
+        ], Inner);
         frame.Execute();
-        Inner.TryGetVar("a").Should().BeEquivalentTo(I(0));
-        Inner.TryGetVar("b").Should().BeEquivalentTo(I(0));
-        Inner.TryGetVar("c").Should().BeNull();
-        Outer.TryGetVar("a").Should().BeEquivalentTo(I(1));
-        Outer.TryGetVar("b").Should().BeEquivalentTo(I(2));
-        Outer.TryGetVar("c").Should().BeEquivalentTo(I(2));
+        Outer.TryGetVar("a").Should().BeEquivalentTo(I(0));
+        Outer.TryGetVar("b").Should().BeEquivalentTo(I(0));
+        Outer.TryGetVar("c").Should().BeNull();
+        Inner.TryGetVar("a").Should().BeEquivalentTo(I(1));
+        Inner.TryGetVar("b").Should().BeEquivalentTo(I(2));
+        Inner.TryGetVar("c").Should().BeEquivalentTo(I(2));
     }
 
     [Fact]
@@ -59,14 +59,14 @@ public class ScopeTest : Test
             // c = 2
             new Bytecodes.Int(2),
             new Bytecodes.Set("c")
-        ], Outer);
+        ], Inner);
         frame.Execute();
-        Inner.TryGetVar("a").Should().BeEquivalentTo(I(0));
-        Inner.TryGetVar("b").Should().BeEquivalentTo(I(2));
-        Inner.TryGetVar("c").Should().BeNull();
-        Outer.TryGetVar("a").Should().BeEquivalentTo(I(1));
+        Outer.TryGetVar("a").Should().BeEquivalentTo(I(0));
         Outer.TryGetVar("b").Should().BeEquivalentTo(I(2));
-        Outer.TryGetVar("c").Should().BeEquivalentTo(I(2));
+        Outer.TryGetVar("c").Should().BeNull();
+        Inner.TryGetVar("a").Should().BeEquivalentTo(I(1));
+        Inner.TryGetVar("b").Should().BeEquivalentTo(I(2));
+        Inner.TryGetVar("c").Should().BeEquivalentTo(I(2));
     }
 
     [Fact]
@@ -74,13 +74,13 @@ public class ScopeTest : Test
     {
         var frame = new BishFrame([
             new Bytecodes.Del("a")
-        ], Outer);
+        ], Inner);
         frame.Execute();
-        Inner.TryGetVar("a").Should().BeEquivalentTo(I(0));
-        Inner.TryGetVar("b").Should().BeEquivalentTo(I(0));
-        Inner.TryGetVar("c").Should().BeNull();
         Outer.TryGetVar("a").Should().BeEquivalentTo(I(0));
         Outer.TryGetVar("b").Should().BeEquivalentTo(I(0));
-        Outer.TryGetVar("c").Should().BeEquivalentTo(I(1));
+        Outer.TryGetVar("c").Should().BeNull();
+        Inner.TryGetVar("a").Should().BeEquivalentTo(I(0));
+        Inner.TryGetVar("b").Should().BeEquivalentTo(I(0));
+        Inner.TryGetVar("c").Should().BeEquivalentTo(I(1));
     }
 }

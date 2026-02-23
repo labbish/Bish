@@ -112,5 +112,7 @@ public static class BishBuiltinIteratorBinder
         staticType.SetMember("next",
             new BishFunc([new BishArg("iter", staticType)],
                 args => (BishObject?)next.Invoke(args[0], []) ?? throw BishException.OfIteratorStop()));
+        staticType.SetMember("op_Iter", new BishFunc([new BishArg("self", staticType)],
+            args => args[0]));
     }
 }

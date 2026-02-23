@@ -11,7 +11,12 @@ public class BishList(List<BishObject> list) : BishObject
     public static BishList Create() => new([]);
 
     [Builtin("hook")]
-    public static void Init(BishList self, [DefaultNull] BishList? other) => self.List = other?.List.ToList() ?? [];
+    public static void Init(BishList self, [DefaultNull] BishObject? iterable) => self.List = iterable switch
+    {
+        BishList list => list.List.ToList(),
+        not null => iterable.ToEnumerable().ToList(),
+        _ => self.List
+    };
 
     [Builtin("op")]
     public static BishList Add(BishList a, BishList b) => new([..a.List, ..b.List]);
@@ -41,19 +46,57 @@ public class BishList(List<BishObject> list) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishList a) => new(a.List.Count != 0);
 
-    private int CheckedIndex(int index) => index >= -List.Count && index < List.Count
-        ? index < 0 ? List.Count + index : index
-        : throw BishException.OfArgument_IndexOutOfBound(this, index);
+    [Builtin("op")]
+    public static BishObject GetIndex(BishList self, BishObject x) => x switch
+    {
+        BishInt index => self.List[index.Value.Regularize(self.List.Count)],
+        BishRange range => new BishList(range.Regularize(self.List.Count).ToInts().Select(i => GetIndex(self, i)).ToList()),
+        _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
+    };
 
     [Builtin("op")]
-    public static BishObject GetIndex(BishList a, BishInt b) => a.List[a.CheckedIndex(b.Value)];
+    public static BishObject SetIndex(BishList self, BishObject x, BishObject value)
+    {
+        switch (x)
+        {
+            case BishInt index: self.List[index.Value.Regularize(self.List.Count)] = value; break;
+            case BishRange range:
+                range = range.Regularize(self.List.Count);
+                if (value is not BishList list) throw BishException.OfType_Argument(value, StaticType);
+                if (range.Step == 1)
+                {
+                    self.List = [..self.List[..range.Start], ..list.List, ..self.List[range.End..]];
+                    break;
+                }
+                var indexes = range.ToInts().ToList();
+                if (indexes.Count != list.List.Count)
+                    throw BishException.OfArgument(
+                        $"Setting {indexes.Count} indexes with {list.List.Count} elements", []);
+                foreach (var (i, obj) in indexes.Zip(list.List))
+                    SetIndex(self, i, obj);
+                break;
+            default: throw BishException.OfType_Argument(self, BishInt.StaticType);
+        }
+
+        return value;
+    }
 
     [Builtin("op")]
-    public static BishObject SetIndex(BishList a, BishInt b, BishObject value) =>
-        a.List[a.CheckedIndex(b.Value)] = value;
+    public static BishObject DelIndex(BishList self, BishObject x)
+    {
+        var result = GetIndex(self, x);
+        switch (x)
+        {
+            case BishInt index: self.List.RemoveAt(index.Value); break;
+            case BishRange range:
+                var indexes = range.ToInts().Select(i => i.Value).ToList();
+                self.List = self.List.Where((_, i) => !indexes.Contains(i)).ToList();
+                break;
+            default: throw BishException.OfType_Argument(self, BishInt.StaticType);
+        }
 
-    [Builtin("op")]
-    public static void DelIndex(BishList a, BishInt b) => a.List.RemoveAt(a.CheckedIndex(b.Value));
+        return result;
+    }
 
     [Builtin("op")]
     public static BishListIterator Iter(BishList self) => new(self.List);
@@ -64,7 +107,7 @@ public class BishList(List<BishObject> list) : BishObject
     [Builtin(special: false)]
     public static void Add(BishList self, BishObject item) => self.List.Add(item);
 
-    // TODO: some more methods
+// TODO: some more methods
 
     static BishList() => BishBuiltinBinder.Bind<BishList>();
 }

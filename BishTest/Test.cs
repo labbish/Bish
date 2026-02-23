@@ -15,6 +15,10 @@ public class Test
     protected static BishString S(string s) => new(s);
     protected static BishBool B(bool b) => new(b);
     protected static BishList L(params List<BishObject> list) => new(list);
+
+    protected static BishRange R(params int[] args) =>
+        (BishRange)BishRange.StaticType.CreateInstance(args.Select(I).ToList<BishObject>());
+
     protected static readonly BishNull Null = BishNull.Instance;
 }
 

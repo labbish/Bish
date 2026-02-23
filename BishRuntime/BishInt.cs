@@ -12,11 +12,7 @@ public class BishInt(int value) : BishObject
     public static BishInt Create() => new(0);
 
     [Builtin("hook")]
-    public static BishNull Init(BishInt self, [DefaultNull] BishInt? other)
-    {
-        self.Value = other?.Value ?? 0;
-        return BishNull.Instance;
-    }
+    public static void Init(BishInt self, [DefaultNull] BishInt? other) => self.Value = other?.Value ?? 0;
 
     [Builtin("op")]
     public static BishInt Pos(BishInt a) => new(+a.Value);
@@ -37,10 +33,7 @@ public class BishInt(int value) : BishObject
     public static BishNum Div(BishInt a, BishInt b) => new((double)a.Value / b.Value);
 
     [Builtin("op")]
-    public static BishInt Mod(BishInt a, BishInt b)
-    {
-        return b.Value != 0 ? new BishInt(a.Value % b.Value) : throw BishException.OfZeroDivision();
-    }
+    public static BishInt Mod(BishInt a, BishInt b) => b.Value != 0 ? new BishInt(a.Value % b.Value) : throw BishException.OfZeroDivision();
 
     [Builtin("op")]
     public static BishNum Pow(BishInt a, BishInt b) => new(Math.Pow(a.Value, b.Value));
@@ -77,18 +70,14 @@ public class BishRange(int start, int end, int step) : BishObject
     public new static readonly BishType StaticType = new("range");
 
     [Builtin("hook")]
-    public static BishRange Create()
-    {
-        return new BishRange(0, 0, 0);
-    }
+    public static BishRange Create() => new(0, 0, 0);
 
     [Builtin("hook")]
-    public static BishNull Init(BishRange self, BishInt start, BishInt end, [DefaultNull] BishInt? step)
+    public static void Init(BishRange self, BishInt start, BishInt end, [DefaultNull] BishInt? step)
     {
         self.Start = start.Value;
         self.End = end.Value;
         self.Step = step?.Value ?? 1;
-        return BishNull.Instance;
     }
 
     [Iter]
@@ -102,26 +91,17 @@ public class BishRange(int start, int end, int step) : BishObject
     }
 
     [Builtin("hook")]
-    public static BishInt Get_start(BishRange self)
-    {
-        return new BishInt(self.Start);
-    }
+    public static BishInt Get_start(BishRange self) => new(self.Start);
 
     [Builtin("hook")]
-    public static BishInt Get_end(BishRange self)
-    {
-        return new BishInt(self.End);
-    }
+    public static BishInt Get_end(BishRange self) => new(self.End);
 
     [Builtin("hook")]
-    public static BishInt Get_step(BishRange self)
-    {
-        return new BishInt(self.Step);
-    }
+    public static BishInt Get_step(BishRange self) => new(self.Step);
 
     static BishRange()
     {
         BishBuiltinIteratorBinder.Bind<BishRange>();
         BishBuiltinBinder.Bind<BishRange>();
     }
-}
+} // TODO: indexing string / list with range

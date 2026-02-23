@@ -7,7 +7,7 @@ public class ClassTest : Test
     [Fact]
     public void TestClass()
     {
-        Scope.DefVar("a", new BishInt(1));
+        Scope.DefVar("a", I(1));
         var frame = new BishFrame([
             // class C {
             new Bytecodes.ClassStart("C"),
@@ -52,8 +52,8 @@ public class ClassTest : Test
             new Bytecodes.Def("x")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("c").GetMember("x").Should().BeEquivalentTo(new BishInt(1));
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
+        Scope.GetVar("c").GetMember("x").Should().BeEquivalentTo(I(1));
+        Scope.GetVar("x").Should().BeEquivalentTo(I(1));
     }
 
     [Fact]

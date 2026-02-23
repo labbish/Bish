@@ -22,7 +22,7 @@ public class CallTest : Test
             new Bytecodes.Call(args.Length)
         ], Scope);
         frame.Execute();
-        frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(result));
+        frame.Stack.Pop().Should().BeEquivalentTo(I(result));
     }
 
     [Fact]
@@ -34,6 +34,6 @@ public class CallTest : Test
             new Bytecodes.Op("op_Add", 2)
         ]);
         frame.Execute();
-        frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(3));
+        frame.Stack.Pop().Should().BeEquivalentTo(I(3));
     }
 }

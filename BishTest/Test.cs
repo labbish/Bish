@@ -9,6 +9,13 @@ namespace BishTest;
 public class Test
 {
     protected static Action Action(Action action) => action;
+
+    protected static BishInt I(int x) => new(x);
+    protected static BishNum N(double x) => new(x);
+    protected static BishString S(string s) => new(s);
+    protected static BishBool B(bool b) => new(b);
+    protected static BishList L(params List<BishObject> list) => new(list);
+    protected static readonly BishNull Null = BishNull.Instance;
 }
 
 public static class BishExceptionAssertion

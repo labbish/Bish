@@ -12,11 +12,7 @@ public class BishBool(bool value) : BishObject
     public static BishBool Create() => new(false);
 
     [Builtin("hook")]
-    public static BishNull Init(BishBool self, [DefaultNull] BishBool? other)
-    {
-        self.Value = other?.Value ?? false;
-        return BishNull.Instance;
-    }
+    public static void Init(BishBool self, [DefaultNull] BishBool? other) => self.Value = other?.Value ?? false;
 
     [Builtin("op")]
     public static BishBool Invert(BishBool a) => new(!a.Value);

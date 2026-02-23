@@ -6,52 +6,52 @@ public class MemberHookTest : Test
 
     public MemberHookTest()
     {
-        X.Members.Add("a", new BishInt(0));
+        X.Members.Add("a", I(0));
     }
 
     [Fact]
     public void TestObjectGetHook()
     {
-        X.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
-        X.TryGetMember("b").Should().BeEquivalentTo(new BishString("get"));
+        X.TryGetMember("a").Should().BeEquivalentTo(I(0));
+        X.TryGetMember("b").Should().BeEquivalentTo(S("get"));
     }
 
     [Fact]
     public void TestObjectSetHook()
     {
-        X.SetMember("a", BishNull.Instance).Should().BeEquivalentTo(new BishString("set"));
-        X.SetMember("b", BishNull.Instance).Should().BeEquivalentTo(new BishString("set"));
+        X.SetMember("a", Null).Should().BeEquivalentTo(S("set"));
+        X.SetMember("b", Null).Should().BeEquivalentTo(S("set"));
         X.Members.Should().HaveCount(1);
-        X.Members["a"].Should().BeEquivalentTo(new BishInt(0));
+        X.Members["a"].Should().BeEquivalentTo(I(0));
     }
 
 
     [Fact]
     public void TestObjectDelHook()
     {
-        X.TryDelMember("a").Should().BeEquivalentTo(new BishInt(0));
-        X.TryDelMember("b").Should().BeEquivalentTo(new BishString("del"));
+        X.TryDelMember("a").Should().BeEquivalentTo(I(0));
+        X.TryDelMember("b").Should().BeEquivalentTo(S("del"));
         X.Members.Should().HaveCount(0);
     }
 
     [Fact]
     public void TestMemberGetter()
     {
-        Y.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
+        Y.TryGetMember("a").Should().BeEquivalentTo(I(0));
     }
 
     [Fact]
     public void TestMemberSetter()
     {
-        Y.SetMember("a", new BishInt(2)).Should().BeEquivalentTo(BishNull.Instance);
-        Y.TryGetMember("a").Should().BeEquivalentTo(new BishInt(2));
+        Y.SetMember("a", I(2)).Should().BeEquivalentTo(Null);
+        Y.TryGetMember("a").Should().BeEquivalentTo(I(2));
     }
 
     [Fact]
     public void TestMemberDeller()
     {
-        Y.TryDelMember("a").Should().BeEquivalentTo(BishNull.Instance);
-        Y.TryGetMember("a").Should().BeEquivalentTo(new BishInt(0));
+        Y.TryDelMember("a").Should().BeEquivalentTo(Null);
+        Y.TryGetMember("a").Should().BeEquivalentTo(I(0));
     }
 
     [Fact]
@@ -96,29 +96,16 @@ file class U : BishObject
     public new static readonly BishType StaticType = new("U");
 
     [Builtin("hook")]
-    public static U Create()
-    {
-        return new U();
-    }
+    public static U Create() => new();
 
     [Builtin("hook")]
-    public static BishInt Get_a(U self)
-    {
-        return new BishInt(self.A);
-    }
+    public static BishInt Get_a(U self) => new(self.A);
 
     [Builtin("hook")]
-    public static BishNull Set_a(U self, BishInt value)
-    {
-        self.A = value.Value;
-        return BishNull.Instance;
-    }
+    public static void Set_a(U self, BishInt value) => self.A = value.Value;
 
     [Builtin("hook")]
-    public static BishNull Del_a(U self)
-    {
-        return BishNull.Instance;
-    }
+    public static BishNull Del_a(U self) => BishNull.Instance;
 
     static U()
     {

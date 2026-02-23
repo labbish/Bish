@@ -42,7 +42,7 @@ public class ErrorTest : Test
     [Fact]
     public void TestTryThrownFinally()
     {
-        Scope.DefVar("x", new BishInt(0));
+        Scope.DefVar("x", I(0));
         var frame = new BishFrame([
             // try {
             new Bytecodes.TryStart("#"),
@@ -61,13 +61,13 @@ public class ErrorTest : Test
             new Bytecodes.FinallyEnd("#")
         ], Scope);
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
+        Scope.GetVar("x").Should().BeEquivalentTo(I(1));
     }
 
     [Fact]
     public void TestTryReturned()
     {
-        Scope.DefVar("x", new BishInt(0));
+        Scope.DefVar("x", I(0));
         var frame = new BishFrame([
             // try {
             new Bytecodes.TryStart("#"),
@@ -83,14 +83,14 @@ public class ErrorTest : Test
             // }
             new Bytecodes.FinallyEnd("#")
         ], Scope);
-        frame.Execute().Should().BeEquivalentTo(new BishInt(0));
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
+        frame.Execute().Should().BeEquivalentTo(I(0));
+        Scope.GetVar("x").Should().BeEquivalentTo(I(1));
     }
 
     [Fact]
     public void TestCatchThrown()
     {
-        Scope.DefVar("x", new BishInt(0));
+        Scope.DefVar("x", I(0));
         var frame = new BishFrame([
             // try {
             new Bytecodes.TryStart("#"),
@@ -118,13 +118,13 @@ public class ErrorTest : Test
             new Bytecodes.FinallyEnd("#")
         ], Scope);
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("other");
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
+        Scope.GetVar("x").Should().BeEquivalentTo(I(1));
     }
 
     [Fact]
     public void TestCatchReturned()
     {
-        Scope.DefVar("x", new BishInt(0));
+        Scope.DefVar("x", I(0));
         var frame = new BishFrame([
             // try {
             new Bytecodes.TryStart("#"),
@@ -149,8 +149,8 @@ public class ErrorTest : Test
             // }
             new Bytecodes.FinallyEnd("#")
         ], Scope);
-        frame.Execute().Should().BeEquivalentTo(new BishInt(0));
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishInt(1));
+        frame.Execute().Should().BeEquivalentTo(I(0));
+        Scope.GetVar("x").Should().BeEquivalentTo(I(1));
     }
 
     [Fact]
@@ -238,6 +238,6 @@ public class ErrorTest : Test
             new Bytecodes.Call(0)
         ]);
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType)
-            .Which.Error.StackTrace.Should().BeEquivalentTo(["f", "g", "h"]);
+            .Which.Error.StackTrace.Should().BeEquivalentTo("f", "g", "h");
     }
 }

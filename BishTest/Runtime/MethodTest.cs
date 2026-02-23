@@ -2,62 +2,60 @@
 
 public class MethodTest : Test
 {
-    public readonly BishObject X = T.StaticType.CreateInstance([new BishString("x")]);
+    public readonly BishObject X = T.StaticType.CreateInstance([S("x")]);
 
     private void Inject() =>
-        X.Members.Add("f", new BishFunc([new BishArg("_", Default: BishNull.Instance)], _ => new BishInt(1)));
+        X.Members.Add("f", new BishFunc([new BishArg("_", Default: Null)], _ => I(1)));
 
     [Fact]
     public void TestObjectInitialization()
     {
         X.Should().BeEquivalentTo(new T("x"));
-        T.StaticType.Call([new BishString("y")]).Should().BeEquivalentTo(new T("y"));
+        T.StaticType.Call([S("y")]).Should().BeEquivalentTo(new T("y"));
     }
 
     [Fact]
     public void TestMethodTryCall()
     {
         Inject();
-        new BishInt(0).TryCall([]).Should().BeNull();
-        X.TryCall([]).Should().BeEquivalentTo(new BishInt(0));
-        Action(() => X.TryCall([BishNull.Instance])).Should().Excepts(BishError.ArgumentErrorType);
-        X.GetMember("f").TryCall([]).Should().BeEquivalentTo(new BishInt(1));
-        X.GetMember("f").TryCall([BishNull.Instance]).Should().BeEquivalentTo(new BishInt(1));
+        I(0).TryCall([]).Should().BeNull();
+        X.TryCall([]).Should().BeEquivalentTo(I(0));
+        Action(() => X.TryCall([Null])).Should().Excepts(BishError.ArgumentErrorType);
+        X.GetMember("f").TryCall([]).Should().BeEquivalentTo(I(1));
+        X.GetMember("f").TryCall([Null]).Should().BeEquivalentTo(I(1));
         Action(() => X.GetMember("g").TryCall([])).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => X.GetMember("g").TryCall([BishNull.Instance])).Should().Excepts(BishError.TypeErrorType);
+        Action(() => X.GetMember("g").TryCall([Null])).Should().Excepts(BishError.TypeErrorType);
         Action(() => T.StaticType.GetMember("g").TryCall([])).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => T.StaticType.GetMember("g").TryCall([BishNull.Instance, X])).Should()
-            .Excepts(BishError.TypeErrorType);
-        X.GetMember("toString").TryCall([]).Should().BeEquivalentTo(new BishString("T(x)"));
-        T.StaticType.GetMember("name").Should().BeEquivalentTo(new BishString("T"));
+        Action(() => T.StaticType.GetMember("g").TryCall([Null, X])).Should().Excepts(BishError.TypeErrorType);
+        X.GetMember("toString").TryCall([]).Should().BeEquivalentTo(S("T(x)"));
+        T.StaticType.GetMember("name").Should().BeEquivalentTo(S("T"));
     }
 
     [Fact]
     public void TestMethodCall()
     {
         Inject();
-        Action(() => new BishInt(0).Call([])).Should().Excepts(BishError.TypeErrorType);
-        X.Call([]).Should().BeEquivalentTo(new BishInt(0));
-        Action(() => X.Call([BishNull.Instance])).Should().Excepts(BishError.ArgumentErrorType);
-        X.GetMember("f").Call([]).Should().BeEquivalentTo(new BishInt(1));
-        X.GetMember("f").Call([BishNull.Instance]).Should().BeEquivalentTo(new BishInt(1));
+        Action(() => I(0).Call([])).Should().Excepts(BishError.TypeErrorType);
+        X.Call([]).Should().BeEquivalentTo(I(0));
+        Action(() => X.Call([Null])).Should().Excepts(BishError.ArgumentErrorType);
+        X.GetMember("f").Call([]).Should().BeEquivalentTo(I(1));
+        X.GetMember("f").Call([Null]).Should().BeEquivalentTo(I(1));
         Action(() => X.GetMember("g").Call([])).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => X.GetMember("g").Call([BishNull.Instance])).Should().Excepts(BishError.TypeErrorType);
+        Action(() => X.GetMember("g").Call([Null])).Should().Excepts(BishError.TypeErrorType);
         Action(() => T.StaticType.GetMember("g").Call([])).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => T.StaticType.GetMember("g").Call([BishNull.Instance, X])).Should()
-            .Excepts(BishError.TypeErrorType);
-        X.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("T(x)"));
-        T.StaticType.GetMember("name").Should().BeEquivalentTo(new BishString("T"));
+        Action(() => T.StaticType.GetMember("g").Call([Null, X])).Should().Excepts(BishError.TypeErrorType);
+        X.GetMember("toString").Call([]).Should().BeEquivalentTo(S("T(x)"));
+        T.StaticType.GetMember("name").Should().BeEquivalentTo(S("T"));
     }
 
     [Fact]
     public void TestSpecialBindMethod()
     {
-        var x = new BishInt(1);
-        // x.Type.GetMember("toString").Call([x]).Should().BeEquivalentTo(new BishString("1"));
-        x.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("1"));
-        BishNull.Instance.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("null"));
-        x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(new BishString("[Type int]"));
+        var x = I(1);
+        // x.Type.GetMember("toString").Call([x]).Should().BeEquivalentTo(S("1"));
+        x.GetMember("toString").Call([]).Should().BeEquivalentTo(S("1"));
+        Null.GetMember("toString").Call([]).Should().BeEquivalentTo(S("null"));
+        x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(S("[Type int]"));
     }
 }
 
@@ -77,10 +75,7 @@ file class T(string tag) : BishObject
     public static BishInt G(T self, T _) => new(0);
 
     [Builtin("hook")]
-    public static T Create()
-    {
-        return new T("");
-    }
+    public static T Create() => new("");
 
     [Builtin("hook")]
     public static T Init(T self, BishString tag)
@@ -94,8 +89,5 @@ file class T(string tag) : BishObject
 
     static T() => BishBuiltinBinder.Bind<T>();
 
-    public override string ToString()
-    {
-        return $"T({Tag})";
-    }
+    public override string ToString() => $"T({Tag})";
 }

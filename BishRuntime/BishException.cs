@@ -114,13 +114,7 @@ public class BishException(BishError error) : Exception
             ["name"] = new BishString(name)
         });
 
-    public static BishException OfZeroDivision()
-    {
-        return Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
-    }
+    public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
 
-    public static BishException OfIteratorStop()
-    {
-        return Create(BishError.IteratorStopType, "Iterator stopped", []);
-    }
+    public static BishException OfIteratorStop() => Create(BishError.IteratorStopType, "Iterator stopped", []);
 }

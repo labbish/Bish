@@ -16,17 +16,10 @@ public class BishString(string value) : BishObject
     public static BishString Create() => new("");
 
     [Builtin("hook")]
-    public static BishNull Init(BishString self, [DefaultNull] BishString? other)
-    {
-        self.Value = other?.Value ?? "";
-        return BishNull.Instance;
-    }
+    public static void Init(BishString self, [DefaultNull] BishString? other) => self.Value = other?.Value ?? "";
 
     [Builtin("op")]
-    public static BishString Add(BishString a, BishString b)
-    {
-        return new BishString(a.Value + b.Value);
-    }
+    public static BishString Add(BishString a, BishString b) => new(a.Value + b.Value);
 
     [Builtin("op")]
     public static BishString Mul(BishObject a, BishObject b)
@@ -36,12 +29,10 @@ public class BishString(string value) : BishObject
         throw BishException.OfType_Argument(a, StaticType);
     }
 
-    private static BishString MulHelper(BishString s, BishObject b)
-    {
-        return b is BishInt x
+    private static BishString MulHelper(BishString s, BishObject b) =>
+        b is BishInt x
             ? new BishString(string.Concat(Enumerable.Repeat(s.Value, x.Value)))
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
-    }
 
     public override string ToString() => Value;
 
@@ -49,28 +40,16 @@ public class BishString(string value) : BishObject
     public static BishBool Eq(BishString a, BishString b) => new(a.Value == b.Value);
 
     [Builtin("op")]
-    public static BishBool Bool(BishString a)
-    {
-        return new BishBool(a.Value != "");
-    }
+    public static BishBool Bool(BishString a) => new(a.Value != "");
 
     [Builtin("op")]
-    public static BishString GetIndex(BishString a, BishInt b)
-    {
-        return new BishString(a.Value[b.Value]);
-    }
+    public static BishString GetIndex(BishString a, BishInt b) => new(a.Value[b.Value]);
 
     [Builtin("op")]
-    public static BishStringIterator Iter(BishString self)
-    {
-        return new BishStringIterator(self.Value);
-    }
+    public static BishStringIterator Iter(BishString self) => new(self.Value);
 
     [Builtin("hook")]
-    public static BishInt Get_length(BishString self)
-    {
-        return new BishInt(self.Value.Length);
-    }
+    public static BishInt Get_length(BishString self) => new(self.Value.Length);
 
     // TODO: some more string methods
 
@@ -87,13 +66,7 @@ public class BishStringIterator(string value) : BishObject
     public new static readonly BishType StaticType = new("string.iter");
 
     [Iter]
-    public BishString? Next()
-    {
-        return Index < Value.Length ? new BishString(Value[Index++]) : null;
-    }
+    public BishString? Next() => Index < Value.Length ? new BishString(Value[Index++]) : null;
 
-    static BishStringIterator()
-    {
-        BishBuiltinIteratorBinder.Bind<BishStringIterator>();
-    }
+    static BishStringIterator() => BishBuiltinIteratorBinder.Bind<BishStringIterator>();
 }

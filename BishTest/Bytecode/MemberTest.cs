@@ -7,8 +7,8 @@ public class MemberTest : Test
     public MemberTest()
     {
         var x = new BishObject();
-        x.SetMember("a", new BishInt(1));
-        x.SetMember("b", new BishInt(2));
+        x.SetMember("a", I(1));
+        x.SetMember("b", I(2));
         Scope.DefVar("x", x);
     }
 
@@ -20,7 +20,7 @@ public class MemberTest : Test
             new Bytecodes.GetMember("a")
         ], Scope);
         frame.Execute();
-        frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(1));
+        frame.Stack.Pop().Should().BeEquivalentTo(I(1));
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class MemberTest : Test
         ], Scope);
         frame.Execute();
         frame.Stack.Should().BeEmpty();
-        frame.Scope.GetVar("x").GetMember("a").Should().BeEquivalentTo(new BishInt(0));
+        frame.Scope.GetVar("x").GetMember("a").Should().BeEquivalentTo(I(0));
     }
 
     [Fact]

@@ -14,11 +14,7 @@ public class BishNum(double value) : BishObject
     public static BishNum Create() => new(0);
 
     [Builtin("hook")]
-    public static BishNull Init(BishNum self, [DefaultNull] BishNum? other)
-    {
-        self.Value = other?.Value ?? 0;
-        return BishNull.Instance;
-    }
+    public static void Init(BishNum self, [DefaultNull] BishNum? other) => self.Value = other?.Value ?? 0;
 
     [Builtin("op")]
     public static BishNum Pos(BishNum a) => new(+a.Value);

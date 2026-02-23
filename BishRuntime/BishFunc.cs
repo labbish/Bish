@@ -58,8 +58,5 @@ public class BishFunc(List<BishArg> inArgs, Func<List<BishObject>, BishObject> f
 
     public new static readonly BishType StaticType = new("func");
 
-    public override string ToString()
-    {
-        return "[Function]";
-    }
+    public override string ToString() => "[Function]";
 }

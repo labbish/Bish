@@ -12,10 +12,7 @@ public class BishNull : BishObject
 
     public new static readonly BishType StaticType = new("null");
 
-    public override string ToString()
-    {
-        return "null";
-    }
+    public override string ToString() => "null";
 
     [Builtin("hook")]
     public static BishNull Create() => Instance;

@@ -27,7 +27,7 @@ public class IterTest : Test
             new Bytecodes.Nop().Tagged("end")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("x").Should().BeEquivalentTo(new BishString("abc"));
-        Scope.GetVar("s").Should().BeEquivalentTo(new BishString("cba"));
+        Scope.GetVar("x").Should().BeEquivalentTo(S("abc"));
+        Scope.GetVar("s").Should().BeEquivalentTo(S("cba"));
     }
 }

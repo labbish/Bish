@@ -67,10 +67,7 @@ public static partial class BytecodeParser
         return type.GetConstructors().First().GetParameters().Select(p => (p.ParameterType, p.Name!)).ToList();
     }
 
-    private static string ToCodeName(string className)
-    {
-        return string.IsNullOrEmpty(className) ? className : CodeNameRegex().Replace(className, "_$1").ToUpper();
-    }
+    private static string ToCodeName(string className) => string.IsNullOrEmpty(className) ? className : CodeNameRegex().Replace(className, "_$1").ToUpper();
 
     private static string ToClassName(string codeName)
     {

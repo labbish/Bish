@@ -11,7 +11,7 @@ public class JumpTest : Test
             new Bytecodes.Int(2).Tagged("tag")
         ]);
         frame.Execute();
-        frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(2));
+        frame.Stack.Pop().Should().BeEquivalentTo(I(2));
         frame.Stack.Should().BeEmpty();
     }
 
@@ -33,7 +33,7 @@ public class JumpTest : Test
             new Bytecodes.Nop().Tagged("end")
         ]);
         frame.Execute();
-        frame.Stack.Pop().Should().BeEquivalentTo(new BishInt(condition ? 1 : 2));
+        frame.Stack.Pop().Should().BeEquivalentTo(I(condition ? 1 : 2));
         frame.Stack.Should().BeEmpty();
     }
 
@@ -71,6 +71,6 @@ public class JumpTest : Test
             new Bytecodes.JumpIf("start")
         ]);
         frame.Execute();
-        frame.Scope.GetVar("s").Should().BeEquivalentTo(new BishInt(sum));
+        frame.Scope.GetVar("s").Should().BeEquivalentTo(I(sum));
     }
 }

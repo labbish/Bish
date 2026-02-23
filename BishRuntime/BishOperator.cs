@@ -6,20 +6,11 @@ public class Pattern
 {
     private readonly object _pattern;
 
-    private Pattern(object pattern)
-    {
-        _pattern = pattern;
-    }
+    private Pattern(object pattern) => _pattern = pattern;
 
-    public static implicit operator Pattern(string pattern)
-    {
-        return new Pattern(pattern);
-    }
+    public static implicit operator Pattern(string pattern) => new(pattern);
 
-    public static implicit operator Pattern(Regex pattern)
-    {
-        return new Pattern(pattern);
-    }
+    public static implicit operator Pattern(Regex pattern) => new(pattern);
 
     public bool Match(string name)
     {

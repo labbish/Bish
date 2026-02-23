@@ -196,21 +196,16 @@ public static class TagSlicer
         }
 
         public CodeSlice<TStart, TEnd> Slice<TStart, TEnd>(string name)
-            where TStart : StartTag<TEnd> where TEnd : EndTag
-        {
-            return frame.TrySlice<TStart, TEnd>(name) ??
-                   throw new ArgumentException($"Start tag named {name} not found");
-        }
+            where TStart : StartTag<TEnd> where TEnd : EndTag =>
+            frame.TrySlice<TStart, TEnd>(name) ??
+            throw new ArgumentException($"Start tag named {name} not found");
     }
 }
 
 public abstract record TagBased<TStart, TEnd>(string Name)
     : BishBytecode where TStart : StartTag<TEnd> where TEnd : EndTag
 {
-    public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame)
-    {
-        return frame.Slice<TStart, TEnd>(Name);
-    }
+    public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame) => frame.Slice<TStart, TEnd>(Name);
 }
 
 public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name);

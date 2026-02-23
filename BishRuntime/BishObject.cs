@@ -26,10 +26,7 @@ public class BishObject(BishType? type = null)
 
     public readonly Dictionary<string, BishObject> Members = [];
 
-    public BishObject? TryCallHook(string name, List<BishObject> args)
-    {
-        return TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
-    }
+    public BishObject? TryCallHook(string name, List<BishObject> args) => TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
 
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
@@ -99,33 +96,23 @@ public class BishObject(BishType? type = null)
     private BishObject? TryBind(BishObject? member, bool noBind) =>
         noBind ? member : member is BishFunc method ? method.Bind(this) : member;
 
-    public BishObject SetMember(string name, BishObject value)
-    {
-        return TryCallHook("hook_Set", [new BishString(name), value]) ??
-               TryCallHook($"hook_Set_{name}", [value]) ?? (Members[name] = value);
-    }
+    public BishObject SetMember(string name, BishObject value) =>
+        TryCallHook("hook_Set", [new BishString(name), value]) ??
+        TryCallHook($"hook_Set_{name}", [value]) ?? (Members[name] = value);
 
     public BishObject DelMember(string name) =>
         TryDelMember(name) ?? throw BishException.OfAttribute("delete", this, name);
 
-    public BishObject? TryDelMember(string name)
-    {
-        return TryCallHook($"hook_Del_{name}", []) ?? (Members.Remove(name, out var member)
+    public BishObject? TryDelMember(string name) =>
+        TryCallHook($"hook_Del_{name}", []) ?? (Members.Remove(name, out var member)
             ? member
             : TryCallHook("hook_Del", [new BishString(name)]));
-    }
 
     public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
 
-    public virtual BishObject? TryCall(List<BishObject> args)
-    {
-        return TryGetMember("op_Call")?.TryCall(args);
-    }
+    public virtual BishObject? TryCall(List<BishObject> args) => TryGetMember("op_Call")?.TryCall(args);
 
-    public override string ToString()
-    {
-        return $"[Object {Type.Name}]";
-    }
+    public override string ToString() => $"[Object {Type.Name}]";
 
     [Builtin]
     public static BishString ToString(BishObject obj) => new(obj.ToString());
@@ -203,16 +190,10 @@ public class BishType(string name, List<BishType>? parents = null) : BishObject
         return Parents.Any(parent => parent.CanAssignTo(other, excludes));
     }
 
-    public override string ToString()
-    {
-        return $"[Type {Name}]";
-    }
+    public override string ToString() => $"[Type {Name}]";
 
     [Builtin("hook")]
-    public static BishString Get_name(BishType type)
-    {
-        return new BishString(type.Name);
-    }
+    public static BishString Get_name(BishType type) => new(type.Name);
 
     public override BishType DefaultType => StaticType;
 

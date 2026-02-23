@@ -4,7 +4,7 @@ public class ScopeDepthTest : Test
 {
     public readonly BishScope Scope = BishScope.Globals();
 
-    public ScopeDepthTest() => Scope.DefVar("a", new BishInt(0));
+    public ScopeDepthTest() => Scope.DefVar("a", I(0));
 
     [Fact]
     public void TestScope()
@@ -20,7 +20,7 @@ public class ScopeDepthTest : Test
             new Bytecodes.Outer()
         ], Scope);
         frame.Execute();
-        Scope.TryGetVar("a").Should().BeEquivalentTo(new BishInt(0));
+        Scope.TryGetVar("a").Should().BeEquivalentTo(I(0));
         Scope.TryGetVar("b").Should().BeNull();
     }
 }

@@ -42,8 +42,8 @@ public class FuncTest : Test
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(2));
-        Scope.GetVar("x2").Should().BeEquivalentTo(new BishInt(3));
+        Scope.GetVar("x1").Should().BeEquivalentTo(I(2));
+        Scope.GetVar("x2").Should().BeEquivalentTo(I(3));
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public class FuncTest : Test
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(3));
-        Scope.GetVar("x2").Should().BeEquivalentTo(new BishInt(3));
+        Scope.GetVar("x1").Should().BeEquivalentTo(I(3));
+        Scope.GetVar("x2").Should().BeEquivalentTo(I(3));
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class FuncTest : Test
             new Bytecodes.Def("ans")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("ans").Should().BeEquivalentTo(new BishInt(24));
+        Scope.GetVar("ans").Should().BeEquivalentTo(I(24));
     }
 
     [Fact]
@@ -189,8 +189,8 @@ public class FuncTest : Test
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("x1").Should().BeEquivalentTo(new BishInt(1));
-        Scope.GetVar("x2").Should().BeEquivalentTo(new BishInt(2));
+        Scope.GetVar("x1").Should().BeEquivalentTo(I(1));
+        Scope.GetVar("x2").Should().BeEquivalentTo(I(2));
     }
 
     [Theory]
@@ -222,6 +222,6 @@ public class FuncTest : Test
             new Bytecodes.Def("ans")
         ], Scope);
         frame.Execute();
-        Scope.GetVar("ans").Should().BeEquivalentTo(new BishInt(result));
+        Scope.GetVar("ans").Should().BeEquivalentTo(I(result));
     }
 }

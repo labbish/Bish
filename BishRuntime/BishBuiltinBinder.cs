@@ -45,10 +45,10 @@ public static class BishBuiltinBinder
             .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info)))
             .ToList();
         return new BishFunc(inArgs,
-            args => (BishObject)method.InvokeRaw(null,
+            args => (BishObject?)method.InvokeRaw(null,
                 args.Select((arg, i) =>
                         ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))
-                    .ToArray())!);
+                    .ToArray()) ?? BishNull.Instance);
     }
 
     public static object ConvertImplicit(object obj, Type target)

@@ -21,8 +21,8 @@ public class Test
 public static class BishExceptionAssertion
 {
     public static ExceptionAssertions<BishException> Excepts<TDelegate, TAssertions>(
-        this DelegateAssertions<TDelegate, TAssertions> assertions, BishType errorType)
+        this DelegateAssertions<TDelegate, TAssertions> assertions, BishType? errorType = null)
         where TDelegate : Delegate
         where TAssertions : DelegateAssertions<TDelegate, TAssertions>
-        => assertions.Throw<BishException>().Where(ex => ex.Error.Type == errorType);
+        => assertions.Throw<BishException>().Where(ex => ex.Error.Type.CanAssignTo(errorType ?? BishError.StaticType));
 }

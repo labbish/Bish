@@ -16,7 +16,7 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Div", [I(3), I(2)]).Should().BeEquivalentTo(N(1.5));
         BishOperator.Call("op_Mod", [I(3), I(2)]).Should().BeEquivalentTo(I(1));
         BishOperator.Call("op_Mod", [I(-3), I(2)]).Should().BeEquivalentTo(I(-1));
-        Action(() => BishOperator.Call("op_Mod", [I(3), I(0)])).Should().Throw();
+        Action(() => BishOperator.Call("op_Mod", [I(3), I(0)])).Should().Excepts();
         BishOperator.Call("op_Pow", [I(3), I(2)]).Should().BeEquivalentTo(N(9));
 
         I(3).GetMember("abs").Call([]).Should().BeEquivalentTo(I(3));
@@ -111,6 +111,9 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Bool", [S("")]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_Bool", [S("a")]).Should().BeEquivalentTo(B(true));
         BishOperator.Call("op_GetIndex", [S("abc"), I(1)]).Should().BeEquivalentTo(S("b"));
+        BishOperator.Call("op_GetIndex", [S("abc"), I(-1)]).Should().BeEquivalentTo(S("c"));
+        Action(() => BishOperator.Call("op_GetIndex", [S("abc"), I(3)])).Should().Excepts();
+        Action(() => BishOperator.Call("op_GetIndex", [S("abc"), I(-4)])).Should().Excepts();
         S("abc").GetMember("length").Should().BeEquivalentTo(I(3));
 
         var iter = BishOperator.Call("op_Iter", [S("abc")]);
@@ -153,11 +156,15 @@ public class BuiltinsTest : Test
 
         var l = L(a, c, b);
         BishOperator.Call("op_GetIndex", [l, I(0)]).Should().BeEquivalentTo(a);
+        BishOperator.Call("op_GetIndex", [l, I(-1)]).Should().BeEquivalentTo(b);
         BishOperator.Call("op_SetIndex", [l, I(1), b]); // [a, b, b]
         BishOperator.Call("op_DelIndex", [l, I(2)]); // [a, b]
         l.GetMember("add").Call([c]); // [a, b, c]
         l.Should().BeEquivalentTo(L(a, b, c));
         l.GetMember("length").Should().BeEquivalentTo(I(3));
+
+        Action(() => BishOperator.Call("op_GetIndex", [l, I(3)])).Should().Excepts();
+        Action(() => BishOperator.Call("op_DelIndex", [l, I(-4)])).Should().Excepts();
 
         var iter = BishOperator.Call("op_Iter", [l]);
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(a);

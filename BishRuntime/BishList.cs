@@ -41,8 +41,8 @@ public class BishList(List<BishObject> list) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishList a) => new(a.List.Count != 0);
 
-    private int CheckedIndex(int index) => index < List.Count
-        ? index
+    private int CheckedIndex(int index) => index >= -List.Count && index < List.Count
+        ? index < 0 ? List.Count + index : index
         : throw BishException.OfArgument_IndexOutOfBound(this, index);
 
     [Builtin("op")]

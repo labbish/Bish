@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using JetBrains.Annotations;
+
+namespace BishRuntime;
 
 public class BishString(string value) : BishObject
 {
@@ -6,6 +8,10 @@ public class BishString(string value) : BishObject
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("string");
+
+    public BishString(char c) : this(new string(c, 1))
+    {
+    }
 
 
     [Builtin("hook")]
@@ -53,10 +59,14 @@ public class BishString(string value) : BishObject
     [Builtin("op")]
     public static BishString GetIndex(BishString a, BishInt b)
     {
-        return new BishString(new string(a.Value[b.Value], 1));
+        return new BishString(a.Value[b.Value]);
     }
 
-    // TODO: iterator?
+    [Builtin("op")]
+    public static BishStringIterator Iter(BishString self)
+    {
+        return new BishStringIterator(self.Value);
+    }
 
     [Builtin("hook")]
     public static BishInt Get_length(BishString self)
@@ -67,4 +77,25 @@ public class BishString(string value) : BishObject
     // TODO: some more string methods
 
     static BishString() => BishBuiltinBinder.Bind<BishString>();
+}
+
+public class BishStringIterator(string value) : BishObject
+{
+    public string Value => value;
+    public int Index;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("string.iter");
+
+    [UsedImplicitly]
+    public BishString? Next()
+    {
+        return Index < Value.Length ? new BishString(Value[Index++]) : null;
+    }
+
+    static BishStringIterator()
+    {
+        BishBuiltinIteratorBinder.Bind<BishStringIterator, BishString>();
+    }
 }

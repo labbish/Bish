@@ -64,11 +64,11 @@ public static class BishBuiltinBinder
     private static MethodInfo? GetImplicitConversionMethod(this Type type, Type source, Type target)
     {
         return type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(mi =>
+            .FirstOrDefault(info =>
             {
-                var parameters = mi.GetParameters();
-                return mi.Name == "op_Implicit"
-                       && mi.ReturnType == target
+                var parameters = info.GetParameters();
+                return info.Name == "op_Implicit"
+                       && info.ReturnType == target
                        && parameters.Length == 1
                        && parameters[0].ParameterType.IsAssignableFrom(source);
             });
@@ -91,4 +91,22 @@ public static class BishBuiltinBinder
     }
 
     private static readonly BishObject DefaultNull = new BishNull(); // Used only as a tag
+}
+
+public static class BishBuiltinIteratorBinder
+{
+    public static void Bind<TIter, TItem>() where TIter : BishObject where TItem : BishObject
+    {
+        var item = BishType.GetStaticType(typeof(TItem)).Name;
+        var type = typeof(TIter);
+        var next = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                       .FirstOrDefault(info => info.Name == "Next") ??
+                   throw new ArgumentException($"Cannot find method `Next` on type {type}");
+        var staticType = BishType.GetStaticType(type);
+        staticType.SetMember("hook_Create", new BishFunc([], _ =>
+            throw BishException.OfType($"Cannot manually create {item} iterator; use .op_Iter() instead", [])));
+        staticType.SetMember("next",
+            new BishFunc([new BishArg("iter", staticType)],
+                args => (BishObject?)next.Invoke(args[0], []) ?? throw BishException.OfIteratorStop()));
+    }
 }

@@ -118,4 +118,9 @@ public class BishException(BishError error) : Exception
     {
         return Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
     }
+
+    public static BishException OfIteratorStop()
+    {
+        return Create(BishError.IteratorStopType, "Iterator stopped", []);
+    }
 }

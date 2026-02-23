@@ -126,5 +126,11 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_GetIndex", [new BishString("abc"), new BishInt(1)])
             .Should().BeEquivalentTo(new BishString("b"));
         new BishString("abc").GetMember("length").Should().BeEquivalentTo(new BishInt(3));
+
+        var iter = BishOperator.Call("op_Iter", [new BishString("abc")]);
+        iter.GetMember("next").Call([]).Should().BeEquivalentTo(new BishString("a"));
+        iter.GetMember("next").Call([]).Should().BeEquivalentTo(new BishString("b"));
+        iter.GetMember("next").Call([]).Should().BeEquivalentTo(new BishString("c"));
+        Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
     }
 }

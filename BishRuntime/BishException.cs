@@ -108,6 +108,15 @@ public class BishException(BishError error) : Exception
             ["operator"] = new BishString(op) // TODO: record the arg types after we have an builtin list
         });
 
+    public static BishException OfArgument_IndexOutOfBound(BishObject obj, int index) => OfArgument(
+        $"Index out of bound: accessing index {index} on {obj}",
+        new Dictionary<string, BishObject>
+        {
+            ["index"] = new BishInt(index),
+            ["object"] = obj
+        }
+    );
+
     public static BishException OfName(string name) => Create(BishError.NameErrorType,
         $"Name {name} is not defined", new Dictionary<string, BishObject>
         {

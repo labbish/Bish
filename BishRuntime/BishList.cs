@@ -41,14 +41,19 @@ public class BishList(List<BishObject> list) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishList a) => new(a.List.Count != 0);
 
-    [Builtin("op")]
-    public static BishObject GetIndex(BishList a, BishInt b) => a.List[b.Value];
+    private int CheckedIndex(int index) => index < List.Count
+        ? index
+        : throw BishException.OfArgument_IndexOutOfBound(this, index);
 
     [Builtin("op")]
-    public static BishObject SetIndex(BishList a, BishInt b, BishObject value) => a.List[b.Value] = value;
+    public static BishObject GetIndex(BishList a, BishInt b) => a.List[a.CheckedIndex(b.Value)];
 
     [Builtin("op")]
-    public static void DelIndex(BishList a, BishInt b) => a.List.RemoveAt(b.Value);
+    public static BishObject SetIndex(BishList a, BishInt b, BishObject value) =>
+        a.List[a.CheckedIndex(b.Value)] = value;
+
+    [Builtin("op")]
+    public static void DelIndex(BishList a, BishInt b) => a.List.RemoveAt(a.CheckedIndex(b.Value));
 
     [Builtin("op")]
     public static BishListIterator Iter(BishList self) => new(self.List);

@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Runtime.CompilerServices;
+
+namespace BishRuntime;
 
 public class BishString(string value) : BishObject
 {
@@ -42,8 +44,12 @@ public class BishString(string value) : BishObject
     [Builtin("op")]
     public static BishBool Bool(BishString a) => new(a.Value != "");
 
+    private int CheckedIndex(int index) => index < Value.Length
+        ? index
+        : throw BishException.OfArgument_IndexOutOfBound(this, index);
+
     [Builtin("op")]
-    public static BishString GetIndex(BishString a, BishInt b) => new(a.Value[b.Value]);
+    public static BishString GetIndex(BishString a, BishInt b) => new(a.Value[a.CheckedIndex(b.Value)]);
 
     [Builtin("op")]
     public static BishStringIterator Iter(BishString self) => new(self.Value);

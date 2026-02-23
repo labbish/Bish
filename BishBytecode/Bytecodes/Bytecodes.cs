@@ -350,3 +350,20 @@ public record CatchEnd(string Name) : EndTag(Name);
 public record FinallyStart(string Name) : StartTag<FinallyEnd>(Name);
 
 public record FinallyEnd(string Name) : EndTag(Name);
+
+public record ForIter(string GoalTag) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var iter = frame.Stack.Peek();
+        try
+        {
+            frame.Stack.Push(iter.GetMember("next").Call([]));
+        }
+        catch (BishException e)
+        {
+            if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) frame.JumpToTag(GoalTag);
+            else throw;
+        }
+    }
+}

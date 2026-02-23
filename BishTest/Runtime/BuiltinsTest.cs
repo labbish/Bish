@@ -133,4 +133,19 @@ public class BuiltinsTest : Test
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(new BishString("c"));
         Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
     }
+
+    [Fact]
+    public void TestRange()
+    {
+        var range = BishRange.StaticType.CreateInstance([new BishInt(1), new BishInt(10), new BishInt(3)]);
+        range.GetMember("next").Call([]).Should().BeEquivalentTo(new BishInt(1));
+        range.GetMember("next").Call([]).Should().BeEquivalentTo(new BishInt(4));
+        range.GetMember("next").Call([]).Should().BeEquivalentTo(new BishInt(7));
+        Action(() => range.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
+        range.GetMember("start").Should().BeEquivalentTo(new BishInt(1));
+        range.GetMember("end").Should().BeEquivalentTo(new BishInt(10));
+        range.GetMember("step").Should().BeEquivalentTo(new BishInt(3));
+        BishRange.StaticType.CreateInstance([new BishInt(1), new BishInt(10), new BishInt(1)]).Should()
+            .BeEquivalentTo(BishRange.StaticType.CreateInstance([new BishInt(1), new BishInt(10)]));
+    }
 }

@@ -64,3 +64,64 @@ public class BishInt(int value) : BishObject
 
     static BishInt() => BishBuiltinBinder.Bind<BishInt>();
 }
+
+public class BishRange(int start, int end, int step) : BishObject
+{
+    public int Start = start;
+    public int End = end;
+    public int Step = step;
+    public int? Current;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("range");
+
+    [Builtin("hook")]
+    public static BishRange Create()
+    {
+        return new BishRange(0, 0, 0);
+    }
+
+    [Builtin("hook")]
+    public static BishNull Init(BishRange self, BishInt start, BishInt end, [DefaultNull] BishInt? step)
+    {
+        self.Start = start.Value;
+        self.End = end.Value;
+        self.Step = step?.Value ?? 1;
+        return BishNull.Instance;
+    }
+
+    [Iter]
+    public BishInt? Next()
+    {
+        Current ??= Start;
+        if (Current >= End) return null;
+        var result = Current;
+        Current += Step;
+        return new BishInt(result.Value);
+    }
+
+    [Builtin("hook")]
+    public static BishInt Get_start(BishRange self)
+    {
+        return new BishInt(self.Start);
+    }
+
+    [Builtin("hook")]
+    public static BishInt Get_end(BishRange self)
+    {
+        return new BishInt(self.End);
+    }
+
+    [Builtin("hook")]
+    public static BishInt Get_step(BishRange self)
+    {
+        return new BishInt(self.Step);
+    }
+
+    static BishRange()
+    {
+        BishBuiltinIteratorBinder.Bind<BishRange>();
+        BishBuiltinBinder.Bind<BishRange>();
+    }
+}

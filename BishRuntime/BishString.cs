@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 public class BishString(string value) : BishObject
 {
@@ -88,7 +86,7 @@ public class BishStringIterator(string value) : BishObject
 
     public new static readonly BishType StaticType = new("string.iter");
 
-    [UsedImplicitly]
+    [Iter]
     public BishString? Next()
     {
         return Index < Value.Length ? new BishString(Value[Index++]) : null;
@@ -96,6 +94,6 @@ public class BishStringIterator(string value) : BishObject
 
     static BishStringIterator()
     {
-        BishBuiltinIteratorBinder.Bind<BishStringIterator, BishString>();
+        BishBuiltinIteratorBinder.Bind<BishStringIterator>();
     }
 }

@@ -93,18 +93,22 @@ public static class BishBuiltinBinder
     private static readonly BishObject DefaultNull = new BishNull(); // Used only as a tag
 }
 
+[MeansImplicitUse]
+[AttributeUsage(AttributeTargets.Method)]
+public class IterAttribute : Attribute;
+
 public static class BishBuiltinIteratorBinder
 {
-    public static void Bind<TIter, TItem>() where TIter : BishObject where TItem : BishObject
+    public static void Bind<T>() where T : BishObject
     {
-        var item = BishType.GetStaticType(typeof(TItem)).Name;
-        var type = typeof(TIter);
+        var type = typeof(T);
         var next = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                       .FirstOrDefault(info => info.Name == "Next") ??
+                       .FirstOrDefault(info =>
+                           info.Name == "Next" && info.GetCustomAttribute<IterAttribute>() is not null) ??
                    throw new ArgumentException($"Cannot find method `Next` on type {type}");
         var staticType = BishType.GetStaticType(type);
         staticType.SetMember("hook_Create", new BishFunc([], _ =>
-            throw BishException.OfType($"Cannot manually create {item} iterator; use .op_Iter() instead", [])));
+            throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_Iter() instead", [])));
         staticType.SetMember("next",
             new BishFunc([new BishArg("iter", staticType)],
                 args => (BishObject?)next.Invoke(args[0], []) ?? throw BishException.OfIteratorStop()));

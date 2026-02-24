@@ -65,7 +65,7 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfType_Expect(string expr,
         BishObject result, BishType expect)
-        => OfType($"Expect result of {expr} to be ${expect.Name}, found {result}",
+        => OfType($"Expect result of {expr} to be {expect.Name}, found {result}",
             new Dictionary<string, BishObject>
             {
                 ["expression"] = new BishString(expr),

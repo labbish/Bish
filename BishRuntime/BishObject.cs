@@ -160,9 +160,9 @@ public partial class BishType(string name, List<BishType>? parents = null) : Bis
 
     public BishObject CreateInstance(List<BishObject> args)
     {
-        var instance = TryCallHook("hook_Create", []) ?? new BishObject(this);
-        instance.Type = this; // TODO: do we really want this?
-        instance.TryCallHook("hook_Init", args);
+        var instance = TryCallHook("hook_Create", []) ?? new BishObject();
+        instance.Type = this; // We need this when hook_Create is called on the parent class
+        instance.TryCallHook("hook_Init", args)?.ExpectToBe<BishNull>("hook_Init return value");
         return instance;
     }
 

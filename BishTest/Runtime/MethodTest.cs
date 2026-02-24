@@ -78,11 +78,7 @@ file class T1(string tag) : BishObject
     public static T1 Create() => new("");
 
     [Builtin("hook")]
-    public static T1 Init(T1 self, BishString tag)
-    {
-        self.Tag = tag.Value;
-        return self;
-    }
+    public static void Init(T1 self, BishString tag) => self.Tag = tag.Value;
 
     [Builtin("op")]
     public static BishInt Call(T1 self) => new(0);

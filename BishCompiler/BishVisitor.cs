@@ -34,11 +34,36 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitGetMember(BishParser.GetMemberContext context) =>
         [..Visit(context.expr()), new GetMember(context.name.Text)];
 
-    public override Codes VisitSet(BishParser.SetContext context) =>
-        [..Visit(context.expr()), new Set(context.name.Text)];
+    public override Codes VisitSet(BishParser.SetContext context)
+    {
+        var name = context.name.Text;
+        var op = context.setOp()?.GetText();
+        return
+        [
+            op is null ? new Nop() : new Get(name),
+            ..Visit(context.expr()),
+            op is null ? new Nop() : new Op(BishOperator.GetOperatorName(op, 2), 2),
+            new Set(name)
+        ];
+    }
 
-    public override Codes VisitSetMember(BishParser.SetMemberContext context) =>
-        [..Visit(context.value), ..Visit(context.obj), new SetMember(context.name.Text)];
+    public override Codes VisitSetMember(BishParser.SetMemberContext context)
+    {
+        var name = context.name.Text;
+        var op = context.setOp()?.GetText();
+        // For a.b @= c, we want `a` to be evaluated only once
+        return
+        [
+            ..Visit(context.obj),
+            op is null ? new Nop() : new Copy(),
+            ..Visit(context.value),
+            new Swap(),
+            ..(Codes)(op is null
+                ? []
+                : [new GetMember(name), new Swap(), new Op(BishOperator.GetOperatorName(op, 2), 2), new Swap()]),
+            new SetMember(name)
+        ];
+    }
 
     public override Codes VisitDef(BishParser.DefContext context) =>
         [..Visit(context.expr()), new Def(context.name.Text)];

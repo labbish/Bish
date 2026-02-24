@@ -25,6 +25,7 @@ expr
     | '(' defArgs ')' '=>' (expr | '{' stat* '}')               # FuncExpr
     | FUN ID? '(' defArgs ')' (('=>' expr) | ('{' stat* '}'))   # FuncExpr
     | CLS ID? (':' args)? ('{' stat* '}')?                      # ClassExpr
+    // TODO: decorators
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
     // TODO: op_index
@@ -40,13 +41,17 @@ expr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
-    | <assoc=right> obj=expr '.' name=ID '=' value=expr         # SetMember
-    | <assoc=right> name=ID '=' value=expr                      # Set
+    | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
+    | <assoc=right> name=ID setOp? '=' value=expr               # Set
     | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
     | <assoc=right> DEL name=ID                                 # Del
-    // TODO: op-assign (e.g. +=)
+    // TODO: string interpolation
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    ;
+
+setOp
+    : '+'|'-'|'*'|'/'|'%'|'^'
     ;
 
 args

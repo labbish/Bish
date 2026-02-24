@@ -20,11 +20,11 @@ public class StatementsTest : CompilerTest
     [Fact]
     public void TestWhile()
     {
-        Execute("x:=1;i:=4;while(i>0){x=x*i;i=i-1;}");
+        Execute("x:=1;i:=4;while(i>0){x*=i;i-=1;}");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
         Execute("x:=0;while(false)x=1;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(0));
-        Execute("x:=1;i:=4;do{x=x*i;i=i-1;}while(i>0);");
+        Execute("x:=1;i:=4;do{x*=i;i-=1;}while(i>0);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
         Execute("x:=0;do x=1;while(false);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(1));
@@ -33,9 +33,9 @@ public class StatementsTest : CompilerTest
     [Fact]
     public void TestFor()
     {
-        Execute("x:=1;for(i:=1;i<5;i=i+1)x=x*i;");
+        Execute("x:=1;for(i:=1;i<5;i+=1)x*=i;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
-        Execute("x:=1;for(i:range(1,5))x=x*i;");
+        Execute("x:=1;for(i:range(1,5))x*=i;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
     }
 
@@ -52,7 +52,7 @@ public class StatementsTest : CompilerTest
                        for (i: range(2, num.sqrt(n).floor() + 1))
                            if (n % i == 0)
                                prime = false;
-                       if (prime) s = s + 1;
+                       if (prime) s += 1;
                    }
                    """;
         Execute(code);

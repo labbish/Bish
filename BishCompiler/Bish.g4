@@ -8,7 +8,7 @@ stat
     | WHL '(' expr ')' stat                                     # WhileStat
     | DO stat WHL '(' expr ')' END                              # DoWhileStat
     | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
-    | FOR '(' ID ':' expr ')' stat                              # ForIterStat
+    | FOR '(' name=ID ':' expr ')' stat                         # ForIterStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
     ;
@@ -30,8 +30,9 @@ expr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> obj=expr '.' name=ID '=' value=expr         # SetMember
     | <assoc=right> name=ID '=' value=expr                      # Set
+    | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
+    | <assoc=right> DEL name=ID                                 # Del
     // TODO: op-assign (e.g. +=)
-    // TODO: del?
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
     ;
@@ -65,6 +66,7 @@ ELS : 'else' ;
 WHL : 'while' ;
 DO  : 'do' ;
 FOR : 'for' ;
+DEL : 'del' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

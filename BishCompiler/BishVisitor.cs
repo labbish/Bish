@@ -41,6 +41,11 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitDef(BishParser.DefContext context) =>
         [..Visit(context.expr()), new Def(context.name.Text)];
 
+    public override Codes VisitDel(BishParser.DelContext context) => [new Del(context.name.Text)];
+
+    public override Codes VisitDelMember(BishParser.DelMemberContext context) =>
+        [..Visit(context.obj), new DelMember(context.name.Text)];
+
     public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
     {
         var tag = Symbols.Get("and");
@@ -172,11 +177,12 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitForIterStat(BishParser.ForIterStatContext context)
     {
         var (tag, end) = Symbols.GetPair("for_iter");
-        return [
+        return
+        [
             ..Visit(context.expr()),
             new Op("op_Iter", 1),
             new ForIter(end).Tagged(tag),
-            ..Wrap([new Def(context.ID().GetText())], Visit(context.stat())),
+            ..Wrap([new Def(context.name.Text)], Visit(context.stat())),
             new Pop(),
             new Jump(tag),
             new Pop().Tagged(end)

@@ -8,7 +8,7 @@ namespace BishCompiler;
 
 public class BishVisitor : BishBaseVisitor<Codes>
 {
-    protected SymbolAllocator Allocator = new();
+    protected readonly SymbolAllocator Allocator = new();
 
     public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
         [new Int(int.Parse(context.INT().GetText()))];
@@ -80,12 +80,30 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitProgram(BishParser.ProgramContext context) =>
         context.stat().SelectMany(Visit).ToList();
 
-    // TODO: support calling with rest args
     public override Codes VisitCallExpr(BishParser.CallExprContext context)
     {
-        var args = context.args().expr();
-        return [..args.SelectMany(Visit), ..Visit(context.func), new Call(args.Length)];
+        var args = context.args().arg();
+        if (NoRest(args)) return [..args.SelectMany(Visit), ..Visit(context.func), new Call(args.Length)];
+        return [..ToList(args), ..Visit(context.func), new CallArgs()];
     }
+
+    public override Codes VisitListExpr(BishParser.ListExprContext context)
+    {
+        var args = context.args().arg();
+        return NoRest(args) ? [..args.SelectMany(Visit), new BuildList(args.Length)] : ToList(args);
+    }
+
+    public Codes ToList(BishParser.ArgContext[] args) =>
+    [
+        new BuildList(0),
+        ..args.SelectMany<BishParser.ArgContext, BishBytecode.BishBytecode>(arg => arg switch
+        {
+            BishParser.RestArgContext => [..Visit(arg), new Op("op_Add", 2)],
+            _ => [..Visit(arg), new Swap(), new GetMember("add"), new Call(1)]
+        })
+    ];
+
+    public static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
 }
 
 public class SymbolAllocator

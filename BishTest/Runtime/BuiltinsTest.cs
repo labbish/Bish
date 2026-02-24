@@ -91,7 +91,7 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_Eq", [B(false), B(true)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_Eq", [B(true), B(false)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_Eq", [B(true), B(true)]).Should().BeEquivalentTo(B(true));
-
+        
         BishOperator.Call("op_Bool", [B(false)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_Bool", [B(true)]).Should().BeEquivalentTo(B(true));
     }

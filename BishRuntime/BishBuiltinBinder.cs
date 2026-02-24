@@ -54,7 +54,7 @@ public static class BishBuiltinBinder
             try
             {
                 var converted = args.Select((arg, i) =>
-                        ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))
+                        arg is DefaultNull ? null : ConvertImplicit(arg, parameters[i].ParameterType))
                     .ToArray();
                 return (BishObject?)method.InvokeRaw(null, converted) ?? BishNull.Instance;
             }
@@ -92,8 +92,8 @@ public static class BishBuiltinBinder
             });
     }
 
-    private static BishObject? Default(ParameterInfo info) =>
-        info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : DefaultNull;
+    private static DefaultNull? Default(ParameterInfo info) =>
+        info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : new DefaultNull();
 
     private static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
     {
@@ -107,9 +107,9 @@ public static class BishBuiltinBinder
             throw; // Make compiler happy
         }
     }
-
-    private static readonly BishObject DefaultNull = new BishNull(); // Used only as a tag
 }
+
+internal class DefaultNull : BishObject;
 
 [MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]

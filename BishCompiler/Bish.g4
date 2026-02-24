@@ -10,6 +10,7 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
+    | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
     | op=('+'|'-'|'~') expr                                     # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
@@ -28,7 +29,11 @@ expr
     ;
 
 args
-    : (expr (',' expr)* ','?)?
+    : (arg (',' arg)* ','?)?
+    ;
+arg
+    : expr                                                      # SingleArg
+    | '..' expr                                                 # RestArg
     ;
 
 atom

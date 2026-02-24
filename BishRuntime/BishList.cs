@@ -107,9 +107,13 @@ public class BishList(List<BishObject> list) : BishObject
     public static BishInt Get_length(BishList self) => new(self.List.Count);
 
     [Builtin(special: false)]
-    public static void Add(BishList self, BishObject item) => self.List.Add(item);
+    public static BishList Add(BishList self, BishObject item)
+    {
+        self.List.Add(item);
+        return self;
+    }
 
-// TODO: some more methods
+    // TODO: some more methods
 
     static BishList() => BishBuiltinBinder.Bind<BishList>();
 }

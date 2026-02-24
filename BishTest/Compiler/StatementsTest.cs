@@ -38,4 +38,24 @@ public class StatementsTest : CompilerTest
         Execute("x:=1;for(i:range(1,5))x=x*i;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
     }
+
+    [Theory]
+    [InlineData(10, 4)]
+    [InlineData(100, 25)]
+    [InlineData(1000, 168)]
+    public void TestStatements(int n, int primes)
+    {
+        var code = $$"""
+                   s := 0;
+                   for (n: range(2, {{n + 1}})) {
+                       prime := true;
+                       for (i: range(2, num.sqrt(n).floor() + 1))
+                           if (n % i == 0)
+                               prime = false;
+                       if (prime) s = s + 1;
+                   }
+                   """;
+        Execute(code);
+        Scope.GetVar("s").Should().BeEquivalentTo(I(primes));
+    }
 }

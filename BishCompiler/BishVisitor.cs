@@ -189,6 +189,34 @@ public class BishVisitor : BishBaseVisitor<Codes>
         ];
     }
 
+    private Codes Return(BishParser.ExprContext expr) => [..Visit(expr), new Ret()];
+
+    public override Codes VisitReturnStat(BishParser.ReturnStatContext context) => Return(context.expr());
+
+    public override Codes VisitFuncExpr(BishParser.FuncExprContext context)
+    {
+        var name = context.ID()?.GetText();
+        var symbol = Symbols.Get(context.ID()?.GetText() ?? "anon");
+        var defArgs = context.defArgs().defArg() ?? [];
+        var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
+            new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null)).ToList());
+        var defaults = args.Select(arg => arg.Default).OfType<BishParser.ExprContext>().ToList();
+        var expr = context.expr();
+        var stats = context.stat();
+        return
+        [
+            new FuncStart(symbol, args.Select(arg => arg.Name).ToList()),
+            new Inner(),
+            ..args.Select(arg => new Def(arg.Name)),
+            ..expr is null ? stats.SelectMany(Visit) : Return(expr),
+            new Outer(),
+            new FuncEnd(symbol),
+            ..defaults.SelectMany(Visit),
+            new MakeFunc(symbol, defaults.Count, Rest: args[^1].Rest),
+            ..(BishBytecode.BishBytecode[])(name is null ? [] : [new Def(name)])
+        ];
+    }
+
     public override Codes VisitProgram(BishParser.ProgramContext context) =>
         context.stat().SelectMany(Visit).ToList();
 }

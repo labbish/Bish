@@ -41,6 +41,9 @@ public class BishNum(double value) : BishObject
     public static BishNum Pow(BishNum a, BishNum b) => new(Math.Pow(a.Value, b.Value));
 
     [Builtin(special: false)]
+    public static BishNum Sqrt(BishNum a) => new(Math.Sqrt(a.Value));
+
+    [Builtin(special: false)]
     public static BishNum Abs(BishNum a) => new(Math.Abs(a.Value));
 
     [Builtin(special: false)]

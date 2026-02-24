@@ -215,7 +215,7 @@ public class FuncTest : Test
             new Bytecodes.Int(0),
             new Bytecodes.MakeFunc("f", 2),
             new Bytecodes.Def("f"),
-
+            // ans := f(...args)
             ..args.Select(x => new Bytecodes.Int(x)),
             new Bytecodes.Get("f"),
             new Bytecodes.Call(args.Length),
@@ -223,5 +223,29 @@ public class FuncTest : Test
         ], Scope);
         frame.Execute();
         Scope.GetVar("ans").Should().BeEquivalentTo(I(result));
+    }
+
+    [Fact]
+    public void TestRestArgs()
+    {
+        var frame = new BishFrame([
+            // f := (...rest) => rest
+            new Bytecodes.FuncStart("f", ["rest"]),
+            new Bytecodes.Inner(),
+            new Bytecodes.Ret(),
+            new Bytecodes.Outer(),
+            new Bytecodes.FuncEnd("f"),
+            new Bytecodes.MakeFunc("f", Rest: true),
+            new Bytecodes.Def("f"),
+            // ans := f(1, 2, 3)
+            new Bytecodes.Int(1),
+            new Bytecodes.Int(2),
+            new Bytecodes.Int(3),
+            new Bytecodes.Get("f"),
+            new Bytecodes.Call(3),
+            new Bytecodes.Def("ans")
+        ], Scope);
+        frame.Execute();
+        Scope.GetVar("ans").Should().BeEquivalentTo(L(I(1), I(2), I(3)));
     }
 }

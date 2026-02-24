@@ -212,7 +212,7 @@ public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name
 
 public record FuncEnd(string Name) : EndTag(Name);
 
-public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, FuncEnd>(Name)
+public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false) : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
@@ -221,7 +221,8 @@ public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, F
         var scope = frame.Scope;
         var defaults = frame.Stack.Pop(DefaultArgc);
         var inArgs = names
-            .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)))).ToList();
+            .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
+                Rest: Rest && i == names.Count - 1)).ToList();
         frame.Stack.Push(new BishFunc(Name, inArgs,
             args =>
             {

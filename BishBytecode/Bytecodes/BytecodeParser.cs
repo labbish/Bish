@@ -42,6 +42,7 @@ public static partial class BytecodeParser
             int x => x.ToString(),
             double x => x.ToString(CultureInfo.InvariantCulture),
             string x => x,
+            bool x => x ? "true" : "false",
             IList list => "[" + string.Join(",", list.OfType<object>().Select(ArgToString)) + "]",
             _ => throw new ArgumentException($"Invalid argument type {value.GetType()} for BytecodeParser")
         };
@@ -52,6 +53,8 @@ public static partial class BytecodeParser
         if (type == typeof(int)) return int.Parse(str);
         if (type == typeof(double)) return double.Parse(str);
         if (type == typeof(string)) return str;
+        if (type == typeof(bool))
+            return str == "true" || (str == "false" ? false : throw new ArgumentException($"Invalid boolean: {str}"));
         if (typeof(IList).IsAssignableFrom(type))
         {
             var innerType = type.GetGenericArguments()[0];

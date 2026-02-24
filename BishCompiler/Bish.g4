@@ -4,6 +4,7 @@ program : stat* EOF ;
 
 stat
     : expr END                                                  # ExprStat
+    | RET expr END                                              # ReturnStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
     | WHL '(' expr ')' stat                                     # WhileStat
     | DO stat WHL '(' expr ')' END                              # DoWhileStat
@@ -15,12 +16,14 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
+    | '(' defArgs ')' '=>' (expr | '{' stat* '}')               # FuncExpr
+    | FUN (ID)? '(' defArgs ')' (('=>' expr) | ('{' stat* '}')) # FuncExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
     | expr '.' name=ID                                          # GetMember
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
-    | left=expr op=('*'|'/') right=expr                         # BinOpExpr
+    | left=expr op=('*'|'/'|'%') right=expr                     # BinOpExpr
     | left=expr op=('+'|'-') right=expr                         # BinOpExpr
     | left=expr op='<=>' right=expr                             # BinOpExpr
     | left=expr op=('<'|'<='|'>'|'>=') right=expr               # BinOpExpr
@@ -45,6 +48,13 @@ arg
     | '..' expr                                                 # RestArg
     ;
 
+defArgs
+    : (defArg (',' defArg)* ','?)?
+    ;
+defArg
+    : dots='..'? name=ID ('=' expr)?
+    ;
+
 atom
     : INT                                                       # IntAtom
     | NUM                                                       # NumAtom
@@ -67,6 +77,8 @@ WHL : 'while' ;
 DO  : 'do' ;
 FOR : 'for' ;
 DEL : 'del' ;
+FUN : 'func' ;
+RET : 'return' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

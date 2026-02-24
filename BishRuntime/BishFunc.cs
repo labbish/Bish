@@ -1,7 +1,10 @@
 ﻿namespace BishRuntime;
 
+public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T : class;
+
 // `Type` will only be used by builtin functions
 public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null, bool Rest = false)
+    : Arg<BishObject>(Name, Default, Rest)
 {
     public BishType Type => DefType ?? BishObject.StaticType;
 
@@ -19,11 +22,11 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
 public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
 {
     public string Name => name;
-    public List<BishArg> Args => CheckedArgs(inArgs);
+    public List<BishArg> Args => CheckedArgs<BishArg, BishObject>(inArgs);
     public Func<List<BishObject>, BishObject> Func => func;
     public BishObject? BoundSelf;
 
-    public static List<BishArg> CheckedArgs(List<BishArg> args)
+    public static List<TArg> CheckedArgs<TArg, T>(List<TArg> args) where TArg : Arg<T> where T: class
     {
         var rests = args.Where(arg => arg.Rest).ToList();
         if (rests.Count > 0)

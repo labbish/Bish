@@ -80,7 +80,7 @@ public record Call(int Argc) : BishBytecode
     public override void Execute(BishFrame frame)
     {
         var func = frame.Stack.Pop();
-        var args = frame.Stack.Pop(Argc).Reversed();
+        var args = frame.Stack.Pop(Argc);
         frame.Stack.Push(func.Call(args));
     }
 }
@@ -89,7 +89,7 @@ public record Op(string Operator, int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var args = frame.Stack.Pop(Argc).Reversed();
+        var args = frame.Stack.Pop(Argc);
         frame.Stack.Push(BishOperator.Call(Operator, args));
     }
 }
@@ -217,11 +217,12 @@ public record MakeFunc(string Name, int DefaultArgc = 0) : TagBased<FuncStart, F
     public override void Execute(BishFrame frame)
     {
         var slice = Slice(frame);
+        var names = slice.Start.Args;
         var scope = frame.Scope;
         var defaults = frame.Stack.Pop(DefaultArgc);
-        frame.Stack.Push(new BishFunc(Name,
-            slice.Start.Args.Reversed().Select((arg, i) => new BishArg(arg, null, defaults.ElementAtOrDefault(i)))
-                .ToList().Reversed(),
+        var inArgs = names
+            .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)))).ToList();
+        frame.Stack.Push(new BishFunc(Name, inArgs,
             args =>
             {
                 var inner = new BishFrame(slice.Code, scope, frame);
@@ -264,7 +265,7 @@ public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart,
     {
         var slice = Slice(frame);
         var inner = slice.Execute(frame);
-        var parents = frame.Stack.Pop(ParentCount).Reversed()
+        var parents = frame.Stack.Pop(ParentCount)
             .Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList();
         var type = new BishType(Name, parents);
         foreach (var (key, value) in inner.Scope.Vars) type.SetMember(key, value);
@@ -353,4 +354,19 @@ public record ForIter(string GoalTag) : BishBytecode
             else throw;
         }
     }
+}
+
+public record CallArgs : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var func = frame.Stack.Pop();
+        var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
+        frame.Stack.Push(func.Call(args.List));
+    }
+}
+
+public record BuildList(int Argc) : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishList(frame.Stack.Pop(Argc)));
 }

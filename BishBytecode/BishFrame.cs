@@ -39,12 +39,13 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
 
 public static class Helper
 {
+    // FIFO order
     public static List<T> Pop<T>(this Stack<T> stack, int count)
     {
         List<T> list = [];
         for (var i = 0; i < count; i++)
             list.Add(stack.Pop());
-        return list;
+        return list.Reversed();
     }
 
     public static List<T> Reversed<T>(this List<T> list)

@@ -50,7 +50,8 @@ public class BishList(List<BishObject> list) : BishObject
     public static BishObject GetIndex(BishList self, BishObject x) => x switch
     {
         BishInt index => self.List[index.Value.Regularize(self.List.Count)],
-        BishRange range => new BishList(range.Regularize(self.List.Count).ToInts().Select(i => GetIndex(self, i)).ToList()),
+        BishRange range => new BishList(range.Regularize(self.List.Count).ToInts().Select(i => GetIndex(self, i))
+            .ToList()),
         _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
     };
 
@@ -68,6 +69,7 @@ public class BishList(List<BishObject> list) : BishObject
                     self.List = [..self.List[..range.Start], ..list.List, ..self.List[range.End..]];
                     break;
                 }
+
                 var indexes = range.ToInts().ToList();
                 if (indexes.Count != list.List.Count)
                     throw BishException.OfArgument(

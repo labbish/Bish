@@ -19,6 +19,9 @@ public class BuiltinAttribute(string? prefix = null, bool special = true) : Attr
 [AttributeUsage(AttributeTargets.Parameter)]
 public class DefaultNullAttribute : Attribute;
 
+[AttributeUsage(AttributeTargets.Parameter)]
+public class RestAttribute : Attribute;
+
 public static class BishBuiltinBinder
 {
     public static void Bind<TObject>() where TObject : BishObject
@@ -42,13 +45,27 @@ public static class BishBuiltinBinder
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
-            .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info)))
+            .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info),
+                Rest: info.GetCustomAttribute<RestAttribute>() is not null))
             .ToList();
-        return new BishFunc(name, inArgs,
-            args => (BishObject?)method.InvokeRaw(null,
-                args.Select((arg, i) =>
+
+        BishObject Func(List<BishObject> args)
+        {
+            try
+            {
+                var converted = args.Select((arg, i) =>
                         ReferenceEquals(arg, DefaultNull) ? null : ConvertImplicit(arg, parameters[i].ParameterType))
-                    .ToArray()) ?? BishNull.Instance);
+                    .ToArray();
+                return (BishObject?)method.InvokeRaw(null, converted) ?? BishNull.Instance;
+            }
+            catch (Exception e)
+            {
+                if (e is BishException) throw;
+                throw new Exception($"Error occured while invoking method {name} ({method})", e);
+            }
+        }
+
+        return new BishFunc(name, inArgs, Func);
     }
 
     public static object ConvertImplicit(object obj, Type target)
@@ -58,7 +75,7 @@ public static class BishBuiltinBinder
         var method = source.GetImplicitConversionMethod(source, target) ??
                      target.GetImplicitConversionMethod(source, target);
         // We don't throw a BishException because it is user's responsibility to be aware of their bindings' correctness
-        return method?.Invoke(null, [obj]) ?? throw new InvalidOperationException();
+        return method?.Invoke(null, [obj]) ?? throw new InvalidOperationException($"Cannot convert {obj} to {target}");
     }
 
     private static MethodInfo? GetImplicitConversionMethod(this Type type, Type source, Type target)

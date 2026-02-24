@@ -55,7 +55,7 @@ public class MethodTest : Test
         // x.Type.GetMember("toString").Call([x]).Should().BeEquivalentTo(S("1"));
         x.GetMember("toString").Call([]).Should().BeEquivalentTo(S("1"));
         Null.GetMember("toString").Call([]).Should().BeEquivalentTo(S("null"));
-        x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(S("[Type int]"));
+        x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(S("int"));
     }
 }
 

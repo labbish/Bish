@@ -1,13 +1,19 @@
 ﻿namespace BishRuntime;
 
-// TODO: maybe support rest args (after we have an builtin list)
 // `Type` will only be used by builtin functions
-public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null)
+public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null, bool Rest = false)
 {
     public BishType Type => DefType ?? BishObject.StaticType;
 
     public override string ToString() =>
-        (DefType is null ? "" : DefType.Name + " ") + Name + (Default is null ? "" : "=" + Default);
+        (DefType is null ? "" : DefType.Name + " ") + (Rest ? "..." : "") + Name +
+        (Default is null ? "" : "=" + Default);
+
+    public BishObject? Match(BishObject? arg)
+    {
+        if (arg is null) return Default;
+        return arg.Type.CanAssignTo(Type) ? arg : throw BishException.OfType_Argument(arg, Type);
+    }
 }
 
 public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
@@ -19,6 +25,14 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
 
     public static List<BishArg> CheckedArgs(List<BishArg> args)
     {
+        var rests = args.Where(arg => arg.Rest).ToList();
+        if (rests.Count > 0)
+        {
+            if (rests.Count > 1) throw BishException.OfArgument_DefineRests();
+            if (!args[^1].Rest) throw BishException.OfArgument_DefineRestPos();
+            return args.Any(arg => arg.Default is not null) ? throw BishException.OfArgument_DefineRestDefault() : args;
+        }
+
         var repeat = args.GroupBy(arg => arg.Name)
             .Where(g => g.Count() > 1).Select(g => g.Key).FirstOrDefault();
         if (repeat is not null) throw BishException.OfArgument_DefineRepeat(repeat);
@@ -37,30 +51,37 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
 
     public List<BishObject> Match(List<BishObject> args)
     {
-        var minArgs = Args.Count(arg => arg.Default is null);
-        if (args.Count > Args.Count) throw BishException.OfArgument_Count(minArgs, Args.Count, args.Count);
-        return Args.Select((arg, i) =>
+        if (Args.Any(arg => arg.Rest))
         {
-            var got = args.ElementAtOrDefault(i);
-            if (got is not null)
-                return got.Type.CanAssignTo(arg.Type) ? got : throw BishException.OfType_Argument(got, arg.Type);
-            return arg.Default ?? throw BishException.OfArgument_Count(minArgs, Args.Count, args.Count);
-        }).ToList();
+            var normal = Args[..^1];
+            var rest = Args[^1];
+            if (args.Count < normal.Count) throw BishException.OfArgument_Count(args.Count, min: normal.Count);
+            return normal.Select((arg, i) => arg.Match(args[i])!)
+                .Concat([rest.Match(new BishList(args[normal.Count..]))!]).ToList();
+        }
+
+        var minArgs = Args.Count(arg => arg.Default is null);
+        if (args.Count > Args.Count) throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count);
+        return Args.Select((arg, i) =>
+            arg.Match(args.ElementAtOrDefault(i)) ??
+            throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToList();
     }
 
     public BishFunc Bind(BishObject self)
     {
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
-        return self.Type.CanAssignTo(Args[0].Type)
-            ? new BishFunc(Name, Args.Skip(1).ToList(), args => Func([self, ..args])) { BoundSelf = self }
+        var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
+        return self.Type.CanAssignTo(Args[0].Type) || Args[0].Rest
+            ? new BishFunc(Name, args1, args => Func([self, ..args])) { BoundSelf = self }
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 
     public override BishObject TryCall(List<BishObject> args)
     {
+        var match = Match(args);
         try
         {
-            return Func(Match(args));
+            return Func(match);
         }
         catch (BishException e)
         {

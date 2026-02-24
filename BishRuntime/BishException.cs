@@ -90,12 +90,28 @@ public class BishException(BishError error) : Exception
             ["name"] = new BishString(name)
         });
 
-    public static BishException OfArgument_Count(int min, int max, int count) => OfArgument(
-        $"Wrong argument count: expected {(min == max ? min : $"{min}~{max}")}, got {count}",
+    public static BishException OfArgument_DefineRests() =>
+        OfArgument("Found multiple rest args while defining function", []);
+
+    public static BishException OfArgument_DefineRestPos() =>
+        OfArgument("Found rest argument which is not the last argument while defining function", []);
+
+    public static BishException OfArgument_DefineRestDefault() =>
+        OfArgument("Function definition contains both rest argument and optional argument", []);
+
+    private static string Range(int? min, int? max)
+    {
+        if (min is null) return $"<={max}";
+        if (max is null) return $">={min}";
+        return min == max ? $"{min}" : $"{min}~{max}";
+    }
+
+    public static BishException OfArgument_Count(int count, int? min = null, int? max = null) => OfArgument(
+        $"Wrong argument count: expected {Range(min, max)}, got {count}",
         new Dictionary<string, BishObject>
         {
-            ["min"] = new BishInt(min),
-            ["max"] = new BishInt(max),
+            ["min"] = min is null ? BishNull.Instance : new BishInt(min.Value),
+            ["max"] = max is null ? BishNull.Instance : new BishInt(max.Value),
             ["count"] = new BishInt(count)
         });
 

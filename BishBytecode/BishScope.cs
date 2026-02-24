@@ -27,7 +27,7 @@ public class BishScope
 
     public BishScope CreateInner() => new(this);
 
-    public static BishScope Globals() => new()
+    public static BishScope Globals => new()
     {
         Vars =
         {

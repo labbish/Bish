@@ -68,14 +68,15 @@ public static class BishBuiltinBinder
         return new BishFunc(name, inArgs, Func);
     }
 
-    public static object ConvertImplicit(object obj, Type target)
+    public static object ConvertImplicit(BishObject obj, Type target)
     {
         if (target.IsInstanceOfType(obj)) return obj;
         var source = obj.GetType();
         var method = source.GetImplicitConversionMethod(source, target) ??
                      target.GetImplicitConversionMethod(source, target);
-        // We don't throw a BishException because it is user's responsibility to be aware of their bindings' correctness
-        return method?.Invoke(null, [obj]) ?? throw new InvalidOperationException($"Cannot convert {obj} to {target}");
+        // This might happen when Type doesn't match with underlying type
+        return method?.Invoke(null, [obj]) ??
+               throw BishException.OfType_Argument(obj, BishType.GetStaticType(target));
     }
 
     private static MethodInfo? GetImplicitConversionMethod(this Type type, Type source, Type target)

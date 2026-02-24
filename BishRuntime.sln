@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishTest", "BishTest\BishTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishBytecode", "BishBytecode\BishBytecode.csproj", "{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishCompiler", "BishCompiler\BishCompiler.csproj", "{9982FB55-8744-4AD6-911D-E19029B3BEFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5DBD5B2-4876-41F7-823A-BFAA5905A6C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9982FB55-8744-4AD6-911D-E19029B3BEFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9982FB55-8744-4AD6-911D-E19029B3BEFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9982FB55-8744-4AD6-911D-E19029B3BEFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9982FB55-8744-4AD6-911D-E19029B3BEFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -2,7 +2,7 @@
 
 public class IterTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals();
+    public readonly BishScope Scope = BishScope.Globals;
 
     [Fact]
     public void TestIterString()
@@ -22,6 +22,7 @@ public class IterTest : Test
             new Bytecodes.Get("s"),
             new Bytecodes.Op("op_Add", 2),
             new Bytecodes.Set("s"),
+            new Bytecodes.Pop(),
             // }
             new Bytecodes.Jump("start"),
             new Bytecodes.Nop().Tagged("end")
@@ -50,6 +51,7 @@ public class IterTest : Test
             new Bytecodes.Get("s"),
             new Bytecodes.Op("op_Add", 2),
             new Bytecodes.Set("s"),
+            new Bytecodes.Pop(),
             // }
             new Bytecodes.Jump("start"),
             new Bytecodes.Nop().Tagged("end")

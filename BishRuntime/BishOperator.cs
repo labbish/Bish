@@ -21,6 +21,12 @@ public class Pattern
             _ => throw new ArgumentException("Invalid pattern")
         };
     }
+
+    public string Name => _pattern switch
+    {
+        string pattern => pattern,
+        _ => throw new ArgumentException("Pattern is not string")
+    };
 }
 
 public record SpecialMethod(Pattern NamePattern, int? Argc, string? Op = null, Func<BishObject>? Default = null);
@@ -101,6 +107,9 @@ public static partial class BishOperator
         if (special.Argc is not null && special.Argc != func.Args.Count)
             throw new ArgumentException($"{opName} expects {special.Argc} args, found {func.Args.Count}" + tip);
     }
+
+    public static string GetOperatorName(string op, int argc) =>
+        SpecialMethods.First(special => special.Op == op && special.Argc == argc).NamePattern.Name;
 
     [GeneratedRegex("hook_Get_[A-Za-z_]+")]
     private static partial Regex GetterRegex();

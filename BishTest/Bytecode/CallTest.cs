@@ -2,7 +2,7 @@
 
 public class CallTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals();
+    public readonly BishScope Scope = BishScope.Globals;
 
     public CallTest()
     {

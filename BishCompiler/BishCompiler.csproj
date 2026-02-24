@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Antlr4 Include="Bish.g4">
+            <CustomToolNamespace>BishCompiler</CustomToolNamespace>
+        </Antlr4>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1"/>
+        <PackageReference Include="Antlr4BuildTasks" Version="12.14.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BishBytecode\BishBytecode.csproj" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <Antlr4ToolJarPath>$(ProjectDir)tools/antlr-4.13.2-complete.jar</Antlr4ToolJarPath>
+    </PropertyGroup>
+</Project>

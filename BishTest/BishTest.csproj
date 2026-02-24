@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\BishBytecode\BishBytecode.csproj"/>
+        <ProjectReference Include="..\BishCompiler\BishCompiler.csproj" />
         <ProjectReference Include="..\BishRuntime\BishRuntime.csproj"/>
     </ItemGroup>
 

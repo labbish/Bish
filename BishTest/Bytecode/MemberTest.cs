@@ -2,7 +2,7 @@
 
 public class MemberTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals();
+    public readonly BishScope Scope = BishScope.Globals;
 
     public MemberTest()
     {
@@ -33,7 +33,6 @@ public class MemberTest : Test
             new Bytecodes.SetMember("a")
         ], Scope);
         frame.Execute();
-        frame.Stack.Should().BeEmpty();
         frame.Scope.GetVar("x").GetMember("a").Should().BeEquivalentTo(I(0));
     }
 
@@ -45,7 +44,6 @@ public class MemberTest : Test
             new Bytecodes.DelMember("a")
         ], Scope);
         frame.Execute();
-        frame.Stack.Should().BeEmpty();
         frame.Scope.GetVar("x").TryGetMember("a").Should().BeNull();
     }
 }

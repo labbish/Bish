@@ -2,7 +2,7 @@
 
 public class ErrorTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals();
+    public readonly BishScope Scope = BishScope.Globals;
 
     [Fact]
     public void TestThrow()

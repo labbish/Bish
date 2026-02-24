@@ -21,7 +21,9 @@ public class Test
 
     protected static BishType T(string name, params List<BishType> parents) => new(name, parents);
 
-    protected static readonly BishNull Null = BishNull.Instance;
+    protected static BishNull Null => BishNull.Instance;
+
+    protected static BishFrame Compile(string code, BishScope scope) => BishCompiler.BishCompiler.Compile(code, scope);
 }
 
 public static class BishExceptionAssertion

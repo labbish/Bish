@@ -260,14 +260,15 @@ public record Copy : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Peek());
 }
 
-public record Swap : BishBytecode
+public record Swap(int Count = 1) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var first = frame.Stack.Pop();
-        var second = frame.Stack.Pop();
-        frame.Stack.Push(first);
-        frame.Stack.Push(second);
+        var top = frame.Stack.Pop();
+        var items = frame.Stack.Pop(Count);
+        frame.Stack.Push(top);
+        foreach (var item in items)
+            frame.Stack.Push(item);
     }
 }
 

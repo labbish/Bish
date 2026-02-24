@@ -9,7 +9,7 @@ namespace BishCompiler;
 
 public class BishVisitor : BishBaseVisitor<Codes>
 {
-    public static readonly string Anonymous = "anonymous";
+    public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
 
     public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
@@ -25,14 +25,19 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitParenExpr(BishParser.ParenExprContext context) => Visit(context.expr());
 
+    private static Op Op(string op, int argc) => new(BishOperator.GetOperatorName(op, argc), argc);
+
     public override Codes VisitBinOpExpr(BishParser.BinOpExprContext context) =>
-        [..Visit(context.left), ..Visit(context.right), new Op(BishOperator.GetOperatorName(context.op.Text, 2), 2)];
+        [..Visit(context.left), ..Visit(context.right), Op(context.op.Text, 2)];
 
     public override Codes VisitUnOpExpr(BishParser.UnOpExprContext context) =>
-        [..Visit(context.expr()), new Op(BishOperator.GetOperatorName(context.op.Text, 1), 1)];
+        [..Visit(context.expr()), Op(context.op.Text, 1)];
 
     public override Codes VisitGetMember(BishParser.GetMemberContext context) =>
         [..Visit(context.expr()), new GetMember(context.name.Text)];
+
+    public override Codes VisitGetIndex(BishParser.GetIndexContext context) =>
+        [..Visit(context.obj), ..Visit(context.index), Op("get[]", 2)];
 
     public override Codes VisitSet(BishParser.SetContext context)
     {
@@ -42,7 +47,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
         [
             op is null ? new Nop() : new Get(name),
             ..Visit(context.expr()),
-            op is null ? new Nop() : new Op(BishOperator.GetOperatorName(op, 2), 2),
+            op is null ? new Nop() : Op(op, 2),
             new Set(name)
         ];
     }
@@ -58,10 +63,23 @@ public class BishVisitor : BishBaseVisitor<Codes>
             op is null ? new Nop() : new Copy(),
             ..Visit(context.value),
             new Swap(),
-            ..(Codes)(op is null
-                ? []
-                : [new GetMember(name), new Swap(), new Op(BishOperator.GetOperatorName(op, 2), 2), new Swap()]),
+            ..(Codes)(op is null ? [] : [new GetMember(name), new Swap(), Op(op, 2), new Swap()]),
             new SetMember(name)
+        ];
+    }
+
+    public override Codes VisitSetIndex(BishParser.SetIndexContext context)
+    {
+        var op = context.setOp()?.GetText();
+        return
+        [
+            ..Visit(context.obj),
+            op is null ? new Nop() : new Copy(),
+            ..Visit(context.index),
+            ..(Codes)(op is null ? [] : [new Copy(), new Swap(2), Op("get[]", 2)]),
+            ..Visit(context.value),
+            op is null ? new Nop() : Op(op, 2),
+            Op("set[]", 3)
         ];
     }
 
@@ -72,6 +90,9 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitDelMember(BishParser.DelMemberContext context) =>
         [..Visit(context.obj), new DelMember(context.name.Text)];
+
+    public override Codes VisitDelIndex(BishParser.DelIndexContext context) =>
+        [..Visit(context.obj), ..Visit(context.index), Op("del[]", 2)];
 
     public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
     {

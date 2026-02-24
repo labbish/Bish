@@ -1,10 +1,8 @@
 ﻿namespace BishTest.Compiler;
 
-public class ScopeMemberTest : Test
+public class AccessTest : CompilerTest
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
-    public ScopeMemberTest()
+    public AccessTest()
     {
         Scope.DefVar("a", I(5));
         Scope.DefVar("b", S("abc"));
@@ -13,13 +11,13 @@ public class ScopeMemberTest : Test
         x.SetMember("y", new BishObject());
         x.SetMember("z", I(4));
         Scope.DefVar("x", x);
+        Scope.DefVar("l", L(I(0), I(1), I(2), I(3), I(4)));
     }
 
     [Fact]
-    public void TestScopeMember()
+    public void TestAccess()
     {
-        var frame = Compile("a=b.length;c:='c';x.y.z=0;del x.z;m:=del n;", Scope);
-        frame.Execute();
+        Execute("a=b.length;c:='c';x.y.z=0;del x.z;m:=del n;");
         Scope.GetVar("a").Should().BeEquivalentTo(I(3));
         Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
         Scope.GetVar("c").Should().BeEquivalentTo(S("c"));
@@ -32,9 +30,18 @@ public class ScopeMemberTest : Test
     [Fact]
     public void TestScopeDepth()
     {
-        var frame = Compile("{a=b.length;b:='b'}", Scope);
-        frame.Execute();
+        Execute("{a=b.length;b:='b'}");
         Scope.GetVar("a").Should().BeEquivalentTo(I(3));
         Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
+    }
+
+    [Fact]
+    public void TestIndex()
+    {
+        ExpectResult("l[0]", I(0));
+        Execute("l[1]=-1;l[2]*=3;");
+        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(-1), I(6), I(3), I(4)));
+        Execute("del l[3];");
+        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(-1), I(6), I(3)));
     }
 }

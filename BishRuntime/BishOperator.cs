@@ -62,9 +62,9 @@ public static partial class BishOperator
         new(GetterRegex(), 1),
         new(SetterRegex(), 2),
         new(DellerRegex(), 1),
-        new("op_GetIndex", 2, "[]"),
-        new("op_SetIndex", 3, "[]"),
-        new("op_DelIndex", 2, "[]"),
+        new("op_GetIndex", 2, "get[]"),
+        new("op_SetIndex", 3, "set[]"),
+        new("op_DelIndex", 2, "del[]"),
         new("op_Iter", 1, "iter")
     ];
 

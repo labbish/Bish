@@ -28,7 +28,7 @@ expr
     // TODO: decorators
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
-    // TODO: op_index
+    | obj=expr '[' index=expr ']'                               # GetIndex
     | expr '.' name=ID                                          # GetMember
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
@@ -41,8 +41,11 @@ expr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
+    | <assoc=right> obj=expr '[' index=expr ']'
+        setOp? '=' value=expr                                   # SetIndex
     | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
     | <assoc=right> name=ID setOp? '=' value=expr               # Set
+    | <assoc=right> DEL obj=expr '[' index=expr ']'             # DelIndex
     | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
     | <assoc=right> DEL name=ID                                 # Del
     // TODO: string interpolation

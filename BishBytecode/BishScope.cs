@@ -50,6 +50,7 @@ public class BishScope
             ["NameError"] = BishError.NameErrorType,
             ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
             ["IterationStop"] = BishError.IteratorStopType
+            // TODO: a builtin print
         }
     };
 }

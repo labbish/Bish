@@ -3,8 +3,9 @@ The Bish Language Compiler & Runtime.
 
 ## Parts
 
-This repository consists of 4 parts:
+This repository consists of 5 parts:
 
+* **Bish** - The entry point, containing an REPL.
 * **BishCompiler** - The compiler which transforms Bish code into bytecode.
 * **BishBytecode** - To run bytecode and interact with the VM.
 * **BishRuntime** - The VM and object model.

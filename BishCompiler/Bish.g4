@@ -8,9 +8,11 @@ stat
     : expr END                                                  # ExprStat
     | RET expr END                                              # ReturnStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
+    // TODO: switch-case?
     | WHL '(' expr ')' stat                                     # WhileStat
     | DO stat WHL '(' expr ')' END                              # DoWhileStat
     | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
+    // TODO: break & continue
     | FOR '(' name=ID ':' expr ')' stat                         # ForIterStat
     | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
         | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
@@ -25,6 +27,7 @@ expr
     | CLS ID? (':' args)? ('{' stat* '}')?                      # ClassExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
+    // TODO: op_index
     | expr '.' name=ID                                          # GetMember
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr

@@ -1,5 +1,6 @@
 ﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
 using System.Text.RegularExpressions;
+using Antlr4.Runtime;
 using BishBytecode.Bytecodes;
 using BishRuntime;
 using String = BishBytecode.Bytecodes.String;
@@ -212,7 +213,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
             new Outer(),
             new FuncEnd(symbol),
             ..defaults.SelectMany(Visit),
-            new MakeFunc(symbol, defaults.Count, Rest: args[^1].Rest),
+            new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest),
             name is null ? new Nop() : new Def(name)
         ];
     }
@@ -233,6 +234,22 @@ public class BishVisitor : BishBaseVisitor<Codes>
                 : [..ToList(args), new MakeClassArgs(symbol)]),
             name is null ? new Nop() : new Def(name)
         ];
+    }
+
+    public override Codes VisitThrowExpr(BishParser.ThrowExprContext context) => [..Visit(context.expr()), new Throw()];
+
+    public override Codes VisitErrorStat(BishParser.ErrorStatContext context)
+    {
+        var tag = Symbols.Get("error");
+        Codes tryPart = [new TryStart(tag), ..Visit(context.tryStat), new TryEnd(tag)];
+        var @catch = context.catchExpr as ParserRuleContext ?? context.catchStat;
+        var id = context.ID()?.GetText();
+        Codes catchPart = @catch is null
+            ? []
+            : [new CatchStart(tag), id is null ? new Pop() : new Move(id), ..Visit(@catch), new CatchEnd(tag)];
+        var @finally = context.finallyStat;
+        Codes finallyPart = @finally is null ? [] : [new FinallyStart(tag), ..Visit(@finally), new FinallyEnd(tag)];
+        return [..tryPart, ..catchPart, ..finallyPart];
     }
 
     public override Codes VisitProgram(BishParser.ProgramContext context) =>

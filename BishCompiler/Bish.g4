@@ -12,6 +12,8 @@ stat
     | DO stat WHL '(' expr ')' END                              # DoWhileStat
     | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
     | FOR '(' name=ID ':' expr ')' stat                         # ForIterStat
+    | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
+        | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
     ;
@@ -34,6 +36,7 @@ expr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
+    | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> obj=expr '.' name=ID '=' value=expr         # SetMember
     | <assoc=right> name=ID '=' value=expr                      # Set
     | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
@@ -83,6 +86,10 @@ DEL : 'del' ;
 FUN : 'func' ;
 RET : 'return' ;
 CLS : 'class' ;
+THR : 'throw' ;
+TRY : 'try' ;
+CTH : 'catch' ;
+FIN : 'finally' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

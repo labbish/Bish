@@ -30,3 +30,15 @@ public partial class BishType
         return result;
     }
 }
+
+public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
+{
+    public BishObject Inner => inner;
+    public BishType MRORoot => mroRoot;
+
+    public override BishType DefaultType => inner.Type.WithMRORoot(MRORoot);
+
+    public override BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None, 
+        BishType? _ = null, List<BishObject>? excludes = null) =>
+        Inner.TryGetMember(name, mode, MRORoot, excludes);
+}

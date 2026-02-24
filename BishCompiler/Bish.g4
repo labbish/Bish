@@ -1,6 +1,8 @@
 grammar Bish;
 
-program : stat* EOF ;
+program
+    : stat* EOF
+    ;
 
 stat
     : expr END                                                  # ExprStat
@@ -17,7 +19,8 @@ stat
 expr
     : '(' expr ')'                                              # ParenExpr
     | '(' defArgs ')' '=>' (expr | '{' stat* '}')               # FuncExpr
-    | FUN (ID)? '(' defArgs ')' (('=>' expr) | ('{' stat* '}')) # FuncExpr
+    | FUN ID? '(' defArgs ')' (('=>' expr) | ('{' stat* '}'))   # FuncExpr
+    | CLS ID? (':' args)? ('{' stat* '}')?                      # ClassExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
     | expr '.' name=ID                                          # GetMember
@@ -79,6 +82,7 @@ FOR : 'for' ;
 DEL : 'del' ;
 FUN : 'func' ;
 RET : 'return' ;
+CLS : 'class' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

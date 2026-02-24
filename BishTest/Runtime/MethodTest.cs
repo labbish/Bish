@@ -57,6 +57,20 @@ public class MethodTest : Test
         Null.GetMember("toString").Call([]).Should().BeEquivalentTo(S("null"));
         x.Type.GetMember("toString").Call([]).Should().BeEquivalentTo(S("int"));
     }
+
+    [Fact]
+    public void TestBase()
+    {
+        var c1 = new BishType("C1");
+        c1.SetMember("f", new BishFunc("f", [new BishArg("self")], args => args[0].GetMember("a")));
+        var c2 = new BishType("C2", [c1]);
+        c2.SetMember("f", new BishFunc("f", [new BishArg("self")], args => args[0].GetMember("b")));
+        var x = c2.CreateInstance([]);
+        x.SetMember("a", I(1));
+        x.SetMember("b", I(2));
+        x.GetMember("f").Call([]).Should().BeEquivalentTo(I(2));
+        x.GetMember("base").Call([]).GetMember("f").Call([]).Should().BeEquivalentTo(I(1));
+    }
 }
 
 file class T1(string tag) : BishObject

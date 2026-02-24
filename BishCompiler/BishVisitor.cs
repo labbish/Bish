@@ -8,6 +8,7 @@ namespace BishCompiler;
 
 public class BishVisitor : BishBaseVisitor<Codes>
 {
+    public static readonly string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
 
     public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
@@ -182,8 +183,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
             ..Visit(context.expr()),
             new Op("op_Iter", 1),
             new ForIter(end).Tagged(tag),
-            ..Wrap([new Def(context.name.Text)], Visit(context.stat())),
-            new Pop(),
+            ..Wrap([new Move(context.name.Text)], Visit(context.stat())),
             new Jump(tag),
             new Pop().Tagged(end)
         ];
@@ -196,7 +196,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitFuncExpr(BishParser.FuncExprContext context)
     {
         var name = context.ID()?.GetText();
-        var symbol = Symbols.Get(context.ID()?.GetText() ?? "anon");
+        var symbol = Symbols.Get(name ?? Anonymous);
         var defArgs = context.defArgs().defArg() ?? [];
         var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
             new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null)).ToList());
@@ -207,13 +207,31 @@ public class BishVisitor : BishBaseVisitor<Codes>
         [
             new FuncStart(symbol, args.Select(arg => arg.Name).ToList()),
             new Inner(),
-            ..args.Select(arg => new Def(arg.Name)),
+            ..args.Select(arg => new Move(arg.Name)),
             ..expr is null ? stats.SelectMany(Visit) : Return(expr),
             new Outer(),
             new FuncEnd(symbol),
             ..defaults.SelectMany(Visit),
             new MakeFunc(symbol, defaults.Count, Rest: args[^1].Rest),
-            ..(BishBytecode.BishBytecode[])(name is null ? [] : [new Def(name)])
+            name is null ? new Nop() : new Def(name)
+        ];
+    }
+
+    public override Codes VisitClassExpr(BishParser.ClassExprContext context)
+    {
+        var name = context.ID()?.GetText();
+        var symbol = Symbols.Get(name ?? Anonymous);
+        var args = context.args()?.arg() ?? [];
+        var stats = context.stat() ?? [];
+        return
+        [
+            new ClassStart(symbol),
+            ..stats.SelectMany(Visit),
+            new ClassEnd(symbol),
+            ..(Codes)(NoRest(args)
+                ? [..args.SelectMany(Visit), new MakeClass(symbol, args.Length)]
+                : [..ToList(args), new MakeClassArgs(symbol)]),
+            name is null ? new Nop() : new Def(name)
         ];
     }
 

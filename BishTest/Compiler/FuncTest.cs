@@ -35,4 +35,11 @@ public class FuncTest : CompilerTest
         Action(() => Execute("func f(x,y,..z=0)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
         Action(() => Execute("func f(x,..y,..z)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
     }
+
+    [Fact]
+    public void TestRecursive()
+    {
+        Execute("func f(n) => n <= 0 ? 1 : n * f(n - 1);");
+        ExpectResult("f(4)", I(24));
+    }
 }

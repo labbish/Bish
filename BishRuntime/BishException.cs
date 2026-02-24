@@ -50,6 +50,12 @@ public class BishException(BishError error) : Exception
     public static BishException OfType(string message, Dictionary<string, BishObject> data) =>
         Create(BishError.TypeErrorType, message, data);
 
+    public static BishException OfType_NoBase(BishObject obj) => OfType(
+        $"Cannot call .base() because MRO chain of {obj} is empty", new Dictionary<string, BishObject>
+        {
+            ["object"] = obj
+        });
+
     public static BishException OfType_NotCallable(BishObject obj) => OfType($"Cannot call {obj}",
         new Dictionary<string, BishObject>
         {

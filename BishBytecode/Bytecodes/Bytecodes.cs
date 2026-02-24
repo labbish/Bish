@@ -45,6 +45,11 @@ public record Def(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.DefVar(Name, frame.Stack.Pop()));
 }
 
+public record Move(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Scope.DefVar(Name, frame.Stack.Pop());
+}
+
 public record Set(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.SetVar(Name, frame.Stack.Pop()));
@@ -82,6 +87,16 @@ public record Call(int Argc) : BishBytecode
         var func = frame.Stack.Pop();
         var args = frame.Stack.Pop(Argc);
         frame.Stack.Push(func.Call(args));
+    }
+}
+
+public record CallArgs : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var func = frame.Stack.Pop();
+        var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
+        frame.Stack.Push(func.Call(args.List));
     }
 }
 
@@ -260,18 +275,27 @@ public record ClassStart(string Name) : StartTag<ClassEnd>(Name);
 
 public record ClassEnd(string Name) : EndTag(Name);
 
-public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart, ClassEnd>(Name)
+public static class ClassHelper
 {
-    public override void Execute(BishFrame frame)
+    public static void MakeClass(this BishFrame frame, string name, TagSlicer.CodeSlice<ClassStart, ClassEnd> slice,
+        List<BishObject> parents)
     {
-        var slice = Slice(frame);
         var inner = slice.Execute(frame);
-        var parents = frame.Stack.Pop(ParentCount)
-            .Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList();
-        var type = new BishType(Name, parents);
+        var type = new BishType(name, parents.Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList());
         foreach (var (key, value) in inner.Scope.Vars) type.SetMember(key, value);
         frame.Stack.Push(type);
     }
+}
+
+public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart, ClassEnd>(Name)
+{
+    public override void Execute(BishFrame frame) => frame.MakeClass(Name, Slice(frame), frame.Stack.Pop(ParentCount));
+}
+
+public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
+{
+    public override void Execute(BishFrame frame) =>
+        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().ExpectToBe<BishList>("parents").List);
 }
 
 public record Throw : BishBytecode
@@ -354,16 +378,6 @@ public record ForIter(string GoalTag) : BishBytecode
             if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) frame.JumpToTag(GoalTag);
             else throw;
         }
-    }
-}
-
-public record CallArgs : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        var func = frame.Stack.Pop();
-        var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
-        frame.Stack.Push(func.Call(args.List));
     }
 }
 

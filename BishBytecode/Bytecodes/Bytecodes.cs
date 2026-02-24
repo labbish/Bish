@@ -135,7 +135,7 @@ public record JumpIf(string GoalTag) : BishBytecode
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value)
+        if (result.ExpectToBe<BishBool>("condition").Value)
             frame.JumpToTag(GoalTag);
     }
 }
@@ -145,7 +145,7 @@ public record JumpIfNot(string GoalTag) : BishBytecode
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (!BishOperator.Call("op_Bool", [result]).ExpectToBe<BishBool>("condition").Value)
+        if (!result.ExpectToBe<BishBool>("condition").Value)
             frame.JumpToTag(GoalTag);
     }
 }

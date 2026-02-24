@@ -12,7 +12,8 @@ expr
     : '(' expr ')'                                              # ParenExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
-    | op=('+'|'-'|'~') expr                                     # UnOpExpr
+    | expr '.' name=ID                                          # GetMember
+    | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
     | left=expr op=('*'|'/') right=expr                         # BinOpExpr
     | left=expr op=('+'|'-') right=expr                         # BinOpExpr
@@ -21,7 +22,7 @@ expr
     | left=expr op=('=='|'!=') right=expr                       # BinOpExpr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
-    | expr '.' name=ID                                          # GetMember
+    | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> obj=expr '.' name=ID '=' value=expr         # SetMember
     | <assoc=right> name=ID '=' value=expr                      # Set
     | <assoc=right> name=ID ':=' value=expr                     # Def

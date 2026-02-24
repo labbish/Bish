@@ -71,14 +71,21 @@ public class BishVisitor : BishBaseVisitor<Codes>
         ];
     }
 
-    public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
-        [..Visit(context.expr()), new Pop()]; // pops the expr result to make stack empty
-
-    public override Codes VisitBlockStat(BishParser.BlockStatContext context) =>
-        [new Inner(), ..context.stat().SelectMany(Visit), new Outer()];
-
-    public override Codes VisitProgram(BishParser.ProgramContext context) =>
-        context.stat().SelectMany(Visit).ToList();
+    public override Codes VisitTernOpExpr(BishParser.TernOpExprContext context)
+    {
+        var tag = Allocator.Symbol("tern");
+        var end = Allocator.Symbol("tern_end");
+        return [
+            ..Visit(context.cond),
+            new Op("op_Bool", 1),
+            new JumpIfNot(tag),
+            ..Visit(context.left),
+            new Jump(end),
+            new Nop().Tagged(tag),
+            ..Visit(context.right),
+            new Nop().Tagged(end)
+        ];
+    }
 
     public override Codes VisitCallExpr(BishParser.CallExprContext context)
     {
@@ -93,7 +100,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
         return NoRest(args) ? [..args.SelectMany(Visit), new BuildList(args.Length)] : ToList(args);
     }
 
-    public Codes ToList(BishParser.ArgContext[] args) =>
+    protected Codes ToList(BishParser.ArgContext[] args) =>
     [
         new BuildList(0),
         ..args.SelectMany<BishParser.ArgContext, BishBytecode.BishBytecode>(arg => arg switch
@@ -103,7 +110,16 @@ public class BishVisitor : BishBaseVisitor<Codes>
         })
     ];
 
-    public static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
+    protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
+
+    public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
+        [..Visit(context.expr()), new Pop()]; // pops expr result to keep stack empty
+
+    public override Codes VisitBlockStat(BishParser.BlockStatContext context) =>
+        [new Inner(), ..context.stat().SelectMany(Visit), new Outer()];
+
+    public override Codes VisitProgram(BishParser.ProgramContext context) =>
+        context.stat().SelectMany(Visit).ToList();
 }
 
 public class SymbolAllocator

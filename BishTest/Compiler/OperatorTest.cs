@@ -33,7 +33,14 @@ public class OperatorTest : CompilerTest
         ExpectResult("false||false", B(false));
         
         Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
+
+        Count = 0;
         ExpectResult("f()&&f()", B(true));
         Count.Should().Be(1);
+
+        Count = 0;
+        ExpectResult("true?3:f()", I(3));
+        ExpectResult("false?f():3", I(3));
+        Count.Should().Be(0);
     }
 }

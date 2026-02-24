@@ -22,10 +22,10 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
-    | '(' defArgs ')' '=>' (expr | '{' stat* '}')               # FuncExpr
-    | FUN ID? '(' defArgs ')' (('=>' expr) | ('{' stat* '}'))   # FuncExpr
-    | CLS ID? (':' args)? ('{' stat* '}')?                      # ClassExpr
-    // TODO: decorators
+    | deco* '(' defArgs ')' '=>' (expr | '{' stat* '}')         # FuncExpr
+    | deco* FUN ID? '(' defArgs ')'
+        (('=>' expr) | ('{' stat* '}'))                         # FuncExpr
+    | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
     | obj=expr '[' index=expr ']'                               # GetIndex
@@ -70,6 +70,10 @@ defArgs
     ;
 defArg
     : dots='..'? name=ID ('=' expr)?
+    ;
+
+deco
+    : '@' expr
     ;
 
 atom

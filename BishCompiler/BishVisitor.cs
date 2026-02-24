@@ -159,11 +159,11 @@ public class BishVisitor : BishBaseVisitor<Codes>
     protected Codes ToList(BishParser.ArgContext[] args) =>
     [
         new BuildList(0),
-        ..args.SelectMany<BishParser.ArgContext, BishBytecode.BishBytecode>(arg => arg switch
+        ..args.SelectMany(arg => Visit(arg).Concat(arg switch
         {
-            BishParser.RestArgContext => [..Visit(arg), new Op("op_Add", 2)],
-            _ => [..Visit(arg), new Swap(), new GetMember("add"), new Call(1)]
-        })
+            BishParser.RestArgContext => [new Op("op_Add", 2)],
+            _ => [new Swap(), new GetMember("add"), new Call(1)]
+        }))
     ];
 
     protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
@@ -260,6 +260,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
             new FuncEnd(symbol),
             ..defaults.SelectMany(Visit),
             new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest),
+            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Call(1)])),
             name is null ? new Nop() : new Def(name)
         ];
     }
@@ -278,6 +279,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
             ..(Codes)(NoRest(args)
                 ? [..args.SelectMany(Visit), new MakeClass(symbol, args.Length)]
                 : [..ToList(args), new MakeClassArgs(symbol)]),
+            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Call(1)])),
             name is null ? new Nop() : new Def(name)
         ];
     }

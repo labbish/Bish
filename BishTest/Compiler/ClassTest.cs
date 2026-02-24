@@ -41,4 +41,16 @@ public class ClassTest : CompilerTest
         d.Type.Should().Be(D);
         d.GetMember("f").Call([S("s")]).Should().BeEquivalentTo(S("ds?"));
     }
+
+    [Fact]
+    public void TestDecorator()
+    {
+        Execute("func d(cls){cls.name='D';init:=cls.hook_Init;cls.hook_Init=(self)=>{init(self);self.y='d';};return cls;}");
+        Execute("@d class C{name:='C';func hook_Init(self)=>self.x='c';func f(self,s)=>self.x+s;};");
+        Execute("c:=C();");
+        BishObject C = Scope.GetVar("C"), c = Scope.GetVar("c");
+        C.GetMember("name").Should().BeEquivalentTo(S("D"));
+        c.GetMember("x").Should().BeEquivalentTo(S("c"));
+        c.GetMember("y").Should().BeEquivalentTo(S("d"));
+    }
 }

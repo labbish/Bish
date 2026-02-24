@@ -42,4 +42,11 @@ public class FuncTest : CompilerTest
         Execute("func f(n) => n <= 0 ? 1 : n * f(n - 1);");
         ExpectResult("f(4)", I(24));
     }
+
+    [Fact]
+    public void TestDecorator()
+    {
+        Execute("func d1(f)=>(x)=>f(x*2);func d2(f)=>(x)=>f(x)+1;");
+        ExpectResult("(@d1 @d2 (x)=>x)(3)", I(7));
+    }
 }

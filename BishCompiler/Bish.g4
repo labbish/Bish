@@ -4,6 +4,11 @@ program : stat* EOF ;
 
 stat
     : expr END                                                  # ExprStat
+    | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
+    | WHL '(' expr ')' stat                                     # WhileStat
+    | DO stat WHL '(' expr ')' END                              # DoWhileStat
+    | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
+    | FOR '(' ID ':' expr ')' stat                              # ForIterStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
     ;
@@ -25,6 +30,8 @@ expr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> obj=expr '.' name=ID '=' value=expr         # SetMember
     | <assoc=right> name=ID '=' value=expr                      # Set
+    // TODO: op-assign (e.g. +=)
+    // TODO: del?
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
     ;
@@ -49,9 +56,15 @@ END : ';' ;
 INT : [0-9]+ ;
 NUM : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
 
-STR : S1 | S2;
+STR : S1 | S2 ;
 S1  : '"' ( ~('\\'|'"') | '\\' . )* '"' ;
 S2  : '\'' ( ~('\\'|'\'') | '\\' . )* '\'' ;
+
+IF  : 'if' ;
+ELS : 'else' ;
+WHL : 'while' ;
+DO  : 'do' ;
+FOR : 'for' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

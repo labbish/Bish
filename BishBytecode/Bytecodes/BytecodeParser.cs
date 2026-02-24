@@ -15,13 +15,16 @@ public static partial class BytecodeParser
         var type = bytecode.GetType();
         var name = Mappings.FirstOrDefault(pair => pair.Value == type).Key ?? ToCodeName(type.Name);
         var args = Args(type);
-        return name + " " + string.Join(" ",
+        return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + name + " " + string.Join(" ",
             args.Select(arg => ArgToString(type.GetProperty(arg.Name)!.GetValue(bytecode)!)));
     }
 
-    public static BishBytecode FromString(string code)
+    public static BishBytecode FromString(string code) =>
+        FromString(code.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+    public static BishBytecode FromString(string[] parts)
     {
-        var parts = code.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts[0].EndsWith(':')) return FromString(parts[1..]).Tagged(parts[0][..^1]);
         var first = parts[0].ToUpper();
         var type =
             Mappings.GetValueOrDefault(first) ??

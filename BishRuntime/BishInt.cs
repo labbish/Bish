@@ -14,6 +14,11 @@ public class BishInt(int value) : BishObject
     [Builtin("hook")]
     public static void Init(BishInt self, [DefaultNull] BishInt? other) => self.Value = other?.Value ?? 0;
 
+    [Builtin(special: false)]
+    public static BishInt Parse(BishString a) => int.TryParse(a.Value, out var value)
+        ? new BishInt(value)
+        : throw BishException.OfArgument_Parse(a, StaticType);
+
     [Builtin("op")]
     public static BishInt Pos(BishInt a) => new(+a.Value);
 

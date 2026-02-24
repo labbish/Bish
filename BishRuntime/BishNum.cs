@@ -16,6 +16,11 @@ public class BishNum(double value) : BishObject
     [Builtin("hook")]
     public static void Init(BishNum self, [DefaultNull] BishNum? other) => self.Value = other?.Value ?? 0;
 
+    [Builtin(special: false)]
+    public static BishNum Parse(BishString a) => double.TryParse(a.Value, out var value)
+        ? new BishNum(value)
+        : throw BishException.OfArgument_Parse(a, StaticType);
+
     [Builtin("op")]
     public static BishNum Pos(BishNum a) => new(+a.Value);
 

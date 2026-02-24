@@ -155,6 +155,13 @@ public class BishException(BishError error) : Exception
         }
     );
 
+    public static BishException OfArgument_Parse(BishString str, BishType type) => OfArgument(
+        $"Cannot parse {str} to {type}", new Dictionary<string, BishObject>
+        {
+            ["type"] = type,
+            ["string"] = str
+        });
+
     public static BishException OfName(string name) => Create(BishError.NameErrorType,
         $"Name {name} is not defined", new Dictionary<string, BishObject>
         {

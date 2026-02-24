@@ -17,6 +17,11 @@ public class Repl(BishScope? scope = null)
             var code = Console.ReadLine();
             if (string.IsNullOrEmpty(code)) continue;
             if (code == ".exit") break;
+            if (code == ".clear")
+            {
+                Console.Clear();
+                continue;
+            }
             if (code.StartsWith(".file"))
                 Handled(() =>
                 {

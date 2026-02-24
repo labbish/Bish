@@ -42,6 +42,8 @@ public class BishScope
             ["true"] = new BishBool(true),
             ["false"] = new BishBool(false),
             ["null"] = BishNull.Instance, // TODO: maybe make these const
+            ["print"] = BishBuiltinBinder.Builtin("print", Print),
+            ["input"] = BishBuiltinBinder.Builtin("input", Input),
             ["Error"] = BishError.StaticType,
             ["AttributeError"] = BishError.AttributeErrorType,
             ["ArgumentError"] = BishError.ArgumentErrorType,
@@ -50,7 +52,14 @@ public class BishScope
             ["NameError"] = BishError.NameErrorType,
             ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
             ["IterationStop"] = BishError.IteratorStopType
-            // TODO: a builtin print
         }
     };
+
+    public static BishNull Print(BishObject obj)
+    {
+        Console.Write(obj.GetMember("toString").Call([]).ExpectToBe<BishString>("toString").Value);
+        return BishNull.Instance;
+    }
+
+    public static BishString Input() => new(Console.ReadLine() ?? "");
 }

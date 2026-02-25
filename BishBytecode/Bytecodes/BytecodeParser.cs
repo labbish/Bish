@@ -16,7 +16,9 @@ public static partial class BytecodeParser
         var name = Mappings.FirstOrDefault(pair => pair.Value == type).Key ?? ToCodeName(type.Name);
         var args = Args(type);
         return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + name + " " + string.Join(" ",
-            args.Select(arg => ArgToString(type.GetProperty(arg.Name)!.GetValue(bytecode)!)));
+            args.Select(arg =>
+                ArgToString(type.GetProperty(arg.Name)?.GetValue(bytecode) ??
+                             type.GetField(arg.Name)!.GetValue(bytecode)!)));
     }
 
     public static BishBytecode FromString(string code) =>

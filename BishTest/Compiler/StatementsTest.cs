@@ -1,6 +1,7 @@
 ﻿namespace BishTest.Compiler;
 
-public class StatementsTest : CompilerTest
+[Collection("opt")]
+public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]
     public void TestIf()
@@ -46,15 +47,15 @@ public class StatementsTest : CompilerTest
     public void TestStatements(int n, int primes)
     {
         var code = $$"""
-                   s := 0;
-                   for (n: range(2, {{n + 1}})) {
-                       prime := true;
-                       for (i: range(2, num.sqrt(n).floor() + 1))
-                           if (n % i == 0)
-                               prime = false;
-                       if (prime) s += 1;
-                   }
-                   """;
+                     s := 0;
+                     for (n: range(2, {{n + 1}})) {
+                         prime := true;
+                         for (i: range(2, num.sqrt(n).floor() + 1))
+                             if (n % i == 0)
+                                 prime = false;
+                         if (prime) s += 1;
+                     }
+                     """;
         Execute(code);
         Scope.GetVar("s").Should().BeEquivalentTo(I(primes));
     }

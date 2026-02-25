@@ -8,7 +8,7 @@ public abstract record BishBytecode
 
     public abstract void Execute(BishFrame frame);
 
-    public BishBytecode Tagged(string tag)
+    public BishBytecode Tagged(string? tag)
     {
         Tag = tag;
         return this;

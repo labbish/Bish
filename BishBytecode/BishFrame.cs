@@ -7,7 +7,7 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
     public BishFrame? Outer => outer;
     public BishScope Scope = scope ?? BishScope.Globals;
     public readonly Stack<BishObject> Stack = new();
-    public List<BishBytecode> Bytecodes => bytecodes;
+    public List<BishBytecode> Bytecodes = bytecodes;
     public int Ip;
 
     public BishObject? ReturnValue;

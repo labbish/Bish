@@ -2,10 +2,10 @@
 
 namespace BishTest.Compiler;
 
-[SuppressMessage("Usage", "CA2211")]
-public class OperatorTest : CompilerTest
+[Collection("opt")]
+public class OperatorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
-    public static int Count;
+    [SuppressMessage("Usage", "CA2211")] public static int Count;
 
     public static BishBool F()
     {
@@ -31,7 +31,7 @@ public class OperatorTest : CompilerTest
         ExpectResult("true||false", B(true));
         ExpectResult("false||true", B(true));
         ExpectResult("false||false", B(false));
-        
+
         Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
 
         Count = 0;

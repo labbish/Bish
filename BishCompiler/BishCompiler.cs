@@ -6,7 +6,7 @@ namespace BishCompiler;
 public static class BishCompiler
 {
     public static BishFrame Compile(string code, BishScope? scope = null,
-        ErrorHandlingMode mode = ErrorHandlingMode.Default)
+        ErrorHandlingMode mode = ErrorHandlingMode.Default, bool optimize = true)
     {
         var stream = CharStreams.fromString(code);
         var lexer = new BishLexer(stream);
@@ -29,6 +29,7 @@ public static class BishCompiler
         var tree = parser.program();
         var visitor = new BishVisitor();
         var codes = visitor.Visit(tree);
+        if (optimize) codes = BishOptimizer.Optimize(codes);
         return new BishFrame(codes, scope);
     }
 }

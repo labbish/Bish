@@ -1,8 +1,8 @@
 ﻿global using BishRuntime;
 global using BishBytecode;
+global using BishCompiler;
 global using FluentAssertions;
 global using Bytecodes = BishBytecode.Bytecodes;
-using BishCompiler;
 using FluentAssertions.Specialized;
 
 namespace BishTest;
@@ -23,9 +23,6 @@ public class Test
     protected static BishType T(string name, params List<BishType> parents) => new(name, parents);
 
     protected static BishNull Null => BishNull.Instance;
-
-    protected static BishFrame Compile(string code, BishScope scope) =>
-        BishCompiler.BishCompiler.Compile(code, scope, ErrorHandlingMode.Throw);
 }
 
 public static class BishExceptionAssertion

@@ -2,7 +2,8 @@
 
 namespace BishTest.Compiler;
 
-public class ClassTest : CompilerTest
+[Collection("opt")]
+public class ClassTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]
     public void TestClass()
@@ -45,7 +46,7 @@ public class ClassTest : CompilerTest
     [Fact]
     public void TestDecorator()
     {
-        Execute("func d(cls){cls.name='D';init:=cls.hook_Init;cls.hook_Init=(self)=>{init(self);self.y='d';};return cls;}");
+        Execute("func d(cls){cls.name='D';init:=cls.hook_Init;cls.hook_Init=(self)=>{init(self);self.y='d';};return cls;};");
         Execute("@d class C{name:='C';func hook_Init(self)=>self.x='c';func f(self,s)=>self.x+s;};");
         Execute("c:=C();");
         BishObject C = Scope.GetVar("C"), c = Scope.GetVar("c");

@@ -15,22 +15,19 @@ public record Pop : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Pop();
 }
 
-public record Empty : BishBytecode
-{
-    public override void Execute(BishFrame frame) => frame.Stack.Clear();
-}
+public abstract record Value : BishBytecode;
 
-public record Int(int Value) : BishBytecode
+public record Int(int Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishInt(Value));
 }
 
-public record Num(double Value) : BishBytecode
+public record Num(double Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishNum(Value));
 }
 
-public record String(string Value) : BishBytecode
+public record String(string Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishString(Value));
 }
@@ -120,48 +117,38 @@ public record Outer : BishBytecode
         frame.Scope = frame.Scope.Outer ?? throw new ArgumentException("No outer scope");
 }
 
-public static class Jumper
+public abstract record Jumper(string GoalTag) : BishBytecode
 {
-    extension(BishFrame frame)
-    {
-        public int TagPos(string tag)
-        {
-            var pos = frame.Bytecodes.FindIndex(x => x.Tag == tag);
-            return pos == -1 ? throw new ArgumentException($"No such tag: {tag}") : pos;
-        }
+    public string GoalTag = GoalTag;
 
-        public void JumpToTag(string tag)
-        {
-            frame.Ip = frame.TagPos(tag);
-        }
+    public void Jump(BishFrame frame)
+    {
+        var pos = frame.Bytecodes.FindIndex(x => x.Tag == GoalTag);
+        if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
+        frame.Ip = pos;
     }
 }
 
-public record Jump(string GoalTag) : BishBytecode
+public record Jump(string GoalTag) : Jumper(GoalTag)
 {
-    public override void Execute(BishFrame frame)
-    {
-        frame.JumpToTag(GoalTag);
-    }
+    public override void Execute(BishFrame frame) => Jump(frame);
 }
 
-public record JumpIf(string GoalTag) : BishBytecode
+public record JumpIf(string GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (result.ExpectToBe<BishBool>("condition").Value)
-            frame.JumpToTag(GoalTag);
+        if (result.ExpectToBe<BishBool>("condition").Value) Jump(frame);
     }
 }
 
-public record JumpIfNot(string GoalTag) : BishBytecode
+public record JumpIfNot(string GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
         var result = frame.Stack.Pop();
-        if (!result.ExpectToBe<BishBool>("condition").Value)
-            frame.JumpToTag(GoalTag);
+        if (!result.ExpectToBe<BishBool>("condition").Value) Jump(frame);
     }
 }
 
@@ -179,7 +166,12 @@ public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
     }
 }
 
-public record EndTag(string Name) : Nop;
+public record EndTag(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+    }
+};
 
 public static class TagSlicer
 {
@@ -365,7 +357,7 @@ public record FinallyStart(string Name) : StartTag<FinallyEnd>(Name);
 
 public record FinallyEnd(string Name) : EndTag(Name);
 
-public record ForIter(string GoalTag) : BishBytecode
+public record ForIter(string GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
@@ -376,7 +368,7 @@ public record ForIter(string GoalTag) : BishBytecode
         }
         catch (BishException e)
         {
-            if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) frame.JumpToTag(GoalTag);
+            if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) Jump(frame);
             else throw;
         }
     }

@@ -1,6 +1,7 @@
 ﻿namespace BishTest.Compiler;
 
-public class FuncTest : CompilerTest
+[Collection("opt")]
+public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]
     public void TestFunc()

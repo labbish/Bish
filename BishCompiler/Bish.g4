@@ -85,6 +85,14 @@ atom
 
 END : ';' ;
 
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> skip
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> skip
+    ;
+
 INT : [0-9]+ ;
 NUM : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
 

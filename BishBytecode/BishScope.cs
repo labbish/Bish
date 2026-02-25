@@ -55,9 +55,10 @@ public class BishScope
         }
     };
 
-    public static BishNull Print(BishObject obj)
+    public static BishNull Print([Rest] BishList args)
     {
-        Console.Write(obj.GetMember("toString").Call([]).ExpectToBe<BishString>("toString").Value);
+        Console.Write(string.Join("", args.List.Select(arg =>
+            arg.GetMember("toString").Call([]).ExpectToBe<BishString>("toString").Value)));
         return BishNull.Instance;
     }
 

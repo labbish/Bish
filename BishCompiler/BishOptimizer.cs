@@ -22,24 +22,6 @@ public static class BishOptimizer
             return codes;
         }
 
-        public Codes CombineTag(int i)
-        {
-            switch (codes[i].Tag, codes[i + 1].Tag)
-            {
-                case ({ } tag, { } next):
-                    codes.RenameTag(next, tag);
-                    break;
-                case ({ } tag, null):
-                    codes[i + 1].Tag = tag;
-                    break;
-                case (_, null): break;
-            }
-
-            codes[i].Tag = null;
-
-            return codes;
-        }
-
         public Codes Replace(int i, BishBytecode.BishBytecode code)
         {
             codes[i] = code.Tagged(codes[i].Tag);
@@ -73,9 +55,8 @@ public static class BishOptimizer
         public Codes CombineDefPop()
         {
             for (var i = 0; i < codes.Count - 1; i++)
-                if (codes[i] is Def def && codes[i + 1] is Pop)
+                if (codes[i] is Def def && codes[i + 1] is Pop { Tag: null })
                 {
-                    codes.CombineTag(i);
                     codes.Replace(i, new Nop());
                     codes.Replace(i + 1, new Move(def.Name));
                 }
@@ -87,7 +68,21 @@ public static class BishOptimizer
         {
             for (var i = 0; i < codes.Count - 1; i++)
                 if (codes[i] is Nop { Tag: not null })
-                    codes.CombineTag(i);
+                {
+                    switch (codes[i].Tag, codes[i + 1].Tag)
+                    {
+                        case ({ } tag, { } next):
+                            codes.RenameTag(next, tag);
+                            break;
+                        case ({ } tag, null):
+                            codes[i + 1].Tag = tag;
+                            break;
+                        case (_, null): break;
+                    }
+
+                    codes[i].Tag = null;
+                }
+
             return codes;
         }
 
@@ -97,7 +92,7 @@ public static class BishOptimizer
 
     static BishOptimizer()
     {
-        // Current optimization percentage: 15%
+        // Current optimization percentage ~ 15%
         Optimizers.Add(RemoveInnerOuter);
         Optimizers.Add(RemoveValuePop);
         Optimizers.Add(CombineDefPop);

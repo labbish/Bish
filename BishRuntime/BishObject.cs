@@ -135,6 +135,13 @@ public class BishObject(BishType? type = null)
         { } result => throw BishException.OfType_Expect(expr, result, BishType.GetStaticType(typeof(T)))
     };
 
+    public BishObject? TryConvert(BishType type)
+    {
+        // Special case
+        if (Type == BishInt.StaticType && type == BishNum.StaticType) return BishNum.StaticType.CreateInstance([this]);
+        return Type.CanAssignTo(type) ? this : null;
+    }
+
     [Builtin("op")]
     public static BishBool Neq(BishObject a, BishObject b) =>
         BishBool.Invert(BishOperator.Call("op_Eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}"));
@@ -208,8 +215,5 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
         new(Name, Parents, GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot))
             { Members = Members };
 
-    static BishType()
-    {
-        BishBuiltinBinder.Bind<BishType>();
-    }
+    static BishType() => BishBuiltinBinder.Bind<BishType>();
 }

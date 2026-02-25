@@ -10,9 +10,9 @@ public record Nop : BishBytecode
     }
 }
 
-public record Pop : BishBytecode
+public record Pop(int Count = 1) : BishBytecode
 {
-    public override void Execute(BishFrame frame) => frame.Stack.Pop();
+    public override void Execute(BishFrame frame) => frame.Stack.Pop(Count);
 }
 
 public abstract record Value : BishBytecode;
@@ -30,6 +30,16 @@ public record Num(double Value) : Value
 public record String(string Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishString(Value));
+}
+
+public record Bool(bool Value) : Value
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishBool(Value));
+}
+
+public record Null : Value
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(BishNull.Instance);
 }
 
 public record Get(string Name) : BishBytecode
@@ -377,4 +387,28 @@ public record ForIter(string GoalTag) : Jumper(GoalTag)
 public record BuildList(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishList(frame.Stack.Pop(Argc)));
+}
+
+public record IsNull : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishBool(frame.Stack.Pop() is BishNull));
+}
+
+public record TestType(string GoalTag) : Jumper(GoalTag)
+{
+    public override void Execute(BishFrame frame)
+    {
+        var type = frame.Stack.Pop().ExpectToBe<BishType>("type");
+        var obj = frame.Stack.Pop();
+        var result = obj.TryConvert(type);
+        frame.Stack.Push(new BishBool(result is not null));
+        frame.Stack.Push(result ?? obj);
+        if (result is null) Jump(frame);
+    }
+}
+
+public record Not : BishBytecode
+{
+    public override void Execute(BishFrame frame) =>
+        frame.Stack.Push(BishBool.Invert(frame.Stack.Pop().ExpectToBe<BishBool>("bool")));
 }

@@ -8,7 +8,6 @@ stat
     : expr END                                                  # ExprStat
     | RET expr END                                              # ReturnStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
-    // TODO: switch-case?
     | WHL '(' expr ')' stat                                     # WhileStat
     | DO stat WHL '(' expr ')' END                              # DoWhileStat
     | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
@@ -16,6 +15,7 @@ stat
     | FOR '(' name=ID ':' expr ')' stat                         # ForIterStat
     | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
         | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
+    | SWC expr '{' caseStat* '}'                                # SwitchStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
     ;
@@ -28,14 +28,17 @@ expr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
+    // TODO: slice index
     | obj=expr '[' index=expr ']'                               # GetIndex
     | expr '.' name=ID                                          # GetMember
+    | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
     | left=expr op=('*'|'/'|'%') right=expr                     # BinOpExpr
     | left=expr op=('+'|'-') right=expr                         # BinOpExpr
     | left=expr op='<=>' right=expr                             # BinOpExpr
     | left=expr op=('<'|'<='|'>'|'>=') right=expr               # BinOpExpr
+    | expr IS pattern                                           # MatchExpr
     | left=expr op=('=='|'!=') right=expr                       # BinOpExpr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
@@ -51,6 +54,30 @@ expr
     // TODO: string interpolation
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    ;
+
+caseExpr
+    : pattern '=>' expr
+    ;
+
+caseStat
+    : CAS pattern ':' stat
+    ;
+
+pattern
+    : '_'                                                       # DefaultPattern
+    | NUL                                                       # NullPattern
+    | '(' pattern ')'                                           # ParenPattern
+    | expr                                                      # ExprPattern
+    | op=matchOp expr                                           # OpPattern
+    | 'of' type=expr ID?                                        # TypePattern
+    | 'not' pattern                                             # NotPattern
+    | left=pattern 'and' right=pattern                          # AndPattern
+    | left=pattern 'or' right=pattern                           # OrPattern
+    ;
+
+matchOp
+    : '<'|'<='|'>'|'>='|'=='|'!='
     ;
 
 setOp
@@ -80,6 +107,7 @@ atom
     : INT                                                       # IntAtom
     | NUM                                                       # NumAtom
     | STR                                                       # StrAtom
+    | NUL                                                       # NullAtom
     | ID                                                        # IdAtom
     ;
 
@@ -100,6 +128,8 @@ STR : S1 | S2 ;
 S1  : '"' ( ~('\\'|'"') | '\\' . )* '"' ;
 S2  : '\'' ( ~('\\'|'\'') | '\\' . )* '\'' ;
 
+NUL : 'null' ;
+
 IF  : 'if' ;
 ELS : 'else' ;
 WHL : 'while' ;
@@ -113,6 +143,10 @@ THR : 'throw' ;
 TRY : 'try' ;
 CTH : 'catch' ;
 FIN : 'finally' ;
+
+IS  : 'is' ;
+SWC : 'switch' ;
+CAS : 'case' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

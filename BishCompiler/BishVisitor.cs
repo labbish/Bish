@@ -7,7 +7,7 @@ using String = BishBytecode.Bytecodes.String;
 
 namespace BishCompiler;
 
-public class BishVisitor : BishBaseVisitor<Codes>
+public partial class BishVisitor : BishBaseVisitor<Codes>
 {
     public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
@@ -20,6 +20,8 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitStrAtom(BishParser.StrAtomContext context) =>
         [new String(Regex.Unescape(context.STR().GetText()[1..^1]))];
+
+    public override Codes VisitNullAtom(BishParser.NullAtomContext context) => [new Null()];
 
     public override Codes VisitIdAtom(BishParser.IdAtomContext context) => [new Get(context.GetText())];
 
@@ -96,7 +98,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
     {
-        var tag = Symbols.Get("and");
+        var tag = Symbols.Get("bin_and");
         return
         [
             ..Visit(context.left),
@@ -111,7 +113,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitLogicOrExpr(BishParser.LogicOrExprContext context)
     {
-        var tag = Symbols.Get("or");
+        var tag = Symbols.Get("bin_or");
         return
         [
             ..Visit(context.left),
@@ -127,8 +129,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
     private Codes Condition(string name, Codes cond, Codes left, Codes right)
     {
         var (tag, end) = Symbols.GetPair(name);
-        return
-        [
+        return Wrap([
             ..cond,
             new Op("op_Bool", 1),
             new JumpIfNot(tag),
@@ -137,7 +138,7 @@ public class BishVisitor : BishBaseVisitor<Codes>
             new Nop().Tagged(tag),
             ..right,
             new Nop().Tagged(end)
-        ];
+        ]);
     }
 
     public override Codes VisitTernOpExpr(BishParser.TernOpExprContext context) =>
@@ -168,6 +169,8 @@ public class BishVisitor : BishBaseVisitor<Codes>
 
     protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
 
+    public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
+
     public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
         [..Visit(context.expr()), new Pop()];
 
@@ -183,34 +186,31 @@ public class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitWhileStat(BishParser.WhileStatContext context)
     {
         var (tag, end) = Symbols.GetPair("while");
-        return
-        [
+        return Wrap([
             new Nop().Tagged(tag),
             ..Visit(context.expr()),
             new JumpIfNot(end),
             ..Wrap(Visit(context.stat())),
             new Jump(tag),
             new Nop().Tagged(end)
-        ];
+        ]);
     }
 
     public override Codes VisitDoWhileStat(BishParser.DoWhileStatContext context)
     {
         var tag = Symbols.Get("do_while");
-        return
-        [
+        return Wrap([
             new Nop().Tagged(tag),
             ..Wrap(Visit(context.stat())),
             ..Visit(context.expr()),
             new JumpIf(tag)
-        ];
+        ]);
     }
 
     public override Codes VisitForStat(BishParser.ForStatContext context)
     {
         var (tag, end) = Symbols.GetPair("for");
-        return
-        [
+        return Wrap([
             ..Visit(context.init),
             new Nop().Tagged(tag),
             ..Visit(context.cond),
@@ -219,21 +219,20 @@ public class BishVisitor : BishBaseVisitor<Codes>
             new Pop(),
             new Jump(tag),
             new Pop().Tagged(end)
-        ];
+        ]);
     }
 
     public override Codes VisitForIterStat(BishParser.ForIterStatContext context)
     {
         var (tag, end) = Symbols.GetPair("for_iter");
-        return
-        [
+        return Wrap([
             ..Visit(context.expr()),
             new Op("op_Iter", 1),
             new ForIter(end).Tagged(tag),
             ..Wrap([new Move(context.name.Text)], Visit(context.stat())),
             new Jump(tag),
             new Pop().Tagged(end)
-        ];
+        ]);
     }
 
     private Codes Return(BishParser.ExprContext expr) => [..Visit(expr), new Ret()];

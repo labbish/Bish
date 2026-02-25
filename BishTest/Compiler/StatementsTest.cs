@@ -15,6 +15,7 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Scope.TryGetVar("y").Should().BeNull();
         Execute("x:=0;if(false){x=1;y:=2;}else y:=3;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(0));
+        Execute("if(y:=true);");
         Scope.TryGetVar("y").Should().BeNull();
     }
 
@@ -29,6 +30,8 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
         Execute("x:=0;do x=1;while(false);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(1));
+        Execute("while(y:=false);do;while(y:=false);");
+        Scope.TryGetVar("y").Should().BeNull();
     }
 
     [Fact]
@@ -38,6 +41,7 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
         Execute("x:=1;for(i:range(1,5))x*=i;");
         Scope.GetVar("x").Should().BeEquivalentTo(I(24));
+        Scope.TryGetVar("i").Should().BeNull();
     }
 
     [Theory]

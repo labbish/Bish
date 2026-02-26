@@ -22,8 +22,13 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitNumAtom(BishParser.NumAtomContext context) =>
         [new Num(double.Parse(context.NUM().GetText()))];
 
-    public override Codes VisitStrAtom(BishParser.StrAtomContext context) =>
-        [new String(Regex.Unescape(context.STR().GetText()[1..^1]))];
+    public override Codes VisitStrAtom(BishParser.StrAtomContext context)
+    {
+        var str = context.STR().GetText();
+        var raw = str.StartsWith('r');
+        var text = str.TrimStart('r').Trim('#')[1..^1];
+        return [new String(raw ? text : Regex.Unescape(text))];
+    }
 
     public override Codes VisitNullAtom(BishParser.NullAtomContext context) => [new Null()];
 

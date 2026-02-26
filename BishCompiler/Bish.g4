@@ -31,6 +31,7 @@ expr
     | func=expr '(' args ')'                                    # CallExpr
     | obj=expr index                                            # GetIndex
     | expr '.' name=ID                                          # GetMember
+    // TODO: optional chain
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
@@ -45,12 +46,12 @@ expr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> obj=expr index setOp? '=' value=expr        # SetIndex
+    // TODO: &&= and ||=
     | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
     | <assoc=right> name=ID setOp? '=' value=expr               # Set
     | <assoc=right> DEL obj=expr index                          # DelIndex
     | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
     | <assoc=right> DEL name=ID                                 # Del
-    // TODO: string interpolation
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
     ;
@@ -134,9 +135,23 @@ LINE_COMMENT
 INT : [0-9]+ ;
 NUM : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
 
-STR : S1 | S2 ;
-S1  : '"' ( ~('\\'|'"') | '\\' . )* '"' ;
-S2  : '\'' ( ~('\\'|'\'') | '\\' . )* '\'' ;
+// TODO: format string (seems difficult)
+
+STR : S1 | S2 | R11 | R12 | R13 | R14 | R21 | R22 | R23 | R24 ;
+
+// We'll use a simple method for now
+RP  : 'r';
+R11 : RP '\'' .*? '\'' ;
+R12 : RP '#' '\'' .*? '\'' '#' ;
+R13 : RP '##' '\'' .*? '\'' '##' ;
+R14 : RP '###' '\'' .*? '\'' '###' ;
+R21 : RP '"' .*? '"' ;
+R22 : RP '#' '"' .*? '"' '#' ;
+R23 : RP '##' '"' .*? '"' '##' ;
+R24 : RP '###' '"' .*? '"' '###' ;
+
+S1  : '\'' ( ~('\\'|'\'') | '\\' . )* '\'' ;
+S2  : '"' ( ~('\\'|'"') | '\\' . )* '"' ;
 
 NUL : 'null' ;
 

@@ -38,7 +38,7 @@ public class CallTest : Test
         var frame = new BishFrame([
             new Bytecodes.Int(1),
             new Bytecodes.Int(2),
-            new Bytecodes.Op("op_Add", 2)
+            new Bytecodes.Op("op_add", 2)
         ]);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(I(3));

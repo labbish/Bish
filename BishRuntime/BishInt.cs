@@ -9,7 +9,7 @@ public class BishInt(int value) : BishObject
     public new static readonly BishType StaticType = new("int");
 
     [Builtin("hook")]
-    public static BishInt Create() => new(0);
+    public static BishInt Create(BishObject _) => new(0);
 
     [Builtin("hook")]
     public static void Init(BishInt self, [DefaultNull] BishInt? other) => self.Value = other?.Value ?? 0;

@@ -21,7 +21,7 @@ public class BishError(string message) : BishObject
     public new static readonly BishType StaticType = new("Error");
 
     [Builtin("hook")]
-    public static BishError Create() => new("");
+    public static BishError Create(BishObject _) => new("");
 
     [Builtin("hook")]
     public static void Init(BishError self, [DefaultNull] BishString? message) => self.Message = message?.Value ?? "";
@@ -45,6 +45,7 @@ public class BishError(string message) : BishObject
     public static readonly BishType NullErrorType = new("NullError", [StaticType]);
     public static readonly BishType NameErrorType = new("NameError", [StaticType]);
     public static readonly BishType ZeroDivisionErrorType = new("ZeroDivisionError", [StaticType]);
+    public static readonly BishType RecursionErrorType = new("RecursionError", [StaticType]);
 
     public static readonly BishType IteratorStopType = new("IteratorStop", [StaticType]);
 }

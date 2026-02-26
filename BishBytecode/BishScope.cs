@@ -11,15 +11,18 @@ public class BishScope
 
     public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
 
-    public BishObject GetVar(string name) => TryGetVar(name) ?? throw BishException.OfName(name);
+    public BishObject GetVar(string name) => TryGetVar(name) ?? throw BishException.OfName(name)
+        .WithExtraMsg(Discard(name) ? "" : " (note: vars named _, __, ... will be discarded)");
 
-    public BishObject DefVar(string name, BishObject value) => Vars[name] = value;
+    public BishObject DefVar(string name, BishObject value) => Discard(name) ? value : Vars[name] = value;
 
     public BishObject? TrySetVar(string name, BishObject value) =>
-        Vars.ContainsKey(name) ? Vars[name] = value : Outer?.TrySetVar(name, value);
+        Discard(name) ? value : Vars.ContainsKey(name) ? Vars[name] = value : Outer?.TrySetVar(name, value);
 
     public BishObject SetVar(string name, BishObject value) =>
         TrySetVar(name, value) ?? throw BishException.OfName(name).WithExtraMsg(" (did you mean to use `:=`?)");
+
+    private bool Discard(string name) => name.All(c => c == '_');
 
     public BishObject? TryDelVar(string name) => Vars.Remove(name, out var value) ? value : null;
 
@@ -51,6 +54,7 @@ public class BishScope
             ["NullError"] = BishError.NullErrorType,
             ["NameError"] = BishError.NameErrorType,
             ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
+            ["RecursionError"] = BishError.RecursionErrorType,
             ["IterationStop"] = BishError.IteratorStopType
         }
     };

@@ -8,7 +8,7 @@ public class BishList(List<BishObject> list) : BishObject
     public new static readonly BishType StaticType = new("list");
 
     [Builtin("hook")]
-    public static BishList Create() => new([]);
+    public static BishList Create(BishObject _) => new([]);
 
     [Builtin("hook")]
     public static void Init(BishList self, [DefaultNull] BishObject? iterable) => self.List = iterable switch
@@ -40,7 +40,7 @@ public class BishList(List<BishObject> list) : BishObject
 
     [Builtin("op")]
     public static BishBool Eq(BishList a, BishList b) => new(a.List.Count == b.List.Count && a.List.Zip(b.List)
-        .All(pair => BishOperator.Call("op_Eq", [pair.First, pair.Second])
+        .All(pair => BishOperator.Call("op_eq", [pair.First, pair.Second])
             .ExpectToBe<BishBool>($"{pair.First} == {pair.Second}").Value));
 
     [Builtin("op")]

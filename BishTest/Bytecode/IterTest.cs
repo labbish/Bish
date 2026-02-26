@@ -16,11 +16,11 @@ public class IterTest : Test
             new Bytecodes.Def("x"),
             // for (c : x) {
             new Bytecodes.Get("x"),
-            new Bytecodes.Op("op_Iter", 1),
+            new Bytecodes.Op("op_iter", 1),
             new Bytecodes.ForIter("end").Tagged("start"),
             // s = c + s
             new Bytecodes.Get("s"),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("s"),
             new Bytecodes.Pop(),
             // }
@@ -49,7 +49,7 @@ public class IterTest : Test
             new Bytecodes.ForIter("end").Tagged("start"),
             // s = s + i
             new Bytecodes.Get("s"),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("s"),
             new Bytecodes.Pop(),
             // }

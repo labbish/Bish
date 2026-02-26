@@ -6,14 +6,15 @@ namespace BishRuntime;
 
 [MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]
-public class BuiltinAttribute(string? prefix = null, bool special = true) : Attribute
+public class BuiltinAttribute(string? prefix = null, bool special = true, string? tag = null) : Attribute
 {
     public string? Prefix => prefix;
     public bool Special => special;
+    public string? Tag => tag;
 
     private static string ToLower(string name) => name == "" ? name : char.ToLower(name[0]) + name[1..];
 
-    public string GetName(string name) => Prefix is null ? ToLower(name) : $"{Prefix}_{name}";
+    public string GetName(string name) => (Prefix is null ? "" : Prefix + "_") + ToLower(name);
 }
 
 [AttributeUsage(AttributeTargets.Parameter)]
@@ -33,15 +34,16 @@ public static class BishBuiltinBinder
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
             if (attr == null) continue;
             var name = attr.GetName(method.Name);
-            var func = Builtin(name, method);
+            var func = Builtin(name, method, attr.Tag);
             if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
             staticType.Members[name] = func;
         }
     }
 
-    public static BishFunc Builtin(string name, Delegate method) => Builtin(name, method.Method);
+    public static BishFunc Builtin(string name, Delegate method, string? tag = null) =>
+        Builtin(name, method.Method, tag);
 
-    public static BishFunc Builtin(string name, MethodInfo method)
+    public static BishFunc Builtin(string name, MethodInfo method, string? tag = null)
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
@@ -65,7 +67,7 @@ public static class BishBuiltinBinder
             }
         }
 
-        return new BishFunc(name, inArgs, Func);
+        return new BishFunc(name, inArgs, Func, tag);
     }
 
     public static object ConvertImplicit(BishObject obj, Type target)
@@ -125,12 +127,12 @@ public static class BishBuiltinIteratorBinder
                            info.Name == "Next" && info.GetCustomAttribute<IterAttribute>() is not null) ??
                    throw new ArgumentException($"Cannot find method `Next` on type {type}");
         var staticType = BishType.GetStaticType(type);
-        staticType.SetMember("hook_Create", new BishFunc("hook_Create", [], _ =>
-            throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_Iter() instead", [])));
+        staticType.SetMember("hook_create", new BishFunc("hook_create", [], _ =>
+            throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_iter() instead", [])));
         staticType.SetMember("next",
             new BishFunc("next", [new BishArg("iter", staticType)],
                 args => (BishObject?)next.InvokeRaw(args[0], []) ?? throw BishException.OfIteratorStop()));
-        staticType.SetMember("op_Iter", new BishFunc("op_Iter",
+        staticType.SetMember("op_iter", new BishFunc("op_iter",
             [new BishArg("self", staticType)], args => args[0]));
     }
 }

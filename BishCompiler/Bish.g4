@@ -8,6 +8,7 @@ stat
     : expr END                                                  # ExprStat
     | BRK ID? END                                               # BreakStat
     | CTN ID? END                                               # ContinueStat
+    // TODO: yield
     | RET expr END                                              # ReturnStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
     | tag? WHL '(' expr ')' stat                                # WhileStat
@@ -23,9 +24,11 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
-    | deco* '(' defArgs ')' '=>' (expr | '{' stat* '}')         # FuncExpr
-    | deco* FUN ID? '(' defArgs ')'
-        (('=>' expr) | ('{' stat* '}'))                         # FuncExpr
+    | deco* (FUN ID?)? '(' defArgs ')' funcBody                 # FuncExpr
+    | deco* OP defOp '(' defArgs ')' funcBody                   # OperExpr
+    | deco* accessOp accessItem? '(' defArgs ')' funcBody       # AccessExpr
+    | deco* INI '(' defArgs ')' funcBody                        # InitExpr
+    | deco* CRT '(' defArgs ')' funcBody                        # CreateExpr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | expr nullAccess+                                          # GetAccess
@@ -37,6 +40,7 @@ expr
     | left=expr op='<=>' right=expr                             # BinOpExpr
     | left=expr op=('<'|'<='|'>'|'>=') right=expr               # BinOpExpr
     | expr IS pattern                                           # MatchExpr
+    // TODO: as operator
     | left=expr op=('=='|'!='|'==='|'!==') right=expr           # BinOpExpr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
@@ -51,6 +55,24 @@ expr
     | <assoc=right> DEL name=ID                                 # Del
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    ;
+
+funcBody
+    : (('=>' expr) | ('{' stat* '}'))
+    ;
+
+accessOp
+    : GET | SET | DEL
+    ;
+
+accessItem 
+    : ID | '[' ']'
+    ;
+
+// We need to spilt '()' to avoid breaking calls like `f()`, and to allow white space between them
+defOp
+    : '=='|'!='|'+'|'-'|'*'|'/'|'%'|'^'|('(' ')')
+    | '<=>'|'<'|'<='|'>'|'>='|'~'|'bool'|'iter'
     ;
 
 nullAccess
@@ -82,10 +104,11 @@ caseStat
     : CAS pattern ':' stat
     ;
 
+// We need IdPattern to handle _ without breaking '_' used as an ID in other places
 pattern
-    : '_'                                                       # DefaultPattern
-    | NUL                                                       # NullPattern
+    : NUL                                                       # NullPattern
     | '(' pattern ')'                                           # ParenPattern
+    | ID                                                        # IdPattern
     | expr                                                      # ExprPattern
     | op=matchOp expr                                           # OpPattern
     | 'of' type=expr ID?                                        # TypePattern
@@ -169,8 +192,13 @@ CTN : 'continue' ;
 WHL : 'while' ;
 DO  : 'do' ;
 FOR : 'for' ;
+GET : 'get' ;
+SET : 'set' ;
 DEL : 'del' ;
 FUN : 'func' ;
+OP  : 'oper' ;
+INI : 'init' ;
+CRT : 'create' ;
 RET : 'return' ;
 CLS : 'class' ;
 THR : 'throw' ;

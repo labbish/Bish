@@ -57,17 +57,17 @@ public class JumpTest : Test
             // s = s + i
             new Bytecodes.Get("s"),
             new Bytecodes.Get("i"),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("s"),
             // i = i + 1
             new Bytecodes.Get("i"),
             new Bytecodes.Int(1),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("i"),
             // } while (i <= n)
             new Bytecodes.Get("i"),
             new Bytecodes.Get("n"),
-            new Bytecodes.Op("op_Le", 2),
+            new Bytecodes.Op("op_le", 2),
             new Bytecodes.JumpIf("start")
         ]);
         frame.Execute();

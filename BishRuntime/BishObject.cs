@@ -26,8 +26,12 @@ public class BishObject(BishType? type = null)
 
     public Dictionary<string, BishObject> Members = [];
 
-    public BishObject? TryCallHook(string name, List<BishObject> args) =>
-        TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter)?.TryCall(args);
+    public BishObject? TryCallHook(string name, List<BishObject> args, bool ignores = false)
+    {
+        var hook = TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoGetter);
+        if (ignores && hook is BishFunc { Tag: "ignore" }) return null;
+        return hook?.TryCall(args);
+    }
 
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
@@ -41,16 +45,18 @@ public class BishObject(BishType? type = null)
      * 2. (If this is a type) @GetFromType [ignore exceptions]
      * 3. (Only non-empty for types) Members (including getter) of the rest of the lookup chain
      * 4. @GetFromType
-     * 5. (If not NoHook mode) Call hook_Get
+     * 5. (If not NoHook mode) Call hook_get
      *
      * ...And fun fact: Python used a simpler order, so that int.__str__(1) works but int.__str__() don't.
      * But we prefer class methods (e.g. obj.toString()) to free functions (e.g. str(obj)), so this works better here.
      */
     public virtual BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
-        BishType? mroRoot = null, List<BishObject>? excludes = null)
+        BishType? mroRoot = null, List<BishObject>? excludes = null, BishObject? boundSelf = null)
     {
+        var self = mroRoot is null ? this : Base(this, mroRoot);
         excludes ??= [];
         mroRoot ??= Type;
+        boundSelf ??= this;
         if (excludes.Contains(this)) return null;
 
         var chain = LookupChain;
@@ -73,7 +79,7 @@ public class BishObject(BishType? type = null)
                 return member;
 
         // Step 4 & 5
-        return GetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : TryCallGetHook(name));
+        return GetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : self.TryCallGetHook(name));
 
         BishObject? GetFromType() => mode.HasFlag(BishLookupMode.NotFromType)
             ? null
@@ -81,13 +87,16 @@ public class BishObject(BishType? type = null)
                 Type.WithMRORoot(mroRoot).TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType,
                     excludes: excludes), mode.HasFlag(BishLookupMode.NoBind));
 
+        BishObject? TryBind(BishObject? member, bool noBind) =>
+            noBind ? member : member is BishFunc method ? method.Bind(boundSelf) : member;
+
         bool TryGetFromMember(BishObject? obj, [NotNullWhen(true)] out BishObject? member)
         {
             member = null;
             if (obj is null) return false;
             excludes.Add(obj);
             member = obj.Members.GetValueOrDefault(name) ??
-                     (mode.HasFlag(BishLookupMode.NoGetter) ? null : obj.TryCallHook($"hook_Get_{name}", []));
+                     (mode.HasFlag(BishLookupMode.NoGetter) ? null : obj.TryCallHook($"hook_get_{name}", []));
             return member is not null;
         }
     }
@@ -96,30 +105,45 @@ public class BishObject(BishType? type = null)
     {
         excludes ??= [];
         if (excludes.Contains(this)) return null;
-        var result = TryCallHook("hook_Get", [new BishString(name)]);
+        var result = TryCallHook("hook_get", [new BishString(name)], ignores: true);
         if (result is not null) return result;
         excludes.Add(this);
         return Type.TryCallGetHook(name, excludes);
     }
 
-    private BishObject? TryBind(BishObject? member, bool noBind) =>
-        noBind ? member : member is BishFunc method ? method.Bind(this) : member;
+    [Builtin("hook", tag: "ignore")]
+    public static BishObject Get(BishObject self, BishString name) => self.GetMember(name.Value, BishLookupMode.NoHook);
 
-    public BishObject SetMember(string name, BishObject value) =>
-        TryCallHook("hook_Set", [new BishString(name), value]) ??
-        TryCallHook($"hook_Set_{name}", [value]) ?? (Members[name] = value);
+    public virtual BishObject SetMember(string name, BishObject value, BishObject? mroRoot = null)
+    {
+        var self = mroRoot is null ? this : Base(this, mroRoot);
+        var hooked = this is BishType
+            ? null
+            : self.TryCallHook("hook_set", [new BishString(name), value], ignores: true);
+        return hooked ?? self.TryCallHook($"hook_set_{name}", [value]) ?? (Members[name] = value);
+    }
+
+    [Builtin("hook", tag: "ignore")]
+    public static BishObject Set(BishObject self, BishString name, BishObject value) =>
+        self.SetMember(name.Value, value);
 
     public BishObject DelMember(string name) =>
         TryDelMember(name) ?? throw BishException.OfAttribute("delete", this, name);
 
-    public BishObject? TryDelMember(string name) =>
-        TryCallHook($"hook_Del_{name}", []) ?? (Members.Remove(name, out var member)
+    public virtual BishObject? TryDelMember(string name, BishObject? mroRoot = null)
+    {
+        var self = mroRoot is null ? this : Base(this, mroRoot);
+        return self.TryCallHook($"hook_del_{name}", []) ?? (Members.Remove(name, out var member)
             ? member
-            : TryCallHook("hook_Del", [new BishString(name)]));
+            : self.TryCallHook("hook_del", [new BishString(name)], ignores: true));
+    }
+
+    [Builtin("hook", tag: "ignore")]
+    public static BishObject Del(BishObject self, BishString name) => self.DelMember(name.Value);
 
     public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
 
-    public virtual BishObject? TryCall(List<BishObject> args) => TryGetMember("op_Call")?.TryCall(args);
+    public virtual BishObject? TryCall(List<BishObject> args) => TryGetMember("op_call")?.TryCall(args);
 
     public override string ToString() => $"[Object {Type.Name}]";
 
@@ -144,10 +168,10 @@ public class BishObject(BishType? type = null)
 
     [Builtin("op")]
     public static BishBool Neq(BishObject a, BishObject b) =>
-        BishBool.Invert(BishOperator.Call("op_Eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}"));
+        BishBool.Invert(BishOperator.Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}"));
 
     private static int Compare(BishObject a, BishObject b) =>
-        BishOperator.Call("op_Cmp", [a, b]).ExpectToBe<BishInt>($"{a} <=> {b}").Value;
+        BishOperator.Call("op_cmp", [a, b]).ExpectToBe<BishInt>($"{a} <=> {b}").Value;
 
     [Builtin("op")]
     public static BishBool Lt(BishObject a, BishObject b) => new(Compare(a, b) < 0);
@@ -183,9 +207,16 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
 
     public BishObject CreateInstance(List<BishObject> args)
     {
-        var instance = TryCallHook("hook_Create", []) ?? new BishObject();
-        instance.Type = this; // We need this when hook_Create is called on the parent class
-        instance.TryCallHook("hook_Init", args);
+        var instance = new BishObject();
+        var types = GetMRO();
+        types.Reverse();
+        foreach (var type in types)
+        {
+            var created = type.Members.GetValueOrDefault("hook_create")?.TryCall([instance]);
+            instance = created ?? instance;
+            instance.Type = type;
+        }
+        instance.TryCallHook("hook_init", args);
         return instance;
     }
 

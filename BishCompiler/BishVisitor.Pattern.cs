@@ -5,11 +5,12 @@ namespace BishCompiler;
 
 public partial class BishVisitor
 {
-    public override Codes VisitDefaultPattern(BishParser.DefaultPatternContext context) => [new Pop(), new Bool(true)];
-
     public override Codes VisitNullPattern(BishParser.NullPatternContext context) => [new IsNull()];
 
     public override Codes VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
+
+    public override Codes VisitIdPattern(BishParser.IdPatternContext context) =>
+        context.ID().GetText() == "_" ? [new Pop(), new Bool(true)] : [new Get(context.ID().GetText()), Op("==", 2)];
 
     public override Codes VisitExprPattern(BishParser.ExprPatternContext context) =>
         [..Visit(context.expr()), Op("==", 2)];
@@ -40,7 +41,7 @@ public partial class BishVisitor
         [
             new Copy(),
             ..Visit(context.left),
-            new Op("op_Bool", 1),
+            new Op("op_bool", 1),
             new Copy(),
             new JumpIf(tag),
             new Swap(),
@@ -60,7 +61,7 @@ public partial class BishVisitor
         [
             new Copy(),
             ..Visit(context.left),
-            new Op("op_Bool", 1),
+            new Op("op_bool", 1),
             new Copy(),
             new JumpIfNot(tag),
             new Swap(),

@@ -157,7 +157,7 @@ public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
-        var result = BishOperator.Call("op_Bool", [frame.Stack.Pop()]);
+        var result = BishOperator.Call("op_bool", [frame.Stack.Pop()]);
         if (result.ExpectToBe<BishBool>("condition").Value != Reverse) Jump(frame);
     }
 }

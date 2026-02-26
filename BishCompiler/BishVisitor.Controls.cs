@@ -4,12 +4,16 @@ namespace BishCompiler;
 
 public partial class BishVisitor
 {
+    public override Codes VisitIfStat(BishParser.IfStatContext context) =>
+        Condition("if", Visit(context.cond), Wrap(Visit(context.left)),
+            context.right is null ? [] : Wrap(Visit(context.right)));
+
     private static Codes WrapLoop(Codes codes, string @break, string @continue, string? loopTag, bool pops = false) =>
         Wrap(codes).SelectMany(code => code switch
         {
             Break x when MatchLoopTag(x.LoopTag, loopTag) =>
                 [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@break)],
-            Continue x when MatchLoopTag(x.LoopTag, loopTag) => 
+            Continue x when MatchLoopTag(x.LoopTag, loopTag) =>
                 [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@continue)],
             LoopUnbound x when pops => [x.Deeper()],
             _ => (Codes)([code])
@@ -89,7 +93,7 @@ public partial class BishVisitor
         var name = context.name.Text;
         return WrapLoop([
             ..Visit(context.expr()),
-            new Op("op_Iter", 1),
+            new Op("op_iter", 1),
             new ForIter(end).Tagged(tag),
             ..Wrap([context.set is null ? new Def(name) : new Set(name), new Pop()], Visit(context.stat())),
             new Jump(tag),

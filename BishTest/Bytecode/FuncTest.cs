@@ -18,7 +18,7 @@ public class FuncTest : Test
             // new Bytecodes.Set("x"),
             // new Bytecodes.Get("x"),
             new Bytecodes.Get("a"),
-            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Op("op_sub", 2),
             new Bytecodes.Ret(),
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("f"),
@@ -59,7 +59,7 @@ public class FuncTest : Test
             // x = x + 1
             new Bytecodes.Get("x"),
             new Bytecodes.Int(1),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("x"),
             // return x
             new Bytecodes.Get("x"),
@@ -96,7 +96,7 @@ public class FuncTest : Test
             // if (n <= 0)
             new Bytecodes.Get("n"),
             new Bytecodes.Int(0),
-            new Bytecodes.Op("op_Le", 2),
+            new Bytecodes.Op("op_le", 2),
             new Bytecodes.JumpIfNot("tag"),
             // return 1
             new Bytecodes.Int(1),
@@ -105,10 +105,10 @@ public class FuncTest : Test
             new Bytecodes.Get("f").Tagged("tag"),
             new Bytecodes.Get("n"),
             new Bytecodes.Int(1),
-            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Op("op_sub", 2),
             new Bytecodes.Call(1),
             new Bytecodes.Get("n"),
-            new Bytecodes.Op("op_Mul", 2),
+            new Bytecodes.Op("op_mul", 2),
             new Bytecodes.Ret(),
 
             new Bytecodes.Outer(),
@@ -145,7 +145,7 @@ public class FuncTest : Test
             // count = count + 1
             new Bytecodes.Get("count"),
             new Bytecodes.Int(1),
-            new Bytecodes.Op("op_Add", 2),
+            new Bytecodes.Op("op_add", 2),
             new Bytecodes.Set("count"),
 
             // return count
@@ -205,9 +205,9 @@ public class FuncTest : Test
             // f := (x, y = 1, z = 0) => x * y - z
             new Bytecodes.FuncStart("f", ["x", "y", "z"]),
             new Bytecodes.Inner(),
-            new Bytecodes.Op("op_Mul", 2),
+            new Bytecodes.Op("op_mul", 2),
             new Bytecodes.Swap(),
-            new Bytecodes.Op("op_Sub", 2),
+            new Bytecodes.Op("op_sub", 2),
             new Bytecodes.Ret(),
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("f"),

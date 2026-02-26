@@ -25,7 +25,7 @@ public class ClassTest : Test
             new Bytecodes.FuncEnd("f"),
             new Bytecodes.MakeFunc("f"),
             new Bytecodes.Def("f"),
-            // hook_Init = (self, x) => {
+            // hook_init = (self, x) => {
             new Bytecodes.FuncStart("init", ["self", "x"]),
             new Bytecodes.Inner(),
             // self.x = x
@@ -35,7 +35,7 @@ public class ClassTest : Test
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("init"),
             new Bytecodes.MakeFunc("init"),
-            new Bytecodes.Def("hook_Init"),
+            new Bytecodes.Def("hook_init"),
             // } (end C)
             new Bytecodes.ClassEnd("C"),
             new Bytecodes.MakeClass("C"),

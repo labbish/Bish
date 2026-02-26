@@ -15,7 +15,7 @@ public class BishNull : BishObject
     public override string ToString() => "null";
 
     [Builtin("hook")]
-    public static BishNull Create() => Instance;
+    public static BishNull Create(BishObject _) => Instance;
 
     [Builtin("hook")]
     public static BishObject Get(BishNull self, BishString name) =>

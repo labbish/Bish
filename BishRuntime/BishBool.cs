@@ -9,7 +9,7 @@ public class BishBool(bool value) : BishObject
 
 
     [Builtin("hook")]
-    public static BishBool Create() => new(false);
+    public static BishBool Create(BishObject _) => new(false);
 
     [Builtin("hook")]
     public static void Init(BishBool self, [DefaultNull] BishBool? other) => self.Value = other?.Value ?? false;

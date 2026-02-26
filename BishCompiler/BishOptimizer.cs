@@ -48,6 +48,23 @@ public static class BishOptimizer
             return codes;
         }
 
+        public Codes RemoveDiscarded()
+        {
+            bool Discarded(string name) => name.All(c => c == '_');
+            for (var i = 0; i < codes.Count; i++)
+            {
+                codes[i] = codes[i] switch
+                {
+                    Set code when Discarded(code.Name) => new Nop(),
+                    Def code when Discarded(code.Name) => new Nop(),
+                    Move code when Discarded(code.Name) => new Pop(),
+                    {} code => code
+                };
+            }
+
+            return codes;
+        }
+
         public Codes RemoveValuePop()
         {
             for (var i = 0; i < codes.Count - 1; i++)
@@ -103,6 +120,7 @@ public static class BishOptimizer
         // Current optimization percentage 10%~15%
         Optimizers.Add(RemoveUnusedTag);
         Optimizers.Add(RemoveInnerOuter);
+        Optimizers.Add(RemoveDiscarded);
         Optimizers.Add(RemoveValuePop);
         Optimizers.Add(CombineDefPop);
         Optimizers.Add(MoveNopTag);

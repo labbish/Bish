@@ -12,7 +12,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
     public new static readonly BishType StaticType = new("range");
 
     [Builtin("hook")]
-    public static BishRange Create() => new(0, 0, 0);
+    public static BishRange Create(BishObject _) => new(0, 0, 0);
 
     private static int? ToInt(BishObject? obj) => obj switch
     {
@@ -103,7 +103,7 @@ public static class IteratorHelper
 
     extension(BishObject obj)
     {
-        internal BishObject Iterator() => BishOperator.Call("op_Iter", [obj]);
+        internal BishObject Iterator() => BishOperator.Call("op_iter", [obj]);
         internal IEnumerable<BishObject> ToEnumerable() => Enumerate(obj.Iterator());
     }
 }

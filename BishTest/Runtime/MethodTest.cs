@@ -89,7 +89,7 @@ file class T1(string tag) : BishObject
     public static BishInt G(T1 self, T1 _) => new(0);
 
     [Builtin("hook")]
-    public static T1 Create() => new("");
+    public static T1 Create(BishObject _) => new("");
 
     [Builtin("hook")]
     public static void Init(T1 self, BishString tag) => self.Tag = tag.Value;

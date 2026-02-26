@@ -19,14 +19,15 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
     }
 }
 
-public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func) : BishObject
+public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func, string? tag = null) : BishObject
 {
+    public string? Tag => tag;
     public string Name => name;
     public List<BishArg> Args => CheckedArgs<BishArg, BishObject>(inArgs);
     public Func<List<BishObject>, BishObject> Func => func;
     public BishObject? BoundSelf;
 
-    public static List<TArg> CheckedArgs<TArg, T>(List<TArg> args) where TArg : Arg<T> where T: class
+    public static List<TArg> CheckedArgs<TArg, T>(List<TArg> args) where TArg : Arg<T> where T : class
     {
         var rests = args.Where(arg => arg.Rest).ToList();
         if (rests.Count > 0)
@@ -75,15 +76,15 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
         return self.Type.CanAssignTo(Args[0].Type) || Args[0].Rest
-            ? new BishFunc(Name, args1, args => Func([self, ..args])) { BoundSelf = self }
+            ? new BishFunc(Name, args1, args => Func([self, ..args]), Tag) { BoundSelf = self }
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 
     public override BishObject TryCall(List<BishObject> args)
     {
-        var match = Match(args);
         try
         {
+            var match = Match(args);
             return Func(match);
         }
         catch (BishException e)

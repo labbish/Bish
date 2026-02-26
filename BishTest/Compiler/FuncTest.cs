@@ -8,7 +8,7 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     {
         Execute("x:=((x)=>x+1)(3);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
-        Execute("x:=((x)=>{return x+1;})(3);");
+        Execute("x:=((x){return x+1;})(3);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
         Execute("func f(x)=>x+1;x:=f(3);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));

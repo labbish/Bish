@@ -29,43 +29,50 @@ public class Pattern
     };
 }
 
-public record SpecialMethod(Pattern NamePattern, int? Argc, string? Op = null, Func<BishObject>? Default = null);
+public record SpecialMethod(Pattern NamePattern, string[]? Args, string? Op = null, Func<BishObject>? Default = null)
+{
+    public int? Argc => Args?.Length;
+
+    public string OpString() => $"operator {Op} ({(Args is null ? "self, ..." : string.Join(", ", Args))})";
+
+    public string ExpectArgc() => Argc?.ToString() ?? ">= 1";
+}
 
 public static partial class BishOperator
 {
     internal static readonly List<SpecialMethod> SpecialMethods =
     [
-        new("toString", 1),
-        new("hook_Get", 2),
-        new("hook_Set", 3),
-        new("hook_Del", 2),
-        new("hook_Create", 0),
-        new("hook_Init", null),
-        new("op_Eq", 2, "==", () => new BishBool(false)),
-        new("op_Neq", 2, "!="),
-        new("op_Call", null, "()"),
-        new("op_Pos", 1, "+"),
-        new("op_Neg", 1, "-"),
-        new("op_Add", 2, "+"),
-        new("op_Sub", 2, "-"),
-        new("op_Mul", 2, "*"),
-        new("op_Div", 2, "/"),
-        new("op_Mod", 2, "%"),
-        new("op_Pow", 2, "^"),
-        new("op_Cmp", 2, "<=>"),
-        new("op_Lt", 2, "<"),
-        new("op_Le", 2, "<="),
-        new("op_Gt", 2, ">"),
-        new("op_Ge", 2, ">="),
-        new("op_Invert", 1, "~"),
-        new("op_Bool", 1, "bool", () => new BishBool(true)),
-        new(GetterRegex(), 1),
-        new(SetterRegex(), 2),
-        new(DellerRegex(), 1),
-        new("op_GetIndex", 2, "get[]"),
-        new("op_SetIndex", 3, "set[]"),
-        new("op_DelIndex", 2, "del[]"),
-        new("op_Iter", 1, "iter")
+        new("toString", ["self"]),
+        new("hook_get", ["self", "member"], "get()"),
+        new("hook_set", ["self", "member", "value"], "set()"),
+        new("hook_del", ["self", "member"], "del()"),
+        new("hook_create", ["self"], "create"),
+        new("hook_init", null, "init"),
+        new("op_eq", ["left", "right"], "==", () => new BishBool(false)),
+        new("op_neq", ["left", "right"], "!="),
+        new("op_call", null, "()"),
+        new("op_pos", ["self"], "+"),
+        new("op_neg", ["self"], "-"),
+        new("op_add", ["left", "right"], "+"),
+        new("op_sub", ["left", "right"], "-"),
+        new("op_mul", ["left", "right"], "*"),
+        new("op_div", ["left", "right"], "/"),
+        new("op_mod", ["left", "right"], "%"),
+        new("op_pow", ["left", "right"], "^"),
+        new("op_cmp", ["left", "right"], "<=>"),
+        new("op_lt", ["left", "right"], "<"),
+        new("op_le", ["left", "right"], "<="),
+        new("op_gt", ["left", "right"], ">"),
+        new("op_ge", ["left", "right"], ">="),
+        new("op_invert", ["self"], "~"),
+        new("op_bool", ["self"], "bool", () => new BishBool(true)),
+        new(GetterRegex(), ["self"], "get"),
+        new(SetterRegex(), ["self", "value"], "set"),
+        new(DellerRegex(), ["self"], "del"),
+        new("op_getIndex", ["self", "index"], "get[]"),
+        new("op_setIndex", ["self", "index", "value"], "set[]"),
+        new("op_delIndex", ["self", "index"], "del[]"),
+        new("op_iter", ["self"], "iter")
     ];
 
     public static BishObject? TryCall(string name, List<BishObject> args) =>
@@ -104,19 +111,28 @@ public static partial class BishOperator
         var special = GetSpecialMethod(name);
         if (special is null) throw new ArgumentException($"'{name}' is not a special name" + tip);
         var opName = special.Op is null ? name : $"{name} (operator {special.Op})";
-        if (special.Argc is not null && special.Argc != func.Args.Count)
-            throw new ArgumentException($"{opName} expects {special.Argc} args, found {func.Args.Count}" + tip);
+        var argc = func.Args.Count;
+        if ((special.Argc is null && argc != 0) || special.Argc == argc) return;
+        throw new ArgumentException($"{opName} expects {special.ExpectArgc()} args, found {func.Args.Count}" + tip);
     }
 
-    public static string GetOperatorName(string op, int argc) =>
-        SpecialMethods.First(special => special.Op == op && special.Argc == argc).NamePattern.Name;
+    public static SpecialMethod GetOperator(string op, int argc)
+    {
+        var founds = SpecialMethods.Where(special => special.Op == op).ToList();
+        return founds.FirstOrDefault(special => (special.Argc is null && argc > 0) || special.Argc == argc) ??
+               throw new ArgumentException(
+                   $"Operator {op} does not take {argc} arguments; " +
+                   $"did you mean {string.Join(" or ", founds.Select(special => special.OpString()))}");
+    }
 
-    [GeneratedRegex("hook_Get_[A-Za-z_]+")]
+    public static string GetOperatorName(string op, int argc) => GetOperator(op, argc).NamePattern.Name;
+
+    [GeneratedRegex("hook_get_[A-Za-z_][A-Za-z0-9_]*")]
     private static partial Regex GetterRegex();
 
-    [GeneratedRegex("hook_Set_[A-Za-z_]+")]
+    [GeneratedRegex("hook_set_[A-Za-z_][A-Za-z0-9_]*")]
     private static partial Regex SetterRegex();
 
-    [GeneratedRegex("hook_Del_[A-Za-z_]+")]
+    [GeneratedRegex("hook_del_[A-Za-z_][A-Za-z0-9_]*")]
     private static partial Regex DellerRegex();
 }

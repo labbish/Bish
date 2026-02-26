@@ -73,7 +73,7 @@ file class T1 : BishObject
     public new static readonly BishType StaticType = new("T");
 
     [Builtin("hook")]
-    public static T1 Create() => new();
+    public static T1 Create(BishObject _) => new();
 
     [Builtin("hook")]
     public static BishString Get(T1 self, BishString name) => new("get");
@@ -96,7 +96,7 @@ file class T2 : BishObject
     public new static readonly BishType StaticType = new("U");
 
     [Builtin("hook")]
-    public static T2 Create() => new();
+    public static T2 Create(BishObject _) => new();
 
     [Builtin("hook")]
     public static BishInt Get_a(T2 self) => new(self.A);

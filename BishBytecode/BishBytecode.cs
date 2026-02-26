@@ -1,6 +1,4 @@
-﻿global using Bytecodes = BishBytecode.Bytecodes;
-
-namespace BishBytecode;
+﻿namespace BishBytecode;
 
 public abstract record BishBytecode
 {

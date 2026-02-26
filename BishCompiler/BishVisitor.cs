@@ -1,6 +1,5 @@
 ﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
 using System.Text.RegularExpressions;
-using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using BishBytecode;
 using BishBytecode.Bytecodes;
@@ -165,7 +164,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         var tag = Symbols.Get("bin_and");
         return
         [
-            ..Visit(context.left), new Op("op_Bool", 1), new Copy(),
+            ..Visit(context.left), new Op("op_bool", 1), new Copy(),
             new JumpIfNot(tag), new Pop(), ..Visit(context.right), Tag(tag)
         ];
     }
@@ -175,7 +174,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         var tag = Symbols.Get("bin_or");
         return
         [
-            ..Visit(context.left), new Op("op_Bool", 1), new Copy(),
+            ..Visit(context.left), new Op("op_bool", 1), new Copy(),
             new JumpIf(tag), new Pop(), ..Visit(context.right), Tag(tag)
         ];
     }
@@ -225,7 +224,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         new BuildList(0),
         ..args.SelectMany(arg => Visit(arg).Concat(arg switch
         {
-            BishParser.RestArgContext => [new Op("op_Add", 2)],
+            BishParser.RestArgContext => [new Op("op_add", 2)],
             _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
         }))
     ];
@@ -254,74 +253,6 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         Wrap(context.stat().SelectMany(Visit).ToList());
 
     private static Codes Wrap(params Codes[] codes) => [new Inner(), ..codes.SelectMany(x => x), new Outer()];
-
-    public override Codes VisitIfStat(BishParser.IfStatContext context) =>
-        Condition("if", Visit(context.cond), Wrap(Visit(context.left)),
-            context.right is null ? [] : Wrap(Visit(context.right)));
-
-    private Codes Return(BishParser.ExprContext expr) => [..Visit(expr), new Ret()];
-
-    public override Codes VisitReturnStat(BishParser.ReturnStatContext context) => Return(context.expr());
-
-    public override Codes VisitFuncExpr(BishParser.FuncExprContext context)
-    {
-        var name = context.ID()?.GetText();
-        var symbol = Symbols.Get(name ?? Anonymous);
-        var defArgs = context.defArgs().defArg() ?? [];
-        var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
-            new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null)).ToList());
-        var defaults = args.Select(arg => arg.Default).OfType<BishParser.ExprContext>().ToList();
-        var expr = context.expr();
-        var stats = context.stat();
-        return
-        [
-            new FuncStart(symbol, args.Select(arg => arg.Name).ToList()),
-            new Inner(),
-            ..args.Select(arg => new Move(arg.Name)),
-            ..expr is null ? stats.SelectMany(Visit) : Return(expr),
-            new Outer(),
-            new FuncEnd(symbol),
-            ..defaults.SelectMany(Visit),
-            new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest),
-            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
-            name is null ? new Nop() : new Def(name)
-        ];
-    }
-
-    public override Codes VisitClassExpr(BishParser.ClassExprContext context)
-    {
-        var name = context.ID()?.GetText();
-        var symbol = Symbols.Get(name ?? Anonymous);
-        var args = context.args()?.arg() ?? [];
-        var stats = context.stat() ?? [];
-        return
-        [
-            new ClassStart(symbol),
-            ..stats.SelectMany(Visit),
-            new ClassEnd(symbol),
-            ..(Codes)(NoRest(args)
-                ? [..args.SelectMany(Visit), new MakeClass(symbol, args.Length)]
-                : [..ToList(args), new MakeClassArgs(symbol)]),
-            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
-            name is null ? new Nop() : new Def(name)
-        ];
-    }
-
-    public override Codes VisitThrowExpr(BishParser.ThrowExprContext context) => [..Visit(context.expr()), new Throw()];
-
-    public override Codes VisitErrorStat(BishParser.ErrorStatContext context)
-    {
-        var tag = Symbols.Get("error");
-        Codes tryPart = [new TryStart(tag), ..Visit(context.tryStat), new TryEnd(tag)];
-        var @catch = context.catchExpr as ParserRuleContext ?? context.catchStat;
-        var id = context.ID()?.GetText();
-        Codes catchPart = @catch is null
-            ? []
-            : [new CatchStart(tag), id is null ? new Pop() : new Move(id), ..Visit(@catch), new CatchEnd(tag)];
-        var @finally = context.finallyStat;
-        Codes finallyPart = @finally is null ? [] : [new FinallyStart(tag), ..Visit(@finally), new FinallyEnd(tag)];
-        return [..tryPart, ..catchPart, ..finallyPart];
-    }
 
     public override Codes VisitProgram(BishParser.ProgramContext context) =>
         context.stat().SelectMany(Visit).ToList();

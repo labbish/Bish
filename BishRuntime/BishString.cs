@@ -13,7 +13,7 @@ public class BishString(string value) : BishObject
 
 
     [Builtin("hook")]
-    public static BishString Create() => new("");
+    public static BishString Create(BishObject _) => new("");
 
     [Builtin("hook")]
     public static void Init(BishString self, [DefaultNull] BishString? other) => self.Value = other?.Value ?? "";

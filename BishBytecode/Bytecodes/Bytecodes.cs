@@ -136,12 +136,13 @@ public record Outer : BishBytecode
         frame.Scope = frame.Scope.Outer ?? throw new ArgumentException("No outer scope");
 }
 
-public abstract record Jumper(string GoalTag) : BishBytecode
+public abstract record Jumper(string? GoalTag) : BishBytecode
 {
-    public string GoalTag = GoalTag;
+    public string? GoalTag = GoalTag;
 
     public void Jump(BishFrame frame)
     {
+        if (GoalTag is null) return;
         var pos = frame.Bytecodes.FindIndex(x => x.Tag == GoalTag);
         if (pos == -1) throw new ArgumentException($"No such tag: {GoalTag}");
         frame.Ip = pos;
@@ -396,7 +397,7 @@ public record IsNull : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishBool(frame.Stack.Pop() is BishNull));
 }
 
-public record TestType(string GoalTag) : Jumper(GoalTag)
+public record TestType(string? GoalTag = null) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
@@ -404,7 +405,7 @@ public record TestType(string GoalTag) : Jumper(GoalTag)
         var obj = frame.Stack.Pop();
         var result = obj.TryConvert(type);
         frame.Stack.Push(new BishBool(result is not null));
-        frame.Stack.Push(result ?? obj);
+        frame.Stack.Push(result ?? BishNull.Instance);
         if (result is null) Jump(frame);
     }
 }
@@ -420,4 +421,11 @@ public record RefEq : BishBytecode
     public override void Execute(BishFrame frame) =>
         // ReSharper disable once EqualExpressionComparison
         frame.Stack.Push(new BishBool(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
+}
+
+// ReSharper disable once UnusedType.Global
+public record DebugStack : BishBytecode
+{
+    public override void Execute(BishFrame frame) =>
+        Console.WriteLine(string.Join(", ", frame.Stack.ToArray()));
 }

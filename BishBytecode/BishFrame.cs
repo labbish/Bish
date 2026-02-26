@@ -30,7 +30,7 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
             }
             catch (Exception e)
             {
-                throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}", e);
+                throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);
             }
 
             if (ReturnValue is not null) return ReturnValue;

@@ -40,7 +40,7 @@ expr
     | left=expr op='<=>' right=expr                             # BinOpExpr
     | left=expr op=('<'|'<='|'>'|'>=') right=expr               # BinOpExpr
     | expr IS pattern                                           # MatchExpr
-    // TODO: as operator
+    | obj=expr AS type=expr                                     # AsExpr
     | left=expr op=('=='|'!='|'==='|'!==') right=expr           # BinOpExpr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
@@ -206,6 +206,7 @@ TRY : 'try' ;
 CTH : 'catch' ;
 FIN : 'finally' ;
 
+AS  : 'as' ;
 IS  : 'is' ;
 SWC : 'switch' ;
 CAS : 'case' ;

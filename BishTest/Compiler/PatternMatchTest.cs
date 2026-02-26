@@ -51,4 +51,12 @@ public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixtur
         s1.Should().BeEquivalentTo(s);
         s2.Should().BeEquivalentTo(s);
     }
+
+    [Fact]
+    public void TestAs()
+    {
+        ExpectResult("1 as int", I(1));
+        ExpectResult("1 as num", N(1));
+        ExpectResult("1 as string", Null);
+    }
 }

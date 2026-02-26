@@ -77,6 +77,15 @@ public partial class BishVisitor
     public override Codes VisitMatchExpr(BishParser.MatchExprContext context) =>
         [..Visit(context.expr()), ..Visit(context.pattern())];
 
+    public override Codes VisitAsExpr(BishParser.AsExprContext context) =>
+    [
+        ..Visit(context.obj),
+        ..Visit(context.type),
+        new TestType(),
+        new Swap(),
+        new Pop()
+    ];
+
     public override Codes VisitSwitchExpr(BishParser.SwitchExprContext context) => Switch(1, Visit(context.expr()),
         context.caseExpr().Select(branch => (Visit(branch.pattern()), Wrap(Visit(branch.expr())))).ToList());
 

@@ -41,14 +41,13 @@ public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixtur
             ("_", "-1")
         ];
         var expr = $"s1:=({value}) switch" + "{" +
-                   string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "}";
+                   string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "};";
         var stat = $"s2:=null;switch ({value})" + "{" +
                    string.Join("", cases.Select(branch => $"case {branch.Pattern}: s2={branch.Expr};")) + "}";
         Execute(expr);
         Execute(stat);
-        Execute($"s:={expect}");
+        Execute($"s:={expect};");
         BishObject s = Scope.GetVar("s"), s1 = Scope.GetVar("s1"), s2 = Scope.GetVar("s2");
-        Console.WriteLine($"s1={s1}, s2={s2}, s={s}");
         s1.Should().BeEquivalentTo(s);
         s2.Should().BeEquivalentTo(s);
     }

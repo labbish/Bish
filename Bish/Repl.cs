@@ -1,4 +1,5 @@
 ﻿using BishBytecode;
+using BishBytecode.Bytecodes;
 using BishRuntime;
 
 namespace Bish;
@@ -20,6 +21,7 @@ public class Repl(BishScope? scope = null)
                 case null or "": break;
                 case ".help":
                     Console.WriteLine(".clear  Clear screen.");
+                    Console.WriteLine(".comp   Compile and print bytecode.");
                     Console.WriteLine(".exit   Exit the REPL.");
                     Console.WriteLine(".file   Load a file into the REPL session.");
                     Console.WriteLine(".help   Print this help message.");
@@ -33,6 +35,14 @@ public class Repl(BishScope? scope = null)
                         var content = File.ReadAllText(file);
                         var frame = BishCompiler.BishCompiler.Compile(content, Scope);
                         frame.Execute();
+                    });
+                    break;
+                case not null when code.StartsWith(".comp"):
+                    Handled(() =>
+                    {
+                        var frame = BishCompiler.BishCompiler.Compile(code[5..], Scope);
+                        foreach (var bytecode in frame.Bytecodes)
+                            Console.WriteLine(BytecodeParser.ToString(bytecode));
                     });
                     break;
                 default:

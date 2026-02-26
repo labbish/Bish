@@ -31,7 +31,7 @@ public class AccessTest : CompilerTest
     [Fact]
     public void TestScopeDepth()
     {
-        Execute("{a=b.length;b:='b'}");
+        Execute("{a=b.length;b:='b';}");
         Scope.GetVar("a").Should().BeEquivalentTo(I(3));
         Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
     }

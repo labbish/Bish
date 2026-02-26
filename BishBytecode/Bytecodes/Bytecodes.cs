@@ -232,7 +232,8 @@ public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name
 
 public record FuncEnd(string Name) : EndTag(Name);
 
-public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false) : TagBased<FuncStart, FuncEnd>(Name)
+public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool Gen = false)
+    : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
@@ -243,21 +244,43 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false) : Ta
         var inArgs = names
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
-        frame.Stack.Push(new BishFunc(Name, inArgs,
-            args =>
+
+        BishObject Func(List<BishObject> args)
+        {
+            var inner = new BishFrame(slice.Code, scope, frame);
+            // The first argument is in the top
+            foreach (var arg in args.Reversed()) inner.Stack.Push(arg);
+            if (!Gen) return inner.Execute();
+
+            var type = new BishType("gen");
+            BishBuiltinIteratorBinder.Bind(type, _ =>
             {
-                var inner = new BishFrame(slice.Code, scope, frame);
-                // The first argument is in the top
-                foreach (var arg in args.Reversed())
-                    inner.Stack.Push(arg);
-                return inner.Execute();
-            }));
+                try
+                {
+                    inner.Execute();
+                }
+                catch (BishException e) when (e.Error.Type.CanAssignTo(BishError.YieldValueType))
+                {
+                    return e.Error.GetMember("value");
+                }
+
+                return null;
+            });
+            return new BishObject(type);
+        }
+
+        frame.Stack.Push(new BishFunc(Name, inArgs, Func));
     }
 }
 
 public record Ret : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.ReturnValue = frame.Stack.Pop();
+}
+
+public record Yield : BishBytecode
+{
+    public override void Execute(BishFrame frame) => throw BishException.OfYield(frame.Stack.Pop());
 }
 
 public record Copy : BishBytecode

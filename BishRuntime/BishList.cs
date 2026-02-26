@@ -100,7 +100,7 @@ public class BishList(List<BishObject> list) : BishObject
         return result;
     }
 
-    [Builtin("op")]
+    [Builtin]
     public static BishListIterator Iter(BishList self) => new(self.List);
 
     [Builtin("hook")]

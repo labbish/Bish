@@ -116,7 +116,7 @@ public class BuiltinsTest : Test
         Action(() => BishOperator.Call("op_getIndex", [S("abc"), I(-4)])).Should().Excepts();
         S("abc").GetMember("length").Should().BeEquivalentTo(I(3));
 
-        var iter = BishOperator.Call("op_iter", [S("abc")]);
+        var iter = BishOperator.Call("iter", [S("abc")]);
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(S("a"));
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(S("b"));
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(S("c"));
@@ -179,7 +179,7 @@ public class BuiltinsTest : Test
         Action(() => BishOperator.Call("op_getIndex", [l, I(3)])).Should().Excepts();
         Action(() => BishOperator.Call("op_delIndex", [l, I(-4)])).Should().Excepts();
 
-        var iter = BishOperator.Call("op_iter", [l]);
+        var iter = BishOperator.Call("iter", [l]);
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(a);
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(b);
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(c);

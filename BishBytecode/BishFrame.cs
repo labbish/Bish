@@ -14,6 +14,8 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
 
     // Used by REPL, to display statement result
     public Action<BishObject>? EndStatHandler;
+    
+    public bool Ended => Ip >= Stack.Count;
 
     public BishObject Execute()
     {
@@ -24,12 +26,9 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
             {
                 bytecode.Execute(this);
             }
-            catch (BishException)
-            {
-                throw;
-            }
             catch (Exception e)
             {
+                if (e is BishException) throw;
                 throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);
             }
 

@@ -10,16 +10,31 @@ public partial class BishVisitor
 
     public override Codes VisitReturnStat(BishParser.ReturnStatContext context) => Return(context.expr());
 
-    public override Codes VisitFuncExpr(BishParser.FuncExprContext context) => MakeFunc(context.ID()?.GetText(),
-        context.defArgs(), context.funcBody(), context.deco());
+    public override Codes VisitYieldStat(BishParser.YieldStatContext context)
+    {
+        var (tag, end) = Symbols.GetPair("yield");
+        BishBytecode.BishBytecode? nop = context.gen is null ? new Nop() : null;
+        return
+        [
+            ..Visit(context.expr()),
+            nop ?? new Op("iter", 1),
+            nop ?? new ForIter(end).Tagged(tag),
+            new Yield(),
+            nop ?? new Jump(tag),
+            nop ?? Tag(end)
+        ];
+    }
+
+    public override Codes VisitFuncExpr(BishParser.FuncExprContext context) =>
+        MakeFunc(context.ID()?.GetText(), context.funcBody(), context.deco());
 
     public override Codes VisitOperExpr(BishParser.OperExprContext context)
     {
         var op = context.defOp().GetText();
-        var special = BishOperator.GetOperator(op, context.defArgs().defArg().Length);
+        var special = BishOperator.GetOperator(op, context.funcBody().defArgs().defArg().Length);
         var name = special.NamePattern.Name;
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        return MakeFunc(name, context.defArgs(), context.funcBody(), context.deco(),
+        return MakeFunc(name, context.funcBody(), context.deco(),
             special.Args is not null, $"operator {op}");
     }
 
@@ -32,7 +47,7 @@ public partial class BishVisitor
             (null, _) => "()",
             (_, null) => "[]",
             (_, _) => ""
-        }, context.defArgs().defArg().Length);
+        }, context.funcBody().defArgs().defArg().Length);
         var access = op + op[^1] + "er";
         var (name, funcName) = (item, item?.ID()) switch
         {
@@ -40,21 +55,21 @@ public partial class BishVisitor
             (_, null) => (special.NamePattern.Name, $"index {access}"),
             (_, { } id) => ($"hook_{op}_{id.GetText()}", $"{access} {id.GetText()}")
         };
-        return MakeFunc(name, context.defArgs(), context.funcBody(), context.deco(), true, funcName);
+        return MakeFunc(name, context.funcBody(), context.deco(), true, funcName);
     }
 
     public override Codes VisitInitExpr(BishParser.InitExprContext context) =>
-        MakeFunc("hook_init", context.defArgs(), context.funcBody(), context.deco(), true, "initializer");
+        MakeFunc("hook_init", context.funcBody(), context.deco(), true, "initializer");
 
     public override Codes VisitCreateExpr(BishParser.CreateExprContext context) =>
-        MakeFunc("hook_create", context.defArgs(), context.funcBody(), context.deco(), true, "create hook");
+        MakeFunc("hook_create", context.funcBody(), context.deco(), true, "create hook");
 
-    private Codes MakeFunc(string? name, BishParser.DefArgsContext? defArgs, BishParser.FuncBodyContext body,
-        BishParser.DecoContext[] decos, bool fixedArgc = false, string funcName = "")
+    private Codes MakeFunc(string? name, BishParser.FuncBodyContext body, BishParser.DecoContext[] decos,
+        bool fixedArgc = false, string funcName = "")
     {
         var symbol = Symbols.Get(name ?? Anonymous);
-        var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>((defArgs?.defArg() ?? [])
-            .Select(arg =>
+        var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(
+            (body.defArgs()?.defArg() ?? []).Select(arg =>
                 new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null))
             .ToList());
         if (fixedArgc && args.Any(arg => arg.Default is not null || arg.Rest))
@@ -69,7 +84,7 @@ public partial class BishVisitor
             new Outer(),
             new FuncEnd(symbol),
             ..defaults.SelectMany(Visit),
-            new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest),
+            new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest, Gen: body.gen is not null),
             ..decos.Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
             name is null ? new Nop() : new Def(name)
         ];

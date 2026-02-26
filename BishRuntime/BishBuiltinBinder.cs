@@ -126,13 +126,20 @@ public static class BishBuiltinIteratorBinder
                        .FirstOrDefault(info =>
                            info.Name == "Next" && info.GetCustomAttribute<IterAttribute>() is not null) ??
                    throw new ArgumentException($"Cannot find method `Next` on type {type}");
-        var staticType = BishType.GetStaticType(type);
-        staticType.SetMember("hook_create", new BishFunc("hook_create", [], _ =>
-            throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_iter() instead", [])));
-        staticType.SetMember("next",
-            new BishFunc("next", [new BishArg("iter", staticType)],
-                args => (BishObject?)next.InvokeRaw(args[0], []) ?? throw BishException.OfIteratorStop()));
-        staticType.SetMember("op_iter", new BishFunc("op_iter",
-            [new BishArg("self", staticType)], args => args[0]));
+        Bind(BishType.GetStaticType(type), next);
+    }
+
+    public static void Bind(BishType type, MethodInfo next) =>
+        Bind(type, self => (BishObject?)next.InvokeRaw(self, []));
+
+    public static void Bind(BishType type, Func<BishObject, BishObject?> next)
+    {
+        type.SetMember("hook_create", new BishFunc("hook_create", [], _ =>
+            throw BishException.OfType($"Cannot manually create {type.Name}; did you mean to call .iter()?", [])));
+        type.SetMember("next",
+            new BishFunc("next", [new BishArg("iter", type)],
+                args => next(args[0]) ?? throw BishException.OfIteratorStop()));
+        type.SetMember("iter", new BishFunc("iter",
+            [new BishArg("self", type)], args => args[0]));
     }
 }

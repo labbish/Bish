@@ -51,7 +51,7 @@ public class BishString(string value) : BishObject
         _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
     };
 
-    [Builtin("op")]
+    [Builtin]
     public static BishStringIterator Iter(BishString self) => new(self.Value);
 
     [Builtin("hook")]

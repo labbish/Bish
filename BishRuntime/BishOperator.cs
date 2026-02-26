@@ -72,7 +72,7 @@ public static partial class BishOperator
         new("op_getIndex", ["self", "index"], "get[]"),
         new("op_setIndex", ["self", "index", "value"], "set[]"),
         new("op_delIndex", ["self", "index"], "del[]"),
-        new("op_iter", ["self"], "iter")
+        new("iter", ["self"], "iter")
     ];
 
     public static BishObject? TryCall(string name, List<BishObject> args) =>

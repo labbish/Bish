@@ -184,4 +184,10 @@ public class BishException(BishError error) : Exception
         });
 
     public static BishException OfIteratorStop() => Create(BishError.IteratorStopType, "Iterator stopped", []);
+
+    public static BishException OfYield(BishObject value) => Create(BishError.YieldValueType,
+        "Yield expression out of generator function", new Dictionary<string, BishObject>
+        {
+            ["value"] = value
+        });
 }

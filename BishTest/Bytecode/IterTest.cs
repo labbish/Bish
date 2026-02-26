@@ -16,7 +16,7 @@ public class IterTest : Test
             new Bytecodes.Def("x"),
             // for (c : x) {
             new Bytecodes.Get("x"),
-            new Bytecodes.Op("op_iter", 1),
+            new Bytecodes.Op("iter", 1),
             new Bytecodes.ForIter("end").Tagged("start"),
             // s = c + s
             new Bytecodes.Get("s"),

@@ -8,8 +8,8 @@ stat
     : expr END                                                  # ExprStat
     | BRK ID? END                                               # BreakStat
     | CTN ID? END                                               # ContinueStat
-    // TODO: yield
     | RET expr END                                              # ReturnStat
+    | YLD gen='*'? expr END                                     # YieldStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
     | tag? WHL '(' expr ')' stat                                # WhileStat
     | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
@@ -24,11 +24,11 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
-    | deco* (FUN ID?)? '(' defArgs ')' funcBody                 # FuncExpr
-    | deco* OP defOp '(' defArgs ')' funcBody                   # OperExpr
-    | deco* accessOp accessItem? '(' defArgs ')' funcBody       # AccessExpr
-    | deco* INI '(' defArgs ')' funcBody                        # InitExpr
-    | deco* CRT '(' defArgs ')' funcBody                        # CreateExpr
+    | deco* (FUN ID?)? funcBody                                 # FuncExpr
+    | deco* OP defOp funcBody                                   # OperExpr
+    | deco* accessOp accessItem? funcBody                       # AccessExpr
+    | deco* INI funcBody                                        # InitExpr
+    | deco* CRT funcBody                                        # CreateExpr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | expr nullAccess+                                          # GetAccess
@@ -58,7 +58,7 @@ expr
     ;
 
 funcBody
-    : (('=>' expr) | ('{' stat* '}'))
+    : '(' defArgs ')' gen='*'? (('=>' expr) | ('{' stat* '}'))
     ;
 
 accessOp
@@ -200,6 +200,7 @@ OP  : 'oper' ;
 INI : 'init' ;
 CRT : 'create' ;
 RET : 'return' ;
+YLD : 'yield' ;
 CLS : 'class' ;
 THR : 'throw' ;
 TRY : 'try' ;

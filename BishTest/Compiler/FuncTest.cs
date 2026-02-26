@@ -50,4 +50,14 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Execute("func d1(f)=>(x)=>f(x*2);func d2(f)=>(x)=>f(x)+1;");
         ExpectResult("(@d1 @d2 (x)=>x)(3)", I(7));
     }
+
+    [Fact]
+    public void TestYield()
+    {
+        Action(() => Execute("yield 0;")).Should().Excepts(BishError.YieldValueType);
+        Execute("func square(it)*{for(i:it)yield i^2;};");
+        Execute("func add(it1, it2)*{yield* it1;yield* it2;};");
+        Execute("l:=list(range(5));l=list(add(l,square(l)));");
+        ExpectResult("l", L(I(0), I(1), I(2), I(3), I(4), I(0), I(1), I(4), I(9), I(16)));
+    }
 }

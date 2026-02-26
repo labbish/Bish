@@ -13,13 +13,29 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
 
-    public static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
+    private static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
+
+    private static int ToInt(string text)
+    {
+        if (text[0] != '0' || text.Length < 2) return int.Parse(text);
+        var radix = text[1] switch { 'x' => 16, 'o' => 8, 'b' => 2, _ => 10 };
+        return Convert.ToInt32(text[2..], radix);
+    }
+
+    private static double ToNum(string text)
+    {
+        var pos = text.IndexOf('e');
+        if (pos == -1) return double.Parse(text);
+        var part = text[(pos + 1)..];
+        var exp = "+-".Contains(part[0]) ? ToInt(part[1..]) * (part[0] == '-' ? -1 : 1) : ToInt(part);
+        return double.Parse(text[..pos]) * Math.Pow(10, exp);
+    }
 
     public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
-        [new Int(int.Parse(context.INT().GetText()))];
+        [new Int(ToInt(context.INT().GetText()))];
 
     public override Codes VisitNumAtom(BishParser.NumAtomContext context) =>
-        [new Num(double.Parse(context.NUM().GetText()))];
+        [new Num(ToNum(context.NUM().GetText()))];
 
     public override Codes VisitStrAtom(BishParser.StrAtomContext context)
     {

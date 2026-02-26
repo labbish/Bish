@@ -163,8 +163,13 @@ LINE_COMMENT
     : '//' ~[\r\n]* -> skip
     ;
 
-INT : [0-9]+ ;
-NUM : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
+INT : '0'
+    | [1-9] [0-9]*
+    | '0x' [1-9A-Fa-f] [0-9A-Fa-f]*
+    | '0o' [1-7] [0-7]*
+    | '0b' '1' [01]*
+    ;
+NUM : ([0-9]+ '.' [0-9]* | '.' [0-9]+) ('e' ('+'|'-')? INT)? ;
 BOL : 'true' | 'false' ;
 
 // TODO: format string (seems difficult)

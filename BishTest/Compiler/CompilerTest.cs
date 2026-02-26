@@ -7,9 +7,9 @@ public class CompilerTest(OptimizeInfoFixture fixture) : Test
 
     public readonly BishScope Scope = BishScope.Globals;
 
-    protected BishFrame Compile(string code, BishScope scope)
+    protected BishFrame Compile(string code)
     {
-        var frame = BishCompiler.BishCompiler.Compile(code, scope, excepts: true, optimize: false);
+        var frame = BishCompiler.BishCompiler.Compile(code, Scope, excepts: true, optimize: false);
         Interlocked.Add(ref Fixture.Before, frame.Bytecodes.Count);
         frame.Bytecodes = BishOptimizer.Optimize(frame.Bytecodes);
         Interlocked.Add(ref Fixture.After, frame.Bytecodes.Count);
@@ -18,7 +18,7 @@ public class CompilerTest(OptimizeInfoFixture fixture) : Test
 
     protected void Execute(string code)
     {
-        var frame = Compile(code, Scope);
+        var frame = Compile(code);
         frame.Execute();
         frame.Stack.Should().BeEmpty();
     }

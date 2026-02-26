@@ -1,6 +1,8 @@
 ﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
+using BishBytecode;
 using BishBytecode.Bytecodes;
 using BishRuntime;
 using String = BishBytecode.Bytecodes.String;
@@ -11,6 +13,8 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 {
     public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
+
+    public static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
 
     public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
         [new Int(int.Parse(context.INT().GetText()))];
@@ -117,7 +121,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
             new JumpIfNot(tag),
             new Pop(),
             ..Visit(context.right),
-            new Nop().Tagged(tag)
+            Tag(tag)
         ];
     }
 
@@ -132,7 +136,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
             new JumpIf(tag),
             new Pop(),
             ..Visit(context.right),
-            new Nop().Tagged(tag)
+            Tag(tag)
         ];
     }
 
@@ -145,9 +149,9 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
             new JumpIfNot(tag),
             ..left,
             new Jump(end),
-            new Nop().Tagged(tag),
+            Tag(tag),
             ..right,
-            new Nop().Tagged(end)
+            Tag(end)
         ]);
     }
 
@@ -192,58 +196,6 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitIfStat(BishParser.IfStatContext context) =>
         Condition("if", Visit(context.cond), Wrap(Visit(context.left)),
             context.right is null ? [] : Wrap(Visit(context.right)));
-
-    public override Codes VisitWhileStat(BishParser.WhileStatContext context)
-    {
-        var (tag, end) = Symbols.GetPair("while");
-        return Wrap([
-            new Nop().Tagged(tag),
-            ..Visit(context.expr()),
-            new JumpIfNot(end),
-            ..Wrap(Visit(context.stat())),
-            new Jump(tag),
-            new Nop().Tagged(end)
-        ]);
-    }
-
-    public override Codes VisitDoWhileStat(BishParser.DoWhileStatContext context)
-    {
-        var tag = Symbols.Get("do_while");
-        return Wrap([
-            new Nop().Tagged(tag),
-            ..Wrap(Visit(context.stat())),
-            ..Visit(context.expr()),
-            new JumpIf(tag)
-        ]);
-    }
-
-    public override Codes VisitForStat(BishParser.ForStatContext context)
-    {
-        var (tag, end) = Symbols.GetPair("for");
-        return Wrap([
-            ..Visit(context.init),
-            new Nop().Tagged(tag),
-            ..Visit(context.cond),
-            new JumpIfNot(end),
-            ..Wrap(Visit(context.stat()), Visit(context.step)),
-            new Pop(),
-            new Jump(tag),
-            new Pop().Tagged(end)
-        ]);
-    }
-
-    public override Codes VisitForIterStat(BishParser.ForIterStatContext context)
-    {
-        var (tag, end) = Symbols.GetPair("for_iter");
-        return Wrap([
-            ..Visit(context.expr()),
-            new Op("op_Iter", 1),
-            new ForIter(end).Tagged(tag),
-            ..Wrap([new Move(context.name.Text)], Visit(context.stat())),
-            new Jump(tag),
-            new Pop().Tagged(end)
-        ]);
-    }
 
     private Codes Return(BishParser.ExprContext expr) => [..Visit(expr), new Ret()];
 
@@ -311,6 +263,21 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitProgram(BishParser.ProgramContext context) =>
         context.stat().SelectMany(Visit).ToList();
+
+    internal abstract record Unbound : BishBytecode.BishBytecode
+    {
+        public abstract void Error();
+        public override void Execute(BishFrame frame) => Error();
+    }
+
+    public Codes VisitFull(IParseTree tree, bool optimize)
+    {
+        var codes = Visit(tree);
+        foreach (var code in codes)
+            if (code is Unbound unbound)
+                unbound.Error();
+        return optimize ? BishOptimizer.Optimize(codes) : codes;
+    }
 }
 
 public class SymbolAllocator

@@ -6,13 +6,14 @@ program
 
 stat
     : expr END                                                  # ExprStat
+    | BRK ID? END                                               # BreakStat
+    | CTN ID? END                                               # ContinueStat
     | RET expr END                                              # ReturnStat
     | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
-    | WHL '(' expr ')' stat                                     # WhileStat
-    | DO stat WHL '(' expr ')' END                              # DoWhileStat
-    | FOR '(' init=expr END cond=expr END step=expr ')' stat    # ForStat
-    // TODO: break & continue
-    | FOR '(' name=ID ':' expr ')' stat                         # ForIterStat
+    | tag? WHL '(' expr ')' stat                                # WhileStat
+    | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
+    | tag? FOR '(' forStats ')' stat                            # ForStat
+    | tag? FOR '(' name=ID set=':'? ':' expr ')' stat           # ForIterStat
     | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
         | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat
@@ -53,6 +54,12 @@ expr
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
     ;
+
+forStats
+    : init=expr END cond=expr END step=expr
+    ;
+
+tag : ID ':' ;
 
 index
     : '[' expr ']'                                              # SingleIndex
@@ -135,6 +142,8 @@ NUL : 'null' ;
 
 IF  : 'if' ;
 ELS : 'else' ;
+BRK : 'break' ;
+CTN : 'continue' ;
 WHL : 'while' ;
 DO  : 'do' ;
 FOR : 'for' ;

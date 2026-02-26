@@ -63,4 +63,44 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Execute(code);
         Scope.GetVar("s").Should().BeEquivalentTo(I(primes));
     }
+
+    [Fact]
+    public void TestBreak()
+    {
+        Action(() => Compile("break;")).Should().Throw();
+        Execute("i:=0;while(true){i+=1;if(i==3)break;}");
+        Scope.GetVar("i").Should().BeEquivalentTo(I(3));
+        Execute("i:=0;do{i+=1;if(i==3)break;}while(true);");
+        Scope.GetVar("i").Should().BeEquivalentTo(I(3));
+        Execute("i:=0;for(i=0;true;i+=1)if(i==3)break;");
+        Scope.GetVar("i").Should().BeEquivalentTo(I(3));
+        Execute("i:=0;for(i::range(0,100))if(i==3)break;");
+    }
+
+    [Fact]
+    public void TestContinue()
+    {
+        Action(() => Compile("continue;")).Should().Throw();
+        Execute("x:=1;i:=5;while(i>1){i-=1;if(i==2)continue;x*=i;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(12));
+        Execute("x:=1;i:=5;do{i-=1;if(i==2)continue;x*=i;}while(i>1);");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(12));
+        Execute("x:=1;for(i:=1;i<5;i+=1){if(i==2)continue;x*=i;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(12));
+        Execute("x:=1;for(i:range(1,5)){if(i==2)continue;x*=i;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(12));
+    }
+
+    [Fact]
+    public void TestTagged()
+    {
+        Execute("x:=0;out:for(i:=0;i<5;i+=1)for(j:=0;j<5;j+=1){x+=i+j;if(i==3&&j==2)break out;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(57));
+        Execute("x:=0;out:for(i:range(5))for(j:range(5)){x+=i+j;if(i==3&&j==2)break out;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(57));
+        Execute("x:=0;out:for(i:=0;i<5;i+=1)for(j:=0;j<5;j+=1){x+=i+j;if(i==3&&j==2)continue out;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(87));
+        Execute("x:=0;out:for(i:range(5))for(j:range(5)){x+=i+j;if(i==3&&j==2)continue out;}");
+        Scope.GetVar("x").Should().BeEquivalentTo(I(87));
+    }
 }

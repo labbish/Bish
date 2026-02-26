@@ -46,10 +46,10 @@ public partial class BishVisitor
             new Swap(),
             new Pop(),
             new Jump(end),
-            new Nop().Tagged(tag),
+            Tag(tag),
             new Pop(),
             ..Visit(context.right),
-            new Nop().Tagged(end)
+            Tag(end)
         ];
     }
 
@@ -66,10 +66,10 @@ public partial class BishVisitor
             new Swap(),
             new Pop(),
             new Jump(end),
-            new Nop().Tagged(tag),
+            Tag(tag),
             new Pop(),
             ..Visit(context.right),
-            new Nop().Tagged(end)
+            Tag(end)
         ];
     }
 

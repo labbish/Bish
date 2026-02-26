@@ -28,6 +28,14 @@ public static class BishOptimizer
             return codes;
         }
 
+        public Codes RemoveUnusedTag()
+        {
+            foreach (var code in codes)
+                if (code.Tag is { } tag && codes.All(other => other is not Jumper jumper || jumper.GoalTag != tag))
+                    code.Tag = null;
+            return codes;
+        }
+
         public Codes RemoveInnerOuter()
         {
             for (var i = 0; i < codes.Count - 1; i++)
@@ -93,6 +101,7 @@ public static class BishOptimizer
     static BishOptimizer()
     {
         // Current optimization percentage ~ 15%
+        Optimizers.Add(RemoveUnusedTag);
         Optimizers.Add(RemoveInnerOuter);
         Optimizers.Add(RemoveValuePop);
         Optimizers.Add(CombineDefPop);

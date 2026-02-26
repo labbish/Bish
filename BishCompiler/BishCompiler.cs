@@ -22,8 +22,7 @@ public static class BishCompiler
 
         var tree = parser.program();
         var visitor = new BishVisitor();
-        var codes = visitor.Visit(tree);
-        if (optimize) codes = BishOptimizer.Optimize(codes);
+        var codes = visitor.VisitFull(tree, optimize: optimize);
         return new BishFrame(codes, scope);
     }
 }
@@ -49,5 +48,3 @@ public class ThrowingLexerErrorListener : IAntlrErrorListener<int>
         throw new RecognitionException($"Syntax error at row {line} column {column}: {msg}", recognizer, null,
             e.Context as ParserRuleContext);
 }
-
-// public class 

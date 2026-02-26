@@ -95,7 +95,7 @@ public static class BishBuiltinBinder
     private static DefaultNull? Default(ParameterInfo info) =>
         info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : new DefaultNull();
 
-    private static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
+    internal static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
     {
         try
         {
@@ -129,7 +129,7 @@ public static class BishBuiltinIteratorBinder
             throw BishException.OfType($"Cannot manually create {staticType.Name}; use .op_Iter() instead", [])));
         staticType.SetMember("next",
             new BishFunc("next", [new BishArg("iter", staticType)],
-                args => (BishObject?)next.Invoke(args[0], []) ?? throw BishException.OfIteratorStop()));
+                args => (BishObject?)next.InvokeRaw(args[0], []) ?? throw BishException.OfIteratorStop()));
         staticType.SetMember("op_Iter", new BishFunc("op_Iter",
             [new BishArg("self", staticType)], args => args[0]));
     }

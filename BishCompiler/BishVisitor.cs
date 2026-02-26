@@ -39,7 +39,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         [..Visit(context.expr()), new GetMember(context.name.Text)];
 
     public override Codes VisitGetIndex(BishParser.GetIndexContext context) =>
-        [..Visit(context.obj), ..Visit(context.index), Op("get[]", 2)];
+        [..Visit(context.obj), ..Visit(context.index()), Op("get[]", 2)];
 
     public override Codes VisitSet(BishParser.SetContext context)
     {
@@ -77,7 +77,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         [
             ..Visit(context.obj),
             op is null ? new Nop() : new Copy(),
-            ..Visit(context.index),
+            ..Visit(context.index()),
             ..(Codes)(op is null ? [] : [new Copy(), new Swap(2), Op("get[]", 2)]),
             ..Visit(context.value),
             op is null ? new Nop() : Op(op, 2),
@@ -94,7 +94,17 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         [..Visit(context.obj), new DelMember(context.name.Text)];
 
     public override Codes VisitDelIndex(BishParser.DelIndexContext context) =>
-        [..Visit(context.obj), ..Visit(context.index), Op("del[]", 2)];
+        [..Visit(context.obj), ..Visit(context.index()), Op("del[]", 2)];
+
+    public override Codes VisitSingleIndex(BishParser.SingleIndexContext context) => Visit(context.expr());
+
+    private Codes VisitOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
+
+    public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
+    [
+        ..VisitOrNull(context.start), ..VisitOrNull(context.end), ..VisitOrNull(context.step),
+        new Get("range"), new Call(3)
+    ];
 
     public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
     {
@@ -172,7 +182,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
 
     public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
-        [..Visit(context.expr()), new Pop()];
+        [..Visit(context.expr()), new EndStat()];
 
     public override Codes VisitBlockStat(BishParser.BlockStatContext context) =>
         Wrap(context.stat().SelectMany(Visit).ToList());

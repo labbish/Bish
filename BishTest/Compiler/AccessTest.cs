@@ -45,4 +45,17 @@ public class AccessTest : CompilerTest
         Execute("del l[3];");
         Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(-1), I(6), I(3)));
     }
+
+    [Fact]
+    public void TestRangeIndex()
+    {
+        Execute("l:=list(range(11));");
+        ExpectResult("l[1:7:2]", L(I(1), I(3), I(5)));
+        Execute("l[2:8]=['a','b'];");
+        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(1), S("a"), S("b"), I(8), I(9), I(10)));
+        Execute("l[::3]=[null]*3;");
+        Scope.GetVar("l").Should().BeEquivalentTo(L(Null, I(1), S("a"), Null, I(8), I(9), Null));
+        Execute("del l[1::2];");
+        Scope.GetVar("l").Should().BeEquivalentTo(L(Null, S("a"), I(8), Null));
+    }
 }

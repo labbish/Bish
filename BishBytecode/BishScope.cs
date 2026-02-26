@@ -19,7 +19,7 @@ public class BishScope
         Vars.ContainsKey(name) ? Vars[name] = value : Outer?.TrySetVar(name, value);
 
     public BishObject SetVar(string name, BishObject value) =>
-        TrySetVar(name, value) ?? throw BishException.OfName(name);
+        TrySetVar(name, value) ?? throw BishException.OfName(name).WithExtraMsg(" (did you mean to use `:=`?)");
 
     public BishObject? TryDelVar(string name) => Vars.Remove(name, out var value) ? value : null;
 

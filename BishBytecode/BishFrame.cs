@@ -12,6 +12,9 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
 
     public BishObject? ReturnValue;
 
+    // Used by REPL, to display statement result
+    public Action<BishObject>? EndStatHandler;
+
     public BishObject Execute()
     {
         while (Ip < Bytecodes.Count)

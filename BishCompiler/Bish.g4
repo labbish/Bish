@@ -28,8 +28,7 @@ expr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | func=expr '(' args ')'                                    # CallExpr
-    // TODO: slice index
-    | obj=expr '[' index=expr ']'                               # GetIndex
+    | obj=expr index                                            # GetIndex
     | expr '.' name=ID                                          # GetMember
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
@@ -44,16 +43,20 @@ expr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
-    | <assoc=right> obj=expr '[' index=expr ']'
-        setOp? '=' value=expr                                   # SetIndex
+    | <assoc=right> obj=expr index setOp? '=' value=expr        # SetIndex
     | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
     | <assoc=right> name=ID setOp? '=' value=expr               # Set
-    | <assoc=right> DEL obj=expr '[' index=expr ']'             # DelIndex
+    | <assoc=right> DEL obj=expr index                          # DelIndex
     | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
     | <assoc=right> DEL name=ID                                 # Del
     // TODO: string interpolation
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    ;
+
+index
+    : '[' expr ']'                                              # SingleIndex
+    | '[' start=expr? ':' end=expr? (':' step=expr)? ']'        # RangeIndex
     ;
 
 caseExpr

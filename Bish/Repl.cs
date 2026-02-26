@@ -1,6 +1,4 @@
 ﻿using BishBytecode;
-using BishBytecode.Bytecodes;
-using BishCompiler;
 using BishRuntime;
 
 namespace Bish;
@@ -11,36 +9,45 @@ public class Repl(BishScope? scope = null)
 
     public void Loop()
     {
+        Console.WriteLine("Welcome to Bish REPL!");
+        Console.WriteLine("Type \".help\" for more information.");
         while (true)
         {
             Console.Write(">>> ");
             var code = Console.ReadLine();
-            if (string.IsNullOrEmpty(code)) continue;
-            if (code == ".exit") break;
-            if (code == ".clear")
+            switch (code)
             {
-                Console.Clear();
-                continue;
+                case null or "": break;
+                case ".help":
+                    Console.WriteLine(".clear  Clear screen.");
+                    Console.WriteLine(".exit   Exit the REPL.");
+                    Console.WriteLine(".file   Load a file into the REPL session.");
+                    Console.WriteLine(".help   Print this help message.");
+                    break;
+                case ".clear": Console.Clear(); break;
+                case ".exit": return;
+                case not null when code.StartsWith(".file"):
+                    Handled(() =>
+                    {
+                        var file = code[5..].Trim().Trim('"');
+                        var content = File.ReadAllText(file);
+                        var frame = BishCompiler.BishCompiler.Compile(content, Scope);
+                        frame.Execute();
+                    });
+                    break;
+                default:
+                    Handled(() =>
+                    {
+                        var frame = BishCompiler.BishCompiler.Compile(code, Scope);
+                        frame.EndStatHandler = result => Handled(() =>
+                        {
+                            Scope.DefVar("_", result);
+                            Console.WriteLine(result);
+                        });
+                        frame.Execute();
+                    });
+                    break;
             }
-            if (code.StartsWith(".file"))
-                Handled(() =>
-                {
-                    var file = code[5..].Trim().Trim('"');
-                    var content = File.ReadAllText(file);
-                    var frame = BishCompiler.BishCompiler.Compile(content, Scope);
-                    frame.Execute();
-                });
-            else
-                Handled(() =>
-                {
-                    var frame = BishCompiler.BishCompiler.Compile(code, Scope, ErrorHandlingMode.Ignore);
-                    if (frame.Bytecodes[^1] is Pop) frame.Bytecodes.RemoveAt(frame.Bytecodes.Count - 1);
-                    frame.Execute();
-                    if (frame.Stack.Count == 0) return;
-                    var result = frame.Stack.Pop();
-                    Scope.DefVar("_", result);
-                    Console.WriteLine(result);
-                });
         }
     }
 

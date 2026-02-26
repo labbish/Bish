@@ -1,5 +1,4 @@
 ﻿using BishBytecode.Bytecodes;
-using BishCompiler;
 using CommandLine;
 
 namespace Bish;
@@ -21,7 +20,7 @@ public static class Program
                 break;
             default:
                 var input = options.Command ?? File.ReadAllText(options.File!);
-                var frame = BishCompiler.BishCompiler.Compile(input, mode: ErrorHandlingMode.Throw);
+                var frame = BishCompiler.BishCompiler.Compile(input);
                 if (options.Output is {} output)
                     File.WriteAllText(output, string.Join("\n", frame.Bytecodes.Select(BytecodeParser.ToString)));
                 if (options.SkipExecution) return;

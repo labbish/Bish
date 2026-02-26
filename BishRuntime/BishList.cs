@@ -66,7 +66,7 @@ public class BishList(List<BishObject> list) : BishObject
                 if (value is not BishList list) throw BishException.OfType_Argument(value, StaticType);
                 if (range.Step == 1)
                 {
-                    self.List = [..self.List[..range.Start], ..list.List, ..self.List[range.End..]];
+                    self.List = [..self.List[..range.Start!.Value], ..list.List, ..self.List[range.End!.Value..]];
                     break;
                 }
 
@@ -91,7 +91,7 @@ public class BishList(List<BishObject> list) : BishObject
         {
             case BishInt index: self.List.RemoveAt(index.Value); break;
             case BishRange range:
-                var indexes = range.ToInts().Select(i => i.Value).ToList();
+                var indexes = range.Regularize(self.List.Count).ToInts().Select(i => i.Value).ToList();
                 self.List = self.List.Where((_, i) => !indexes.Contains(i)).ToList();
                 break;
             default: throw BishException.OfType_Argument(self, BishInt.StaticType);

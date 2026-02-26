@@ -23,6 +23,12 @@ public class BishException(BishError error) : Exception
         return this;
     }
 
+    public BishException WithExtraMsg(string msg)
+    {
+        Error.Message += msg;
+        return this;
+    }
+
     public static BishException Create(BishType errorType, string message, Dictionary<string, BishObject> data)
     {
         var error = (BishError)errorType.CreateInstance([new BishString(message)]);

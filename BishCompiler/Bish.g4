@@ -149,6 +149,7 @@ atom
     | NUM                                                       # NumAtom
     | STR                                                       # StrAtom
     | NUL                                                       # NullAtom
+    | BOL                                                       # BoolAtom
     | ID                                                        # IdAtom
     ;
 
@@ -164,6 +165,7 @@ LINE_COMMENT
 
 INT : [0-9]+ ;
 NUM : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
+BOL : 'true' | 'false' ;
 
 // TODO: format string (seems difficult)
 

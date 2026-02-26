@@ -31,6 +31,9 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitNullAtom(BishParser.NullAtomContext context) => [new Null()];
 
+    public override Codes VisitBoolAtom(BishParser.BoolAtomContext context) =>
+        [new Bool(context.BOL().GetText() == "true")];
+
     public override Codes VisitIdAtom(BishParser.IdAtomContext context) => [new Get(context.GetText())];
 
     public override Codes VisitParenExpr(BishParser.ParenExprContext context) => Visit(context.expr());

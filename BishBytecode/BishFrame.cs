@@ -14,8 +14,6 @@ public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, Bi
 
     // Used by REPL, to display statement result
     public Action<BishObject>? EndStatHandler;
-    
-    public bool Ended => Ip >= Stack.Count;
 
     public BishObject Execute()
     {

@@ -176,13 +176,6 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
 
-    // TODO: records the stack depth at function calls
-    public static BishException OfRecursion(int depth) => Create(BishError.RecursionErrorType,
-        "Recursion limit exceeded", new Dictionary<string, BishObject>
-        {
-            ["depth"] = new BishInt(depth),
-        });
-
     public static BishException OfIteratorStop() => Create(BishError.IteratorStopType, "Iterator stopped", []);
 
     public static BishException OfYield(BishObject value) => Create(BishError.YieldValueType,

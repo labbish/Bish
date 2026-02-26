@@ -44,7 +44,7 @@ public class BishScope
             ["range"] = BishRange.StaticType,
             ["true"] = new BishBool(true),
             ["false"] = new BishBool(false),
-            ["null"] = BishNull.Instance, // TODO: maybe make these const
+            ["null"] = BishNull.Instance,
             ["print"] = BishBuiltinBinder.Builtin("print", Print),
             ["input"] = BishBuiltinBinder.Builtin("input", Input),
             ["Error"] = BishError.StaticType,
@@ -54,7 +54,6 @@ public class BishScope
             ["NullError"] = BishError.NullErrorType,
             ["NameError"] = BishError.NameErrorType,
             ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
-            ["RecursionError"] = BishError.RecursionErrorType,
             ["IterationStop"] = BishError.IteratorStopType
         }
     };

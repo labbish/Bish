@@ -13,15 +13,13 @@ public partial class BishVisitor
     public override Codes VisitYieldStat(BishParser.YieldStatContext context)
     {
         var (tag, end) = Symbols.GetPair("yield");
-        BishBytecode.BishBytecode? nop = context.gen is null ? new Nop() : null;
+        Codes nop = [];
         return
         [
             ..Visit(context.expr()),
-            nop ?? new Op("iter", 1),
-            nop ?? new ForIter(end).Tagged(tag),
+            ..context.gen is null ? nop : [new Op("iter", 1), new ForIter(end).Tagged(tag)],
             new Yield(),
-            nop ?? new Jump(tag),
-            nop ?? Tag(end)
+            ..context.gen is null ? nop : [new Jump(tag), Tag(end)]
         ];
     }
 

@@ -153,8 +153,11 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
     [
-        ..VisitOrNull(context.start), ..VisitOrNull(context.end), ..VisitOrNull(context.step),
-        new Get("range"), new SwapCall(3)
+        new Get("range"),
+        ..VisitOrNull(context.start),
+        ..VisitOrNull(context.end),
+        ..VisitOrNull(context.step),
+        new Call(3)
     ];
 
     public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
@@ -223,7 +226,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         ..args.SelectMany(arg => Visit(arg).Concat(arg switch
         {
             BishParser.RestArgContext => [new Op("op_Add", 2)],
-            _ => [new Swap(), new GetMember("add"), new SwapCall(1)]
+            _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
         }))
     ];
 
@@ -280,7 +283,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
             new FuncEnd(symbol),
             ..defaults.SelectMany(Visit),
             new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest),
-            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new SwapCall(1)])),
+            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
             name is null ? new Nop() : new Def(name)
         ];
     }
@@ -299,7 +302,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
             ..(Codes)(NoRest(args)
                 ? [..args.SelectMany(Visit), new MakeClass(symbol, args.Length)]
                 : [..ToList(args), new MakeClassArgs(symbol)]),
-            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new SwapCall(1)])),
+            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
             name is null ? new Nop() : new Def(name)
         ];
     }

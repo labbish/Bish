@@ -24,9 +24,9 @@ public class CallTest : Test
         if (argsResult is not [.. var args, var result])
             throw new ArgumentException("TestCall requires arguments");
         var frame = new BishFrame([
-            ..args.Select(x => new Bytecodes.Int(x)),
             new Bytecodes.Get("f"),
-            new Bytecodes.SwapCall(args.Length)
+            ..args.Select(x => new Bytecodes.Int(x)),
+            new Bytecodes.Call(args.Length)
         ], Scope);
         frame.Execute();
         frame.Stack.Pop().Should().BeEquivalentTo(I(result));

@@ -9,9 +9,9 @@ public class ErrorTest : Test
     {
         var frame = new BishFrame([
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw()
         ], Scope);
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
@@ -24,9 +24,9 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } catch (e) {
             new Bytecodes.TryEnd("#"),
@@ -47,9 +47,9 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } finally {
             new Bytecodes.TryEnd("#"),
@@ -95,18 +95,18 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } catch {
             new Bytecodes.TryEnd("#"),
             new Bytecodes.CatchStart("#"),
             new Bytecodes.Pop(),
             // throw Error("other")
-            new Bytecodes.String("other"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("other"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } finally {
             new Bytecodes.CatchEnd("#"),
@@ -129,9 +129,9 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } catch {
             new Bytecodes.TryEnd("#"),
@@ -160,17 +160,17 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } finally {
             new Bytecodes.TryEnd("#"),
             new Bytecodes.FinallyStart("#"),
             // throw Error("other")
-            new Bytecodes.String("other"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("other"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // }
             new Bytecodes.FinallyEnd("#")
@@ -185,9 +185,9 @@ public class ErrorTest : Test
             // try {
             new Bytecodes.TryStart("#"),
             // throw Error("error")
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             // } finally {
             new Bytecodes.TryEnd("#"),
@@ -207,9 +207,9 @@ public class ErrorTest : Test
         var frame = new BishFrame([
             new Bytecodes.FuncStart("f", []),
             new Bytecodes.Inner(),
-            new Bytecodes.String("error"),
             new Bytecodes.Get("Error"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.String("error"),
+            new Bytecodes.Call(1),
             new Bytecodes.Throw(),
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("f"),
@@ -219,7 +219,7 @@ public class ErrorTest : Test
             new Bytecodes.FuncStart("g", []),
             new Bytecodes.Inner(),
             new Bytecodes.Get("f"),
-            new Bytecodes.SwapCall(0),
+            new Bytecodes.Call(0),
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("g"),
             new Bytecodes.MakeFunc("g"),
@@ -228,14 +228,14 @@ public class ErrorTest : Test
             new Bytecodes.FuncStart("h", []),
             new Bytecodes.Inner(),
             new Bytecodes.Get("g"),
-            new Bytecodes.SwapCall(0),
+            new Bytecodes.Call(0),
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("h"),
             new Bytecodes.MakeFunc("h"),
             new Bytecodes.Def("h"),
 
             new Bytecodes.Get("h"),
-            new Bytecodes.SwapCall(0)
+            new Bytecodes.Call(0)
         ]);
         Action(() => frame.Execute()).Should().Excepts(BishError.StaticType).Which.Error.StackTrace
             .Select(layer => layer.Func.Name).Should().BeEquivalentTo("f", "g", "h");

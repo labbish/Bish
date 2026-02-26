@@ -42,14 +42,14 @@ public class ClassTest : Test
             new Bytecodes.Def("C"),
 
             // c := C(1)
-            new Bytecodes.Int(1),
             new Bytecodes.Get("C"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.Int(1),
+            new Bytecodes.Call(1),
             new Bytecodes.Def("c"),
             // x := c.f()
             new Bytecodes.Get("c"),
             new Bytecodes.GetMember("f"),
-            new Bytecodes.SwapCall(0),
+            new Bytecodes.Call(0),
             new Bytecodes.Def("x")
         ], Scope);
         frame.Execute();

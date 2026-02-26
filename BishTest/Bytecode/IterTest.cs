@@ -43,9 +43,9 @@ public class IterTest : Test
             new Bytecodes.Int(0),
             new Bytecodes.Def("s"),
             // for i in range(n + 1) {
-            new Bytecodes.Int(n + 1),
             new Bytecodes.Get("range"),
-            new Bytecodes.SwapCall(1),
+            new Bytecodes.Int(n + 1),
+            new Bytecodes.Call(1),
             new Bytecodes.ForIter("end").Tagged("start"),
             // s = s + i
             new Bytecodes.Get("s"),

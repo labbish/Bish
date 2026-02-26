@@ -96,17 +96,6 @@ public record DelMember(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));
 }
 
-// There are so many unit tests relying on this, so I'll keep it for now
-public record SwapCall(int Argc) : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        var func = frame.Stack.Pop();
-        var args = frame.Stack.Pop(Argc);
-        frame.Stack.Push(func.Call(args));
-    }
-}
-
 public record Call(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)

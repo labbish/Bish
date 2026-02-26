@@ -28,10 +28,7 @@ expr
         (('=>' expr) | ('{' stat* '}'))                         # FuncExpr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
-    | func=expr '(' args ')'                                    # CallExpr
-    | obj=expr index                                            # GetIndex
-    | expr '.' name=ID                                          # GetMember
-    // TODO: optional chain
+    | expr nullAccess+                                          # GetAccess
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
     | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
@@ -40,13 +37,13 @@ expr
     | left=expr op='<=>' right=expr                             # BinOpExpr
     | left=expr op=('<'|'<='|'>'|'>=') right=expr               # BinOpExpr
     | expr IS pattern                                           # MatchExpr
-    | left=expr op=('=='|'!=') right=expr                       # BinOpExpr
+    | left=expr op=('=='|'!='|'==='|'!==') right=expr           # BinOpExpr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
+    | left=expr '??' right=expr                                 # NullCombExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> obj=expr index setOp? '=' value=expr        # SetIndex
-    // TODO: &&= and ||=
     | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
     | <assoc=right> name=ID setOp? '=' value=expr               # Set
     | <assoc=right> DEL obj=expr index                          # DelIndex
@@ -54,6 +51,16 @@ expr
     | <assoc=right> DEL name=ID                                 # Del
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    ;
+
+nullAccess
+    : op='?'? access
+    ;
+
+access
+    : '(' args ')'                                              # CallAccess
+    | index                                                     # IndexAccess
+    | '.' ID                                                    # MemberAccess
     ;
 
 forStats
@@ -92,7 +99,7 @@ matchOp
     ;
 
 setOp
-    : '+'|'-'|'*'|'/'|'%'|'^'
+    : '+'|'-'|'*'|'/'|'%'|'^'|'&&'|'||'|'??'
     ;
 
 args

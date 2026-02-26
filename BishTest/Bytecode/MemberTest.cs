@@ -28,8 +28,8 @@ public class MemberTest : Test
     {
         var frame = new BishFrame([
             // x.a = 0
-            new Bytecodes.Int(0),
             new Bytecodes.Get("x"),
+            new Bytecodes.Int(0),
             new Bytecodes.SetMember("a")
         ], Scope);
         frame.Execute();

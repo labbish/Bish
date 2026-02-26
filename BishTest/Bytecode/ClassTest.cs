@@ -29,6 +29,7 @@ public class ClassTest : Test
             new Bytecodes.FuncStart("init", ["self", "x"]),
             new Bytecodes.Inner(),
             // self.x = x
+            new Bytecodes.Swap(),
             new Bytecodes.SetMember("x"),
             // } (end f)
             new Bytecodes.Outer(),
@@ -43,12 +44,12 @@ public class ClassTest : Test
             // c := C(1)
             new Bytecodes.Int(1),
             new Bytecodes.Get("C"),
-            new Bytecodes.Call(1),
+            new Bytecodes.SwapCall(1),
             new Bytecodes.Def("c"),
             // x := c.f()
             new Bytecodes.Get("c"),
             new Bytecodes.GetMember("f"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("x")
         ], Scope);
         frame.Execute();

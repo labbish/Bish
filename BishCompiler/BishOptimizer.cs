@@ -100,7 +100,7 @@ public static class BishOptimizer
 
     static BishOptimizer()
     {
-        // Current optimization percentage ~ 15%
+        // Current optimization percentage 10%~15%
         Optimizers.Add(RemoveUnusedTag);
         Optimizers.Add(RemoveInnerOuter);
         Optimizers.Add(RemoveValuePop);

@@ -3,8 +3,11 @@
 namespace BishTest.Compiler;
 
 [Collection("opt")]
-public class OperatorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class OperatorTest : CompilerTest
 {
+    public OperatorTest(OptimizeInfoFixture fixture) : base(fixture) =>
+        Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
+
     [SuppressMessage("Usage", "CA2211")] public static int Count;
 
     public static BishBool F()
@@ -32,8 +35,6 @@ public class OperatorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         ExpectResult("false||true", B(true));
         ExpectResult("false||false", B(false));
 
-        Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
-
         Count = 0;
         ExpectResult("f()&&f()", B(true));
         Count.Should().Be(1);
@@ -42,5 +43,34 @@ public class OperatorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         ExpectResult("true?3:f()", I(3));
         ExpectResult("false?f():3", I(3));
         Count.Should().Be(0);
+    }
+
+    [Fact]
+    public void TestLogicAssign()
+    {
+        Count = 0;
+        Execute("b:=true;b&&=f();");
+        ExpectResult("b", B(false));
+        Count.Should().Be(1);
+        Execute("b:=false;b&&=f();");
+        ExpectResult("b", B(false));
+        Count.Should().Be(1);
+
+        Count = 0;
+        Execute("o:=0;o.x=true;o.x&&=f();");
+        ExpectResult("o.x", B(false));
+        Count.Should().Be(1);
+        Execute("o:=0;o.x=false;o.x&&=f();");
+        ExpectResult("o.x", B(false));
+        Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void TestRefEqual()
+    {
+        Execute("x:=y:=object();z:=x;w:=object();");
+        ExpectResult("x===y", B(true));
+        ExpectResult("x!==z", B(false));
+        ExpectResult("x===w", B(false));
     }
 }

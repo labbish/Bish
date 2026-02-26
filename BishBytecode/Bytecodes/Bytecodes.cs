@@ -14,6 +14,7 @@ public record Pop(int Count = 1) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Pop(Count);
 }
+
 public record EndStat : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -84,8 +85,8 @@ public record SetMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var obj = frame.Stack.Pop();
         var value = frame.Stack.Pop();
+        var obj = frame.Stack.Pop();
         frame.Stack.Push(obj.SetMember(Name, value));
     }
 }
@@ -95,7 +96,8 @@ public record DelMember(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));
 }
 
-public record Call(int Argc) : BishBytecode
+// There are so many unit tests relying on this, so I'll keep it for now
+public record SwapCall(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
@@ -105,12 +107,22 @@ public record Call(int Argc) : BishBytecode
     }
 }
 
+public record Call(int Argc) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var args = frame.Stack.Pop(Argc);
+        var func = frame.Stack.Pop();
+        frame.Stack.Push(func.Call(args));
+    }
+}
+
 public record CallArgs : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var func = frame.Stack.Pop();
         var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
+        var func = frame.Stack.Pop();
         frame.Stack.Push(func.Call(args.List));
     }
 }
@@ -152,23 +164,16 @@ public record Jump(string GoalTag) : Jumper(GoalTag)
     public override void Execute(BishFrame frame) => Jump(frame);
 }
 
-public record JumpIf(string GoalTag) : Jumper(GoalTag)
+public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
-        var result = frame.Stack.Pop();
-        if (result.ExpectToBe<BishBool>("condition").Value) Jump(frame);
+        var result = BishOperator.Call("op_Bool", [frame.Stack.Pop()]);
+        if (result.ExpectToBe<BishBool>("condition").Value != Reverse) Jump(frame);
     }
 }
 
-public record JumpIfNot(string GoalTag) : Jumper(GoalTag)
-{
-    public override void Execute(BishFrame frame)
-    {
-        var result = frame.Stack.Pop();
-        if (!result.ExpectToBe<BishBool>("condition").Value) Jump(frame);
-    }
-}
+public record JumpIfNot(string GoalTag) : JumpIf(GoalTag, Reverse: true);
 
 public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
 {
@@ -419,4 +424,11 @@ public record Not : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
         frame.Stack.Push(BishBool.Invert(frame.Stack.Pop().ExpectToBe<BishBool>("bool")));
+}
+
+public record RefEq : BishBytecode
+{
+    public override void Execute(BishFrame frame) =>
+        // ReSharper disable once EqualExpressionComparison
+        frame.Stack.Push(new BishBool(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
 }

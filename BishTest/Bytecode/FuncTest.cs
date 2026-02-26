@@ -28,7 +28,7 @@ public class FuncTest : Test
             // x1 := f(3)
             new Bytecodes.Int(3),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(1),
+            new Bytecodes.SwapCall(1),
             new Bytecodes.Def("x1"),
 
             // a = 2
@@ -38,7 +38,7 @@ public class FuncTest : Test
             // x2 := f(5)
             new Bytecodes.Int(5),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(1),
+            new Bytecodes.SwapCall(1),
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
@@ -72,12 +72,12 @@ public class FuncTest : Test
 
             // x1 := f()
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("x1"),
 
             // x2 := f()
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
@@ -106,7 +106,7 @@ public class FuncTest : Test
             new Bytecodes.Int(1),
             new Bytecodes.Op("op_Sub", 2),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(1),
+            new Bytecodes.SwapCall(1),
             new Bytecodes.Get("n"),
             new Bytecodes.Op("op_Mul", 2),
             new Bytecodes.Ret(),
@@ -119,7 +119,7 @@ public class FuncTest : Test
             // ans := f(4)
             new Bytecodes.Int(4),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(1),
+            new Bytecodes.SwapCall(1),
             new Bytecodes.Def("ans")
         ], Scope);
         frame.Execute();
@@ -166,26 +166,26 @@ public class FuncTest : Test
 
             // c1 := counter()
             new Bytecodes.Get("counter"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("c1"),
 
             // c2 := counter()
             new Bytecodes.Get("counter"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("c2"),
 
             // x1 := c1()
             new Bytecodes.Get("c1"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("x1"),
 
             // c2()
             new Bytecodes.Get("c2"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Pop(), // just to empty the stack
             // x2 := c2()
             new Bytecodes.Get("c2"),
-            new Bytecodes.Call(0),
+            new Bytecodes.SwapCall(0),
             new Bytecodes.Def("x2")
         ], Scope);
         frame.Execute();
@@ -218,7 +218,7 @@ public class FuncTest : Test
             // ans := f(...args)
             ..args.Select(x => new Bytecodes.Int(x)),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(args.Length),
+            new Bytecodes.SwapCall(args.Length),
             new Bytecodes.Def("ans")
         ], Scope);
         frame.Execute();
@@ -242,7 +242,7 @@ public class FuncTest : Test
             new Bytecodes.Int(2),
             new Bytecodes.Int(3),
             new Bytecodes.Get("f"),
-            new Bytecodes.Call(3),
+            new Bytecodes.SwapCall(3),
             new Bytecodes.Def("ans")
         ], Scope);
         frame.Execute();

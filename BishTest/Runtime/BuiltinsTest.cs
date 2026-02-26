@@ -32,8 +32,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_cmp", [I(3), I(2)]).Should().BeOfType<BishInt>().Which.Value.Should().BePositive();
         BishOperator.Call("op_cmp", [I(3), I(3)]).Should().BeEquivalentTo(I(0));
         BishOperator.Call("op_cmp", [I(2), I(3)]).Should().BeOfType<BishInt>().Which.Value.Should().BeNegative();
-        BishOperator.Call("op_bool", [I(0)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [I(3)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [I(0)]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [I(3)]).Should().BeEquivalentTo(B(true));
     }
 
     [Fact]
@@ -69,8 +69,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_cmp", [N(3), N(2)]).Should().BeOfType<BishInt>().Which.Value.Should().BePositive();
         BishOperator.Call("op_cmp", [N(3), N(3)]).Should().BeEquivalentTo(I(0));
         BishOperator.Call("op_cmp", [N(2), N(3)]).Should().BeOfType<BishInt>().Which.Value.Should().BeNegative();
-        BishOperator.Call("op_bool", [N(0)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [N(3)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [N(0)]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [N(3)]).Should().BeEquivalentTo(B(true));
 
         BishNum.StaticType.GetMember("E").Should().BeOfType<BishNum>()
             .Which.Value.Should().BeApproximately(Math.E, 1e-5);
@@ -92,8 +92,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_eq", [B(true), B(false)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_eq", [B(true), B(true)]).Should().BeEquivalentTo(B(true));
         
-        BishOperator.Call("op_bool", [B(false)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [B(true)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [B(false)]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [B(true)]).Should().BeEquivalentTo(B(true));
     }
 
     [Fact]
@@ -108,8 +108,8 @@ public class BuiltinsTest : Test
         S("abc").GetMember("toString").Call([]).Should().BeEquivalentTo(S("abc"));
         BishOperator.Call("op_eq", [S("a"), S("a")]).Should().BeEquivalentTo(B(true));
         BishOperator.Call("op_eq", [S("a"), S("b")]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [S("")]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [S("a")]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [S("")]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [S("a")]).Should().BeEquivalentTo(B(true));
         BishOperator.Call("op_getIndex", [S("abc"), I(1)]).Should().BeEquivalentTo(S("b"));
         BishOperator.Call("op_getIndex", [S("abc"), I(-1)]).Should().BeEquivalentTo(S("c"));
         Action(() => BishOperator.Call("op_getIndex", [S("abc"), I(3)])).Should().Excepts();
@@ -164,8 +164,8 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_mul", [I(3), L(a, b)]).Should().BeEquivalentTo(L(a, b, a, b, a, b));
         BishOperator.Call("op_eq", [L(a, L(b, c)), L(a, L(c, c))]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_eq", [L(a, L(b, c)), L(a, L(b, c))]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_bool", [L()]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_bool", [L(a)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [L()]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [L(a)]).Should().BeEquivalentTo(B(true));
 
         var l = L(a, c, b);
         BishOperator.Call("op_getIndex", [l, I(0)]).Should().BeEquivalentTo(a);

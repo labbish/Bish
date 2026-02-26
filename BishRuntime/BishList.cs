@@ -43,7 +43,7 @@ public class BishList(List<BishObject> list) : BishObject
         .All(pair => BishOperator.Call("op_eq", [pair.First, pair.Second])
             .ExpectToBe<BishBool>($"{pair.First} == {pair.Second}").Value));
 
-    [Builtin("op")]
+    [Builtin]
     public static BishBool Bool(BishList a) => new(a.List.Count != 0);
 
     [Builtin("op")]

@@ -39,7 +39,7 @@ public class BishString(string value) : BishObject
     [Builtin("op")]
     public static BishBool Eq(BishString a, BishString b) => new(a.Value == b.Value);
 
-    [Builtin("op")]
+    [Builtin]
     public static BishBool Bool(BishString a) => new(a.Value != "");
 
     [Builtin("op")]

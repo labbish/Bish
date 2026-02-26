@@ -58,7 +58,7 @@ public class BishInt(int value) : BishObject
     [Builtin("op")]
     public static BishInt Cmp(BishInt a, BishInt b) => new(a.Value.CompareTo(b.Value));
 
-    [Builtin("op")]
+    [Builtin]
     public static BishBool Bool(BishInt a) => new(a.Value != 0);
 
     static BishInt() => BishBuiltinBinder.Bind<BishInt>();

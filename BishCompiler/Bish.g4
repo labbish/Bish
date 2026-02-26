@@ -70,9 +70,11 @@ accessItem
     ;
 
 // We need to spilt '()' to avoid breaking calls like `f()`, and to allow white space between them
+// We don't contain `bool` and `iter`, because they have a same name with their func name,
+// ...which disables users from directly accessing their underlying method
 defOp
-    : '=='|'!='|'+'|'-'|'*'|'/'|'%'|'^'|('(' ')')
-    | '<=>'|'<'|'<='|'>'|'>='|'~'|'bool'|'iter'
+    : '=='|'!='|'+'|'-'|'*'|'/'|'%'|'^'
+    | ('(' ')')|'<=>'|'<'|'<='|'>'|'>='|'~'
     ;
 
 nullAccess

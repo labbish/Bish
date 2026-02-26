@@ -22,7 +22,7 @@ public class BishBool(bool value) : BishObject
 
     public override string ToString() => Value ? "true" : "false";
 
-    [Builtin("op")]
+    [Builtin]
     public static BishBool Bool(BishBool a) => new(a.Value);
 
     static BishBool() => BishBuiltinBinder.Bind<BishBool>();

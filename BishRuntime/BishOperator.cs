@@ -65,7 +65,7 @@ public static partial class BishOperator
         new("op_gt", ["left", "right"], ">"),
         new("op_ge", ["left", "right"], ">="),
         new("op_invert", ["self"], "~"),
-        new("op_bool", ["self"], "bool", () => new BishBool(true)),
+        new("bool", ["self"], "bool", () => new BishBool(true)),
         new(GetterRegex(), ["self"], "get"),
         new(SetterRegex(), ["self", "value"], "set"),
         new(DellerRegex(), ["self"], "del"),

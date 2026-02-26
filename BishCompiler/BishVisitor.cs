@@ -183,7 +183,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         var tag = Symbols.Get("bin_and");
         return
         [
-            ..Visit(context.left), new Op("op_bool", 1), new Copy(),
+            ..Visit(context.left), new Op("bool", 1), new Copy(),
             new JumpIfNot(tag), new Pop(), ..Visit(context.right), Tag(tag)
         ];
     }
@@ -193,7 +193,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         var tag = Symbols.Get("bin_or");
         return
         [
-            ..Visit(context.left), new Op("op_bool", 1), new Copy(),
+            ..Visit(context.left), new Op("bool", 1), new Copy(),
             new JumpIf(tag), new Pop(), ..Visit(context.right), Tag(tag)
         ];
     }

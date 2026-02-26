@@ -76,7 +76,7 @@ public class BishNum(double value) : BishObject
     [Builtin("op")]
     public static BishInt Cmp(BishNum a, BishNum b) => new(a.Value.CompareTo(b.Value));
 
-    [Builtin("op")]
+    [Builtin]
     public static BishBool Bool(BishNum a) => new(a.Value != 0);
 
     static BishNum()

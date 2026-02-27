@@ -9,11 +9,53 @@ public partial class BishVisitor
 
     public override Codes VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
 
-    public override Codes VisitIdPattern(BishParser.IdPatternContext context) =>
-        context.ID().GetText() == "_" ? [new Pop(), new Bool(true)] : [new Get(context.ID().GetText()), Op("==", 2)];
+    public override Codes VisitListPattern(BishParser.ListPatternContext context)
+    {
+        var items = context.item();
+        var rests = items.Select((item, index) => new { item, index }).Where(x => x.item.dots is not null).ToList();
+        var restPos = rests.FirstOrDefault()?.index ?? -1;
+        var indexes = items.Select((item, i) => (Pattern: item.pattern(), Index: rests.Count switch
+        {
+            0 => (Codes)([new Int(i)]),
+            1 when i < restPos => [new Int(i)],
+            1 when i == restPos => [new Get("range"), new Int(i), new Int(i - items.Length + 1), new Call(2)],
+            1 when i > restPos => [new Int(i - items.Length)],
+            _ => throw new ArgumentException($"list pattern may only contain one rest item, found {rests}.")
+        })).ToList();
+        var (tag, end) = Symbols.GetPair("list");
+        return
+        [
+            new Copy(),
+            new Get("list"),
+            new TestType(),
+            new Swap(),
+            new Pop(),
+            new JumpIfNot(tag),
+            new Copy(),
+            new GetMember("length"),
+            new Int(items.Length),
+            Op(rests.Count == 0 ? "==" : ">=", 2),
+            new JumpIfNot(tag),
+            ..indexes.SelectMany(x => (Codes)(
+            [
+                new Copy(),
+                ..x.Index,
+                Op("get[]", 2),
+                ..Visit(x.Pattern),
+                new JumpIfNot(tag)
+            ])),
+            new Pop(),
+            new Bool(true),
+            new Jump(end),
+            Tag(tag),
+            new Pop(),
+            new Bool(false),
+            Tag(end)
+        ];
+    }
 
     public override Codes VisitExprPattern(BishParser.ExprPatternContext context) =>
-        [..Visit(context.expr()), Op("==", 2)];
+        context.expr().GetText() == "_" ? [new Pop(), new Bool(true)] : [..Visit(context.expr()), Op("==", 2)];
 
     public override Codes VisitOpPattern(BishParser.OpPatternContext context) =>
         [..Visit(context.expr()), Op(context.op.GetText(), 2)];
@@ -24,7 +66,7 @@ public partial class BishVisitor
         var tag = Symbols.Get("is_of");
         return
         [
-            ..Visit(context.type),
+            ..context.type.GetText() == "_" ? [new Get("object")] : Visit(context.type),
             new TestType(tag),
             name is null ? new Nop() : new Def(name),
             new Pop().Tagged(tag)

@@ -5,22 +5,24 @@ namespace BishCompiler;
 
 public static class BishCompiler
 {
-    public static BishFrame Compile(string code, BishScope? scope = null, bool excepts = false, bool optimize = true)
+    public static BishParser.ProgramContext Parse(string code, bool excepts = false)
     {
         var stream = CharStreams.fromString(code);
         var lexer = new BishLexer(stream);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BishParser(tokens);
+        
+        if (!excepts) return parser.program();
+        parser.RemoveErrorListeners();
+        lexer.RemoveErrorListeners();
+        parser.ErrorHandler = new ThrowOnErrorStrategy();
+        lexer.AddErrorListener(new ThrowingLexerErrorListener());
+        return parser.program();
+    }
 
-        if (excepts)
-        {
-            parser.RemoveErrorListeners();
-            lexer.RemoveErrorListeners();
-            parser.ErrorHandler = new ThrowOnErrorStrategy();
-            lexer.AddErrorListener(new ThrowingLexerErrorListener());
-        }
-
-        var tree = parser.program();
+    public static BishFrame Compile(string code, BishScope? scope = null, bool excepts = false, bool optimize = true)
+    {
+        var tree = Parse(code, excepts);
         var visitor = new BishVisitor();
         var codes = visitor.VisitFull(tree, optimize: optimize);
         return new BishFrame(codes, scope);

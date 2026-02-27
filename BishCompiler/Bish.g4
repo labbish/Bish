@@ -113,17 +113,21 @@ caseStat
     : CAS pattern ':' stat
     ;
 
-// We need IdPattern to handle _ without breaking '_' used as an ID in other places
+// We handle _ in ExprPattern to allow '_' used as an ID in other places
 pattern
     : NUL                                                       # NullPattern
     | '(' pattern ')'                                           # ParenPattern
-    | ID                                                        # IdPattern
+    | '[' (item (',' item)* ','?)? ']'                          # ListPattern
     | expr                                                      # ExprPattern
     | op=matchOp expr                                           # OpPattern
     | 'of' type=expr ID?                                        # TypePattern
     | 'not' pattern                                             # NotPattern
     | left=pattern 'and' right=pattern                          # AndPattern
     | left=pattern 'or' right=pattern                           # OrPattern
+    ;
+
+item
+    : dots='..'? pattern
     ;
 
 matchOp

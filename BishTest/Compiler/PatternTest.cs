@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]
     public void TestMatch()
@@ -26,9 +26,12 @@ public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixtur
     [InlineData("-1", "2")]
     [InlineData("-0.5", "0.5")]
     [InlineData("0.0", "0.0")]
+    [InlineData("[0,3]", "4")]
+    [InlineData("[0,1,2,3,4]", "[1,2,3]")]
     [InlineData("'str'", "'s'")]
     [InlineData("['s','t','r']", "'s'")]
     [InlineData("3.14", "-1")]
+    [InlineData("false", "false")]
     public void TestSwitch(string value, string expect)
     {
         List<(string Pattern, string Expr)> cases =
@@ -37,8 +40,10 @@ public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixtur
             ("1", "1"),
             ("of int and <0", "2"),
             ("of num n and <=0", "-n"),
+            ("[0, of int x]", "x+1"),
+            ("[of int, ..of list m, of int]", "m"),
             ("of string seq or of list seq", "seq[0]"),
-            ("_", "-1")
+            ("of _ x", "x && -1")
         ];
         var expr = $"s1:=({value}) switch" + "{" +
                    string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "};";

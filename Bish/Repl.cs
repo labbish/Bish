@@ -33,14 +33,14 @@ public class Repl(BishScope? scope = null)
                     {
                         var file = code[5..].Trim().Trim('"');
                         var content = File.ReadAllText(file);
-                        var frame = BishCompiler.BishCompiler.Compile(content, Scope);
+                        var frame = Compile(content);
                         frame.Execute();
                     });
                     break;
                 case not null when code.StartsWith(".comp"):
                     Handled(() =>
                     {
-                        var frame = BishCompiler.BishCompiler.Compile(code[5..], Scope);
+                        var frame = Compile(code[5..]);
                         foreach (var bytecode in frame.Bytecodes)
                             Console.WriteLine(BytecodeParser.ToString(bytecode));
                     });
@@ -49,7 +49,7 @@ public class Repl(BishScope? scope = null)
                     Handled(() =>
                     {
                         BishObject? result = null;
-                        var frame = BishCompiler.BishCompiler.Compile(code, Scope);
+                        var frame = Compile(code);
                         frame.EndStatHandler = obj => result = obj;
                         frame.Execute();
                         if (frame.Stack.Count > 0)
@@ -64,7 +64,14 @@ public class Repl(BishScope? scope = null)
         }
     }
 
-    public static void Handled(Action action)
+    private BishFrame Compile(string code)
+    {
+        var result = BishCompiler.BishCompiler.Compile(code, out var errors, Scope);
+        foreach (var error in errors) Console.Error.WriteLine(error);
+        return result;
+    }
+
+    private static void Handled(Action action)
     {
         try
         {

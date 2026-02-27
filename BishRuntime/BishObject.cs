@@ -88,7 +88,7 @@ public class BishObject(BishType? type = null)
                     excludes: excludes), mode.HasFlag(BishLookupMode.NoBind));
 
         BishObject? TryBind(BishObject? member, bool noBind) =>
-            noBind ? member : member is BishFunc method ? method.Bind(boundSelf) : member;
+            !noBind && member is BishFunc method ? method.Bind(boundSelf) : member;
 
         bool TryGetFromMember(BishObject? obj, [NotNullWhen(true)] out BishObject? member)
         {
@@ -216,6 +216,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
             instance = created ?? instance;
             instance.Type = type;
         }
+
         instance.TryCallHook("hook_init", args);
         return instance;
     }

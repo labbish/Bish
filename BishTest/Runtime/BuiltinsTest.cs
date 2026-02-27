@@ -91,7 +91,7 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_eq", [B(false), B(true)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_eq", [B(true), B(false)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("op_eq", [B(true), B(true)]).Should().BeEquivalentTo(B(true));
-        
+
         BishOperator.Call("bool", [B(false)]).Should().BeEquivalentTo(B(false));
         BishOperator.Call("bool", [B(true)]).Should().BeEquivalentTo(B(true));
     }
@@ -121,6 +121,9 @@ public class BuiltinsTest : Test
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(S("b"));
         iter.GetMember("next").Call([]).Should().BeEquivalentTo(S("c"));
         Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
+
+        S("{1},{},{},{0},{}").GetMember("format").Call([I(0), I(1), I(2)]).Should().BeEquivalentTo(S("1,0,1,0,2"));
+        S("0,1,,2").GetMember("split").Call([S(",")]).Should().BeEquivalentTo(L(S("0"), S("1"), S(""), S("2")));
     }
 
     [Fact]
@@ -188,6 +191,8 @@ public class BuiltinsTest : Test
 
         BishList.StaticType.CreateInstance([BishRange.StaticType.CreateInstance([I(5)])]).Should()
             .BeEquivalentTo(L(I(0), I(1), I(2), I(3), I(4)));
+
+        L(I(0), I(1), I(2), I(3)).GetMember("join").Call([S(",")]).Should().BeEquivalentTo(S("0,1,2,3"));
     }
 
     [Fact]
@@ -204,12 +209,13 @@ public class BuiltinsTest : Test
         BishOperator.Call("op_getIndex", [l, R(5, -2)]).Should().BeEquivalentTo(L(I(5), I(6), I(7)));
         BishOperator.Call("op_getIndex", [l, R(2, -1, 2)]).Should().BeEquivalentTo(L(I(2), I(4), I(6), I(8)));
         BishOperator.Call("op_getIndex", [l, R(8, 3, -1)]).Should().BeEquivalentTo(L(I(8), I(7), I(6), I(5), I(4)));
-        
-        BishOperator.Call("op_setIndex", [l, R(2, 7), L(Null, Null, Null)]).Should().BeEquivalentTo(L(Null, Null, Null));
+
+        BishOperator.Call("op_setIndex", [l, R(2, 7), L(Null, Null, Null)]).Should()
+            .BeEquivalentTo(L(Null, Null, Null));
         l.Should().BeEquivalentTo(L(I(0), I(1), Null, Null, Null, I(7), I(8), I(9)));
         BishOperator.Call("op_setIndex", [l, R(6, 0, -2), L(S("a"), S("b"), S("c"))]);
         l.Should().BeEquivalentTo(L(I(0), I(1), S("c"), Null, S("b"), I(7), S("a"), I(9)));
-        
+
         BishOperator.Call("op_delIndex", [l, R(1, 8, 3)]).Should().BeEquivalentTo(L(I(1), S("b"), I(9)));
         l.Should().BeEquivalentTo(L(I(0), S("c"), Null, I(7), S("a")));
     }

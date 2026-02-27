@@ -113,6 +113,28 @@ public class BishList(List<BishObject> list) : BishObject
         return self;
     }
 
+    [Builtin(special: false)]
+    public static BishString Join(BishList self, BishString sep) =>
+        new(string.Join(sep.Value, self.List.Select(BishString.CallToString)));
+
+    [Builtin(special: false)]
+    public static BishList Map(BishList self, BishObject func) =>
+        new(self.List.Select(obj => func.Call([obj])).ToList());
+
+    [Builtin(special: false)]
+    public static BishList Filter(BishList self, BishObject func) =>
+        new(self.List.Where(obj => BishBool.CallToBool(func.Call([obj]))).ToList());
+
+    [Builtin(special: false)]
+    public static BishList Reverse(BishList self) => new(self.List.ToArray().Reverse().ToList());
+
+    [Builtin(special: false)]
+    public static BishObject Reduce(BishList self, BishObject func, [DefaultNull] BishObject? init) => init is null
+        ? self.List.Count == 0
+            ? throw BishException.OfArgument_IndexOutOfBound(0, 0)
+            : self.List.Aggregate((acc, curr) => func.Call([acc, curr]))
+        : self.List.Aggregate(init, (acc, curr) => func.Call([acc, curr]));
+
     // TODO: some more methods
 
     static BishList() => BishBuiltinBinder.Bind<BishList>();

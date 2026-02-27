@@ -9,7 +9,8 @@ public class CompilerTest(OptimizeInfoFixture fixture) : Test
 
     protected BishFrame Compile(string code)
     {
-        var frame = BishCompiler.BishCompiler.Compile(code, Scope, excepts: true, optimize: false);
+        var frame = BishCompiler.BishCompiler.Compile(code, out var errors, Scope, optimize: false);
+        errors.Should().BeEmpty();
         Interlocked.Add(ref Fixture.Before, frame.Bytecodes.Count);
         frame.Bytecodes = BishOptimizer.Optimize(frame.Bytecodes);
         Interlocked.Add(ref Fixture.After, frame.Bytecodes.Count);

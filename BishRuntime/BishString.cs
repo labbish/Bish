@@ -1,6 +1,8 @@
-﻿namespace BishRuntime;
+﻿using System.Text.RegularExpressions;
 
-public class BishString(string value) : BishObject
+namespace BishRuntime;
+
+public partial class BishString(string value) : BishObject
 {
     public string Value { get; private set; } = value;
     public override BishType DefaultType => StaticType;
@@ -57,9 +59,32 @@ public class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishString self) => new(self.Value.Length);
 
+    public static string CallToString(BishObject obj) =>
+        BishOperator.Call("toString", [obj]).ExpectToBe<BishString>("toString").Value;
+
+    [Builtin(special: false)]
+    public static BishString Format(BishString self, [Rest] BishList args)
+    {
+        var autoIndex = 0;
+        return new BishString(MyRegex().Replace(self.Value, match =>
+        {
+            var indexValue = match.Groups[1].Value;
+            var index = string.IsNullOrEmpty(indexValue) ? autoIndex++ : int.Parse(indexValue);
+            if (index < 0 || index >= args.List.Count) return match.Value;
+            return CallToString(args.List[index]);
+        }));
+    }
+
+    [Builtin(special: false)]
+    public static BishList Split(BishString self, BishString sep) =>
+        new(self.Value.Split(sep.Value).Select(s => new BishString(s)).ToList<BishObject>());
+
     // TODO: some more string methods
 
     static BishString() => BishBuiltinBinder.Bind<BishString>();
+
+    [GeneratedRegex(@"\{(\d*)\}")]
+    private static partial Regex MyRegex();
 }
 
 public class BishStringIterator(string value) : BishObject

@@ -15,6 +15,7 @@ stat
     | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
     | tag? FOR '(' forStats ')' stat                            # ForStat
     | tag? FOR '(' name=ID set=':'? ':' expr ')' stat           # ForIterStat
+    // TODO: when clause
     | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
         | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat

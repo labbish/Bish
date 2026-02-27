@@ -25,5 +25,8 @@ public class BishBool(bool value) : BishObject
     [Builtin]
     public static BishBool Bool(BishBool a) => new(a.Value);
 
+    public static bool CallToBool(BishObject obj) =>
+        BishOperator.Call("bool", [obj]).ExpectToBe<BishBool>("bool").Value;
+
     static BishBool() => BishBuiltinBinder.Bind<BishBool>();
 }

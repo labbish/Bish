@@ -1,6 +1,5 @@
 ﻿namespace BishTest.Compiler;
 
-[Collection("opt")]
 public class ErrorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]
@@ -16,5 +15,13 @@ public class ErrorTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Execute("x:=s:=0;try throw Error('error');catch(e)=>x=e;finally{s=1;}");
         Scope.GetVar("x").Should().BeOfType<BishError>().Which.Message.Should().Be("error");
         Scope.GetVar("s").Should().BeEquivalentTo(I(1));
+    }
+
+    [Fact]
+    public void TestWhen()
+    {
+        Action(() => Execute("try{e:=Error('error');e.data=-1;throw e;}catch(e)when(e.data>0){}"))
+            .Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
+        Execute("try{e:=Error('error');e.data=1;throw e;}catch(e)when(e.data>0){}");
     }
 }

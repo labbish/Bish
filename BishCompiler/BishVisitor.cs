@@ -1,5 +1,6 @@
 ﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
 using System.Text.RegularExpressions;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using BishBytecode;
 using BishBytecode.Bytecodes;
@@ -168,6 +169,8 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitSingleIndex(BishParser.SingleIndexContext context) => Visit(context.expr());
 
     private Codes VisitOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
+    
+    private Codes VisitOrNop(ParserRuleContext? context) => context is null ? [] : Visit(context);
 
     public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
     [

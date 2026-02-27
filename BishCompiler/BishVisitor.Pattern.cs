@@ -116,6 +116,16 @@ public partial class BishVisitor
         ];
     }
 
+    public override Codes VisitWhenPattern(BishParser.WhenPatternContext context)
+    {
+        var tag = Symbols.Get("when");
+        return
+        [
+            ..Visit(context.pattern()), new Op("bool", 1), new Copy(),
+            new JumpIfNot(tag), new Pop(), ..Visit(context.expr()), Tag(tag)
+        ];
+    }
+
     public override Codes VisitMatchExpr(BishParser.MatchExprContext context) =>
         [..Visit(context.expr()), ..Visit(context.pattern())];
 

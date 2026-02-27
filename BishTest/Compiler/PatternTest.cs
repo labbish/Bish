@@ -39,7 +39,7 @@ public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
             ("null", "0"),
             ("1", "1"),
             ("of int and <0", "2"),
-            ("of num n and <=0", "-n"),
+            ("of num n when n<=0", "-n"),
             ("[0, of int x]", "x+1"),
             ("[of int, ..of list m, of int]", "m"),
             ("of string seq or of list seq", "seq[0]"),

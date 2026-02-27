@@ -2,7 +2,6 @@
 
 namespace BishTest.Compiler;
 
-[Collection("opt")]
 public class ClassTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
 {
     [Fact]

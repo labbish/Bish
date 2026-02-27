@@ -1,6 +1,5 @@
 ﻿namespace BishTest.Compiler;
 
-[Collection("opt")]
 public class AccessTest : CompilerTest
 {
     public AccessTest(OptimizeInfoFixture fixture) : base(fixture)

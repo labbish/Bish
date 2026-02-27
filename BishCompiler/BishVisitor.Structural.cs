@@ -115,11 +115,18 @@ public partial class BishVisitor
         Codes tryPart = [new TryStart(tag), ..Visit(context.tryStat), new TryEnd(tag)];
         var @catch = context.catchExpr as ParserRuleContext ?? context.catchStat;
         var id = context.ID()?.GetText();
-        Codes catchPart = @catch is null
+        var when = Symbols.Get("when");
+        Codes catchPart = context.CTH() is null
             ? []
-            : [new CatchStart(tag), id is null ? new Pop() : new Move(id), ..Visit(@catch), new CatchEnd(tag)];
+            :
+            [
+                new CatchStart(tag), id is null ? new Nop() : new Def(id),
+                ..context.when is null ? (Codes)[] : [..Visit(context.when), new JumpIf(when), new Throw(), Tag(when)],
+                new Pop(), ..VisitOrNop(@catch), new CatchEnd(tag)
+            ];
         var @finally = context.finallyStat;
-        Codes finallyPart = @finally is null ? [] : [new FinallyStart(tag), ..Visit(@finally), new FinallyEnd(tag)];
+        Codes finallyPart =
+            context.FIN() is null ? [] : [new FinallyStart(tag), ..VisitOrNop(@finally), new FinallyEnd(tag)];
         return [..tryPart, ..catchPart, ..finallyPart];
     }
 }

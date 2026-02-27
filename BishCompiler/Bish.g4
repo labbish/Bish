@@ -15,9 +15,9 @@ stat
     | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
     | tag? FOR '(' forStats ')' stat                            # ForStat
     | tag? FOR '(' name=ID set=':'? ':' expr ')' stat           # ForIterStat
-    // TODO: when clause
-    | TRY tryStat=stat (CTH ('(' ID ')')? (('=>' catchExpr=expr END)
-        | ('{' catchStat=stat* '}')))? (FIN finallyStat=stat)?  # ErrorStat
+    | TRY tryStat=stat (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
+        (('=>' catchExpr=expr END) | ('{' catchStat=stat* '}'))))?
+        (FIN finallyStat=stat)?                                 # ErrorStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
@@ -125,6 +125,7 @@ pattern
     | 'not' pattern                                             # NotPattern
     | left=pattern 'and' right=pattern                          # AndPattern
     | left=pattern 'or' right=pattern                           # OrPattern
+    | pattern WHN expr                                          # WhenPattern
     ;
 
 item
@@ -227,7 +228,7 @@ THR : 'throw' ;
 TRY : 'try' ;
 CTH : 'catch' ;
 FIN : 'finally' ;
-
+WHN : 'when' ;
 AS  : 'as' ;
 IS  : 'is' ;
 SWC : 'switch' ;

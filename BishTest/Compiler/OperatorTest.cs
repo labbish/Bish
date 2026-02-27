@@ -2,7 +2,6 @@
 
 namespace BishTest.Compiler;
 
-[Collection("opt")]
 public class OperatorTest : CompilerTest
 {
     public OperatorTest(OptimizeInfoFixture fixture) : base(fixture) =>

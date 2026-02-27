@@ -16,7 +16,7 @@ stat
     | tag? FOR '(' forStats ')' stat                            # ForStat
     | tag? FOR '(' name=ID set=':'? ':' expr ')' stat           # ForIterStat
     | TRY tryStat=stat (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
-        (('=>' catchExpr=expr END) | ('{' catchStat=stat* '}'))))?
+        (('=>' catchExpr=expr END) | ('{' catchStat+=stat* '}'))))?
         (FIN finallyStat=stat)?                                 # ErrorStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat
     | '{' stat* '}'                                             # BlockStat
@@ -35,7 +35,7 @@ expr
     | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
-    | <assoc=right> op=('+'|'-'|'~') expr                       # UnOpExpr
+    | <assoc=right> op=('+'|'-'|'!'|'~') expr                   # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
     | left=expr op=('*'|'/'|'%') right=expr                     # BinOpExpr
     | left=expr op=('+'|'-') right=expr                         # BinOpExpr

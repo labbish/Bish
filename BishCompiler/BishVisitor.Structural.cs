@@ -1,5 +1,4 @@
-﻿using Antlr4.Runtime;
-using BishBytecode.Bytecodes;
+﻿using BishBytecode.Bytecodes;
 using BishRuntime;
 
 namespace BishCompiler;
@@ -113,7 +112,7 @@ public partial class BishVisitor
     {
         var tag = Symbols.Get("error");
         Codes tryPart = [new TryStart(tag), ..Visit(context.tryStat), new TryEnd(tag)];
-        var @catch = context.catchExpr as ParserRuleContext ?? context.catchStat;
+        var @catch = VisitOrNull(context.catchExpr) ?? context._catchStat?.SelectMany(Visit) ?? [new Nop()];
         var id = context.ID()?.GetText();
         var when = Symbols.Get("when");
         Codes catchPart = context.CTH() is null
@@ -122,11 +121,13 @@ public partial class BishVisitor
             [
                 new CatchStart(tag), id is null ? new Nop() : new Def(id),
                 ..context.when is null ? (Codes)[] : [..Visit(context.when), new JumpIf(when), new Throw(), Tag(when)],
-                new Pop(), ..VisitOrNop(@catch), new CatchEnd(tag)
+                new Pop(), ..@catch, new CatchEnd(tag)
             ];
         var @finally = context.finallyStat;
         Codes finallyPart =
-            context.FIN() is null ? [] : [new FinallyStart(tag), ..VisitOrNop(@finally), new FinallyEnd(tag)];
+            context.FIN() is null
+                ? []
+                : [new FinallyStart(tag), ..VisitOrNull(@finally) ?? [new Nop()], new FinallyEnd(tag)];
         return [..tryPart, ..catchPart, ..finallyPart];
     }
 }

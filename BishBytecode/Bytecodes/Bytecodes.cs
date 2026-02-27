@@ -436,7 +436,7 @@ public record TestType(string? GoalTag = null) : Jumper(GoalTag)
 public record Not : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
-        frame.Stack.Push(BishBool.Invert(frame.Stack.Pop().ExpectToBe<BishBool>("bool")));
+        frame.Stack.Push(new BishBool(!BishBool.CallToBool(frame.Stack.Pop())));
 }
 
 public record RefEq : BishBytecode

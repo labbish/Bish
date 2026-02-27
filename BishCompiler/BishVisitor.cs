@@ -58,7 +58,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     private static Op Op(string op, int argc) => new(BishOperator.GetOperatorName(op, argc), argc);
 
     public override Codes VisitUnOpExpr(BishParser.UnOpExprContext context) =>
-        [..Visit(context.expr()), Op(context.op.Text, 1)];
+        [..Visit(context.expr()), context.op.Text == "!" ? new Not() : Op(context.op.Text, 1)];
 
     public override Codes VisitBinOpExpr(BishParser.BinOpExprContext context)
     {
@@ -168,16 +168,16 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitSingleIndex(BishParser.SingleIndexContext context) => Visit(context.expr());
 
-    private Codes VisitOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
+    private Codes EvalOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
     
-    private Codes VisitOrNop(ParserRuleContext? context) => context is null ? [] : Visit(context);
+    private Codes? VisitOrNull(ParserRuleContext? context) => context is null ? null : Visit(context);
 
     public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
     [
         new Get("range"),
-        ..VisitOrNull(context.start),
-        ..VisitOrNull(context.end),
-        ..VisitOrNull(context.step),
+        ..EvalOrNull(context.start),
+        ..EvalOrNull(context.end),
+        ..EvalOrNull(context.step),
         new Call(3)
     ];
 

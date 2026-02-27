@@ -67,6 +67,7 @@ public class BishScope
     {
         Console.Write(string.Join("", args.List.Select(arg =>
             arg.GetMember("toString").Call([]).ExpectToBe<BishString>("toString").Value)));
+        Console.Out.Flush();
         return BishNull.Instance;
     }
 

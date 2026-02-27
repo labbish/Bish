@@ -5,8 +5,6 @@ namespace BishCompiler;
 
 public static class BishCompiler
 {
-    public static BishParser.ProgramContext Parse(string code) => Parse(code, out _);
-
     public static BishParser.ProgramContext Parse(string code, out List<SyntaxError> errors)
     {
         var stream = CharStreams.fromString(code);
@@ -15,9 +13,10 @@ public static class BishCompiler
         var parser = new BishParser(tokens);
 
         var listener = new SyntaxErrorListener();
+        lexer.RemoveErrorListeners();
+        lexer.AddErrorListener(listener);
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
-        // parser.ErrorHandler = new ThrowOnErrorStrategy();
 
         var result = parser.program();
         errors = listener.Errors;
@@ -43,29 +42,21 @@ public record SyntaxError(int Line, int Column, string Message, int StopLine, in
     public override string ToString() => $"Syntax error at line {Line}, column {Column}: {Message}";
 }
 
-public class SyntaxErrorListener : BaseErrorListener
+public class SyntaxErrorListener : BaseErrorListener, IAntlrErrorListener<int>
 {
     public List<SyntaxError> Errors { get; } = [];
 
     public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol,
         int line, int charPositionInLine, string msg, RecognitionException e)
     {
-        var length = offendingSymbol.StopIndex - offendingSymbol.StartIndex;
-        var stopColumn = charPositionInLine + length + 1;
+        var length = offendingSymbol.StopIndex - offendingSymbol.StartIndex + 1;
+        var stopColumn = charPositionInLine + length;
         Errors.Add(new SyntaxError(line, charPositionInLine, msg, line, stopColumn));
     }
-}
 
-public class ThrowOnErrorStrategy : DefaultErrorStrategy
-{
-    public override void ReportError(Parser recognizer, RecognitionException e) =>
-        throw new RecognitionException(e.Message, recognizer, e.InputStream, e.Context as ParserRuleContext);
-
-    public override void Recover(Parser recognizer, RecognitionException e) => throw e;
-
-    public override IToken RecoverInline(Parser recognizer) => throw new InputMismatchException(recognizer);
-
-    public override void Sync(Parser recognizer)
+    public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol,
+        int line, int charPositionInLine, string msg, RecognitionException e)
     {
+        Errors.Add(new SyntaxError(line, charPositionInLine, msg, line, charPositionInLine + 1));
     }
 }

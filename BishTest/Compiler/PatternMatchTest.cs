@@ -59,4 +59,11 @@ public class PatternMatchTest(OptimizeInfoFixture fixture) : CompilerTest(fixtur
         ExpectResult("1 as num", N(1));
         ExpectResult("1 as string", Null);
     }
+
+    [Fact]
+    public void TestPipe()
+    {
+        ExpectResult("'3'|>int.parse($)|>$*$-$+1", I(7));
+        ExpectResult("3|>$ as string|?>$[0]|>$*3", Null);
+    }
 }

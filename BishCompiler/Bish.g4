@@ -47,6 +47,7 @@ expr
     | left=expr '??' right=expr                                 # NullCombExpr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
+    | expr pipe+                                                # PipeExpr
     | <assoc=right> obj=expr index setOp? '=' value=expr        # SetIndex
     | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
     | <assoc=right> name=ID setOp? '=' value=expr               # Set
@@ -55,6 +56,11 @@ expr
     | <assoc=right> DEL name=ID                                 # Del
     | <assoc=right> name=ID ':=' value=expr                     # Def
     | atom                                                      # AtomExpr
+    | '$'                                                       # PipeVarExpr
+    ;
+
+pipe
+    : '|' op='?'? '>' expr
     ;
 
 funcBody

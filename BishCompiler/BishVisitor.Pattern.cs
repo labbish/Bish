@@ -99,4 +99,20 @@ public partial class BishVisitor
                 [new Copy(), ..branch.pattern], branch.codes, current)),
         new Swap(count * 2), new Pop(count + 1)
     ]);
+
+    public override Codes VisitPipeVarExpr(BishParser.PipeVarExprContext context) => [new Get("$")];
+
+    public override Codes VisitPipe(BishParser.PipeContext context) => Visit(context.expr());
+
+    public override Codes VisitPipeExpr(BishParser.PipeExprContext context)
+    {
+        var tag = Symbols.Get("tag");
+        return Wrap([
+            ..Visit(context.expr()),
+            ..context.pipe().SelectMany(pipe => (Codes)(pipe.op is null
+                ? [new Move("$"), ..Visit(pipe)]
+                : [new Copy(), new IsNull(), new JumpIf(tag), new Move("$"), ..Visit(pipe)])),
+            Tag(tag)
+        ]);
+    }
 }

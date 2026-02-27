@@ -11,8 +11,13 @@ public class BishScope
 
     public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
 
-    public BishObject GetVar(string name) => TryGetVar(name) ?? throw BishException.OfName(name)
-        .WithExtraMsg(Discard(name) ? "" : " (note: vars named _, __, ... will be discarded)");
+    public BishObject GetVar(string name)
+    {
+        var tip = Discard(name) ? " (note: vars named _, __, ... will be discarded)" :
+            name == "$" ? " (did you mean to use it in pipe expression?)" : "";
+        return TryGetVar(name) ?? throw BishException.OfName(name)
+            .WithExtraMsg(tip);
+    }
 
     public BishObject DefVar(string name, BishObject value) => Discard(name) ? value : Vars[name] = value;
 

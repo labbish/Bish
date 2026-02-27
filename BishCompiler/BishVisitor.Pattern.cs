@@ -115,4 +115,7 @@ public partial class BishVisitor
             Tag(tag)
         ]);
     }
+
+    public override Codes VisitTryCallExpr(BishParser.TryCallExprContext context) =>
+        [..Visit(context.expr()), new TryFunc(), ..Call(context.args().arg())];
 }

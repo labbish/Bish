@@ -446,6 +446,27 @@ public record RefEq : BishBytecode
         frame.Stack.Push(new BishBool(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
 }
 
+public record TryFunc : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var obj = frame.Stack.Pop();
+        if (obj is BishNull) frame.Stack.Push(BishNull.Instance);
+        var func = obj.ExpectToBe<BishFunc>("operant of try expression");
+        frame.Stack.Push(new BishFunc(func.Name, func.Args, args =>
+        {
+            try
+            {
+                return func.Call(args);
+            }
+            catch (BishException)
+            {
+                return BishNull.Instance;
+            }
+        }, func.Tag));
+    }
+}
+
 // ReSharper disable once UnusedType.Global
 public record DebugStack : BishBytecode
 {

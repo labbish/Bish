@@ -225,12 +225,11 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitTernOpExpr(BishParser.TernOpExprContext context) =>
         Condition("tern", Visit(context.cond), Visit(context.left), Visit(context.right));
 
-    public override Codes VisitCallAccess(BishParser.CallAccessContext context)
-    {
-        var args = context.args().arg();
-        if (NoRest(args)) return [..args.SelectMany(Visit), new Call(args.Length)];
-        return [..ToList(args), new CallArgs()];
-    }
+    private Codes Call(BishParser.ArgContext[] args) => NoRest(args)
+        ? [..args.SelectMany(Visit), new Call(args.Length)]
+        : [..ToList(args), new CallArgs()];
+
+    public override Codes VisitCallAccess(BishParser.CallAccessContext context) => Call(context.args().arg());
 
     public override Codes VisitListExpr(BishParser.ListExprContext context)
     {

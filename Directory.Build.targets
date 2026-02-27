@@ -1,0 +1,17 @@
+<Project>
+    <Target Name="CopyFilesAfterBuild" AfterTargets="Build" Condition="'$(CopyFiles)' == 'true'">
+        <ItemGroup>
+            <OutputFiles Include="$(OutputPath)**\*.*" />
+        </ItemGroup>
+
+        <PropertyGroup>
+            <ExtensionProjectDir>..\BishLSP\bish-vsc\bin\</ExtensionProjectDir>
+        </PropertyGroup>
+
+        <Message Text="Copying files to $(ExtensionProjectDir)" Importance="high" />
+
+        <Copy SourceFiles="@(OutputFiles)"
+              DestinationFiles="@(OutputFiles->'$(ExtensionProjectDir)%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true" />
+    </Target>
+</Project>

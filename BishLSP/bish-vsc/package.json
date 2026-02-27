@@ -1,0 +1,77 @@
+{
+  "name": "bish-vsc",
+  "displayName": "Bish-VSC",
+  "description": "VSCode extension for Bish language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/labbish/Bish"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "bish",
+        "aliases": [
+          "Bish",
+          "bish"
+        ],
+        "extensions": [
+          ".bish"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bish",
+        "scopeName": "source.bish",
+        "path": "./bish.tmLanguage.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "bish",
+        "label": "Bish Debug"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "bish.runFile",
+        "key": "f5",
+        "when": "editorLangId == bish"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@eslint/json": "^0.14.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.2",
+    "eslint-plugin-no-floating-promise": "^2.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

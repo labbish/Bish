@@ -1,0 +1,123 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Bish",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#funcs"
+        },
+        {
+            "include": "#identifiers"
+        },
+        {
+            "include": "#strings"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.bish",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.bish",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.bish",
+                    "match": "\\b(if|else|break|continue|while|do|for|func|return|yield|class|try|catch|throw|finally)\\b"
+                },
+                {
+                    "name": "keyword.other.pattern.bish",
+                    "match": "\\b(is|of|not|and|or|as|when)"
+                },
+                {
+                    "name": "storage.type.bish",
+                    "match": "\\b(object|type|int|num|bool|string|list|range|Error|AttributeError|ArgumentError|TypeError|NullError|NameError|ZeroDivisionError|IterationStop)\\b"
+                },
+                {
+                    "name": "constant.language.bish",
+                    "match": "\\b(true|false|null)\\b"
+                }
+            ]
+        },
+        "funcs": {
+            "patterns": [
+                {
+                    "name": "entity.name.function.oper.bish",
+                    "match": "\\b(oper)\\s*(==|!=|\\+|-|\\*|/|%|\\^|\\(\\s*\\)|'<=>'|'<'|'<='|'>'|'>='|'~')"
+                },
+                {
+                    "name": "entity.name.function.access.bish",
+                    "match": "\\b(get|set|del)(\\s*\\b([a-zA-Z_][a-zA-Z0-9_]*)|\\[\\s*\\])?"
+                },
+                {
+                    "name": "entity.name.function.init.bish",
+                    "match": "\\b(init)"
+                },
+                {
+                    "name": "entity.name.function.create.bish",
+                    "match": "\\b(create)"
+                },
+                {
+                    "name": "entity.name.function.builtin.bish",
+                    "match": "\\b(print|input)"
+                }
+            ]
+        },
+        "identifiers": {
+            "patterns": [
+                {
+                    "name": "entity.name.function.bish",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()"
+                },
+                {
+                    "name": "entity.name.function.decorator.bish",
+                    "match": "@\\s*[a-zA-Z_][a-zA-Z0-9_]*\\b"
+                },
+                {
+                    "name": "variable.other.bish",
+                    "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.bish",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.bish",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.bish",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.bish",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "scopeName": "source.bish"
+}

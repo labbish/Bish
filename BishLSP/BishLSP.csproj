@@ -8,13 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BishBytecode\BishBytecode.csproj"/>
-        <ProjectReference Include="..\BishCompiler\BishCompiler.csproj"/>
-        <ProjectReference Include="..\BishRuntime\BishRuntime.csproj"/>
+        <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.9"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1"/>
+        <ProjectReference Include="..\BishCompiler\BishCompiler.csproj"/>
     </ItemGroup>
 
     <PropertyGroup>

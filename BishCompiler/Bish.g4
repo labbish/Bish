@@ -32,7 +32,7 @@ expr
     | deco* CRT funcBody                                        # CreateExpr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
-    // TODO: map expression
+    | '{' entries '}'                                           # MapExpr
     | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
@@ -58,6 +58,15 @@ expr
     | <assoc=right> DEL obj=expr                                # Del
     | atom                                                      # AtomExpr
     | '$'                                                       # PipeVarExpr
+    ;
+
+entries
+    : (entry (',' entry)* ','?)?
+    ;
+
+entry
+    : key=expr ':' value=expr                                   # SingleEntry
+    | '..' expr                                                 # RestEntry
     ;
 
 pipe

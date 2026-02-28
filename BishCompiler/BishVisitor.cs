@@ -181,6 +181,19 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
 
+    public override Codes VisitMapExpr(BishParser.MapExprContext context) =>
+    [
+        new Get("map"),
+        new Call(0),
+        ..context.entries().entry().SelectMany(entry => (Codes)(entry switch
+        {
+            BishParser.RestEntryContext rest => [..Visit(rest.expr()), Op("+", 2)],
+            BishParser.SingleEntryContext single =>
+                [new Copy(), ..Visit(single.key), ..Visit(single.value), Op("set[]", 3), new Pop()],
+            _ => throw new ArgumentException("impossible")
+        }))
+    ];
+
     public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
 
     public override Codes VisitExprStat(BishParser.ExprStatContext context) =>

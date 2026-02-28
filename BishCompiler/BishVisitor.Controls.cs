@@ -94,7 +94,7 @@ public partial class BishVisitor
         var name = context.name.Text;
         return WrapLoop([
             ..Visit(context.expr()),
-            new Op("iter", 1),
+            Op("iter", 1),
             new ForIter(end).Tagged(tag),
             ..Wrap([context.set is null ? new Def(name) : new Set(name), new Pop()], Visit(context.stat())),
             new Jump(tag),

@@ -65,7 +65,7 @@ public partial class BishVisitor
         [
             new Copy(),
             ..Visit(context.left),
-            new Op("bool", 1),
+            Op("bool", 1),
             new Copy(),
             new JumpIf(tag),
             new Swap(),
@@ -85,7 +85,7 @@ public partial class BishVisitor
         [
             new Copy(),
             ..Visit(context.left),
-            new Op("bool", 1),
+            Op("bool", 1),
             new Copy(),
             new JumpIfNot(tag),
             new Swap(),
@@ -103,7 +103,7 @@ public partial class BishVisitor
         var tag = Symbols.Get("when");
         return
         [
-            ..Visit(context.pattern()), new Op("bool", 1), new Copy(),
+            ..Visit(context.pattern()), Op("bool", 1), new Copy(),
             new JumpIfNot(tag), new Pop(), ..Visit(context.expr()), Tag(tag)
         ];
     }

@@ -1,10 +1,7 @@
 ﻿namespace BishRuntime;
 
-public class Entry(BishObject key, BishObject value)
+public record Entry(BishObject Key, BishObject Value)
 {
-    public BishObject Key = key;
-    public BishObject Value = value;
-
     public override string ToString() => $"{BishOperator.ToString(Key).Value}: {BishOperator.ToString(Value).Value}";
 }
 
@@ -42,8 +39,8 @@ public class BishMap(List<Entry> entries) : BishObject
 
     private BishObject Add(Entry entry)
     {
-        var found = Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, entry.Key).Value);
-        if (found is not null) found.Value = entry.Value;
+        var index = Entries.FindIndex(e => BishOperator.Eq(e.Key, entry.Key).Value);
+        if (index != -1) Entries[index] = entry;
         else Entries.Add(entry);
         return entry.Value;
     }

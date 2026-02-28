@@ -16,7 +16,7 @@ public partial class BishVisitor
         return
         [
             ..Visit(context.expr()),
-            ..context.gen is null ? nop : [new Op("iter", 1), new ForIter(end).Tagged(tag)],
+            ..context.gen is null ? nop : [Op("iter", 1), new ForIter(end).Tagged(tag)],
             new Yield(),
             ..context.gen is null ? nop : [new Jump(tag), Tag(end)]
         ];

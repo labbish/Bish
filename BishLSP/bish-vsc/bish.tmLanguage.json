@@ -44,7 +44,7 @@
                 },
                 {
                     "name": "storage.type.bish",
-                    "match": "\\b(object|type|int|num|bool|string|list|range|Error|AttributeError|ArgumentError|TypeError|NullError|NameError|ZeroDivisionError|IterationStop)\\b"
+                    "match": "\\b(object|type|int|num|bool|string|list|map|range|Error|AttributeError|ArgumentError|TypeError|NullError|NameError|ZeroDivisionError|IterationStop)\\b"
                 },
                 {
                     "name": "constant.language.bish",

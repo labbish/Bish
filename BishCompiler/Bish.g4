@@ -32,6 +32,7 @@ expr
     | deco* CRT funcBody                                        # CreateExpr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
+    // TODO: map expression
     | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr

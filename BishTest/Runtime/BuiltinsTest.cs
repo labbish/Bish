@@ -1,4 +1,6 @@
-﻿namespace BishTest.Runtime;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace BishTest.Runtime;
 
 public class BuiltinsTest : Test
 {
@@ -218,5 +220,43 @@ public class BuiltinsTest : Test
 
         BishOperator.Call("op_delIndex", [l, R(1, 8, 3)]).Should().BeEquivalentTo(L(I(1), S("b"), I(9)));
         l.Should().BeEquivalentTo(L(I(0), S("c"), Null, I(7), S("a")));
+    }
+
+    [Fact]
+    [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
+    public void TestMap()
+    {
+        BishMap.StaticType.CreateInstance([]).Should().BeEquivalentTo(new BishMap([]));
+
+        var a = I(0);
+        var b = S("x");
+        var c = B(true);
+        var d = Null;
+        BishOperator.Call("op_add", [M((a, b), (c, d)), M((c, a))]).Should().BeEquivalentTo(M((a, b), (c, a)));
+        BishOperator.Call("op_eq", [M((a, b), (c, d)), M((c, d), (a, c))]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("op_eq", [M((a, b), (c, d)), M((c, d), (a, b))]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("bool", [M()]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("bool", [M((a, b))]).Should().BeEquivalentTo(B(true));
+
+        var l = M((a, b), (c, d));
+        BishOperator.Call("op_getIndex", [l, a]).Should().BeEquivalentTo(b);
+        BishOperator.Call("op_getIndex", [l, c]).Should().BeEquivalentTo(d);
+        BishOperator.Call("op_setIndex", [l, a, c]); // {a: c, c: d}
+        BishOperator.Call("op_delIndex", [l, c]); // {a: c}
+        l.Should().BeEquivalentTo(M((a, c)));
+        l.GetMember("length").Should().BeEquivalentTo(I(1));
+
+        Action(() => BishOperator.Call("op_getIndex", [l, b])).Should().Excepts();
+        Action(() => BishOperator.Call("op_delIndex", [l, c])).Should().Excepts();
+
+        l = M((a, b), (c, d));
+        var iter = BishOperator.Call("iter", [l]);
+        iter.GetMember("next").Call([]).Should().BeEquivalentTo(L(a, b));
+        iter.GetMember("next").Call([]).Should().BeEquivalentTo(L(c, d));
+        Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
+        l.Should().BeEquivalentTo(M((a, b), (c, d)));
+        
+        l.GetMember("keys").Call([]).Should().BeEquivalentTo(L(a, c));
+        l.GetMember("values").Call([]).Should().BeEquivalentTo(L(b, d));
     }
 }

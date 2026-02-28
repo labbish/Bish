@@ -46,6 +46,7 @@ public class BishScope
             ["bool"] = BishBool.StaticType,
             ["string"] = BishString.StaticType,
             ["list"] = BishList.StaticType,
+            ["map"] = BishMap.StaticType,
             ["range"] = BishRange.StaticType,
             ["true"] = new BishBool(true),
             ["false"] = new BishBool(false),

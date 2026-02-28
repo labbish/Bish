@@ -40,7 +40,7 @@ public class Repl(BishScope? scope = null)
                 case not null when code.StartsWith(".comp"):
                     Handled(() =>
                     {
-                        var frame = Compile(code[5..]);
+                        var frame = Compile(code[5..] + ';');
                         foreach (var bytecode in frame.Bytecodes)
                             Console.WriteLine(BytecodeParser.ToString(bytecode));
                     });
@@ -49,7 +49,7 @@ public class Repl(BishScope? scope = null)
                     Handled(() =>
                     {
                         BishObject? result = null;
-                        var frame = Compile(code);
+                        var frame = Compile(code + ';');
                         frame.EndStatHandler = obj => result = obj;
                         frame.Execute();
                         if (frame.Stack.Count > 0)

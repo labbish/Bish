@@ -75,14 +75,22 @@ public class BishException(BishError error) : Exception
             ["expect"] = expect
         });
 
-    public static BishException OfType_Expect(string expr,
-        BishObject result, BishType expect)
+    public static BishException OfType_Expect(string expr, BishObject result, BishType expect)
         => OfType($"Expect result of {expr} to be {expect.Name}, found {result}",
             new Dictionary<string, BishObject>
             {
                 ["expression"] = new BishString(expr),
                 ["result"] = result,
                 ["expect"] = expect
+            });
+
+    public static BishException OfType_Expect(string expr, BishObject result, string expect)
+        => OfType($"Expect result of {expr} to be {expect}, found {result}",
+            new Dictionary<string, BishObject>
+            {
+                ["expression"] = new BishString(expr),
+                ["result"] = result,
+                ["expect"] = new BishString(expect)
             });
 
     public static BishException OfArgument(string message, Dictionary<string, BishObject> data) =>
@@ -150,6 +158,13 @@ public class BishException(BishError error) : Exception
         {
             ["index"] = new BishInt(index),
             ["length"] = new BishInt(length)
+        }
+    );
+
+    public static BishException OfArgument_KeyNotFound(BishObject key) => OfArgument($"Key {key} does not exist",
+        new Dictionary<string, BishObject>
+        {
+            ["key"] = key
         }
     );
 

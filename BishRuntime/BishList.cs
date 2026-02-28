@@ -36,12 +36,12 @@ public class BishList(List<BishObject> list) : BishObject
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
     }
 
-    public override string ToString() => "[" + string.Join(", ", List.Select(item => item.ToString())) + "]";
+    public override string ToString() =>
+        "[" + string.Join(", ", List.Select(item => BishOperator.ToString(item).Value)) + "]";
 
     [Builtin("op")]
     public static BishBool Eq(BishList a, BishList b) => new(a.List.Count == b.List.Count && a.List.Zip(b.List)
-        .All(pair => BishOperator.Call("op_eq", [pair.First, pair.Second])
-            .ExpectToBe<BishBool>($"{pair.First} == {pair.Second}").Value));
+        .All(pair => BishOperator.Eq(pair.First, pair.Second).Value));
 
     [Builtin]
     public static BishBool Bool(BishList a) => new(a.List.Count != 0);
@@ -134,6 +134,17 @@ public class BishList(List<BishObject> list) : BishObject
             ? throw BishException.OfArgument_IndexOutOfBound(0, 0)
             : self.List.Aggregate((acc, curr) => func.Call([acc, curr]))
         : self.List.Aggregate(init, (acc, curr) => func.Call([acc, curr]));
+
+    [Builtin(special: false)]
+    public static BishObject Find(BishList self, BishObject obj)
+    {
+        var index = self.List.FindIndex(o => BishOperator.Eq(o, obj).Value);
+        return index == -1 ? BishNull.Instance : new BishInt(index);
+    }
+
+    [Builtin(special: false)]
+    public static BishBool Contains(BishList self, BishObject obj) =>
+        new(self.List.Any(o => BishOperator.Eq(o, obj).Value));
 
     // TODO: some more methods
 

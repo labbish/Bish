@@ -17,6 +17,9 @@ public class Test
     protected static BishBool B(bool b) => new(b);
     protected static BishList L(params List<BishObject> list) => new(list);
 
+    protected static BishMap M(params List<(BishObject, BishObject)> entries) =>
+        new(entries.Select(entry => new Entry(entry.Item1, entry.Item2)).ToList());
+
     protected static BishRange R(params int[] args) =>
         (BishRange)BishRange.StaticType.CreateInstance(args.Select(I).ToList<BishObject>());
 

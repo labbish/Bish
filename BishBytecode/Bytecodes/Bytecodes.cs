@@ -467,6 +467,44 @@ public record TryFunc : BishBytecode
     }
 }
 
+public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var obj = frame.Stack.Pop();
+        if (obj is not BishList list)
+        {
+            if (!Pattern) throw BishException.OfType_Expect("deconstruct operant", obj, BishList.StaticType);
+            frame.Stack.Push(new BishBool(false));
+            return;
+        }
+        var rest = RestPos != -1;
+        var count = list.List.Count;
+        var min = rest ? Count - 1 : Count;
+        int? max = rest ? null : Count;
+        if (count < min || count > max)
+        {
+            if (!Pattern) throw BishException.OfArgument_Count(count, min: Count - 1);
+            frame.Stack.Push(new BishBool(false));
+            return;
+        }
+        var items = Enumerable.Range(0, Count).Select(i => rest switch
+        {
+            false => new BishInt(i) as BishObject,
+            true when i < RestPos => new BishInt(i),
+            true when i == RestPos => new BishRange(i, count + i - Count + 1, 1),
+            true when i > RestPos => new BishInt(i - Count),
+            _ => throw new ArgumentException("impossible")
+        }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToList();
+        if (Pattern)
+        {
+            foreach (var item in items.Reversed()) frame.Stack.Push(item);
+            frame.Stack.Push(new BishBool(true));
+        }
+        else for (var i = 0; i < items.Count; i++) frame.Scope.DefVar($"${i}", items[i]);
+    }
+}
+
 // ReSharper disable once UnusedType.Global
 public record DebugStack : BishBytecode
 {

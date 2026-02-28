@@ -65,12 +65,14 @@ public partial class BishVisitor
         bool fixedArgc = false, string funcName = "")
     {
         var symbol = Symbols.Get(name ?? Anonymous);
-        var args = BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(
-            (body.defArgs()?.defArg() ?? []).Select(arg =>
-                new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null))
-            .ToList());
+        var args = Try(body,
+            () => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(
+                (body.defArgs()?.defArg() ?? []).Select(arg =>
+                    new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null))
+                .ToList()));
+        if (args is null) return [];
         if (fixedArgc && args.Any(arg => arg.Default is not null || arg.Rest))
-            throw new ArgumentException($"Definition of {funcName} should contain no optional or rest argument");
+            return Error(body.defArgs(), $"Definition of {funcName} should contain no optional or rest argument");
         var defaults = args.Select(arg => arg.Default).OfType<BishParser.ExprContext>().ToList();
         return
         [

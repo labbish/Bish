@@ -13,6 +13,29 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 {
     public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
+    public List<CompilationError> Errors { get; } = [];
+
+    private Codes Error(ParserRuleContext context, string message)
+    {
+        var start = context.Start;
+        var stop = context.Stop;
+        Errors.Add(new CompilationError(start.Line, start.Column, message,
+            stop.Line, stop.Column + (stop.Text?.Length ?? 0)));
+        return [];
+    }
+
+    private T? Try<T>(ParserRuleContext context, Func<T> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception e)
+        {
+            Error(context, e.Message);
+            return default;
+        }
+    }
 
     private static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
 
@@ -74,102 +97,10 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         ];
     }
 
-    public override Codes VisitMemberAccess(BishParser.MemberAccessContext context) =>
-        [new GetMember(context.ID().GetText())];
-
-    public override Codes VisitIndexAccess(BishParser.IndexAccessContext context) =>
-        [..Visit(context.index()), Op("get[]", 2)];
-
-    public override Codes VisitSet(BishParser.SetContext context)
-    {
-        var name = context.name.Text;
-        var op = context.setOp()?.GetText();
-        var tag = Symbols.Get("set");
-        return op switch
-        {
-            null => [..Visit(context.expr()), new Set(name)],
-            "&&" =>
-            [
-                new Get(name), new Copy(), new JumpIfNot(tag), new Pop(),
-                ..Visit(context.expr()), new Set(name), Tag(tag)
-            ],
-            "||" =>
-            [
-                new Get(name), new Copy(), new JumpIf(tag), new Pop(),
-                ..Visit(context.expr()), new Set(name), Tag(tag)
-            ],
-            "??" =>
-            [
-                new Get(name), new Copy(), new IsNull(), new JumpIfNot(tag), new Pop(),
-                ..Visit(context.expr()), new Set(name), Tag(tag)
-            ],
-            _ => [new Get(name), ..Visit(context.expr()), Op(op, 2), new Set(name)]
-        };
-    }
-
-    public override Codes VisitSetMember(BishParser.SetMemberContext context)
-    {
-        var name = context.name.Text;
-        var op = context.setOp()?.GetText();
-        var tag = Symbols.Get("set");
-        // For a.b @= c, we want `a` to be evaluated only once
-        return op switch
-        {
-            null => [..Visit(context.obj), ..Visit(context.value), new SetMember(name)],
-            "&&" =>
-            [
-                ..Visit(context.obj), new Copy(), new GetMember(name), new Copy(), new JumpIfNot(tag), new Pop(),
-                ..Visit(context.value), new SetMember(name), new Null(), new Swap(), Tag(tag), new Swap(), new Pop()
-            ],
-            "||" =>
-            [
-                ..Visit(context.obj), new Copy(), new GetMember(name), new Copy(), new JumpIf(tag), new Pop(),
-                ..Visit(context.value), new SetMember(name), new Null(), new Swap(), Tag(tag), new Swap(), new Pop()
-            ],
-            "??" =>
-            [
-                ..Visit(context.obj), new Copy(), new GetMember(name), new Copy(),
-                new IsNull(), new JumpIfNot(tag), new Pop(), ..Visit(context.value),
-                new SetMember(name), new Null(), new Swap(), Tag(tag), new Swap(), new Pop()
-            ],
-            _ =>
-            [
-                ..Visit(context.obj), new Copy(), new GetMember(name),
-                ..Visit(context.value), Op(op, 2), new SetMember(name)
-            ]
-        };
-    }
-
-    public override Codes VisitSetIndex(BishParser.SetIndexContext context)
-    {
-        var op = context.setOp()?.GetText();
-        return
-        [
-            ..Visit(context.obj),
-            op is null ? new Nop() : new Copy(),
-            ..Visit(context.index()),
-            ..(Codes)(op is null ? [] : [new Copy(), new Swap(2), Op("get[]", 2)]),
-            ..Visit(context.value),
-            op is null ? new Nop() : Op(op, 2),
-            Op("set[]", 3)
-        ];
-    }
-
-    public override Codes VisitDef(BishParser.DefContext context) =>
-        [..Visit(context.expr()), new Def(context.name.Text)];
-
-    public override Codes VisitDel(BishParser.DelContext context) => [new Del(context.name.Text)];
-
-    public override Codes VisitDelMember(BishParser.DelMemberContext context) =>
-        [..Visit(context.obj), new DelMember(context.name.Text)];
-
-    public override Codes VisitDelIndex(BishParser.DelIndexContext context) =>
-        [..Visit(context.obj), ..Visit(context.index()), Op("del[]", 2)];
-
     public override Codes VisitSingleIndex(BishParser.SingleIndexContext context) => Visit(context.expr());
 
     private Codes EvalOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
-    
+
     private Codes? VisitOrNull(ParserRuleContext? context) => context is null ? null : Visit(context);
 
     public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
@@ -232,8 +163,6 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         ? [..args.SelectMany(Visit), new Call(args.Length)]
         : [..ToList(args), new CallArgs()];
 
-    public override Codes VisitCallAccess(BishParser.CallAccessContext context) => Call(context.args().arg());
-
     public override Codes VisitListExpr(BishParser.ListExprContext context)
     {
         var args = context.args().arg();
@@ -252,19 +181,6 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
 
-    public override Codes VisitGetAccess(BishParser.GetAccessContext context)
-    {
-        var tag = Symbols.Get("null");
-        return
-        [
-            ..Visit(context.expr()),
-            ..context.nullAccess().SelectMany(access => access.op is null
-                ? Visit(access)
-                : [new Copy(), new IsNull(), new JumpIf(tag), ..Visit(access)]),
-            Tag(tag)
-        ];
-    }
-
     public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
 
     public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
@@ -278,10 +194,10 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     public override Codes VisitProgram(BishParser.ProgramContext context) =>
         context.stat().SelectMany(Visit).ToList();
 
-    internal abstract record Unbound : BishBytecode.BishBytecode
+    internal abstract record Unbound(ParserRuleContext Context) : BishBytecode.BishBytecode
     {
-        public abstract void Error();
-        public override void Execute(BishFrame frame) => Error();
+        public abstract string ErrorMessage();
+        public override void Execute(BishFrame frame) => throw new ArgumentException(ErrorMessage());
     }
 
     public Codes VisitFull(IParseTree tree, bool optimize)
@@ -289,7 +205,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         var codes = Visit(tree);
         foreach (var code in codes)
             if (code is Unbound unbound)
-                unbound.Error();
+                Error(unbound.Context, unbound.ErrorMessage());
         return optimize ? BishOptimizer.Optimize(codes) : codes;
     }
 }

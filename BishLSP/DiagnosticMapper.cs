@@ -6,7 +6,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 public static class DiagnosticMapper
 {
-    public static Diagnostic ToLspDiagnostic(SyntaxError error) =>
+    public static Diagnostic ToLspDiagnostic(CompilationError error) =>
         new()
         {
             Range = new Range(

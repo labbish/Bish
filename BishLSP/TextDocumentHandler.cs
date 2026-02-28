@@ -16,7 +16,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
 
     private Task ParseAndPublishDiagnosticsAsync(string text, DocumentUri uri)
     {
-        BishCompiler.BishCompiler.Parse(text, out var errors);
+        BishCompiler.BishCompiler.Compile(text, out var errors, optimize: false, runs: false);
 
         var diagnostics = errors.Select(DiagnosticMapper.ToLspDiagnostic).ToList();
 

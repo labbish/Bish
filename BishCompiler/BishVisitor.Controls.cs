@@ -1,4 +1,5 @@
-﻿using BishBytecode.Bytecodes;
+﻿using Antlr4.Runtime;
+using BishBytecode.Bytecodes;
 
 namespace BishCompiler;
 
@@ -21,7 +22,7 @@ public partial class BishVisitor
 
     private static bool MatchLoopTag(string? unbound, string? loop) => unbound is null || unbound == loop;
 
-    internal record LoopUnbound(string Name, string? LoopTag) : Unbound
+    internal record LoopUnbound(ParserRuleContext Context, string Name, string? LoopTag) : Unbound(Context)
     {
         public int Depth;
 
@@ -31,18 +32,18 @@ public partial class BishVisitor
             return this;
         }
 
-        public override void Error() => throw new ArgumentException($"Found {Name} statement out of loop!");
+        public override string ErrorMessage() => $"Found {Name} statement out of loop!";
     }
 
     public override Codes VisitBreakStat(BishParser.BreakStatContext context) =>
-        [new Break(context.ID()?.GetText())];
+        [new Break(context, context.ID()?.GetText())];
 
-    internal record Break(string? LoopTag) : LoopUnbound("break", LoopTag);
+    internal record Break(ParserRuleContext Context, string? LoopTag) : LoopUnbound(Context, "break", LoopTag);
 
     public override Codes VisitContinueStat(BishParser.ContinueStatContext context) =>
-        [new Continue(context.ID()?.GetText())];
+        [new Continue(context, context.ID()?.GetText())];
 
-    internal record Continue(string? LoopTag) : LoopUnbound("continue", LoopTag);
+    internal record Continue(ParserRuleContext Context, string? LoopTag) : LoopUnbound(Context, "continue", LoopTag);
 
     public override Codes VisitWhileStat(BishParser.WhileStatContext context)
     {

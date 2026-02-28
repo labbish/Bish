@@ -50,13 +50,11 @@ expr
     | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | expr pipe+                                                # PipeExpr
-    | <assoc=right> obj=expr index setOp? '=' value=expr        # SetIndex
-    | <assoc=right> obj=expr '.' name=ID setOp? '=' value=expr  # SetMember
-    | <assoc=right> name=ID setOp? '=' value=expr               # Set
-    | <assoc=right> DEL obj=expr index                          # DelIndex
-    | <assoc=right> DEL obj=expr '.' name=ID                    # DelMember
-    | <assoc=right> DEL name=ID                                 # Del
-    | <assoc=right> name=ID ':=' value=expr                     # Def
+    // In the following 3 cases, obj should be Setable, defined as:
+    // Setable : AtomExpr(IdAtom) | GetAccess not ending with call | ListExpr of Setables
+    | <assoc=right> obj=expr setOp? '=' value=expr              # Set
+    | <assoc=right> obj=expr ':=' value=expr                    # Def
+    | <assoc=right> DEL obj=expr                                # Del
     | atom                                                      # AtomExpr
     | '$'                                                       # PipeVarExpr
     ;

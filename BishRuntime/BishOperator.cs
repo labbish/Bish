@@ -119,6 +119,7 @@ public static partial class BishOperator
     public static SpecialMethod GetOperator(string op, int argc)
     {
         var founds = SpecialMethods.Where(special => special.Op == op).ToList();
+        if (founds.Count == 0) throw new ArgumentException($"No such operator: {op}");
         return founds.FirstOrDefault(special => (special.Argc is null && argc > 0) || special.Argc == argc) ??
                throw new ArgumentException(
                    $"Operator {op} does not take {argc} arguments; " +

@@ -57,4 +57,25 @@ public class AccessTest : CompilerTest
         Execute("del l[1::2];");
         Scope.GetVar("l").Should().BeEquivalentTo(L(Null, S("a"), I(8), Null));
     }
+
+    [Fact]
+    public void TestDeconstruct()
+    {
+        Execute("o:=object();");
+        Execute("[a,[o.b,c],..l]:=[0,[1,2],3,4];");
+        Scope.GetVar("a").Should().BeEquivalentTo(I(0));
+        Scope.GetVar("o").GetMember("b").Should().BeEquivalentTo(I(1));
+        Scope.GetVar("c").Should().BeEquivalentTo(I(2));
+        Scope.GetVar("l").Should().BeEquivalentTo(L(I(3), I(4)));
+        Execute("[a,[o.b,c],..l]=['a',['b','c'],'l1','l2'];");
+        Scope.GetVar("a").Should().BeEquivalentTo(S("a"));
+        Scope.GetVar("o").GetMember("b").Should().BeEquivalentTo(S("b"));
+        Scope.GetVar("c").Should().BeEquivalentTo(S("c"));
+        Scope.GetVar("l").Should().BeEquivalentTo(L(S("l1"), S("l2")));
+        Execute("del [a,[o.b,c],..l];");
+        Scope.TryGetVar("a").Should().BeNull();
+        Scope.GetVar("o").TryGetMember("b").Should().BeNull();
+        Scope.TryGetVar("c").Should().BeNull();
+        Scope.TryGetVar("l").Should().BeNull();
+    }
 }

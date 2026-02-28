@@ -13,7 +13,7 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
         Execute("func f(x){return x+1;};x:=f(3);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
-        Action(() => Execute("func f(x,y,x)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Compile("func f(x,y,x)=>null;")).Should().Throw();
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         ExpectResult("f(3,2,1)", I(5));
         ExpectResult("f(3,2)", I(6));
         ExpectResult("f(3)", I(3));
-        Action(() => Execute("func f(x=0,y,z=0)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Compile("func f(x=0,y,z=0)=>null;")).Should().Throw();
     }
 
     [Fact]
@@ -31,9 +31,9 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     {
         Execute("func f(..rest)=>rest;");
         ExpectResult("f(1,2,3)", L(I(1), I(2), I(3)));
-        Action(() => Execute("func f(x,y=0,..z)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => Execute("func f(x,y,..z=0)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
-        Action(() => Execute("func f(x,..y,..z)=>null;")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Compile("func f(x,y=0,..z)=>null;")).Should().Throw();
+        Action(() => Compile("func f(x,y,..z=0)=>null;")).Should().Throw();
+        Action(() => Compile("func f(x,..y,..z)=>null;")).Should().Throw();
     }
 
     [Fact]

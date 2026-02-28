@@ -12,43 +12,25 @@ public partial class BishVisitor
     public override Codes VisitListPattern(BishParser.ListPatternContext context)
     {
         var items = context.item();
-        var rests = items.Select((item, index) => new { item, index }).Where(x => x.item.dots is not null).ToList();
-        var restPos = rests.FirstOrDefault()?.index ?? -1;
-        var indexes = items.Select((item, i) => (Pattern: item.pattern(), Index: rests.Count switch
-        {
-            0 => (Codes)([new Int(i)]),
-            1 when i < restPos => [new Int(i)],
-            1 when i == restPos => [new Get("range"), new Int(i), new Int(i - items.Length + 1), new Call(2)],
-            1 when i > restPos => [new Int(i - items.Length)],
-            _ => throw new ArgumentException($"list pattern may only contain one rest item, found {rests}.")
-        })).ToList();
-        var (tag, end) = Symbols.GetPair("list");
+        var pos = -1;
+        for (var i = 0; i < items.Length; i++)
+            if (items[i].dots is not null)
+            {
+                if (pos == -1) pos = i;
+                else return Error(context, "Found list deconstruct pattern with multiple rest pattern");
+            }
+
+        var end = Symbols.Get("list");
+        var tags = Enumerable.Range(0, items.Length).Select(_ => Symbols.Get("list")).ToList();
         return
         [
-            new Copy(),
-            new Get("list"),
-            new TestType(),
-            new Swap(),
-            new Pop(),
-            new JumpIfNot(tag),
-            new Copy(),
-            new GetMember("length"),
-            new Int(items.Length),
-            Op(rests.Count == 0 ? "==" : ">=", 2),
-            new JumpIfNot(tag),
-            ..indexes.SelectMany(x => (Codes)(
-            [
-                new Copy(),
-                ..x.Index,
-                Op("get[]", 2),
-                ..Visit(x.Pattern),
-                new JumpIfNot(tag)
-            ])),
-            new Pop(),
+            new ListDeconstruct(items.Length, pos, Pattern: true),
+            new JumpIfNot(tags[^1]),
+            ..items.SelectMany((item, i) => Visit(item.pattern()).Concat([new JumpIfNot(tags[i])])),
             new Bool(true),
             new Jump(end),
-            Tag(tag),
-            new Pop(),
+            ..tags[..^1].Select(t => new Pop().Tagged(t)),
+            Tag(tags[^1]),
             new Bool(false),
             Tag(end)
         ];

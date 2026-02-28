@@ -189,6 +189,13 @@ public class BishException(BishError error) : Exception
             ["name"] = new BishString(name)
         });
 
+    public static BishException OfImport(string file, string message) => Create(BishError.ImportErrorType,
+        $"Cannot import {file}: {message}", new Dictionary<string, BishObject>
+        {
+            ["file"] = new BishString(file),
+            ["message"] = new BishString(message)
+        });
+
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero", []);
 
     public static BishException OfIteratorStop() => Create(BishError.IteratorStopType, "Iterator stopped", []);

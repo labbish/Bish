@@ -5,9 +5,13 @@ namespace BishBytecode;
 public class BishScope
 {
     public readonly BishScope? Outer;
-    public readonly Dictionary<string, BishObject> Vars = [];
+    public readonly Dictionary<string, BishObject> Vars;
 
-    internal BishScope(BishScope? outer = null) => Outer = outer;
+    internal BishScope(BishScope? outer = null, Dictionary<string, BishObject>? vars = null)
+    {
+        Outer = outer;
+        Vars = vars ?? [];
+    }
 
     public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
 
@@ -27,7 +31,7 @@ public class BishScope
     public BishObject SetVar(string name, BishObject value) =>
         TrySetVar(name, value) ?? throw BishException.OfName(name).WithExtraMsg(" (did you mean to use `:=`?)");
 
-    private bool Discard(string name) => name.All(c => c == '_');
+    private static bool Discard(string name) => name.All(c => c == '_');
 
     public BishObject? TryDelVar(string name) => Vars.Remove(name, out var value) ? value : null;
 
@@ -35,34 +39,9 @@ public class BishScope
 
     public BishScope CreateInner() => new(this);
 
-    public static BishScope Globals => new()
-    {
-        Vars =
-        {
-            ["object"] = BishObject.StaticType,
-            ["type"] = BishType.StaticType,
-            ["int"] = BishInt.StaticType,
-            ["num"] = BishNum.StaticType,
-            ["bool"] = BishBool.StaticType,
-            ["string"] = BishString.StaticType,
-            ["list"] = BishList.StaticType,
-            ["map"] = BishMap.StaticType,
-            ["range"] = BishRange.StaticType,
-            ["true"] = new BishBool(true),
-            ["false"] = new BishBool(false),
-            ["null"] = BishNull.Instance,
-            ["print"] = BishBuiltinBinder.Builtin("print", Print),
-            ["input"] = BishBuiltinBinder.Builtin("input", Input),
-            ["Error"] = BishError.StaticType,
-            ["AttributeError"] = BishError.AttributeErrorType,
-            ["ArgumentError"] = BishError.ArgumentErrorType,
-            ["TypeError"] = BishError.TypeErrorType,
-            ["NullError"] = BishError.NullErrorType,
-            ["NameError"] = BishError.NameErrorType,
-            ["ZeroDivisionError"] = BishError.ZeroDivisionErrorType,
-            ["IterationStop"] = BishError.IteratorStopType
-        }
-    };
+    public static readonly Dictionary<string, BishObject> GlobalVars = [];
+
+    public static BishScope Globals => new(vars: new Dictionary<string, BishObject>(GlobalVars));
 
     public static BishNull Print([Rest] BishList args)
     {
@@ -73,4 +52,30 @@ public class BishScope
     }
 
     public static BishString Input() => new(Console.ReadLine() ?? "");
+
+    static BishScope()
+    {
+        GlobalVars.Add("object", BishObject.StaticType);
+        GlobalVars.Add("type", BishType.StaticType);
+        GlobalVars.Add("int", BishInt.StaticType);
+        GlobalVars.Add("num", BishNum.StaticType);
+        GlobalVars.Add("bool", BishBool.StaticType);
+        GlobalVars.Add("string", BishString.StaticType);
+        GlobalVars.Add("list", BishList.StaticType);
+        GlobalVars.Add("map", BishMap.StaticType);
+        GlobalVars.Add("range", BishRange.StaticType);
+        GlobalVars.Add("true", new BishBool(true));
+        GlobalVars.Add("false", new BishBool(false));
+        GlobalVars.Add("null", BishNull.Instance);
+        GlobalVars.Add("print", BishBuiltinBinder.Builtin("print", Print));
+        GlobalVars.Add("input", BishBuiltinBinder.Builtin("input", Input));
+        GlobalVars.Add("Error", BishError.StaticType);
+        GlobalVars.Add("AttributeError", BishError.AttributeErrorType);
+        GlobalVars.Add("ArgumentError", BishError.ArgumentErrorType);
+        GlobalVars.Add("TypeError", BishError.TypeErrorType);
+        GlobalVars.Add("NullError", BishError.NullErrorType);
+        GlobalVars.Add("NameError", BishError.NameErrorType);
+        GlobalVars.Add("ZeroDivisionError", BishError.ZeroDivisionErrorType);
+        GlobalVars.Add("IterationStop", BishError.IteratorStopType);
+    }
 }

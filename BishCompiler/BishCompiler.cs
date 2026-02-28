@@ -1,15 +1,13 @@
 ﻿using Antlr4.Runtime;
 using BishBytecode;
+using BishRuntime;
 
 namespace BishCompiler;
 
 public static class BishCompiler
 {
-    public static BishFrame Compile(string code, BishScope? scope = null, bool optimize = true) =>
-        Compile(code, out _, scope, optimize);
-
     public static BishFrame Compile(string code, out List<CompilationError> errors,
-        BishScope? scope = null, bool optimize = true, bool runs = true)
+        BishScope? scope = null, string? root = null, bool optimize = true, bool runs = true)
     {
         var stream = CharStreams.fromString(code);
         var lexer = new BishLexer(stream);
@@ -29,7 +27,33 @@ public static class BishCompiler
         if (runs && visitor.Errors.Count > 0)
             throw new Exception("Crucial compile error(s) occured: " + string.Join("\n", visitor.Errors));
         errors = [..listener.Errors, ..visitor.Errors];
-        return new BishFrame(codes, scope);
+
+        var frame = new BishFrame(codes, scope);
+        frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file", BishString.StaticType)], args =>
+        {
+            var path = "(unresolved)";
+            try
+            {
+                var file = args[0].ExpectToBe<BishString>("file");
+                path = Path.GetFullPath(root is null ? file.Value : Path.Combine(root, file.Value));
+                var imported = Compile(File.ReadAllText(path), out var errors);
+                if (errors.Count != 0) throw new ArgumentException(errors[0].Message);
+                imported.Execute();
+                var module = new BishObject();
+                foreach (var (name, value) in imported.Scope.Vars)
+                    module.SetMember(name, value);
+                return module;
+            }
+            catch (BishException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw BishException.OfImport(e.Message, path);
+            }
+        }));
+        return frame;
     }
 }
 

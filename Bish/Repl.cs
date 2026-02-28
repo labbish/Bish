@@ -32,8 +32,9 @@ public class Repl(BishScope? scope = null)
                     Handled(() =>
                     {
                         var file = code[5..].Trim().Trim('"');
+                        var root = FindRoot(file);
                         var content = File.ReadAllText(file);
-                        var frame = Compile(content);
+                        var frame = Compile(content, root);
                         frame.Execute();
                     });
                     break;
@@ -64,9 +65,9 @@ public class Repl(BishScope? scope = null)
         }
     }
 
-    private BishFrame Compile(string code)
+    private BishFrame Compile(string code, string? root = null)
     {
-        var result = BishCompiler.BishCompiler.Compile(code, out var errors, Scope);
+        var result = BishCompiler.BishCompiler.Compile(code, out var errors, Scope, root: root);
         foreach (var error in errors) Console.Error.WriteLine(error);
         return result;
     }
@@ -85,5 +86,19 @@ public class Repl(BishScope? scope = null)
         {
             Console.Error.WriteLine(e);
         }
+    }
+
+    public static string? FindRoot(string? path)
+    {
+        if (path is null) return null;
+        var current = new DirectoryInfo(path);
+        while (current != null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "rubbish.json")))
+                return current.FullName;
+            current = current.Parent;
+        }
+
+        return Path.GetDirectoryName(path);
     }
 }

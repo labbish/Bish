@@ -25,6 +25,16 @@ public class BishError(string message) : BishObject
 
     [Builtin("hook")]
     public static void Init(BishError self, [DefaultNull] BishString? message) => self.Message = message?.Value ?? "";
+    
+    [Builtin("hook")]
+    public static BishString Get_message(BishError self) => new(self.Message);
+
+    [Builtin("hook")]
+    public static BishString Set_message(BishError self, BishString msg)
+    {
+        self.Message = msg.Value;
+        return msg;
+    }
 
     public override string ToString()
     {
@@ -45,6 +55,7 @@ public class BishError(string message) : BishObject
     public static readonly BishType NullErrorType = new("NullError", [StaticType]);
     public static readonly BishType NameErrorType = new("NameError", [StaticType]);
     public static readonly BishType ZeroDivisionErrorType = new("ZeroDivisionError", [StaticType]);
+    public static readonly BishType ImportErrorType = new("NameError", [StaticType]);
 
     public static readonly BishType IteratorStopType = new("IteratorStop", [StaticType]);
     public static readonly BishType YieldValueType = new("YieldValue", [StaticType]);

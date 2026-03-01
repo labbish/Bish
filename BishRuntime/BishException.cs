@@ -106,7 +106,7 @@ public class BishException(BishError error) : Exception
         $"Found required argument {name} at index {index}, after some optional argument, while defining function",
         new Dictionary<string, BishObject>
         {
-            ["index"] = new BishInt(index),
+            ["index"] = BishInt.Of(index),
             ["name"] = new BishString(name)
         });
 
@@ -130,9 +130,9 @@ public class BishException(BishError error) : Exception
         $"Wrong argument count: expected {Range(min, max)}, got {count}",
         new Dictionary<string, BishObject>
         {
-            ["min"] = min is null ? BishNull.Instance : new BishInt(min.Value),
-            ["max"] = max is null ? BishNull.Instance : new BishInt(max.Value),
-            ["count"] = new BishInt(count)
+            ["min"] = min is null ? BishNull.Instance : BishInt.Of(min.Value),
+            ["max"] = max is null ? BishNull.Instance : BishInt.Of(max.Value),
+            ["count"] = BishInt.Of(count)
         });
 
     public static BishException OfArgument_Bind(BishFunc method, BishObject obj) => OfArgument(
@@ -156,8 +156,8 @@ public class BishException(BishError error) : Exception
         $"Index out of bound: accessing index {index} with length {length}",
         new Dictionary<string, BishObject>
         {
-            ["index"] = new BishInt(index),
-            ["length"] = new BishInt(length)
+            ["index"] = BishInt.Of(index),
+            ["length"] = BishInt.Of(length)
         }
     );
 

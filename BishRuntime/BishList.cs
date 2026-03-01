@@ -42,11 +42,11 @@ public class BishList(IList<BishObject> list) : BishObject
         "[" + string.Join(", ", List.Select(item => BishOperator.ToString(item).Value)) + "]";
 
     [Builtin("op")]
-    public static BishBool Eq(BishList a, BishList b) => new(a.List.Count == b.List.Count && a.List.Zip(b.List)
+    public static BishBool Eq(BishList a, BishList b) => BishBool.Of(a.List.Count == b.List.Count && a.List.Zip(b.List)
         .All(pair => BishOperator.Eq(pair.First, pair.Second).Value));
 
     [Builtin]
-    public static BishBool Bool(BishList a) => new(a.List.Count != 0);
+    public static BishBool Bool(BishList a) => BishBool.Of(a.List.Count != 0);
 
     [Builtin("op")]
     public static BishObject GetIndex(BishList self, BishObject x) => x switch
@@ -110,7 +110,7 @@ public class BishList(IList<BishObject> list) : BishObject
     public static BishListIterator Iter(BishList self) => new(self.List);
 
     [Builtin("hook")]
-    public static BishInt Get_length(BishList self) => new(self.List.Count);
+    public static BishInt Get_length(BishList self) => BishInt.Of(self.List.Count);
 
     [Builtin(special: false)]
     public static BishList Add(BishList self, BishObject item)
@@ -145,12 +145,12 @@ public class BishList(IList<BishObject> list) : BishObject
     public static BishObject Find(BishList self, BishObject obj)
     {
         var index = self.List.FindIndex(o => BishOperator.Eq(o, obj).Value);
-        return index == -1 ? BishNull.Instance : new BishInt(index);
+        return index == -1 ? BishNull.Instance : BishInt.Of(index);
     }
 
     [Builtin(special: false)]
     public static BishBool Contains(BishList self, BishObject obj) =>
-        new(self.List.Any(o => BishOperator.Eq(o, obj).Value));
+        BishBool.Of(self.List.Any(o => BishOperator.Eq(o, obj).Value));
 
     // TODO: some more methods
 

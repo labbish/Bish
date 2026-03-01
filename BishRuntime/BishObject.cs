@@ -151,7 +151,7 @@ public class BishObject(BishType? type = null)
     public static BishString ToString(BishObject obj) => new(obj.ToString());
 
     [Builtin("op")]
-    public static BishBool Eq(BishObject a, BishObject b) => new(a == b);
+    public static BishBool Eq(BishObject a, BishObject b) => BishBool.Of(a == b);
 
     public T ExpectToBe<T>(string expr) where T : BishObject => this switch
     {
@@ -174,16 +174,16 @@ public class BishObject(BishType? type = null)
         BishOperator.Call("op_cmp", [a, b]).ExpectToBe<BishInt>($"{a} <=> {b}").Value;
 
     [Builtin("op")]
-    public static BishBool Lt(BishObject a, BishObject b) => new(Compare(a, b) < 0);
+    public static BishBool Lt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) < 0);
 
     [Builtin("op")]
-    public static BishBool Le(BishObject a, BishObject b) => new(Compare(a, b) <= 0);
+    public static BishBool Le(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) <= 0);
 
     [Builtin("op")]
-    public static BishBool Gt(BishObject a, BishObject b) => new(Compare(a, b) > 0);
+    public static BishBool Gt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) > 0);
 
     [Builtin("op")]
-    public static BishBool Ge(BishObject a, BishObject b) => new(Compare(a, b) >= 0);
+    public static BishBool Ge(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) >= 0);
 
     // Cannot write `[DefaultNull] BishType? root` because it causes cycle reference in static initialization
     [Builtin(special: false)]

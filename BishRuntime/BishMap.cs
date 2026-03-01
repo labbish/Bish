@@ -61,11 +61,11 @@ public class BishMap(List<Entry> entries) : BishObject
     public override string ToString() => "{" + string.Join(", ", Entries) + "}";
 
     [Builtin("op")]
-    public static BishBool Eq(BishMap a, BishMap b) => new(a.Entries.All(x =>
+    public static BishBool Eq(BishMap a, BishMap b) => BishBool.Of(a.Entries.All(x =>
         b.Entries.Any(y => BishOperator.Eq(x.Key, y.Key).Value && BishOperator.Eq(x.Value, y.Value).Value)));
 
     [Builtin]
-    public static BishBool Bool(BishMap self) => new(self.Entries.Count != 0);
+    public static BishBool Bool(BishMap self) => BishBool.Of(self.Entries.Count != 0);
 
     [Builtin("op")]
     public static BishObject GetIndex(BishMap self, BishObject key)
@@ -95,7 +95,7 @@ public class BishMap(List<Entry> entries) : BishObject
     public static BishMapIterator Iter(BishMap self) => new(self.Entries);
 
     [Builtin("hook")]
-    public static BishInt Get_length(BishMap self) => new(self.Entries.Count);
+    public static BishInt Get_length(BishMap self) => BishInt.Of(self.Entries.Count);
 
     [Builtin("hook")]
     public static BishList Get_keys(BishMap self) => new(self.Entries.Select(entry => entry.Key).ToList());

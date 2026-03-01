@@ -21,7 +21,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
         _ => throw BishException.OfType_Argument(obj, BishInt.StaticType)
     };
 
-    private static BishObject ToObject(int? value) => value is null ? BishNull.Instance : new BishInt(value.Value);
+    private static BishObject ToObject(int? value) => value is null ? BishNull.Instance : BishInt.Of(value.Value);
 
     [Builtin("hook")]
     public static void Init(BishRange self, BishObject a, [DefaultNull] BishObject? b, [DefaultNull] BishObject? step)
@@ -41,7 +41,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
         if (Current * Step >= End * Step) return null;
         var result = Current;
         Current += Step;
-        return new BishInt(result.Value);
+        return BishInt.Of(result.Value);
     }
 
     public BishRange Regularize(int length) =>
@@ -59,7 +59,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
     public static BishObject Get_end(BishRange self) => ToObject(self.End);
 
     [Builtin("hook")]
-    public static BishInt Get_step(BishRange self) => new(self.Step);
+    public static BishInt Get_step(BishRange self) => BishInt.Of(self.Step);
 
     public override string ToString()
     {

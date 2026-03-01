@@ -2,7 +2,7 @@
 
 public class BishNull : BishObject
 {
-    internal BishNull()
+    private BishNull()
     {
     }
 
@@ -30,7 +30,7 @@ public class BishNull : BishObject
         throw BishException.OfNull("delete", name.Value);
 
     [Builtin]
-    public static BishBool Bool(BishNull a) => new(false);
+    public static BishBool Bool(BishNull a) => BishBool.False;
 
     static BishNull() => BishBuiltinBinder.Bind<BishNull>();
 }

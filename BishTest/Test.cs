@@ -11,10 +11,10 @@ public class Test
 {
     protected static Action Action(Action action) => action;
 
-    protected static BishInt I(int x) => new(x);
+    protected static BishInt I(int x) => BishInt.Of(x);
     protected static BishNum N(double x) => new(x);
     protected static BishString S(string s) => new(s);
-    protected static BishBool B(bool b) => new(b);
+    protected static BishBool B(bool b) => BishBool.Of(b);
     protected static BishList L(params List<BishObject> list) => new(list);
 
     protected static BishMap M(params List<(BishObject, BishObject)> entries) =>

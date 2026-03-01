@@ -11,10 +11,10 @@ public class CallTest : Test
     }
 
     public static BishInt F(BishInt a, BishInt b, [DefaultNull] BishInt? c) =>
-        new(a.Value + b.Value * 10 + (c?.Value ?? 0) * 100);
+        BishInt.Of(a.Value + b.Value * 10 + (c?.Value ?? 0) * 100);
 
     public static BishInt Sum([Rest] BishList nums) =>
-        new(nums.List.Select(n => n.ExpectToBe<BishInt>("element").Value).Sum());
+        BishInt.Of(nums.List.Select(n => n.ExpectToBe<BishInt>("element").Value).Sum());
 
     [Theory]
     [InlineData(1, 2, 21)]

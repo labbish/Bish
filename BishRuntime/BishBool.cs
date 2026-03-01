@@ -1,9 +1,15 @@
 ﻿namespace BishRuntime;
 
-// TODO: make it singletonw
-public class BishBool(bool value) : BishObject
+public class BishBool : BishObject
 {
-    public bool Value { get; private set; } = value;
+    private BishBool(bool value) => Value = value;
+
+    public static readonly BishBool True = new(true);
+    public static readonly BishBool False = new(false);
+
+    public static BishBool Of(bool value) => value ? True : False;
+
+    public bool Value { get; private set; }
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("bool");

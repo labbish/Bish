@@ -28,7 +28,7 @@ public abstract record Value : BishBytecode;
 
 public record Int(int Value) : Value
 {
-    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishInt(Value));
+    public override void Execute(BishFrame frame) => frame.Stack.Push(BishInt.Of(Value));
 }
 
 public record Num(double Value) : Value
@@ -43,7 +43,7 @@ public record String(string Value) : Value
 
 public record Bool(bool Value) : Value
 {
-    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishBool(Value));
+    public override void Execute(BishFrame frame) => frame.Stack.Push(BishBool.Of(Value));
 }
 
 public record Null : Value
@@ -417,7 +417,7 @@ public record BuildList(int Argc) : BishBytecode
 
 public record IsNull : BishBytecode
 {
-    public override void Execute(BishFrame frame) => frame.Stack.Push(new BishBool(frame.Stack.Pop() is BishNull));
+    public override void Execute(BishFrame frame) => frame.Stack.Push(BishBool.Of(frame.Stack.Pop() is BishNull));
 }
 
 public record TestType(string? GoalTag = null) : Jumper(GoalTag)
@@ -427,7 +427,7 @@ public record TestType(string? GoalTag = null) : Jumper(GoalTag)
         var type = frame.Stack.Pop().ExpectToBe<BishType>("type");
         var obj = frame.Stack.Pop();
         var result = obj.TryConvert(type);
-        frame.Stack.Push(new BishBool(result is not null));
+        frame.Stack.Push(BishBool.Of(result is not null));
         frame.Stack.Push(result ?? BishNull.Instance);
         if (result is null) Jump(frame);
     }
@@ -436,14 +436,14 @@ public record TestType(string? GoalTag = null) : Jumper(GoalTag)
 public record Not : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
-        frame.Stack.Push(new BishBool(!BishBool.CallToBool(frame.Stack.Pop())));
+        frame.Stack.Push(BishBool.Of(!BishBool.CallToBool(frame.Stack.Pop())));
 }
 
 public record RefEq : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
         // ReSharper disable once EqualExpressionComparison
-        frame.Stack.Push(new BishBool(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
+        frame.Stack.Push(BishBool.Of(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
 }
 
 public record TryFunc : BishBytecode
@@ -475,7 +475,7 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
         if (obj is not BishList list)
         {
             if (!Pattern) throw BishException.OfType_Expect("deconstruct operant", obj, BishList.StaticType);
-            frame.Stack.Push(new BishBool(false));
+            frame.Stack.Push(BishBool.False);
             return;
         }
         var rest = RestPos != -1;
@@ -485,21 +485,21 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
         if (count < min || count > max)
         {
             if (!Pattern) throw BishException.OfArgument_Count(count, min: Count - 1);
-            frame.Stack.Push(new BishBool(false));
+            frame.Stack.Push(BishBool.False);
             return;
         }
         var items = Enumerable.Range(0, Count).Select(i => rest switch
         {
-            false => new BishInt(i) as BishObject,
-            true when i < RestPos => new BishInt(i),
+            false => BishInt.Of(i) as BishObject,
+            true when i < RestPos => BishInt.Of(i),
             true when i == RestPos => new BishRange(i, count + i - Count + 1, 1),
-            true when i > RestPos => new BishInt(i - Count),
+            true when i > RestPos => BishInt.Of(i - Count),
             _ => throw new ArgumentException("impossible")
         }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToList();
         if (Pattern)
         {
             foreach (var item in items.Reversed()) frame.Stack.Push(item);
-            frame.Stack.Push(new BishBool(true));
+            frame.Stack.Push(BishBool.True);
         }
         else for (var i = 0; i < items.Count; i++) frame.Scope.DefVar($"${i}", items[i]);
     }

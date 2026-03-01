@@ -83,10 +83,10 @@ file class T1(string tag) : BishObject
     public new static readonly BishType StaticType = new("T");
 
     [Builtin(special: false)]
-    public static BishInt F(T1 self) => new(0);
+    public static BishInt F(T1 self) => BishInt.Of(0);
 
     [Builtin(special: false)]
-    public static BishInt G(T1 self, T1 _) => new(0);
+    public static BishInt G(T1 self, T1 _) => BishInt.Of(0);
 
     [Builtin("hook")]
     public static T1 Create(BishObject _) => new("");
@@ -95,7 +95,7 @@ file class T1(string tag) : BishObject
     public static void Init(T1 self, BishString tag) => self.Tag = tag.Value;
 
     [Builtin("op")]
-    public static BishInt Call(T1 self) => new(0);
+    public static BishInt Call(T1 self) => BishInt.Of(0);
 
     static T1() => BishBuiltinBinder.Bind<T1>();
 

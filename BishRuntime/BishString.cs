@@ -39,10 +39,10 @@ public partial class BishString(string value) : BishObject
     public override string ToString() => Value;
 
     [Builtin("op")]
-    public static BishBool Eq(BishString a, BishString b) => new(a.Value == b.Value);
+    public static BishBool Eq(BishString a, BishString b) => BishBool.Of(a.Value == b.Value);
 
     [Builtin]
-    public static BishBool Bool(BishString a) => new(a.Value != "");
+    public static BishBool Bool(BishString a) => BishBool.Of(a.Value != "");
 
     [Builtin("op")]
     public static BishString GetIndex(BishString self, BishObject x) => x switch
@@ -57,7 +57,7 @@ public partial class BishString(string value) : BishObject
     public static BishStringIterator Iter(BishString self) => new(self.Value);
 
     [Builtin("hook")]
-    public static BishInt Get_length(BishString self) => new(self.Value.Length);
+    public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
     public static string CallToString(BishObject obj) =>
         BishOperator.Call("toString", [obj]).ExpectToBe<BishString>("toString").Value;

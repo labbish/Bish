@@ -76,8 +76,8 @@ public class BishScope
         GlobalVars.Add("list", BishList.StaticType);
         GlobalVars.Add("map", BishMap.StaticType);
         GlobalVars.Add("range", BishRange.StaticType);
-        GlobalVars.Add("true", new BishBool(true));
-        GlobalVars.Add("false", new BishBool(false));
+        GlobalVars.Add("true", BishBool.True);
+        GlobalVars.Add("false", BishBool.False);
         GlobalVars.Add("null", BishNull.Instance);
         GlobalVars.Add("print", BishBuiltinBinder.Builtin("print", Print));
         GlobalVars.Add("input", BishBuiltinBinder.Builtin("input", Input));
@@ -108,7 +108,7 @@ public class BishScopeReflect(BishScope scope) : BishObject
     public static BishProxyMap Get_vars(BishScopeReflect self) => new(self.Scope.Vars);
 
     [Builtin("op")]
-    public static BishBool Eq(BishScopeReflect a, BishScopeReflect b) => new(a.Scope == b.Scope);
+    public static BishBool Eq(BishScopeReflect a, BishScopeReflect b) => BishBool.Of(a.Scope == b.Scope);
 
     static BishScopeReflect() => BishBuiltinBinder.Bind<BishScopeReflect>();
 }

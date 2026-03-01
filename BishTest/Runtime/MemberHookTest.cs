@@ -99,7 +99,7 @@ file class T2 : BishObject
     public static T2 Create(BishObject _) => new();
 
     [Builtin("hook")]
-    public static BishInt Get_a(T2 self) => new(self.A);
+    public static BishInt Get_a(T2 self) => BishInt.Of(self.A);
 
     [Builtin("hook")]
     public static void Set_a(T2 self, BishInt value) => self.A = value.Value;

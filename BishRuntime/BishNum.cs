@@ -52,16 +52,16 @@ public class BishNum(double value) : BishObject
     public static BishNum Abs(BishNum a) => new(Math.Abs(a.Value));
 
     [Builtin(special: false)]
-    public static BishInt Sign(BishNum a) => new(Math.Sign(a.Value));
+    public static BishInt Sign(BishNum a) => BishInt.Of(Math.Sign(a.Value));
 
     [Builtin(special: false)]
-    public static BishInt Floor(BishNum a) => new((int)Math.Floor(a.Value));
+    public static BishInt Floor(BishNum a) => BishInt.Of((int)Math.Floor(a.Value));
 
     [Builtin(special: false)]
-    public static BishInt Ceil(BishNum a) => new((int)Math.Ceiling(a.Value));
+    public static BishInt Ceil(BishNum a) => BishInt.Of((int)Math.Ceiling(a.Value));
 
     [Builtin(special: false)]
-    public static BishInt Round(BishNum a) => new((int)Math.Round(a.Value));
+    public static BishInt Round(BishNum a) => BishInt.Of((int)Math.Round(a.Value));
 
     // TODO: some more math methods
 
@@ -71,13 +71,13 @@ public class BishNum(double value) : BishObject
 
     [Builtin("op")]
     // ReSharper disable once CompareOfFloatsByEqualityOperator
-    public static BishBool Eq(BishNum a, BishNum b) => new(a.Value == b.Value);
+    public static BishBool Eq(BishNum a, BishNum b) => BishBool.Of(a.Value == b.Value);
 
     [Builtin("op")]
-    public static BishInt Cmp(BishNum a, BishNum b) => new(a.Value.CompareTo(b.Value));
+    public static BishInt Cmp(BishNum a, BishNum b) => BishInt.Of(a.Value.CompareTo(b.Value));
 
     [Builtin]
-    public static BishBool Bool(BishNum a) => new(a.Value != 0);
+    public static BishBool Bool(BishNum a) => BishBool.Of(a.Value != 0);
 
     static BishNum()
     {

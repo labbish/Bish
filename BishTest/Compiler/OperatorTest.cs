@@ -71,5 +71,9 @@ public class OperatorTest : CompilerTest
         ExpectResult("x===y", B(true));
         ExpectResult("x!==z", B(false));
         ExpectResult("x===w", B(false));
+        
+        ExpectResult("null===null", B(true));
+        ExpectResult("true===true", B(true));
+        ExpectResult("false===false", B(true));
     }
 }

@@ -6,7 +6,7 @@ public class CallTest : CompilerTest
         Scope.DefVar("S", BishBuiltinBinder.Builtin("S", Sum));
 
     public static BishInt Sum([Rest] BishList nums) =>
-        new(nums.List.Select(n => n.ExpectToBe<BishInt>("element").Value).Sum());
+        BishInt.Of(nums.List.Select(n => n.ExpectToBe<BishInt>("element").Value).Sum());
 
     [Fact]
     public void TestCall()

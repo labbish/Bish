@@ -200,7 +200,9 @@ BOL : 'true' | 'false' ;
 STR : S1 | S2 | R11 | R12 | R13 | R14 | R21 | R22 | R23 | R24 ;
 
 // We'll use a simple method for now
-RP  : 'r';
+fragment RP  
+    : 'r'
+    ;
 R11 : RP '\'' .*? '\'' ;
 R12 : RP '#' '\'' .*? '\'' '#' ;
 R13 : RP '##' '\'' .*? '\'' '##' ;

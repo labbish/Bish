@@ -112,7 +112,7 @@ public record CallArgs : BishBytecode
     {
         var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
         var func = frame.Stack.Pop();
-        frame.Stack.Push(func.Call(args.List));
+        frame.Stack.Push(func.Call(args.List.ToList()));
     }
 }
 
@@ -324,7 +324,7 @@ public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart,
 public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
 {
     public override void Execute(BishFrame frame) =>
-        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().ExpectToBe<BishList>("parents").List);
+        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().ExpectToBe<BishList>("parents").List.ToList());
 }
 
 public record Throw : BishBytecode

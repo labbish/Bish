@@ -21,7 +21,7 @@ public class BishObject(BishType? type = null)
     public BishType Type
     {
         get => field ?? DefaultType;
-        set;
+        internal set;
     } = type;
 
     public Dictionary<string, BishObject> Members = [];
@@ -193,59 +193,32 @@ public class BishObject(BishType? type = null)
             self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
             throw BishException.OfType_NoBase(self));
 
+    public virtual BishReflect Reflect() => new(this);
+
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }
 
-public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
+public class BishReflect(BishObject obj) : BishObject
 {
-    public readonly string Name = name;
-    public readonly List<BishType> Parents = parents ?? [];
-    public readonly int Skips = skips;
-
-    protected override List<BishObject> LookupChain =>
-        GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToList<BishObject>();
-
-    public BishObject CreateInstance(List<BishObject> args)
-    {
-        var instance = new BishObject();
-        var types = GetMRO();
-        types.Reverse();
-        foreach (var type in types)
-        {
-            var created = type.Members.GetValueOrDefault("hook_create")?.TryCall([instance]);
-            instance = created ?? instance;
-            instance.Type = type;
-        }
-
-        instance.TryCallHook("hook_init", args);
-        return instance;
-    }
-
-    public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
-
-    public bool CanAssignTo(BishType other)
-    {
-        // Special case here
-        if (this == BishInt.StaticType && other == BishNum.StaticType) return true;
-        return LookupChain.Contains(other);
-    }
-
-    public override string ToString() => Name;
-
-    [Builtin("hook")]
-    public static BishString Get_name(BishType type) => new(type.Name);
+    public BishObject Object => obj;
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("type");
+    public new static readonly BishType StaticType = new("reflect");
 
-    internal static BishType GetStaticType(Type type) =>
-        type.GetField("StaticType")?.GetValue(null) as BishType ??
-        throw new ArgumentException($"Cannot find field `StaticType` on type {type}");
+    [Builtin("hook")]
+    public static BishObject Get_object(BishReflect self) => self.Object;
 
-    public BishType WithMRORoot(BishType mroRoot) =>
-        new(Name, Parents, GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot))
-            { Members = Members };
+    [Builtin("hook")]
+    public static BishProxyMap Get_members(BishReflect self) => new(self.Object.Members);
 
-    static BishType() => BishBuiltinBinder.Bind<BishType>();
+    [Builtin("hook")]
+    public static BishType Get_type(BishReflect self) => self.Object.Type;
+
+    [Builtin("hook")]
+    public static BishType Set_type(BishReflect self, BishType type) => self.Object.Type = type;
+
+    public override string ToString() => $"[{Object} reflect]";
+
+    static BishReflect() => BishBuiltinBinder.Bind<BishReflect>();
 }

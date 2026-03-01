@@ -11,6 +11,18 @@ public class BishScope
     {
         Outer = outer;
         Vars = vars ?? [];
+
+        Vars.Add("reflect", new BishFunc("reflect", [new BishArg("object", Default: new ReflectDefaultNull())], args =>
+            args[0] switch
+            {
+                ReflectDefaultNull => new BishScopeReflect(this),
+                { } obj => obj.Reflect()
+            }));
+    }
+
+    internal class ReflectDefaultNull : BishObject
+    {
+        public override string ToString() => "[scope]";
     }
 
     public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
@@ -78,4 +90,25 @@ public class BishScope
         GlobalVars.Add("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         GlobalVars.Add("IterationStop", BishError.IteratorStopType);
     }
+}
+
+public class BishScopeReflect(BishScope scope) : BishObject
+{
+    public BishScope Scope => scope;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("reflect");
+
+    [Builtin("hook")]
+    public static BishObject Get_outer(BishScopeReflect self) =>
+        self.Scope.Outer is null ? BishNull.Instance : new BishScopeReflect(self.Scope.Outer);
+
+    [Builtin("hook")]
+    public static BishProxyMap Get_vars(BishScopeReflect self) => new(self.Scope.Vars);
+
+    [Builtin("op")]
+    public static BishBool Eq(BishScopeReflect a, BishScopeReflect b) => new(a.Scope == b.Scope);
+
+    static BishScopeReflect() => BishBuiltinBinder.Bind<BishScopeReflect>();
 }

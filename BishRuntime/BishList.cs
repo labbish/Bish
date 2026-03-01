@@ -1,8 +1,10 @@
-﻿namespace BishRuntime;
+﻿using System.Collections;
 
-public class BishList(List<BishObject> list) : BishObject
+namespace BishRuntime;
+
+public class BishList(IList<BishObject> list) : BishObject
 {
-    public List<BishObject> List { get; private set; } = list;
+    public IList<BishObject> List { get; private set; } = list;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("list");
@@ -66,7 +68,10 @@ public class BishList(List<BishObject> list) : BishObject
                 if (value is not BishList list) throw BishException.OfType_Argument(value, StaticType);
                 if (range.Step == 1)
                 {
-                    self.List = [..self.List[..range.Start!.Value], ..list.List, ..self.List[range.End!.Value..]];
+                    var start = range.Start!.Value;
+                    var end = range.End!.Value;
+                    self.List.RemoveRange(start, end - start);
+                    self.List.InsertRange(start, list.List);
                     break;
                 }
 
@@ -91,8 +96,9 @@ public class BishList(List<BishObject> list) : BishObject
         {
             case BishInt index: self.List.RemoveAt(index.Value); break;
             case BishRange range:
-                var indexes = range.Regularize(self.List.Count).ToInts().Select(i => i.Value).ToList();
-                self.List = self.List.Where((_, i) => !indexes.Contains(i)).ToList();
+                var indexes = range.Regularize(self.List.Count).ToInts()
+                    .Select(i => i.Value).OrderDescending().ToList();
+                foreach (var index in indexes) self.List.RemoveAt(index);
                 break;
             default: throw BishException.OfType_Argument(self, BishInt.StaticType);
         }
@@ -151,9 +157,9 @@ public class BishList(List<BishObject> list) : BishObject
     static BishList() => BishBuiltinBinder.Bind<BishList>();
 }
 
-public class BishListIterator(List<BishObject> list) : BishObject
+public class BishListIterator(IList<BishObject> list) : BishObject
 {
-    public List<BishObject> List => list;
+    public IList<BishObject> List => list;
     public int Index;
 
     public override BishType DefaultType => StaticType;
@@ -164,4 +170,69 @@ public class BishListIterator(List<BishObject> list) : BishObject
     public BishObject? Next() => List.ElementAtOrDefault(Index++);
 
     static BishListIterator() => BishBuiltinIteratorBinder.Bind<BishListIterator>();
+}
+
+// ReSharper disable once InconsistentNaming
+public static class IListHelper
+{
+    extension<T>(IList<T> list)
+    {
+        public void RemoveRange(int index, int count)
+        {
+            for (var i = index + count - 1; i >= index; i--) list.RemoveAt(i);
+        }
+
+        public void InsertRange(int index, IEnumerable<T> items)
+        {
+            foreach (var item in items.Reverse()) list.Insert(index, item);
+        }
+
+        public int FindIndex(Predicate<T> predicate)
+        {
+            for (var i = 0; i < list.Count; i++)
+                if (predicate(list[i]))
+                    return i;
+            return -1;
+        }
+    }
+}
+
+public class BishTypedListProxy<T>(List<T> list) : IList<BishObject> where T : BishObject
+{
+    public List<T> List => list;
+
+    public IEnumerator<BishObject> GetEnumerator() => list.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    private static T ToT(BishObject item) =>
+        item as T ?? throw BishException.OfType_Argument(item, BishType.GetStaticType(typeof(T)));
+
+    public void Add(BishObject item) => List.Add(ToT(item));
+
+    public void Clear() => List.Clear();
+
+    public bool Contains(BishObject item) => item is T t && List.Contains(t);
+
+    public void CopyTo(BishObject[] array, int arrayIndex)
+    {
+        // God knows why I can't use List.CopyTo(array, arrayIndex). It looks pretty safe to me.
+        for (var i = 0; i < List.Count; i++) array[arrayIndex + i] = List[i];
+    }
+
+    public bool Remove(BishObject item) => item is T t && List.Remove(t);
+
+    public int Count => List.Count;
+    public bool IsReadOnly => false;
+    public int IndexOf(BishObject item) => item is T t ? List.IndexOf(t) : -1;
+
+    public void Insert(int index, BishObject item) => List.Insert(index, ToT(item));
+
+    public void RemoveAt(int index) => List.RemoveAt(index);
+
+    public BishObject this[int index]
+    {
+        get => List[index];
+        set => List[index] = ToT(value);
+    }
 }

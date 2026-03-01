@@ -1,5 +1,6 @@
 ﻿namespace BishRuntime;
 
+// TODO: make it singletonw
 public class BishBool(bool value) : BishObject
 {
     public bool Value { get; private set; } = value;

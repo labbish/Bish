@@ -30,14 +30,14 @@ public class BishMap(List<Entry> entries) : BishObject
         }
     }
 
-    private static List<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
+    public static List<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
         entry.ExpectToBe<BishList>("map entry") switch
         {
             { List.Count: 2 } list => new Entry(list.List[0], list.List[1]),
             _ => throw BishException.OfType_Expect("map entry", entry, "list with length 2"),
         }).ToList();
 
-    private BishObject Add(Entry entry)
+    public virtual BishObject Add(Entry entry)
     {
         var index = Entries.FindIndex(e => BishOperator.Eq(e.Key, entry.Key).Value);
         if (index != -1) Entries[index] = entry;
@@ -45,7 +45,7 @@ public class BishMap(List<Entry> entries) : BishObject
         return entry.Value;
     }
 
-    private void AddEntries(List<Entry> entries)
+    public void AddEntries(List<Entry> entries)
     {
         foreach (var entry in entries) Add(entry);
     }
@@ -78,13 +78,17 @@ public class BishMap(List<Entry> entries) : BishObject
     public static BishObject SetIndex(BishMap self, BishObject key, BishObject value) =>
         self.Add(new Entry(key, value));
 
+    public virtual BishObject Remove(Entry entry)
+    {
+        Entries.Remove(entry);
+        return entry.Value;
+    }
+
     [Builtin("op")]
     public static BishObject DelIndex(BishMap self, BishObject key)
     {
         var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key).Value);
-        if (found is null) throw BishException.OfArgument_KeyNotFound(key);
-        self.Entries.Remove(found);
-        return found.Value;
+        return found is null ? throw BishException.OfArgument_KeyNotFound(key) : self.Remove(found);
     }
 
     [Builtin]
@@ -93,11 +97,15 @@ public class BishMap(List<Entry> entries) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishMap self) => new(self.Entries.Count);
 
-    [Builtin(special: false)]
-    public static BishList Keys(BishMap self) => new(self.Entries.Select(entry => entry.Key).ToList());
+    [Builtin("hook")]
+    public static BishList Get_keys(BishMap self) => new(self.Entries.Select(entry => entry.Key).ToList());
 
-    [Builtin(special: false)]
-    public static BishList Values(BishMap self) => new(self.Entries.Select(entry => entry.Value).ToList());
+    [Builtin("hook")]
+    public static BishList get_values(BishMap self) => new(self.Entries.Select(entry => entry.Value).ToList());
+
+    [Builtin("hook")]
+    public static BishList Get_entries(BishMap self) =>
+        new(self.Entries.Select(entry => new BishList([entry.Key, entry.Value])).ToList<BishObject>());
 
     static BishMap() => BishBuiltinBinder.Bind<BishMap>();
 }
@@ -119,4 +127,20 @@ public class BishMapIterator(List<Entry> entries) : BishObject
     }
 
     static BishMapIterator() => BishBuiltinIteratorBinder.Bind<BishMapIterator>();
+}
+
+public class BishProxyMap(Dictionary<string, BishObject> dictionary)
+    : BishMap(dictionary.Select(pair => new Entry(new BishString(pair.Key), pair.Value)).ToList())
+{
+    public override BishObject Add(Entry entry)
+    {
+        if (entry.Key is BishString key) dictionary[key.Value] = entry.Value;
+        return base.Add(entry);
+    }
+
+    public override BishObject Remove(Entry entry)
+    {
+        if (entry.Key is BishString key) dictionary.Remove(key.Value);
+        return base.Remove(entry);
+    }
 }

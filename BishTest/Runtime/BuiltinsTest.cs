@@ -256,7 +256,8 @@ public class BuiltinsTest : Test
         Action(() => iter.GetMember("next").Call([])).Should().Excepts(BishError.IteratorStopType);
         l.Should().BeEquivalentTo(M((a, b), (c, d)));
         
-        l.GetMember("keys").Call([]).Should().BeEquivalentTo(L(a, c));
-        l.GetMember("values").Call([]).Should().BeEquivalentTo(L(b, d));
+        l.GetMember("keys").Should().BeEquivalentTo(L(a, c));
+        l.GetMember("values").Should().BeEquivalentTo(L(b, d));
+        l.GetMember("entries").Should().BeEquivalentTo(L(L(a, b), L(c, d)));
     }
 }

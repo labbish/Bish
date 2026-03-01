@@ -72,7 +72,7 @@
                 },
                 {
                     "name": "entity.name.function.builtin.bish",
-                    "match": "\\b(print|input|import)"
+                    "match": "\\b(print|input|import|reflect)"
                 }
             ]
         },

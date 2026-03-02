@@ -33,6 +33,7 @@ expr
     | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr
+    | '{' objEntries '}'                                        # ObjExpr
     | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
@@ -52,12 +53,20 @@ expr
     | <assoc=right> THR expr                                    # ThrowExpr
     | expr pipe+                                                # PipeExpr
     // In the following 3 cases, obj should be Setable, defined as:
-    // Setable : AtomExpr(IdAtom) | GetAccess not ending with call | ListExpr of Setables
+    // Setable : AtomExpr(IdAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
     | <assoc=right> obj=expr setOp? '=' value=expr              # Set
     | <assoc=right> obj=expr ':=' value=expr                    # Def
     | <assoc=right> DEL obj=expr                                # Del
     | atom                                                      # AtomExpr
     | '$'                                                       # PipeVarExpr
+    ;
+
+objEntries
+    : (objEntry (',' objEntry)* ','?)?
+    ;
+
+objEntry
+    : '.' ID (':' expr)?
     ;
 
 entries
@@ -127,6 +136,7 @@ pattern
     : NUL                                                       # NullPattern
     | '(' pattern ')'                                           # ParenPattern
     | '[' (item (',' item)* ','?)? ']'                          # ListPattern
+    // TODO: map & obj pattern
     | expr                                                      # ExprPattern
     | op=matchOp expr                                           # OpPattern
     | 'of' type=expr ID?                                        # TypePattern

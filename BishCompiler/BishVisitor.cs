@@ -194,6 +194,17 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         }))
     ];
 
+    public override Codes VisitObjExpr(BishParser.ObjExprContext context) => [
+        new Get("object"),
+        new Call(0),
+        ..context.objEntries().objEntry().SelectMany(entry => (Codes)([
+            new Copy(),
+            ..entry.expr() is null ? [new Get(entry.ID().GetText())] : Visit(entry.expr()),
+            new SetMember(entry.ID().GetText()),
+            new Pop()
+        ]))
+    ];
+
     public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
 
     public override Codes VisitExprStat(BishParser.ExprStatContext context) =>

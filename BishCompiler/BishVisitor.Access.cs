@@ -37,6 +37,7 @@ public partial class BishVisitor
         }
     }
 
+    // Note: in `Set` and `Def`, `value` does not always evaluate at the first, so it should not rely on the stack.
     private Codes Set(BishParser.ExprContext obj, string? op, Codes value)
     {
         switch (obj)
@@ -50,6 +51,36 @@ public partial class BishVisitor
                     Deconstruct(args),
                     ..ArgsToExpr(args).SelectMany((expr, i) =>
                         Set(expr, op, [new Del($"${i}")]).Concat([i == args.Length - 1 ? new Nop() : new Pop()]))
+                ];
+            }
+            case BishParser.MapExprContext map:
+            {
+                var entries = map.entries().entry();
+                if (entries[..^1].Any(entry => entry is BishParser.RestEntryContext))
+                    return Error(obj, "Rest entry must be the last one in map deconstruction");
+                return
+                [
+                    ..value,
+                    new Get("map"),
+                    new Swap(),
+                    new Call(1),
+                    ..entries.SelectMany(entry => entry switch
+                    {
+                        BishParser.SingleEntryContext single => (Codes)(
+                        [
+                            new Copy(),
+                            ..Visit(single.key),
+                            Op("del[]", 2),
+                            new Move($"$map[{single.GetText()}]"),
+                            ..Set(single.value, op, [new Get($"$map[{single.GetText()}]")]),
+                            new Pop()
+                        ]),
+                        BishParser.RestEntryContext rest => [
+                            new Move($"$map[{rest.GetText()}"),
+                            ..Set(rest.expr(), op, [new Get($"$map[{rest.GetText()}]")])
+                        ],
+                        _ => throw new ArgumentException("Invalid entry!")
+                    })
                 ];
             }
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
@@ -120,6 +151,36 @@ public partial class BishVisitor
                         Def(expr, [new Del($"${i}")]).Concat([i == args.Length - 1 ? new Nop() : new Pop()]))
                 ];
             }
+            case BishParser.MapExprContext map:
+            {
+                var entries = map.entries().entry();
+                if (entries[..^1].Any(entry => entry is BishParser.RestEntryContext))
+                    return Error(obj, "Rest entry must be the last one in map deconstruction");
+                return
+                [
+                    ..value,
+                    new Get("map"),
+                    new Swap(),
+                    new Call(1),
+                    ..entries.SelectMany(entry => entry switch
+                    {
+                        BishParser.SingleEntryContext single => (Codes)(
+                        [
+                            new Copy(),
+                            ..Visit(single.key),
+                            Op("del[]", 2),
+                            new Move($"$map[{single.GetText()}]"),
+                            ..Def(single.value, [new Get($"$map[{single.GetText()}]")]),
+                            new Pop()
+                        ]),
+                        BishParser.RestEntryContext rest => [
+                            new Move($"$map[{rest.GetText()}]"),
+                            ..Def(rest.expr(), [new Get($"$map[{rest.GetText()}]")])
+                        ],
+                        _ => throw new ArgumentException("Invalid entry!")
+                    })
+                ];
+            }
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
                 return [..value, new Def(id.GetText())];
             case BishParser.GetAccessContext access:
@@ -136,11 +197,14 @@ public partial class BishVisitor
         switch (obj)
         {
             case BishParser.ListExprContext list:
-            {
-                var args = list.args().arg();
-                return ArgsToExpr(args).SelectMany((expr, i) =>
-                    Del(expr).Concat([i == args.Length - 1 ? new Nop() : new Pop()])).ToList();
-            }
+                return Dels(ArgsToExpr(list.args().arg()).ToList());
+            case BishParser.MapExprContext map:
+                return Dels(map.entries().entry().Select(entry => entry switch
+                {
+                    BishParser.SingleEntryContext single => single.value,
+                    BishParser.RestEntryContext rest => rest.expr(),
+                    _ => throw new ArgumentException("Invalid entry!")
+                }).ToList());
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
                 return [new Del(id.GetText())];
             case BishParser.GetAccessContext access:
@@ -151,6 +215,9 @@ public partial class BishVisitor
 
         return Error(obj, "Invalid del expression");
     }
+    
+    private Codes Dels(List<BishParser.ExprContext> exprs) => exprs.SelectMany((expr, i) =>
+        Del(expr).Concat([i == exprs.Count - 1 ? new Nop() : new Pop()])).ToList();
 
     public override Codes VisitSet(BishParser.SetContext context) =>
         Set(context.obj, context.setOp()?.GetText(), Visit(context.value));

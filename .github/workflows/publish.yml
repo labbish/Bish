@@ -1,0 +1,55 @@
+name: Publish
+
+on: [ push, pull_request ]
+
+jobs:
+  publish:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+            asset_name: Bish.exe
+          - os: ubuntu-latest
+            runtime: linux-x64
+            asset_name: Bish
+          - os: macos-latest
+            runtime: osx-x64
+            asset_name: Bish
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set GH_TOKEN environment variable (Linux/Mac)
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set GH_TOKEN environment variable (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Publish Project
+          run: >
+            dotnet publish ./Bish/Bish.csproj
+            -c Release
+            -r ${{ matrix.runtime }}
+            --self-contained true
+            /p:PublishSingleFile=true
+            -o ./publish
+
+      - name: Upload artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ./publish/${{ matrix.asset_name }}
+          path: build/

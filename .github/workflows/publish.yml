@@ -47,12 +47,7 @@ jobs:
 
       - name: Publish main project
         run: |
-          dotnet publish ./Bish/Bish.csproj
-          -c Release
-          -r ${{ matrix.runtime }}
-          --self-contained true
-          /p:PublishSingleFile=true
-          -o ./publish
+          dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
 
       - name: Upload main artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
@@ -62,12 +57,7 @@ jobs:
 
       - name: Publish LSP project
         run: |
-          dotnet publish ./BishLSP/BishLSP.csproj
-          -c Release
-          -r ${{ matrix.runtime }}
-          --self-contained true
-          /p:PublishSingleFile=true
-          -o ./publish
+          dotnet publish ./BishLSP/BishLSP.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
 
       - name: Upload LSP artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4

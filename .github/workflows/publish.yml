@@ -71,17 +71,17 @@ jobs:
       - name: Upload main artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: Bish-${{ matrix.os }}
+          name: Bish-${{ matrix.os }}${{ matrix.asset_suffix }}
           path: publish/Bish${{ matrix.asset_suffix }}
 
       - name: Upload LSP artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: BishLSP-${{ matrix.os }}
+          name: BishLSP-${{ matrix.os }}${{ matrix.asset_suffix }}
           path: publish/BishLSP${{ matrix.asset_suffix }}
 
       - name: Upload VSCode extension artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: Bish-vsc.vsix
+          name: Bish-vsc-${{ matrix.os }}.vsix
           path: publish/Bish-vsc.vsix

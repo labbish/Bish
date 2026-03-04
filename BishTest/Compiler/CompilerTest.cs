@@ -22,6 +22,7 @@ public class CompilerTest(OptimizeInfoFixture fixture) : Test
         var frame = Compile(code);
         frame.Execute();
         frame.Stack.Should().BeEmpty();
+        frame.Scope.Vars.Keys.Where(key => key.StartsWith('$')).Should().BeEmpty();
     }
 
     protected void ExpectResult(string expr, BishObject result)

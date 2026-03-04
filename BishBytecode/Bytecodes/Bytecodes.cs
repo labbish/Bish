@@ -478,6 +478,7 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
             frame.Stack.Push(BishBool.False);
             return;
         }
+
         var rest = RestPos != -1;
         var count = list.List.Count;
         var min = rest ? Count - 1 : Count;
@@ -488,6 +489,7 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
             frame.Stack.Push(BishBool.False);
             return;
         }
+
         var items = Enumerable.Range(0, Count).Select(i => rest switch
         {
             false => BishInt.Of(i) as BishObject,
@@ -501,7 +503,43 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
             foreach (var item in items.Reversed()) frame.Stack.Push(item);
             frame.Stack.Push(BishBool.True);
         }
-        else for (var i = 0; i < items.Count; i++) frame.Scope.DefVar($"${i}", items[i]);
+        else
+            for (var i = 0; i < items.Count; i++)
+                frame.Scope.DefVar($"${i}", items[i]);
+    }
+}
+
+public record TryDelIndex : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var index = frame.Stack.Pop();
+        var obj = frame.Stack.Pop();
+        try
+        {
+            frame.Stack.Push(BishOperator.Call("op_delIndex", [obj, index]));
+            frame.Stack.Push(BishBool.True);
+        }
+        catch (BishException)
+        {
+            frame.Stack.Push(BishBool.False);
+        }
+    }
+}
+
+public record TryGetMember(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        try
+        {
+            frame.Stack.Push(frame.Stack.Pop().GetMember(Name));
+            frame.Stack.Push(BishBool.True);
+        }
+        catch (BishException)
+        {
+            frame.Stack.Push(BishBool.False);
+        }
     }
 }
 
@@ -510,4 +548,11 @@ public record DebugStack : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
         Console.WriteLine(string.Join(", ", frame.Stack.ToArray()));
+}
+
+// ReSharper disable once UnusedType.Global
+public record DebugVars : BishBytecode
+{
+    public override void Execute(BishFrame frame) =>
+        Console.WriteLine(string.Join(", ", frame.Scope.Vars.Keys));
 }

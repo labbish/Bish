@@ -11,7 +11,7 @@ public partial class BishVisitor
 
     public override Codes VisitListPattern(BishParser.ListPatternContext context)
     {
-        var items = context.item();
+        var items = context.patternItem();
         var pos = -1;
         for (var i = 0; i < items.Length; i++)
             if (items[i].dots is not null)
@@ -33,6 +33,70 @@ public partial class BishVisitor
             Tag(tags[^1]),
             new Bool(false),
             Tag(end)
+        ];
+    }
+
+    public override Codes VisitMapPattern(BishParser.MapPatternContext context)
+    {
+        var entries = context.patternEntry();
+        if (entries.SkipLast(1).Any(entry => entry is BishParser.RestPatternEntryContext))
+            return Error(context, "Rest entry must be the last one in map deconstruction");
+        var (tag, end) = Symbols.GetPair("map");
+        return
+        [
+            new Copy(),
+            new Get("map"),
+            new TestType(),
+            new Pop(),
+            new JumpIfNot(tag),
+            new Get("map"),
+            new Swap(),
+            new Call(1),
+            ..entries.SelectMany(entry => entry switch
+            {
+                BishParser.SinglePatternEntryContext single =>
+                [
+                    new Copy(),
+                    ..Visit(single.expr()),
+                    new TryDelIndex(),
+                    new JumpIfNot(tag),
+                    ..Visit(single.pattern()),
+                    new JumpIfNot(tag)
+                ],
+                BishParser.RestPatternEntryContext rest => (Codes)(
+                    [new Copy(), ..Visit(rest.pattern()), new JumpIfNot(tag)]),
+                _ => throw new ArgumentException("Invalid entry!")
+            }),
+            new Bool(true),
+            new Jump(end),
+            Tag(tag),
+            new Bool(false),
+            Tag(end),
+            new Swap(),
+            new Pop()
+        ];
+    }
+
+    public override Codes VisitObjPattern(BishParser.ObjPatternContext context)
+    {
+        var (tag, end) = Symbols.GetPair("map");
+        return
+        [
+            ..context.patternObjEntry().SelectMany(entry => (Codes)(
+            [
+                new Copy(),
+                new TryGetMember(entry.ID().GetText()),
+                new JumpIfNot(tag),
+                ..Visit(entry.pattern()),
+                new JumpIfNot(tag)
+            ])),
+            new Bool(true),
+            new Jump(end),
+            Tag(tag),
+            new Bool(false),
+            Tag(end),
+            new Swap(),
+            new Pop()
         ];
     }
 

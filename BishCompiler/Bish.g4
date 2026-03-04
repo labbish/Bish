@@ -131,12 +131,13 @@ caseStat
     : CAS pattern ':' stat
     ;
 
-// We handle _ in ExprPattern to allow '_' used as an ID in other places
+// We handle _ in ExprPattern to allow it to be used as an ID in other places
 pattern
     : NUL                                                       # NullPattern
     | '(' pattern ')'                                           # ParenPattern
-    | '[' (item (',' item)* ','?)? ']'                          # ListPattern
-    // TODO: map & obj pattern
+    | '[' (patternItem (',' patternItem)* ','?)? ']'            # ListPattern
+    | '{' (patternEntry (',' patternEntry)* ','?)? '}'          # MapPattern
+    | '{' (patternObjEntry (',' patternObjEntry)* ','?)? '}'    # ObjPattern
     | expr                                                      # ExprPattern
     | op=matchOp expr                                           # OpPattern
     | 'of' type=expr ID?                                        # TypePattern
@@ -146,8 +147,17 @@ pattern
     | pattern WHN expr                                          # WhenPattern
     ;
 
-item
+patternItem
     : dots='..'? pattern
+    ;
+
+patternEntry
+    : expr ':' pattern                                          # SinglePatternEntry
+    | '..' pattern                                              # RestPatternEntry
+    ;
+
+patternObjEntry
+    : '.' ID ':' pattern
     ;
 
 matchOp

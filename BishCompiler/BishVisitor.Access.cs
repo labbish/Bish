@@ -37,10 +37,28 @@ public partial class BishVisitor
         }
     }
 
-    // Note: in `Set` and `Def`, `value` does not always evaluate at the first, so it should not rely on the stack.
-    private Codes Set(BishParser.ExprContext obj, string? op, Codes value)
+    private Codes Set(string id, string? op, Codes value)
     {
-        switch (obj)
+        var tag = Symbols.Get("set");
+        return op switch
+        {
+            null => [..value, new Set(id)],
+            "&&" =>
+                [new Get(id), new Copy(), new JumpIfNot(tag), new Pop(), ..value, new Set(id), Tag(tag)],
+            "||" => [new Get(id), new Copy(), new JumpIf(tag), new Pop(), ..value, new Set(id), Tag(tag)],
+            "??" =>
+            [
+                new Get(id), new Copy(), new IsNull(), new JumpIfNot(tag),
+                new Pop(), ..value, new Set(id), Tag(tag)
+            ],
+            _ => [new Get(id), ..value, Op(op, 2), new Set(id)]
+        };
+    }
+
+    // Note: in `Set` and `Def`, `value` does not always evaluate at the first, so it should not rely on the stack.
+    private Codes Set(BishParser.ExprContext context, string? op, Codes value)
+    {
+        switch (context)
         {
             case BishParser.ListExprContext list:
             {
@@ -56,51 +74,49 @@ public partial class BishVisitor
             case BishParser.MapExprContext map:
             {
                 var entries = map.entries().entry();
-                if (entries[..^1].Any(entry => entry is BishParser.RestEntryContext))
-                    return Error(obj, "Rest entry must be the last one in map deconstruction");
+                if (entries.SkipLast(1).Any(entry => entry is BishParser.RestEntryContext))
+                    return Error(context, "Rest entry must be the last one in map deconstruction");
                 return
                 [
-                    ..value,
                     new Get("map"),
-                    new Swap(),
+                    ..value,
                     new Call(1),
-                    ..entries.SelectMany(entry => entry switch
+                    ..entries.SelectMany((entry, i) => entry switch
                     {
                         BishParser.SingleEntryContext single => (Codes)(
                         [
                             new Copy(),
                             ..Visit(single.key),
                             Op("del[]", 2),
-                            new Move($"$map[{single.GetText()}]"),
-                            ..Set(single.value, op, [new Get($"$map[{single.GetText()}]")]),
+                            new Move($"${i}"),
+                            ..Set(single.value, op, [new Del($"${i}")]),
                             new Pop()
                         ]),
-                        BishParser.RestEntryContext rest => [
-                            new Move($"$map[{rest.GetText()}"),
-                            ..Set(rest.expr(), op, [new Get($"$map[{rest.GetText()}]")])
+                        BishParser.RestEntryContext rest =>
+                        [
+                            new Move($"${i}"),
+                            ..Set(rest.expr(), op, [new Del($"${i}")])
                         ],
                         _ => throw new ArgumentException("Invalid entry!")
                     })
                 ];
             }
-            case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
+            case BishParser.ObjExprContext obj:
             {
-                var tag = Symbols.Get("set");
-                var name = id.GetText();
-                return op switch
-                {
-                    null => [..value, new Set(name)],
-                    "&&" =>
-                        [new Get(name), new Copy(), new JumpIfNot(tag), new Pop(), ..value, new Set(name), Tag(tag)],
-                    "||" => [new Get(name), new Copy(), new JumpIf(tag), new Pop(), ..value, new Set(name), Tag(tag)],
-                    "??" =>
-                    [
-                        new Get(name), new Copy(), new IsNull(), new JumpIfNot(tag),
-                        new Pop(), ..value, new Set(name), Tag(tag)
-                    ],
-                    _ => [new Get(name), ..value, Op(op, 2), new Set(name)]
-                };
+                var entries = obj.objEntries().objEntry();
+                if (entries.Any(entry => entry.expr() is not null))
+                    return Error(obj, "Entry cannot contain a value in object deconstruction");
+                return
+                [
+                    ..value,
+                    new Move("$_"),
+                    ..entries.SelectMany(entry => Set(entry.ID().GetText(), op,
+                        [new Get("$_"), new GetMember(entry.ID().GetText())]).Concat([new Pop()])),
+                    new Del("$_")
+                ];
             }
+            case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
+                return Set(id.GetText(), op, value);
             case BishParser.GetAccessContext access:
             {
                 var tag = Symbols.Get("set");
@@ -133,12 +149,14 @@ public partial class BishVisitor
             }
         }
 
-        return Error(obj, "Invalid set expression");
+        return Error(context, "Invalid set expression");
     }
 
-    private Codes Def(BishParser.ExprContext obj, Codes value)
+    private static Codes Def(string id, Codes value) => [..value, new Def(id)];
+
+    private Codes Def(BishParser.ExprContext context, Codes value)
     {
-        switch (obj)
+        switch (context)
         {
             case BishParser.ListExprContext list:
             {
@@ -154,47 +172,61 @@ public partial class BishVisitor
             case BishParser.MapExprContext map:
             {
                 var entries = map.entries().entry();
-                if (entries[..^1].Any(entry => entry is BishParser.RestEntryContext))
-                    return Error(obj, "Rest entry must be the last one in map deconstruction");
+                if (entries.SkipLast(1).Any(entry => entry is BishParser.RestEntryContext))
+                    return Error(context, "Rest entry must be the last one in map deconstruction");
                 return
                 [
-                    ..value,
                     new Get("map"),
-                    new Swap(),
+                    ..value,
                     new Call(1),
-                    ..entries.SelectMany(entry => entry switch
+                    ..entries.SelectMany((entry, i) => entry switch
                     {
                         BishParser.SingleEntryContext single => (Codes)(
                         [
                             new Copy(),
                             ..Visit(single.key),
                             Op("del[]", 2),
-                            new Move($"$map[{single.GetText()}]"),
-                            ..Def(single.value, [new Get($"$map[{single.GetText()}]")]),
+                            new Move($"${i}"),
+                            ..Def(single.value, [new Del($"${i}")]),
                             new Pop()
                         ]),
-                        BishParser.RestEntryContext rest => [
-                            new Move($"$map[{rest.GetText()}]"),
-                            ..Def(rest.expr(), [new Get($"$map[{rest.GetText()}]")])
+                        BishParser.RestEntryContext rest =>
+                        [
+                            new Move($"${i}"),
+                            ..Def(rest.expr(), [new Del($"${i}")])
                         ],
                         _ => throw new ArgumentException("Invalid entry!")
                     })
                 ];
             }
+            case BishParser.ObjExprContext obj:
+            {
+                var entries = obj.objEntries().objEntry();
+                if (entries.Any(entry => entry.expr() is not null))
+                    return Error(obj, "Entry cannot contain a value in object deconstruction");
+                return
+                [
+                    ..value,
+                    new Move("$_"),
+                    ..entries.SelectMany(entry => Def(entry.ID().GetText(),
+                        [new Get("$_"), new GetMember(entry.ID().GetText())]).Concat([new Pop()])),
+                    new Del("$_")
+                ];
+            }
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return [..value, new Def(id.GetText())];
+                return Def(id.GetText(), value);
             case BishParser.GetAccessContext access:
                 var tag = Symbols.Get("def");
                 var last = access.nullAccess()[^1];
                 return [..GetExceptLast(access, tag), ..value, ..Set(last, tag), Tag(tag)];
         }
 
-        return Error(obj, "Invalid def expression");
+        return Error(context, "Invalid def expression");
     }
 
-    private Codes Del(BishParser.ExprContext obj)
+    private Codes Del(BishParser.ExprContext context)
     {
-        switch (obj)
+        switch (context)
         {
             case BishParser.ListExprContext list:
                 return Dels(ArgsToExpr(list.args().arg()).ToList());
@@ -205,6 +237,8 @@ public partial class BishVisitor
                     BishParser.RestEntryContext rest => rest.expr(),
                     _ => throw new ArgumentException("Invalid entry!")
                 }).ToList());
+            case BishParser.ObjExprContext obj:
+                return Dels(obj.objEntries().objEntry().Select(entry => entry.ID().GetText()).ToList());
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
                 return [new Del(id.GetText())];
             case BishParser.GetAccessContext access:
@@ -213,9 +247,12 @@ public partial class BishVisitor
                 return [..GetExceptLast(access, tag), ..Del(last, tag), Tag(tag)];
         }
 
-        return Error(obj, "Invalid del expression");
+        return Error(context, "Invalid del expression");
     }
-    
+
+    private static Codes Dels(List<string> ids) => ids.SelectMany((id, i) =>
+        (Codes)([new Del(id), i == ids.Count - 1 ? new Nop() : new Pop()])).ToList();
+
     private Codes Dels(List<BishParser.ExprContext> exprs) => exprs.SelectMany((expr, i) =>
         Del(expr).Concat([i == exprs.Count - 1 ? new Nop() : new Pop()])).ToList();
 

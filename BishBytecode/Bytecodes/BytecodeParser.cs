@@ -41,6 +41,7 @@ public static partial class BytecodeParser
     {
         return value switch
         {
+            null => "null",
             int x => x.ToString(),
             double x => x.ToString(CultureInfo.InvariantCulture),
             string x => x,
@@ -50,8 +51,9 @@ public static partial class BytecodeParser
         };
     }
 
-    private static object ArgFromString(Type type, string str)
+    private static object? ArgFromString(Type type, string str)
     {
+        if (str == "null") return null;
         if (type == typeof(int)) return int.Parse(str);
         if (type == typeof(double)) return double.Parse(str);
         if (type == typeof(string)) return str;

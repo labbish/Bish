@@ -92,5 +92,17 @@ public class AccessTest : CompilerTest
         Scope.TryGetVar("b").Should().BeNull();
         Scope.TryGetVar("c").Should().BeNull();
         ExpectResult("o['a']", I(0));
+        
+        Execute("o:={.a:0,.b:1,.c:2};");
+        Execute("{.a,.b}:=o;");
+        ExpectResult("a", I(0));
+        ExpectResult("b", I(1));
+        Execute("{.a,.b}={.a:-1,.b:-2,.c:-3};");
+        ExpectResult("a", I(-1));
+        ExpectResult("b", I(-2));
+        Execute("del {.a,.b};");
+        Scope.TryGetVar("a").Should().BeNull();
+        Scope.TryGetVar("b").Should().BeNull();
+        ExpectResult("o.a", I(0));
     }
 }

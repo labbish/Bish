@@ -30,6 +30,11 @@ public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     [InlineData("[0,1,2,3,4]", "[1,2,3]")]
     [InlineData("'str'", "'s'")]
     [InlineData("['s','t','r']", "'s'")]
+    [InlineData("{'a':3,'b':4,'c':5}", "6")]
+    [InlineData("{'a':'','b':4,'c':5}", "-1")]
+    [InlineData("{'b':4,'c':5}", "-1")]
+    [InlineData("{.a:3,.b:4}", "9.0")]
+    [InlineData("{.b:4}", "-1")]
     [InlineData("3.14", "-1")]
     [InlineData("false", "false")]
     public void TestSwitch(string value, string expect)
@@ -43,6 +48,8 @@ public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
             ("[0, of int x]", "x+1"),
             ("[of int, ..of list m, of int]", "m"),
             ("of string seq or of list seq", "seq[0]"),
+            ("{'a':of int a, ..of _ rest}", "a*rest.length"),
+            ("{.a:of int a}", "a^2"),
             ("of _ x", "x && -1")
         ];
         var expr = $"s1:=({value}) switch" + "{" +

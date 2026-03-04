@@ -65,8 +65,8 @@ jobs:
           cp -r ./publish/. ./BishLSP/bish-vsc/bin
           cd ./BishLSP/bish-vsc/bin
           npm install
-          vsce package
-          cp bish-vsc-0.0.1.vsix ../../publish
+          npx @vscode/vsce package -o Bish-vsc.vsix
+          cp Bish-vsc.vsix ../../publish
 
       - name: Upload main artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
@@ -84,4 +84,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bish-vsc.vsix
-          path: publish/bish-vsc-0.0.1.vsix
+          path: publish/Bish-vsc.vsix

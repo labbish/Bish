@@ -12,13 +12,13 @@ jobs:
         include:
           - os: windows-latest
             runtime: win-x64
-            asset_name: Bish.exe
+            asset_suffix: .exe
           - os: ubuntu-latest
             runtime: linux-x64
-            asset_name: Bish
+            asset_suffix: ''
           - os: macos-latest
             runtime: osx-x64
-            asset_name: Bish
+            asset_suffix: ''
 
     steps:
       - name: Checkout code
@@ -38,17 +38,39 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
         shell: pwsh
+        
+      - name: Download ANTLR
+        shell: bash
+        run: |
+          mkdir ./BishCompiler/tools
+          curl -L https://www.antlr.org/download/antlr-4.13.2-complete.jar -o ./BishCompiler/tools/antlr.jar
 
-      - name: Publish Project
-        run: dotnet publish ./Bish/Bish.csproj
+      - name: Publish main project
+        run: |
+          dotnet publish ./Bish/Bish.csproj
           -c Release
           -r ${{ matrix.runtime }}
           --self-contained true
           /p:PublishSingleFile=true
           -o ./publish
 
-      - name: Upload artifact for ${{ matrix.os }}
+      - name: Upload main artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: ./publish/${{ matrix.asset_name }}
+          name: ./publish/Bish${{ matrix.asset_suffix }}
+          path: build/
+
+      - name: Publish LSP project
+        run: |
+          dotnet publish ./BishLSP/BishLSP.csproj
+          -c Release
+          -r ${{ matrix.runtime }}
+          --self-contained true
+          /p:PublishSingleFile=true
+          -o ./publish
+
+      - name: Upload LSP artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ./publish/BishLSP${{ matrix.asset_suffix }}
           path: build/

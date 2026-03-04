@@ -3,9 +3,6 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-Program.cs
-!/Bish/Program.cs
-!/BishLSP/Program.cs
 .idea/
 *.sln.DotSettings
 *.sln.DotSettings.user

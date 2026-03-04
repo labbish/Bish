@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir ./BishLSP/bish-vsc/bin
           cp -r ./publish/. ./BishLSP/bish-vsc/bin
-          cd ./BishLSP/bish-vsc/bin
+          cd ./BishLSP/bish-vsc
           npm install
           npx @vscode/vsce package -o Bish-vsc.vsix
           cp Bish-vsc.vsix ../../publish

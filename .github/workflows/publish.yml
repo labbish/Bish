@@ -40,13 +40,12 @@ jobs:
         shell: pwsh
 
       - name: Publish Project
-          run: >
-            dotnet publish ./Bish/Bish.csproj
-            -c Release
-            -r ${{ matrix.runtime }}
-            --self-contained true
-            /p:PublishSingleFile=true
-            -o ./publish
+        run: dotnet publish ./Bish/Bish.csproj
+          -c Release
+          -r ${{ matrix.runtime }}
+          --self-contained true
+          /p:PublishSingleFile=true
+          -o ./publish
 
       - name: Upload artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4

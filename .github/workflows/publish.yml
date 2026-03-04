@@ -29,6 +29,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Use Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+
       - name: Set GH_TOKEN environment variable (Linux/Mac)
         if: ${{ matrix.os != 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
@@ -49,18 +54,34 @@ jobs:
         run: |
           dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
 
-      - name: Upload main artifact for ${{ matrix.os }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ./publish/Bish${{ matrix.asset_suffix }}
-          path: build/
-
       - name: Publish LSP project
         run: |
           dotnet publish ./BishLSP/BishLSP.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
+      
+      - name: Publish VSCode extension project
+        shell: bash
+        run: |
+          mkdir ./BishLSP/bish-vsc/bin
+          cp -r ./publish/. ./BishLSP/bish-vsc/bin
+          cd ./BishLSP/bish-vsc/bin
+          npm install
+          vsce package
+          cp bish-vsc-0.0.1.vsix ../../publish
+
+      - name: Upload main artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bish-${{ matrix.os }}
+          path: publish/Bish${{ matrix.asset_suffix }}
 
       - name: Upload LSP artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: ./publish/BishLSP${{ matrix.asset_suffix }}
-          path: build/
+          name: BishLSP-${{ matrix.os }}
+          path: publish/BishLSP${{ matrix.asset_suffix }}
+
+      - name: Upload VSCode extension artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bish-vsc.vsix
+          path: publish/bish-vsc-0.0.1.vsix

@@ -16,8 +16,4 @@
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1"/>
     </ItemGroup>
-
-    <PropertyGroup>
-        <CopyFiles>true</CopyFiles>
-    </PropertyGroup>
 </Project>

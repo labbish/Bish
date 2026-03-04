@@ -7,18 +7,16 @@ import { LanguageClient } from 'vscode-languageclient/node';
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-	const serverDll = path.join(__dirname, '../bin/BishLSP.dll');
+	const serverExe = path.join(__dirname, '../bin/BishLSP');
 
 	const serverOptions: ServerOptions = {
 		run: {
-			command: "dotnet",
-			args: [serverDll],
-			options: { cwd: path.dirname(serverDll) }
+			command: serverExe,
+			options: { cwd: path.dirname(serverExe) }
 		},
 		debug: {
-			command: "dotnet",
-			args: [serverDll],
-			options: { cwd: path.dirname(serverDll) }
+			command: serverExe,
+			options: { cwd: path.dirname(serverExe) }
 		}
 	};
 
@@ -29,12 +27,12 @@ export function activate(context: ExtensionContext) {
 	const runCommand = vscode.commands.registerCommand('bish.runFile', () => {
 		const activeEditor = vscode.window.activeTextEditor;
 		if (activeEditor) {
-			const runnerPath = path.join(__dirname, '../bin/Bish.dll');
+			const runnerPath = path.join(__dirname, '../bin/Bish');
 			const filePath = activeEditor.document.fileName;
 
 			const terminal = vscode.window.createTerminal(`Bish Run`);
 			terminal.show();
-			terminal.sendText(`dotnet ${runnerPath} -f "${filePath}"`);
+			terminal.sendText(`${runnerPath} -f "${filePath}"`);
 		}
 	});
 

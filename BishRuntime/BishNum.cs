@@ -63,6 +63,33 @@ public class BishNum(double value) : BishObject
     [Builtin(special: false)]
     public static BishInt Round(BishNum a) => BishInt.Of((int)Math.Round(a.Value));
 
+    [Builtin(special: false)]
+    public static BishNum Sin(BishNum a) => new(Math.Sin(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Cos(BishNum a) => new(Math.Cos(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Tan(BishNum a) => new(Math.Tan(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Asin(BishNum a) => new(Math.Asin(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Acos(BishNum a) => new(Math.Acos(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Atan(BishNum a) => new(Math.Atan(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Ln(BishNum a) => new(Math.Log(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Lg(BishNum a) => new(Math.Log10(a.Value));
+
+    [Builtin(special: false)]
+    public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
+
     // TODO: some more math methods
 
     public static implicit operator BishNum(BishInt x) => new(x.Value);

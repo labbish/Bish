@@ -1,6 +1,8 @@
-﻿using Antlr4.Runtime;
+﻿using System.Reflection;
+using Antlr4.Runtime;
 using BishBytecode;
 using BishRuntime;
+using BishSdk;
 
 namespace BishCompiler;
 
@@ -36,12 +38,31 @@ public static class BishCompiler
             {
                 var file = args[0].ExpectToBe<BishString>("file");
                 path = Path.GetFullPath(root is null ? file.Value : Path.Combine(root, file.Value));
-                var imported = Compile(File.ReadAllText(path), out var errors);
-                if (errors.Count != 0) throw new ArgumentException(errors[0].Message);
-                imported.Execute();
                 var module = new BishObject();
-                foreach (var (name, value) in imported.Scope.Vars)
-                    module.SetMember(name, value);
+                if (path.EndsWith(".dll"))
+                {
+                    var assembly = Assembly.LoadFrom(path);
+                    var types = assembly.GetTypes().Where(type =>
+                        type is { IsClass: true, IsAbstract: false, IsPublic: true } &&
+                        typeof(IPlugin).IsAssignableFrom(type)).ToList();
+                    foreach (var type in types)
+                    {
+                        var plugin = Activator.CreateInstance(type) as IPlugin;
+                        var exports = new PluginExports();
+                        plugin?.Initialize(exports);
+                        foreach (var (name, value) in exports.Exports)
+                            module.SetMember(name, value);
+                    }
+                }
+                else
+                {
+                    var imported = Compile(File.ReadAllText(path), out var errors);
+                    if (errors.Count != 0) throw new ArgumentException(errors[0].Message);
+                    imported.Execute();
+                    foreach (var (name, value) in imported.Scope.Vars)
+                        module.SetMember(name, value);
+                }
+
                 return module;
             }
             catch (BishException)

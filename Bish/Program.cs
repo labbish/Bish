@@ -1,6 +1,5 @@
 ﻿using BishBytecode.Bytecodes;
 using CommandLine;
-using String = BishBytecode.Bytecodes.String;
 
 namespace Bish;
 
@@ -26,7 +25,7 @@ public static class Program
                 if (options.Output is {} output)
                     File.WriteAllText(output, string.Join("\n", frame.Bytecodes.Select(BytecodeParser.ToString)));
                 if (options.SkipExecution) return;
-                frame.Execute();
+                Repl.Handled(() => frame.Execute());
                 if (options.Interactive) new Repl(frame.Scope).Loop();
                 break;
         }

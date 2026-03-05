@@ -72,7 +72,7 @@ public class Repl(BishScope? scope = null)
         return result;
     }
 
-    private static void Handled(Action action)
+    public static void Handled(Action action)
     {
         try
         {

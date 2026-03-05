@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\BishRuntime\BishRuntime.csproj">
+            <Private>false</Private>
+            <PrivateAssets>all</PrivateAssets>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\BishSdk\BishSdk.csproj">
+            <Private>false</Private>
+            <PrivateAssets>all</PrivateAssets>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <ItemGroup>
+            <PluginFiles Include="$(OutputPath)$(AssemblyName).dll" />
+        </ItemGroup>
+
+        <PropertyGroup>
+            <PluginsDir>$(SolutionDir)BishExamplePlugin/</PluginsDir>
+        </PropertyGroup>
+
+        <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(PluginsDir)" SkipUnchangedFiles="true" />
+    </Target>
+</Project>

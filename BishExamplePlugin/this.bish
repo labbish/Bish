@@ -1,0 +1,2 @@
+﻿{.this} := import('BishExamplePlugin.dll');
+print(this);

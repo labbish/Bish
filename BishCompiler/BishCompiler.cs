@@ -71,7 +71,7 @@ public static class BishCompiler
             }
             catch (Exception e)
             {
-                throw BishException.OfImport(e.Message, path);
+                throw BishException.OfImport(path, e.Message);
             }
         }));
         return frame;

@@ -45,6 +45,9 @@ public static class BishCompiler
                     var types = assembly.GetTypes().Where(type =>
                         type is { IsClass: true, IsAbstract: false, IsPublic: true } &&
                         typeof(IPlugin).IsAssignableFrom(type)).ToList();
+                    if (types.Count == 0)
+                        throw new ArgumentException($"Cannot find plugin initializer in {path}: " +
+                                                    $"found types {string.Join(", ", assembly.GetTypes())}, none of which implements IPlugin");
                     foreach (var type in types)
                     {
                         var plugin = Activator.CreateInstance(type) as IPlugin;
@@ -71,7 +74,7 @@ public static class BishCompiler
             }
             catch (Exception e)
             {
-                throw BishException.OfImport(path, e.Message);
+                throw BishException.OfImport(path, e.ToString());
             }
         }));
         return frame;

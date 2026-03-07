@@ -54,15 +54,9 @@ jobs:
         run: |
           dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
 
-      - name: Publish LSP project
-        run: |
-          dotnet publish ./BishLSP/BishLSP.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
-      
       - name: Publish VSCode extension project
         shell: bash
         run: |
-          mkdir ./BishLSP/bish-vsc/bin
-          cp -r ./publish/. ./BishLSP/bish-vsc/bin
           cd ./BishLSP/bish-vsc
           npm install
           npx @vscode/vsce package -o Bish-vsc.vsix
@@ -73,12 +67,6 @@ jobs:
         with:
           name: Bish-${{ matrix.os }}${{ matrix.asset_suffix }}
           path: publish/Bish${{ matrix.asset_suffix }}
-
-      - name: Upload LSP artifact for ${{ matrix.os }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: BishLSP-${{ matrix.os }}${{ matrix.asset_suffix }}
-          path: publish/BishLSP${{ matrix.asset_suffix }}
 
       - name: Upload VSCode extension artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4

@@ -19,4 +19,7 @@ internal class Options
 
     [Option('i', "interactive", Required = false, HelpText = "Enter REPL after executing.")]
     public bool Interactive { get; [UsedImplicitly] set; }
+
+    [Option('l', "lsp", Required = false, HelpText = "Run LSP only.")]
+    public bool Server { get; [UsedImplicitly] set; }
 }

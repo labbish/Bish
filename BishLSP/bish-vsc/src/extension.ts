@@ -1,23 +1,22 @@
-import path from 'path';
+import { execSync } from "node:child_process";
+
 import type { ExtensionContext } from 'vscode';
 import vscode from 'vscode';
 import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import { LanguageClient } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
-
-export function activate(context: ExtensionContext) {
-	const serverExe = path.join(__dirname, '../bin/BishLSP');
+export async function activate(context: ExtensionContext) {
+	try {
+		execSync(`bish -h`);
+	} catch {
+		await vscode.window.showErrorMessage("Cannot find bish!");
+		return;
+	}
 
 	const serverOptions: ServerOptions = {
-		run: {
-			command: serverExe,
-			options: { cwd: path.dirname(serverExe) }
-		},
-		debug: {
-			command: serverExe,
-			options: { cwd: path.dirname(serverExe) }
-		}
+		command: 'Bish',
+		args: ['-l']
 	};
 
 	const clientOptions: LanguageClientOptions = {
@@ -27,12 +26,11 @@ export function activate(context: ExtensionContext) {
 	const runCommand = vscode.commands.registerCommand('bish.runFile', () => {
 		const activeEditor = vscode.window.activeTextEditor;
 		if (activeEditor) {
-			const runnerPath = path.join(__dirname, '../bin/Bish');
 			const filePath = activeEditor.document.fileName;
 
 			const terminal = vscode.window.createTerminal(`Bish Run`);
 			terminal.show();
-			terminal.sendText(`${runnerPath} -f "${filePath}"`);
+			terminal.sendText(`Bish -f "${filePath}"`);
 		}
 	});
 
@@ -45,7 +43,7 @@ export function activate(context: ExtensionContext) {
 		clientOptions
 	);
 
-	client.start();
+	await client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {

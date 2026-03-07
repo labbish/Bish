@@ -40,7 +40,7 @@
                 },
                 {
                     "name": "keyword.other.pattern.bish",
-                    "match": "\\b(is|of|not|and|or|as|when)"
+                    "match": "\\b(is|of|not|and|or|as|when)\\b"
                 },
                 {
                     "name": "storage.type.bish",
@@ -64,15 +64,15 @@
                 },
                 {
                     "name": "entity.name.function.init.bish",
-                    "match": "\\b(init)"
+                    "match": "\\b(init)\\b"
                 },
                 {
                     "name": "entity.name.function.create.bish",
-                    "match": "\\b(create)"
+                    "match": "\\b(create)\\b"
                 },
                 {
                     "name": "entity.name.function.builtin.bish",
-                    "match": "\\b(print|input|import|reflect)"
+                    "match": "\\b(print|input|import|reflect)\\b"
                 }
             ]
         },
@@ -88,7 +88,7 @@
                 },
                 {
                     "name": "variable.other.bish",
-                    "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)"
+                    "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"
                 }
             ]
         },

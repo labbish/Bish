@@ -27,12 +27,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
 
     public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
 
-    public bool CanAssignTo(BishType other)
-    {
-        // Special case here
-        if (this == BishInt.StaticType && other == BishNum.StaticType) return true;
-        return LookupChain.Contains(other);
-    }
+    public bool CanAssignTo(BishType other) => LookupChain.Contains(other);
 
     public override string ToString() => Name;
 

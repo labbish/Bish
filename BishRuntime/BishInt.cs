@@ -12,7 +12,7 @@ public class BishInt : BishObject
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("int");
+    public new static readonly BishType StaticType = new("int", [BishNum.StaticType]);
 
     [Builtin("hook")]
     public static BishInt Create(BishObject _) => new(0);

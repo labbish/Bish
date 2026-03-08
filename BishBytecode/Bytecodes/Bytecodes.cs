@@ -192,10 +192,10 @@ public static class TagSlicer
     public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, List<BishBytecode> Code)
         where TStart : StartTag<TEnd> where TEnd : EndTag
     {
-        public BishFrame Execute(BishFrame frame, BishObject? stackTop = null)
+        public BishFrame Execute(BishFrame frame, Action<BishFrame>? before = null)
         {
             var inner = new BishFrame(Code, new BishScope(frame.Scope), frame);
-            if (stackTop is not null) inner.Stack.Push(stackTop);
+            before?.Invoke(inner);
             inner.Execute();
             return inner;
         }
@@ -343,19 +343,6 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
         var catchSlice = frame.TrySlice<CatchStart, CatchEnd>(Name);
         var finallySlice = frame.TrySlice<FinallyStart, FinallyEnd>(Name);
 
-        void HandledFinally(BishFrame? blockFrame = null)
-        {
-            var result = blockFrame?.ReturnValue;
-            if (finallySlice is null)
-            {
-                frame.ReturnValue = result;
-                return;
-            }
-
-            var finallyFrame = finallySlice.Execute(frame);
-            frame.ReturnValue = finallyFrame.ReturnValue ?? result;
-        }
-
         try
         {
             HandledFinally(trySlice.Execute(frame));
@@ -370,7 +357,7 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
 
             try
             {
-                HandledFinally(catchSlice.Execute(frame, tryException.Error));
+                HandledFinally(catchSlice.Execute(frame, inner => inner.Stack.Push(tryException.Error)));
             }
             catch (BishException)
             {
@@ -379,7 +366,21 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
             }
         }
 
-        base.Execute(frame); // Jumps to TryEnd
+        base.Execute(frame);
+        return;
+
+        void HandledFinally(BishFrame? blockFrame = null)
+        {
+            var result = blockFrame?.ReturnValue;
+            if (finallySlice is null)
+            {
+                frame.ReturnValue = result;
+                return;
+            }
+
+            var finallyFrame = finallySlice.Execute(frame);
+            frame.ReturnValue = finallyFrame.ReturnValue ?? result;
+        }
     }
 }
 
@@ -542,6 +543,32 @@ public record TryGetMember(string Name) : BishBytecode
         }
     }
 }
+
+public record WithStart(string Name, string? VarName) : StartTag<WithEnd>(Name)
+{
+    public override void Execute(BishFrame frame)
+    {
+        var manager = frame.Stack.Pop();
+        var slice = frame.Slice<WithStart, WithEnd>(Name);
+        var done = false;
+        try
+        {
+            slice.Execute(frame, inner => inner.Scope.DefVar(VarName, BishOperator.Call("hook_enter", [manager])));
+            done = true;
+            BishOperator.Call("hook_exit", [manager, BishNull.Instance]);
+        }
+        catch (BishException e)
+        {
+            if (done) throw;
+            var result = BishOperator.Call("hook_exit", [manager, e.Error]);
+            if (!BishBool.CallToBool(result)) throw;
+        }
+
+        base.Execute(frame);
+    }
+}
+
+public record WithEnd(string Name) : EndTag(Name);
 
 // ReSharper disable once UnusedType.Global
 public record DebugStack : BishBytecode

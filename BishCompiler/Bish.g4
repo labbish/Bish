@@ -4,7 +4,6 @@ program
     : stat* EOF
     ;
 
-// TODO: some kind of RAII/using/defer/with
 stat
     : expr END                                                  # ExprStat
     | BRK ID? END                                               # BreakStat
@@ -19,6 +18,7 @@ stat
     | TRY tryStat=stat (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
         (('=>' catchExpr=expr END) | ('{' catchStat+=stat* '}'))))?
         (FIN finallyStat=stat)?                                 # ErrorStat
+    | WTH '(' (name=ID ':')? expr ')' stat                      # WithStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat
@@ -264,6 +264,7 @@ AS  : 'as' ;
 IS  : 'is' ;
 SWC : 'switch' ;
 CAS : 'case' ;
+WTH : 'with' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

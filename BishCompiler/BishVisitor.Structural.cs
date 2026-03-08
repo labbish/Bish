@@ -132,4 +132,16 @@ public partial class BishVisitor
                 : [new FinallyStart(tag), ..VisitOrNull(@finally) ?? [new Nop()], new FinallyEnd(tag)];
         return [..tryPart, ..catchPart, ..finallyPart];
     }
+
+    public override Codes VisitWithStat(BishParser.WithStatContext context)
+    {
+        var tag = Symbols.Get("with");
+        return
+        [
+            ..Visit(context.expr()),
+            new WithStart(tag, context.name?.Text),
+            ..Visit(context.stat()),
+            new WithEnd(tag)
+        ];
+    }
 }

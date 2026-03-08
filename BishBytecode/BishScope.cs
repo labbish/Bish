@@ -36,7 +36,8 @@ public class BishScope
             .WithExtraMsg(tip);
     }
 
-    public BishObject DefVar(string name, BishObject value) => Discard(name) ? value : Vars[name] = value;
+    public BishObject DefVar(string? name, BishObject value) =>
+        name is null || Discard(name) ? value : Vars[name] = value;
 
     public BishObject? TrySetVar(string name, BishObject value) =>
         Discard(name) ? value : Vars.ContainsKey(name) ? Vars[name] = value : Outer?.TrySetVar(name, value);
@@ -54,9 +55,9 @@ public class BishScope
 
     public static readonly Dictionary<string, BishObject> GlobalVars = [];
 
-    public static readonly Dictionary<string, BishObject> BuiltinModules = [];
-
     public static BishScope Globals => new(vars: new Dictionary<string, BishObject>(GlobalVars));
+
+    public static readonly Dictionary<string, BishObject> BuiltinModules = [];
 
     public static BishNull Print([Rest] BishList args)
     {
@@ -93,14 +94,7 @@ public class BishScope
         GlobalVars.Add("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         GlobalVars.Add("IterationStop", BishError.IteratorStopType);
 
-        BuiltinModules.Add("thread", new BishObject
-        {
-            Members = new Dictionary<string, BishObject>
-            {
-                ["Thread"] = BishThread.StaticType,
-                ["Lock"] = BishThread.Lock
-            }
-        });
+        BuiltinModules.Add("thread", BishThreadModule.Module);
     }
 }
 

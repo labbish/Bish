@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace BishRuntime;
 
 public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T : class;
 
@@ -12,6 +14,7 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
         (DefType is null ? "" : DefType.Name + " ") + (Rest ? "..." : "") + Name +
         (Default is null ? "" : "=" + Default);
 
+    [return: NotNullIfNotNull(nameof(arg))]
     public BishObject? Match(BishObject? arg)
     {
         if (arg is null) return Default;
@@ -19,11 +22,16 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
     }
 }
 
-public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, BishObject> func, string? tag = null) : BishObject
+public class BishFunc(
+    string name,
+    List<BishArg> inArgs,
+    Func<List<BishObject>, BishObject> func,
+    string? tag = null,
+    bool noCheck = false) : BishObject
 {
     public string? Tag => tag;
     public string Name => name;
-    public List<BishArg> Args => CheckedArgs<BishArg, BishObject>(inArgs);
+    public readonly List<BishArg> Args = noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs);
     public Func<List<BishObject>, BishObject> Func => func;
     public BishObject? BoundSelf;
 
@@ -55,13 +63,13 @@ public class BishFunc(string name, List<BishArg> inArgs, Func<List<BishObject>, 
 
     public List<BishObject> Match(List<BishObject> args)
     {
-        if (Args.Any(arg => arg.Rest))
+        if (Args.LastOrDefault()?.Rest == true)
         {
             var normal = Args[..^1];
             var rest = Args[^1];
             if (args.Count < normal.Count) throw BishException.OfArgument_Count(args.Count, min: normal.Count);
-            return normal.Select((arg, i) => arg.Match(args[i])!)
-                .Concat([rest.Match(new BishList(args[normal.Count..]))!]).ToList();
+            return normal.Select((arg, i) => arg.Match(args[i]))
+                .Concat([rest.Match(new BishList(args[normal.Count..]))]).ToList();
         }
 
         var minArgs = Args.Count(arg => arg.Default is null);

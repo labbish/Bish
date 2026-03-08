@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 public class BishList(IList<BishObject> list) : BishObject
 {
@@ -194,45 +192,5 @@ public static class IListHelper
                     return i;
             return -1;
         }
-    }
-}
-
-public class BishTypedListProxy<T>(List<T> list) : IList<BishObject> where T : BishObject
-{
-    public List<T> List => list;
-
-    public IEnumerator<BishObject> GetEnumerator() => list.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    private static T ToT(BishObject item) =>
-        item as T ?? throw BishException.OfType_Argument(item, BishType.GetStaticType(typeof(T)));
-
-    public void Add(BishObject item) => List.Add(ToT(item));
-
-    public void Clear() => List.Clear();
-
-    public bool Contains(BishObject item) => item is T t && List.Contains(t);
-
-    public void CopyTo(BishObject[] array, int arrayIndex)
-    {
-        // God knows why I can't use List.CopyTo(array, arrayIndex). It looks pretty safe to me.
-        for (var i = 0; i < List.Count; i++) array[arrayIndex + i] = List[i];
-    }
-
-    public bool Remove(BishObject item) => item is T t && List.Remove(t);
-
-    public int Count => List.Count;
-    public bool IsReadOnly => false;
-    public int IndexOf(BishObject item) => item is T t ? List.IndexOf(t) : -1;
-
-    public void Insert(int index, BishObject item) => List.Insert(index, ToT(item));
-
-    public void RemoveAt(int index) => List.RemoveAt(index);
-
-    public BishObject this[int index]
-    {
-        get => List[index];
-        set => List[index] = ToT(value);
     }
 }

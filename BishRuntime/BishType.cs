@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Collections;
+
+namespace BishRuntime;
 
 public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
 {
@@ -27,7 +29,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
 
     public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
 
-    public bool CanAssignTo(BishType other) => LookupChain.Contains(other);
+    public bool CanAssignTo(BishType other) => this == other || LookupChain.Contains(other);
 
     public override string ToString() => Name;
 
@@ -42,9 +44,10 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
         type.GetField("StaticType")?.GetValue(null) as BishType ??
         throw new ArgumentException($"Cannot find field `StaticType` on type {type}");
 
-    public BishType WithMRORoot(BishType mroRoot) =>
-        new(Name, Parents, GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot))
-            { Members = Members };
+    public BishType WithMRORoot(BishType mroRoot) => mroRoot == this
+        ? this
+        : new BishType(Name, Parents,
+            GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot)) { Members = Members };
 
     public override BishTypeReflect Reflect() => new(this);
 
@@ -60,11 +63,69 @@ public class BishTypeReflect(BishType type) : BishReflect(type)
     public new static readonly BishType StaticType = new("reflect", [BishReflect.StaticType]);
 
     [Builtin("hook")]
-    public static BishList Get_parents(BishTypeReflect self) =>
-        new(new BishTypedListProxy<BishType>(self.Type.Parents));
-    
+    public static BishList Get_parents(BishTypeReflect self) => new(new ParentsProxyList(self.Type, self.Type.Parents));
+
     [Builtin("hook")]
     public static BishList Get_MRO(BishTypeReflect self) => new(self.Type.GetMRO().ToList<BishObject>());
 
     static BishTypeReflect() => BishBuiltinBinder.Bind<BishTypeReflect>();
+}
+
+public class ParentsProxyList(BishType type, List<BishType> list) : IList<BishObject>
+{
+    public BishType Type => type;
+    public List<BishType> List => list;
+
+    public IEnumerator<BishObject> GetEnumerator() => list.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    private BishType Convert(BishObject item)
+    {
+        if (item is not BishType t) throw BishException.OfType_Argument(item, BishType.StaticType);
+        Refresh();
+        return t;
+    }
+
+    private void Refresh() => Type.ClearMROCache();
+
+    public void Add(BishObject item) => List.Add(Convert(item));
+
+    public void Clear()
+    {
+        Refresh();
+        List.Clear();
+    }
+
+    public bool Contains(BishObject item) => item is BishType t && List.Contains(t);
+
+    public void CopyTo(BishObject[] array, int arrayIndex)
+    {
+        // God knows why I can't use List.CopyTo(array, arrayIndex). It looks pretty safe to me.
+        for (var i = 0; i < List.Count; i++) array[arrayIndex + i] = List[i];
+    }
+
+    public bool Remove(BishObject item)
+    {
+        Refresh();
+        return item is BishType t && List.Remove(t);
+    }
+
+    public int Count => List.Count;
+    public bool IsReadOnly => false;
+    public int IndexOf(BishObject item) => item is BishType t ? List.IndexOf(t) : -1;
+
+    public void Insert(int index, BishObject item) => List.Insert(index, Convert(item));
+
+    public void RemoveAt(int index)
+    {
+        Refresh();
+        List.RemoveAt(index);
+    }
+
+    public BishObject this[int index]
+    {
+        get => List[index];
+        set => List[index] = Convert(value);
+    }
 }

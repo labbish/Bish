@@ -17,7 +17,7 @@ public class BishScope
             {
                 ReflectDefaultNull => new BishScopeReflect(this),
                 { } obj => obj.Reflect()
-            }));
+            }, noCheck: true));
     }
 
     internal class ReflectDefaultNull : BishObject

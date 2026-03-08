@@ -78,18 +78,15 @@ public static partial class BishOperator
     public static BishObject? TryCall(string name, List<BishObject> args) =>
         BishException.Ignored(() => Call(name, args));
 
-    public static BishObject Call(string name, List<BishObject> args, bool noSpecial = false)
+    public static BishObject Call(string name, List<BishObject> args)
     {
-        var special = GetSpecialMethod(name);
-        if (!noSpecial && special?.Default is not null)
-            return BishException.Ignored(() => Call(name, args, true)) ?? special.Default();
-
         List<BishError> errors = [];
         foreach (var arg in args)
         {
             try
             {
-                return arg.Type.GetMember(name, BishLookupMode.NoBind).Call(args);
+                var op = arg.Type.TryGetMember(name, BishLookupMode.NoBind);
+                if (op is not null) return op.Call(args);
             }
             catch (BishException e)
             {
@@ -97,7 +94,8 @@ public static partial class BishOperator
             }
         }
 
-        throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
+        var special = GetSpecialMethod(name);
+        return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
     }
 
     public static BishBool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}");

@@ -2,7 +2,14 @@
 
 public partial class BishType
 {
-    public List<BishType> GetMRO()
+    
+    private List<BishType>? _mroCache;
+    
+    public void ClearMROCache() => _mroCache = null;
+
+    public List<BishType> GetMRO() => (_mroCache ??= CalcMRO()).ToList();
+    
+    private List<BishType> CalcMRO()
     {
         if (Parents.Count == 0) return [this];
         var parentMRO = Parents.Select(p => p.GetMRO()).ToList();

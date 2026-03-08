@@ -14,6 +14,7 @@ This repository consists of 8 parts:
 * **BishCompiler** - The compiler which transforms Bish code into bytecode.
   - [ANTLR4](https://www.antlr.org/) - A powerful parser generator.
 * **BishBytecode** - To run bytecode and interact with the VM.
+* **BishLib** - Builtin Libraries.
 * **BishRuntime** - The VM and object model.
 * **BishTest** - Unit tests.
   - [xUnit](https://xunit.net) - A free, open source, community-focused unit testing tool for .NET.

@@ -4,6 +4,7 @@ program
     : stat* EOF
     ;
 
+// TODO: some kind of RAII/using/defer/with
 stat
     : expr END                                                  # ExprStat
     | BRK ID? END                                               # BreakStat

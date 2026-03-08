@@ -1,4 +1,5 @@
-﻿using BishRuntime;
+﻿using BishLib;
+using BishRuntime;
 
 namespace BishBytecode;
 
@@ -53,6 +54,8 @@ public class BishScope
 
     public static readonly Dictionary<string, BishObject> GlobalVars = [];
 
+    public static readonly Dictionary<string, BishObject> BuiltinModules = [];
+
     public static BishScope Globals => new(vars: new Dictionary<string, BishObject>(GlobalVars));
 
     public static BishNull Print([Rest] BishList args)
@@ -89,6 +92,15 @@ public class BishScope
         GlobalVars.Add("NameError", BishError.NameErrorType);
         GlobalVars.Add("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         GlobalVars.Add("IterationStop", BishError.IteratorStopType);
+
+        BuiltinModules.Add("thread", new BishObject
+        {
+            Members = new Dictionary<string, BishObject>
+            {
+                ["Thread"] = BishThread.StaticType,
+                ["Lock"] = BishThread.Lock
+            }
+        });
     }
 }
 

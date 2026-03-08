@@ -92,7 +92,7 @@ public class BishList(IList<BishObject> list) : BishObject
         var result = GetIndex(self, x);
         switch (x)
         {
-            case BishInt index: self.List.RemoveAt(index.Value); break;
+            case BishInt index: self.List.RemoveAt(index.Value.Regularize(self.List.Count)); break;
             case BishRange range:
                 var indexes = range.Regularize(self.List.Count).ToInts()
                     .Select(i => i.Value).OrderDescending().ToList();

@@ -34,10 +34,11 @@ public static class BishCompiler
         frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file", BishString.StaticType)], args =>
         {
             var path = "(unresolved)";
+            var file = args[0].ExpectToBe<BishString>("file").Value;
+            if (BishScope.BuiltinModules.TryGetValue(file, out var mod)) return mod;
             try
             {
-                var file = args[0].ExpectToBe<BishString>("file");
-                path = Path.GetFullPath(root is null ? file.Value : Path.Combine(root, file.Value));
+                path = Path.GetFullPath(root is null ? file : Path.Combine(root, file));
                 var module = new BishObject();
                 if (path.EndsWith(".dll"))
                 {

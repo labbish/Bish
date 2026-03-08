@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishSdk", "BishSdk\BishSdk.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishExamplePlugin", "BishExamplePlugin\BishExamplePlugin.csproj", "{7A752605-1D7C-46C6-976E-80DA983A1A75}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishLib", "BishLib\BishLib.csproj", "{65876379-E648-4762-B744-6271256F7192}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{7A752605-1D7C-46C6-976E-80DA983A1A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A752605-1D7C-46C6-976E-80DA983A1A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A752605-1D7C-46C6-976E-80DA983A1A75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65876379-E648-4762-B744-6271256F7192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65876379-E648-4762-B744-6271256F7192}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65876379-E648-4762-B744-6271256F7192}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65876379-E648-4762-B744-6271256F7192}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

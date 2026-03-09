@@ -61,8 +61,7 @@ public class BishScope
 
     public static BishNull Print([Rest] BishList args)
     {
-        Console.Write(string.Join("", args.List.Select(arg =>
-            arg.GetMember("toString").Call([]).ExpectToBe<BishString>("toString").Value)));
+        Console.Write(string.Join("", args.List.Select(BishString.CallToString)));
         Console.Out.Flush();
         return BishNull.Instance;
     }
@@ -95,6 +94,7 @@ public class BishScope
         GlobalVars.Add("IterationStop", BishError.IteratorStopType);
 
         BuiltinModules.Add("thread", BishThreadModule.Module);
+        BuiltinModules.Add("file", BishFileModule.Module);
     }
 }
 

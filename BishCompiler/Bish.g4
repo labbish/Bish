@@ -14,11 +14,14 @@ stat
     | tag? WHL '(' expr ')' stat                                # WhileStat
     | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
     | tag? FOR '(' forStats ')' stat                            # ForStat
-    | tag? FOR '(' name=ID set=':'? ':' expr ')' stat           # ForIterStat
+    // obj is Setable
+    | tag? FOR '(' obj=expr set=':'? ':' iter=expr ')' stat     # ForIterStat
     | TRY tryStat=stat (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
         (('=>' catchExpr=expr END) | ('{' catchStat+=stat* '}'))))?
         (FIN finallyStat=stat)?                                 # ErrorStat
-    | WTH '(' (name=ID ':')? expr ')' stat                      # WithStat
+    // obj is Setable
+    // Unlike ForIterStat, we don't support with (obj :: cont) because it's usually wrong here.
+    | WTH '(' (obj=expr ':')? cont=expr ')' stat                # WithStat
     | SWC expr '{' caseStat* '}'                                # SwitchStat
     | '{' stat* '}'                                             # BlockStat
     | END                                                       # EmptyStat

@@ -104,6 +104,10 @@ public class BishList(IList<BishObject> list) : BishObject
         return result;
     }
 
+    [Builtin("hook")]
+    public static BishList Get_entries(BishList self) =>
+        new(self.List.Select((item, i) => new BishList([BishInt.Of(i), item])).ToList<BishObject>());
+
     [Builtin]
     public static BishListIterator Iter(BishList self) => new(self.List);
 
@@ -149,8 +153,6 @@ public class BishList(IList<BishObject> list) : BishObject
     [Builtin(special: false)]
     public static BishBool Contains(BishList self, BishObject obj) =>
         BishBool.Of(self.List.Any(o => BishOperator.Eq(o, obj).Value));
-
-    // TODO: some more methods
 
     static BishList() => BishBuiltinBinder.Bind<BishList>();
 }

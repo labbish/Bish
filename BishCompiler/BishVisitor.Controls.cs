@@ -91,12 +91,17 @@ public partial class BishVisitor
     public override Codes VisitForIterStat(BishParser.ForIterStatContext context)
     {
         var (tag, end) = Symbols.GetPair("for_iter");
-        var name = context.name.Text;
         return WrapLoop([
-            ..Visit(context.expr()),
+            ..Visit(context.iter),
             Op("iter", 1),
             new ForIter(end).Tagged(tag),
-            ..Wrap([context.set is null ? new Def(name) : new Set(name), new Pop()], Visit(context.stat())),
+            new DebugStack(),
+            ..Wrap(
+                [new Move("$for")],
+                context.set is null ? Def(context.obj, [new Del("$for")]) : Set(context.obj, null, [new Del("$for")]),
+                [new Pop()],
+                Visit(context.stat())
+            ),
             new Jump(tag),
             new Pop().Tagged(end)
         ], end, tag, context.tag()?.ID().GetText(), true);

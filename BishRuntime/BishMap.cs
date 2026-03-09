@@ -101,7 +101,7 @@ public class BishMap(List<Entry> entries) : BishObject
     public static BishList Get_keys(BishMap self) => new(self.Entries.Select(entry => entry.Key).ToList());
 
     [Builtin("hook")]
-    public static BishList get_values(BishMap self) => new(self.Entries.Select(entry => entry.Value).ToList());
+    public static BishList Get_values(BishMap self) => new(self.Entries.Select(entry => entry.Value).ToList());
 
     [Builtin("hook")]
     public static BishList Get_entries(BishMap self) =>

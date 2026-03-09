@@ -102,4 +102,12 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Execute("x:=0;out:for(i:range(5))for(j:range(5)){x+=i+j;if(i==3&&j==2)continue out;}");
         Scope.GetVar("x").Should().BeEquivalentTo(I(87));
     }
+
+    [Fact]
+    public void TestForDeconstruct()
+    {
+        Execute("s:='';for([i,c]:list('abcde').entries)s+=i*c;");
+        // ReSharper disable once StringLiteralTypo
+        Scope.GetVar("s").Should().BeEquivalentTo(S("bccdddeeee"));
+    }
 }

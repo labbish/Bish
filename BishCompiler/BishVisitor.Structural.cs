@@ -138,8 +138,10 @@ public partial class BishVisitor
         var tag = Symbols.Get("with");
         return
         [
-            ..Visit(context.expr()),
-            new WithStart(tag, context.name?.Text),
+            ..Visit(context.cont),
+            new WithStart(tag),
+            ..context.obj is null ? new Codes() : [new Move("$with"), ..Def(context.obj, [new Del("$with")])],
+            new Pop(),
             ..Visit(context.stat()),
             new WithEnd(tag)
         ];

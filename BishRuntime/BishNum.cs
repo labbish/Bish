@@ -90,8 +90,6 @@ public class BishNum(double value) : BishObject
     [Builtin(special: false)]
     public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
 
-    // TODO: some more math methods
-
     public static implicit operator BishNum(BishInt x) => new(x.Value);
 
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);

@@ -79,8 +79,6 @@ public partial class BishString(string value) : BishObject
     public static BishList Split(BishString self, BishString sep) =>
         new(self.Value.Split(sep.Value).Select(s => new BishString(s)).ToList<BishObject>());
 
-    // TODO: some more string methods
-
     static BishString() => BishBuiltinBinder.Bind<BishString>();
 
     [GeneratedRegex(@"\{(\d*)\}")]

@@ -109,7 +109,7 @@ public static class IteratorHelper
 
     extension(BishObject obj)
     {
-        internal BishObject Iterator() => BishOperator.Call("iter", [obj]);
-        internal IEnumerable<BishObject> ToEnumerable() => Enumerate(obj.Iterator());
+        public BishObject Iterator() => BishOperator.Call("iter", [obj]);
+        public IEnumerable<BishObject> ToEnumerable() => Enumerate(obj.Iterator());
     }
 }

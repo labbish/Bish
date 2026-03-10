@@ -10,6 +10,7 @@ public static class BishFileModule
         Members = new Dictionary<string, BishObject>
         {
             ["Reader"] = BishReader.StaticType,
+            ["Writer"] = BishWriter.StaticType
         }
     };
 

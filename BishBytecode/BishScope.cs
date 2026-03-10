@@ -95,6 +95,7 @@ public class BishScope
 
         BuiltinModules.Add("thread", BishThreadModule.Module);
         BuiltinModules.Add("file", BishFileModule.Module);
+        BuiltinModules.Add("random", BishRandomModule.Module);
     }
 }
 

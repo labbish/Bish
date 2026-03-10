@@ -553,9 +553,10 @@ public record WithStart(string Name) : StartTag<WithEnd>(Name)
         var done = false;
         try
         {
-            slice.Execute(frame, inner => inner.Stack.Push(BishOperator.Call("hook_enter", [manager])));
+            var inner = slice.Execute(frame, inner => inner.Stack.Push(BishOperator.Call("hook_enter", [manager])));
             done = true;
             BishOperator.Call("hook_exit", [manager, BishNull.Instance]);
+            if (inner.ReturnValue is not null) frame.ReturnValue = inner.ReturnValue;
         }
         catch (BishException e)
         {

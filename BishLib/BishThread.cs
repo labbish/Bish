@@ -39,9 +39,6 @@ public class BishThread(Thread thread) : BishObject
     }
 
     [Builtin(special: false)]
-    public static void Interrupt(BishThread self) => self.Thread.Interrupt();
-
-    [Builtin(special: false)]
     public static void Sleep(BishInt ms) => Thread.Sleep(ms.Value);
 
     [Builtin("hook", special: false)]

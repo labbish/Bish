@@ -1,4 +1,4 @@
-﻿namespace BishTest.Compiler;
+﻿namespace BishTest;
 
 [Collection("opt")]
 public class CompilerTest(OptimizeInfoFixture fixture) : Test
@@ -25,11 +25,13 @@ public class CompilerTest(OptimizeInfoFixture fixture) : Test
         frame.Scope.Vars.Keys.Where(key => key.StartsWith('$')).Should().BeEmpty();
     }
 
-    protected void ExpectResult(string expr, BishObject result)
+    protected BishObject Result(string expr)
     {
         Execute($"result:={expr};");
-        Scope.GetVar("result").Should().BeEquivalentTo(result);
+        return Scope.GetVar("result");
     }
+
+    protected void ExpectResult(string expr, BishObject result) => Result(expr).Should().BeEquivalentTo(result);
 }
 
 [CollectionDefinition("opt")]

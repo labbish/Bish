@@ -95,7 +95,6 @@ public partial class BishVisitor
             ..Visit(context.iter),
             Op("iter", 1),
             new ForIter(end).Tagged(tag),
-            new DebugStack(),
             ..Wrap(
                 [new Move("$for")],
                 context.set is null ? Def(context.obj, [new Del("$for")]) : Set(context.obj, null, [new Del("$for")]),

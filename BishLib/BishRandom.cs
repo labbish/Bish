@@ -35,29 +35,28 @@ public class BishRandom(Random random) : BishObject
     public static BishNum Rand(BishRandom self) => new(self.Random.NextDouble());
 
     [Builtin(special: false)]
-    public static BishNum RandInt(BishRandom self, BishInt min, BishInt max) => min.Value > max.Value
+    public static BishInt RandInt(BishRandom self, BishInt min, BishInt max) => min.Value > max.Value
         ? throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}", [])
-        : new BishNum(self.Random.Next(min.Value, max.Value));
+        : BishInt.Of(self.Random.Next(min.Value, max.Value));
 
-    public BishObject Choice(BishObject iter)
+    public BishObject Choice(BishObject[] array) => array[Random.Next(array.Length)];
+
+    [Builtin(special: false)]
+    public static BishObject Choice(BishRandom self, BishObject iter) => self.Choice(iter.ToEnumerable().ToArray());
+
+    [Builtin(special: false)]
+    public static BishList Choices(BishRandom self, BishObject iter, BishInt count)
     {
         var array = iter.ToEnumerable().ToArray();
-        return array[Random.Next(array.Length)];
+        return new BishList(Enumerable.Range(0, count.Value).Select(_ => self.Choice(array)).ToList());
     }
-
-    [Builtin(special: false)]
-    public static BishObject Choice(BishRandom self, BishObject iter) => self.Choice(iter);
-
-    [Builtin(special: false)]
-    public static BishList Choices(BishRandom self, BishObject iter, BishInt count) =>
-        new(Enumerable.Range(0, count.Value).Select(_ => self.Choice(iter)).ToList());
 
     [Builtin(special: false)]
     public static BishList Sample(BishRandom self, BishObject iter, BishInt count)
     {
         var shuffled = self.Shuffled(iter);
         return shuffled.Length >= count.Value
-            ? new BishList(shuffled)
+            ? new BishList(shuffled[..count.Value])
             : throw BishException.OfArgument($"Cannot select {count.Value} samples from {shuffled.Length} items", []);
     }
 

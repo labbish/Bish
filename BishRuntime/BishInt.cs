@@ -41,14 +41,8 @@ public class BishInt : BishObject
     public static BishInt Mul(BishInt a, BishInt b) => new(a.Value * b.Value);
 
     [Builtin("op")]
-    public static BishNum Div(BishInt a, BishInt b) => new((double)a.Value / b.Value);
-
-    [Builtin("op")]
     public static BishInt Mod(BishInt a, BishInt b) =>
-        b.Value != 0 ? BishInt.Of(a.Value % b.Value) : throw BishException.OfZeroDivision();
-
-    [Builtin("op")]
-    public static BishNum Pow(BishInt a, BishInt b) => new(Math.Pow(a.Value, b.Value));
+        b.Value != 0 ? Of(a.Value % b.Value) : throw BishException.OfZeroDivision();
 
     [Builtin(special: false)]
     public static BishInt Abs(BishInt a) => new(Math.Abs(a.Value));

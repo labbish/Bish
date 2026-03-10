@@ -29,35 +29,35 @@ public class OperatorTest : Test
     [Fact]
     public void TestEquality()
     {
-        BishOperator.Call("op_eq", [I(1), I(1)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_eq", [I(1), I(2)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_eq", [I(1), N(1)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_eq", [N(1), I(1)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_eq", [I(1), N(1.1)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_eq", [new BishObject(), new BishObject()]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_eq", [I(1), S("")]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("op_eq", [I(1), I(1)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_eq", [I(1), I(2)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_eq", [I(1), N(1)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_eq", [N(1), I(1)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_eq", [I(1), N(1.1)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_eq", [new BishObject(), new BishObject()]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_eq", [I(1), S("")]).Should().BeEquivalentTo(False);
     }
 
     [Fact]
     public void TestAutoCompare()
     {
-        BishOperator.Call("op_neq", [I(1), I(1)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_neq", [I(1), I(2)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("op_neq", [I(1), I(1)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_neq", [I(1), I(2)]).Should().BeEquivalentTo(True);
 
-        BishOperator.Call("op_lt", [I(1), I(2)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_lt", [I(2), I(2)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_lt", [I(2), I(1)]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("op_lt", [I(1), I(2)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_lt", [I(2), I(2)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_lt", [I(2), I(1)]).Should().BeEquivalentTo(False);
 
-        BishOperator.Call("op_le", [I(1), I(2)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_le", [I(2), I(2)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_le", [I(2), I(1)]).Should().BeEquivalentTo(B(false));
+        BishOperator.Call("op_le", [I(1), I(2)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_le", [I(2), I(2)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_le", [I(2), I(1)]).Should().BeEquivalentTo(False);
 
-        BishOperator.Call("op_gt", [I(1), I(2)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_gt", [I(2), I(2)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_gt", [I(2), I(1)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("op_gt", [I(1), I(2)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_gt", [I(2), I(2)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_gt", [I(2), I(1)]).Should().BeEquivalentTo(True);
 
-        BishOperator.Call("op_ge", [I(1), I(2)]).Should().BeEquivalentTo(B(false));
-        BishOperator.Call("op_ge", [I(2), I(2)]).Should().BeEquivalentTo(B(true));
-        BishOperator.Call("op_ge", [I(2), I(1)]).Should().BeEquivalentTo(B(true));
+        BishOperator.Call("op_ge", [I(1), I(2)]).Should().BeEquivalentTo(False);
+        BishOperator.Call("op_ge", [I(2), I(2)]).Should().BeEquivalentTo(True);
+        BishOperator.Call("op_ge", [I(2), I(1)]).Should().BeEquivalentTo(True);
     }
 }

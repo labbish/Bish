@@ -12,30 +12,30 @@ public class OperatorTest : CompilerTest
     public static BishBool F()
     {
         Count++;
-        return B(false);
+        return False;
     }
 
     [Fact]
     public void TestOperator()
     {
         ExpectResult("-5/2+3*(4-1^6)", N(6.5));
-        ExpectResult("1<2&&3>=3&&5<=>7==-1", B(true));
+        ExpectResult("1<2&&3>=3&&5<=>7==-1", True);
     }
 
     [Fact]
     public void TestLogic()
     {
-        ExpectResult("true&&true", B(true));
-        ExpectResult("true&&false", B(false));
-        ExpectResult("false&&true", B(false));
-        ExpectResult("false&&false", B(false));
-        ExpectResult("true||true", B(true));
-        ExpectResult("true||false", B(true));
-        ExpectResult("false||true", B(true));
-        ExpectResult("false||false", B(false));
+        ExpectResult("true&&true", True);
+        ExpectResult("true&&false", False);
+        ExpectResult("false&&true", False);
+        ExpectResult("false&&false", False);
+        ExpectResult("true||true", True);
+        ExpectResult("true||false", True);
+        ExpectResult("false||true", True);
+        ExpectResult("false||false", False);
 
         Count = 0;
-        ExpectResult("f()&&f()", B(true));
+        ExpectResult("f()&&f()", True);
         Count.Should().Be(1);
 
         Count = 0;
@@ -49,18 +49,18 @@ public class OperatorTest : CompilerTest
     {
         Count = 0;
         Execute("b:=true;b&&=f();");
-        ExpectResult("b", B(false));
+        ExpectResult("b", False);
         Count.Should().Be(1);
         Execute("b:=false;b&&=f();");
-        ExpectResult("b", B(false));
+        ExpectResult("b", False);
         Count.Should().Be(1);
 
         Count = 0;
         Execute("o:=0;o.x=true;o.x&&=f();");
-        ExpectResult("o.x", B(false));
+        ExpectResult("o.x", False);
         Count.Should().Be(1);
         Execute("o:=0;o.x=false;o.x&&=f();");
-        ExpectResult("o.x", B(false));
+        ExpectResult("o.x", False);
         Count.Should().Be(1);
     }
 
@@ -68,12 +68,12 @@ public class OperatorTest : CompilerTest
     public void TestRefEqual()
     {
         Execute("x:=y:=object();z:=x;w:=object();");
-        ExpectResult("x===y", B(true));
-        ExpectResult("x!==z", B(false));
-        ExpectResult("x===w", B(false));
+        ExpectResult("x===y", True);
+        ExpectResult("x!==z", False);
+        ExpectResult("x===w", False);
         
-        ExpectResult("null===null", B(true));
-        ExpectResult("true===true", B(true));
-        ExpectResult("false===false", B(true));
+        ExpectResult("null===null", True);
+        ExpectResult("true===true", True);
+        ExpectResult("false===false", True);
     }
 }

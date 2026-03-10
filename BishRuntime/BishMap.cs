@@ -39,7 +39,7 @@ public class BishMap(List<Entry> entries) : BishObject
 
     public virtual BishObject Add(Entry entry)
     {
-        var index = Entries.FindIndex(e => BishOperator.Eq(e.Key, entry.Key).Value);
+        var index = Entries.FindIndex(e => BishOperator.Eq(e.Key, entry.Key));
         if (index != -1) Entries[index] = entry;
         else Entries.Add(entry);
         return entry.Value;
@@ -62,7 +62,7 @@ public class BishMap(List<Entry> entries) : BishObject
 
     [Builtin("op")]
     public static BishBool Eq(BishMap a, BishMap b) => BishBool.Of(a.Entries.All(x =>
-        b.Entries.Any(y => BishOperator.Eq(x.Key, y.Key).Value && BishOperator.Eq(x.Value, y.Value).Value)));
+        b.Entries.Any(y => BishOperator.Eq(x.Key, y.Key) && BishOperator.Eq(x.Value, y.Value))));
 
     [Builtin]
     public static BishBool Bool(BishMap self) => BishBool.Of(self.Entries.Count != 0);
@@ -70,7 +70,7 @@ public class BishMap(List<Entry> entries) : BishObject
     [Builtin("op")]
     public static BishObject GetIndex(BishMap self, BishObject key)
     {
-        var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key).Value);
+        var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key));
         return found is not null ? found.Value : throw BishException.OfArgument_KeyNotFound(key);
     }
 
@@ -87,7 +87,7 @@ public class BishMap(List<Entry> entries) : BishObject
     [Builtin("op")]
     public static BishObject DelIndex(BishMap self, BishObject key)
     {
-        var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key).Value);
+        var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key));
         return found is null ? throw BishException.OfArgument_KeyNotFound(key) : self.Remove(found);
     }
 

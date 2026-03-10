@@ -106,7 +106,7 @@ public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     [Fact]
     public void TestForDeconstruct()
     {
-        Execute("s:='';for([i,c]:list('abcde').entries)s+=i*c;");
+        Execute("s:='';for([i,c]:list('abcde').iter().entries)s+=i*c;");
         // ReSharper disable once StringLiteralTypo
         Scope.GetVar("s").Should().BeEquivalentTo(S("bccdddeeee"));
     }

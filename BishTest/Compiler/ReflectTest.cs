@@ -14,13 +14,13 @@ public class ReflectTest : CompilerTest
     public void TestObjectReflect()
     {
         Execute("r:=reflect(c);");
-        ExpectResult("r.object===c", B(true));
+        ExpectResult("r.object===c", True);
         ExpectResult("r.members['a']", I(1));
         ExpectResult("r.members['b']", I(1));
         Execute("r.members['a']=2;del r.members['b'];");
         ExpectResult("c.a", I(2));
         Action(() => Execute("c.b;")).Should().Excepts();
-        ExpectResult("r.type===C", B(true));
+        ExpectResult("r.type===C", True);
         Execute("r.type=D;");
         ExpectResult("c.f()", I(-1));
     }
@@ -29,8 +29,8 @@ public class ReflectTest : CompilerTest
     public void TestTypeReflect()
     {
         Execute("R:=reflect(C);");
-        ExpectResult("R.parents==[B]", B(true));
-        ExpectResult("R.MRO==[B,object]", B(true));
+        ExpectResult("R.parents==[B]", True);
+        ExpectResult("R.MRO==[B,object]", True);
         Execute("R.parents[:]=[D];");
         ExpectResult("C.o", S("d"));
     }
@@ -41,8 +41,8 @@ public class ReflectTest : CompilerTest
         Execute("s:=reflect();");
         ExpectResult("s.outer", Null);
         Execute("s1:=null;{s1=reflect();}");
-        ExpectResult("s1.outer==s", B(true));
-        ExpectResult("s.vars['int']===int", B(true));
+        ExpectResult("s1.outer==s", True);
+        ExpectResult("s.vars['int']===int", True);
         Execute("s.vars['int']=string;del s.vars['num'];");
         ExpectResult("int()", S(""));
         Action(() => Execute("num();")).Should().Excepts();

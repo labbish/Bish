@@ -174,7 +174,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         new BuildList(0),
         ..args.SelectMany(arg => Visit(arg).Concat(arg switch
         {
-            BishParser.RestArgContext => [new Op("op_add", 2)],
+            BishParser.RestArgContext => [new Get("list"), new Swap(), new Call(1), new Op("op_add", 2)],
             _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
         }))
     ];

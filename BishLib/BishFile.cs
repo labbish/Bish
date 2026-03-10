@@ -38,16 +38,16 @@ public static class BishFileModule
         encoding is null ? Encoding.UTF8 : Encoding.GetEncoding(encoding.Value);
 }
 
-public class BishReader(StreamReader? reader) : BishObject
+public class BishReader(StreamReader reader) : BishObject
 {
-    public StreamReader Reader { get; private set; } = reader!;
+    public StreamReader Reader { get; private set; } = reader;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Reader");
 
     [Builtin("hook")]
-    public static BishReader Create(BishObject _) => new(null);
+    public static BishReader Create(BishObject _) => new(null!);
 
     [Builtin("hook")]
     public static void Init(BishReader self, BishString path, [DefaultNull] BishString? encoding) =>
@@ -118,16 +118,16 @@ public class BishFileLineIterator(BishReader reader) : BishObject
     static BishFileLineIterator() => BishBuiltinIteratorBinder.Bind<BishFileLineIterator>();
 }
 
-public class BishWriter(StreamWriter? writer) : BishObject
+public class BishWriter(StreamWriter writer) : BishObject
 {
-    public StreamWriter Writer { get; private set; } = writer!;
+    public StreamWriter Writer { get; private set; } = writer;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Writer");
 
     [Builtin("hook")]
-    public static BishWriter Create(BishObject _) => new(null);
+    public static BishWriter Create(BishObject _) => new(null!);
 
     [Builtin("hook")]
     public static void Init(BishWriter self, BishString path, [DefaultNull] BishBool? append,

@@ -5,16 +5,16 @@ public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     [Fact]
     public void TestMatch()
     {
-        ExpectResult("1 is _", B(true));
-        ExpectResult("1 is null", B(false));
-        ExpectResult("null is null", B(true));
-        ExpectResult("3 is 1+2", B(true));
-        ExpectResult("5 is 1+2", B(false));
-        ExpectResult("3 is >=1 and <4", B(true));
-        ExpectResult("3 is not (<1 or >=4)", B(true));
-        ExpectResult("0 is of int x", B(true));
-        ExpectResult("1 is of num y", B(true));
-        ExpectResult("2 is of string z", B(false));
+        ExpectResult("1 is _", True);
+        ExpectResult("1 is null", False);
+        ExpectResult("null is null", True);
+        ExpectResult("3 is 1+2", True);
+        ExpectResult("5 is 1+2", False);
+        ExpectResult("3 is >=1 and <4", True);
+        ExpectResult("3 is not (<1 or >=4)", True);
+        ExpectResult("0 is of int x", True);
+        ExpectResult("1 is of num y", True);
+        ExpectResult("2 is of string z", False);
         Scope.GetVar("x").Should().BeEquivalentTo(I(0));
         Scope.GetVar("y").Should().BeEquivalentTo(N(1));
         Scope.TryGetVar("z").Should().BeNull();

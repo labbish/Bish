@@ -100,7 +100,8 @@ public static partial class BishOperator
         return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
     }
 
-    public static BishBool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}");
+    public static bool Eq(BishObject a, BishObject b) =>
+        Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}").Value;
 
     public static BishString ToString(BishObject a) => Call("toString", [a]).ExpectToBe<BishString>("toString()");
 

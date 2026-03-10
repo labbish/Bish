@@ -88,6 +88,6 @@ public class ClassTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Action(() => Execute("c.x4;")).Should().Excepts();
 
         Execute("class C{instance:=null;create(self)=>instance??=self;};");
-        ExpectResult("C()===C()", B(true));
+        ExpectResult("C()===C()", True);
     }
 }

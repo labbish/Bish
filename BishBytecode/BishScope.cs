@@ -85,6 +85,7 @@ public class BishScope
         GlobalVars.Add("print", BishBuiltinBinder.Builtin("print", Print));
         GlobalVars.Add("input", BishBuiltinBinder.Builtin("input", Input));
         GlobalVars.Add("Error", BishError.StaticType);
+        GlobalVars.Add("Iterator", BishIterator.StaticType);
         GlobalVars.Add("AttributeError", BishError.AttributeErrorType);
         GlobalVars.Add("ArgumentError", BishError.ArgumentErrorType);
         GlobalVars.Add("TypeError", BishError.TypeErrorType);

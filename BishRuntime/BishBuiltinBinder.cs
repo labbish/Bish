@@ -119,21 +119,22 @@ public class IterAttribute : Attribute;
 
 public static class BishBuiltinIteratorBinder
 {
-    public static void Bind<T>() where T : BishObject
+    public static void Bind<T>(bool noParent = false) where T : BishObject
     {
         var type = typeof(T);
         var next = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                        .FirstOrDefault(info =>
                            info.Name == "Next" && info.GetCustomAttribute<IterAttribute>() is not null) ??
                    throw new ArgumentException($"Cannot find method `Next` on type {type}");
-        Bind(BishType.GetStaticType(type), next);
+        Bind(BishType.GetStaticType(type), next, noParent);
     }
 
-    public static void Bind(BishType type, MethodInfo next) =>
-        Bind(type, self => (BishObject?)next.InvokeRaw(self, []));
+    public static void Bind(BishType type, MethodInfo next, bool noParent = false) =>
+        Bind(type, self => (BishObject?)next.InvokeRaw(self, []), noParent);
 
-    public static void Bind(BishType type, Func<BishObject, BishObject?> next)
+    public static void Bind(BishType type, Func<BishObject, BishObject?> next, bool noParent = false)
     {
+        if (!noParent) type.Parents.Add(BishIterator.StaticType);
         type.SetMember("hook_create", new BishFunc("hook_create", [], _ =>
             throw BishException.OfType($"Cannot manually create {type.Name}; did you mean to call .iter()?", [])));
         type.SetMember("next",

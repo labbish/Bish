@@ -14,9 +14,9 @@ public static class BishRandomModule
     };
 }
 
-public class BishRandom(Random? random) : BishObject
+public class BishRandom(Random random) : BishObject
 {
-    public Random Random { get; private set; } = random!;
+    public Random Random { get; private set; } = random;
 
     public static readonly BishRandom Shared = new(Random.Shared);
 
@@ -25,7 +25,7 @@ public class BishRandom(Random? random) : BishObject
     public new static readonly BishType StaticType = new("Reader");
 
     [Builtin("hook")]
-    public static BishRandom Create(BishObject _) => new(null);
+    public static BishRandom Create(BishObject _) => new(null!);
 
     [Builtin("hook")]
     public static void Init(BishRandom self, [DefaultNull] BishInt? seed) =>

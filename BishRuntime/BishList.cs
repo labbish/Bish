@@ -41,7 +41,7 @@ public class BishList(IList<BishObject> list) : BishObject
 
     [Builtin("op")]
     public static BishBool Eq(BishList a, BishList b) => BishBool.Of(a.List.Count == b.List.Count && a.List.Zip(b.List)
-        .All(pair => BishOperator.Eq(pair.First, pair.Second).Value));
+        .All(pair => BishOperator.Eq(pair.First, pair.Second)));
 
     [Builtin]
     public static BishBool Bool(BishList a) => BishBool.Of(a.List.Count != 0);
@@ -104,10 +104,6 @@ public class BishList(IList<BishObject> list) : BishObject
         return result;
     }
 
-    [Builtin("hook")]
-    public static BishList Get_entries(BishList self) =>
-        new(self.List.Select((item, i) => new BishList([BishInt.Of(i), item])).ToList<BishObject>());
-
     [Builtin]
     public static BishListIterator Iter(BishList self) => new(self.List);
 
@@ -122,37 +118,7 @@ public class BishList(IList<BishObject> list) : BishObject
     }
 
     [Builtin(special: false)]
-    public static BishString Join(BishList self, BishString sep) =>
-        new(string.Join(sep.Value, self.List.Select(BishString.CallToString)));
-
-    [Builtin(special: false)]
-    public static BishList Map(BishList self, BishObject func) =>
-        new(self.List.Select(obj => func.Call([obj])).ToList());
-
-    [Builtin(special: false)]
-    public static BishList Filter(BishList self, BishObject func) =>
-        new(self.List.Where(obj => BishBool.CallToBool(func.Call([obj]))).ToList());
-
-    [Builtin(special: false)]
     public static BishList Reverse(BishList self) => new(self.List.ToArray().Reverse().ToList());
-
-    [Builtin(special: false)]
-    public static BishObject Reduce(BishList self, BishObject func, [DefaultNull] BishObject? init) => init is null
-        ? self.List.Count == 0
-            ? throw BishException.OfArgument_IndexOutOfBound(0, 0)
-            : self.List.Aggregate((acc, curr) => func.Call([acc, curr]))
-        : self.List.Aggregate(init, (acc, curr) => func.Call([acc, curr]));
-
-    [Builtin(special: false)]
-    public static BishObject Find(BishList self, BishObject obj)
-    {
-        var index = self.List.FindIndex(o => BishOperator.Eq(o, obj).Value);
-        return index == -1 ? BishNull.Instance : BishInt.Of(index);
-    }
-
-    [Builtin(special: false)]
-    public static BishBool Contains(BishList self, BishObject obj) =>
-        BishBool.Of(self.List.Any(o => BishOperator.Eq(o, obj).Value));
 
     static BishList() => BishBuiltinBinder.Bind<BishList>();
 }

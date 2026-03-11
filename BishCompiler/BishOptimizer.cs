@@ -11,22 +11,16 @@ public static class BishOptimizer
 
     extension(Codes codes)
     {
-        public Codes RenameTag(string from, string to)
+        public void RenameTag(string from, string to)
         {
             foreach (var code in codes)
             {
                 if (code.Tag == from) code.Tag = to;
                 if (code is Jumper jumper && jumper.GoalTag == from) jumper.GoalTag = to;
             }
-
-            return codes;
         }
 
-        public Codes Replace(int i, BishBytecode.BishBytecode code)
-        {
-            codes[i] = code.Tagged(codes[i].Tag);
-            return codes;
-        }
+        public void Replace(int i, BishBytecode.BishBytecode code) => codes[i] = code.Tagged(codes[i].Tag);
 
         public Codes RemoveUnusedTag()
         {
@@ -40,6 +34,18 @@ public static class BishOptimizer
         {
             for (var i = 0; i < codes.Count - 1; i++)
                 if (codes[i] is Inner && codes[i + 1] is Outer)
+                {
+                    codes.Replace(i, new Nop());
+                    codes.Replace(i + 1, new Nop());
+                }
+
+            return codes;
+        }
+
+        public Codes RemoveMoveDel()
+        {
+            for (var i = 0; i < codes.Count - 1; i++)
+                if (codes[i] is Move move && codes[i + 1] is Del del && move.Name == del.Name)
                 {
                     codes.Replace(i, new Nop());
                     codes.Replace(i + 1, new Nop());
@@ -120,6 +126,7 @@ public static class BishOptimizer
         // Current optimization percentage 10%~15%
         Optimizers.Add(RemoveUnusedTag);
         Optimizers.Add(RemoveInnerOuter);
+        Optimizers.Add(RemoveMoveDel);
         Optimizers.Add(RemoveDiscarded);
         Optimizers.Add(RemoveValuePop);
         Optimizers.Add(CombineDefPop);

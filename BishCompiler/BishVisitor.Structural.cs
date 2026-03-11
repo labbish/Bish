@@ -1,4 +1,5 @@
-﻿using BishBytecode.Bytecodes;
+﻿using BishBytecode;
+using BishBytecode.Bytecodes;
 using BishRuntime;
 
 namespace BishCompiler;
@@ -30,9 +31,7 @@ public partial class BishVisitor
         var op = context.defOp().GetText();
         var special = BishOperator.GetOperator(op, context.funcBody().defArgs().defArg().Length);
         var name = special.NamePattern.Name;
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        return MakeFunc(name, context.funcBody(), context.deco(),
-            special.Args is not null, $"operator {op}");
+        return MakeFunc(name, context.funcBody(), context.deco(), special.Args is not null, $"operator {op}");
     }
 
     public override Codes VisitAccessExpr(BishParser.AccessExprContext context)
@@ -56,7 +55,7 @@ public partial class BishVisitor
     }
 
     public override Codes VisitInitExpr(BishParser.InitExprContext context) =>
-        MakeFunc("hook_init", context.funcBody(), context.deco(), true, "initializer");
+        MakeFunc("hook_init", context.funcBody(), context.deco(), false, "initializer");
 
     public override Codes VisitCreateExpr(BishParser.CreateExprContext context) =>
         MakeFunc("hook_create", context.funcBody(), context.deco(), true, "create hook");
@@ -65,10 +64,10 @@ public partial class BishVisitor
         bool fixedArgc = false, string funcName = "")
     {
         var symbol = Symbols.Get(name ?? Anonymous);
+        var defArgs = body.defArgs()?.defArg() ?? [];
         var args = Try(body,
-            () => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(
-                (body.defArgs()?.defArg() ?? []).Select(arg =>
-                    new Arg<BishParser.ExprContext>(arg.name.Text, Default: arg.expr(), Rest: arg.dots is not null))
+            () => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
+                    new Arg<BishParser.ExprContext>(arg.obj.GetText(), Default: arg.def, Rest: arg.dots is not null))
                 .ToList()));
         if (args is null) return [];
         if (fixedArgc && args.Any(arg => arg.Default is not null || arg.Rest))
@@ -79,6 +78,10 @@ public partial class BishVisitor
             new FuncStart(symbol, args.Select(arg => arg.Name).ToList()),
             new Inner(),
             ..args.Select(arg => new Move(arg.Name)),
+            ..defArgs.SelectMany(arg =>
+                BishScope.Discard(arg.obj.GetText())
+                    ? []
+                    : Def(arg.obj, [new Del(arg.obj.GetText())]).Concat([new Pop()])),
             ..body.expr() is null ? body.stat()?.SelectMany(Visit) ?? [] : Return(body.expr()),
             new Outer(),
             new FuncEnd(symbol),

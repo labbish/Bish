@@ -22,6 +22,7 @@ public record BishArg(string Name, BishType? DefType = null, BishObject? Default
     }
 }
 
+// TODO: reflecting and constructing function
 public class BishFunc(
     string name,
     List<BishArg> inArgs,

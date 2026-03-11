@@ -45,7 +45,7 @@ public class BishScope
     public BishObject SetVar(string name, BishObject value) =>
         TrySetVar(name, value) ?? throw BishException.OfName(name).WithExtraMsg(" (did you mean to use `:=`?)");
 
-    private static bool Discard(string name) => name.All(c => c == '_');
+    public static bool Discard(string name) => name.All(c => c == '_');
 
     public BishObject? TryDelVar(string name) => Vars.Remove(name, out var value) ? value : null;
 

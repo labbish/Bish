@@ -29,7 +29,6 @@ stat
 
 expr
     : '(' expr ')'                                              # ParenExpr
-    // TODO: allow deconstruction here
     | deco* (FUN ID?)? funcBody                                 # FuncExpr
     | deco* OP defOp funcBody                                   # OperExpr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
@@ -185,7 +184,7 @@ defArgs
     : (defArg (',' defArg)* ','?)?
     ;
 defArg
-    : dots='..'? name=ID ('=' expr)?
+    : dots='..'? obj=expr (':' def=expr)?
     ;
 
 deco

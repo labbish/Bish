@@ -39,6 +39,7 @@ public static class BishCompiler
             try
             {
                 path = Path.GetFullPath(root is null ? file : Path.Combine(root, file));
+                if (ImportCache.TryGetValue(path, out var cached)) return cached;
                 var module = new BishObject();
                 if (path.EndsWith(".dll"))
                 {
@@ -67,6 +68,7 @@ public static class BishCompiler
                         module.SetMember(name, value);
                 }
 
+                ImportCache.Add(path, module);
                 return module;
             }
             catch (BishException)
@@ -80,6 +82,8 @@ public static class BishCompiler
         }));
         return frame;
     }
+
+    public static readonly Dictionary<string, BishObject> ImportCache = [];
 }
 
 public record CompilationError(int Line, int Column, string Message, int StopLine, int StopColumn)

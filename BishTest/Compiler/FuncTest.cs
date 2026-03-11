@@ -19,7 +19,7 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
     [Fact]
     public void TestDefault()
     {
-        Execute("func f(x,y=1,z=0)=>x*y-z;");
+        Execute("func f(x,y:1,z:0)=>x*y-z;");
         ExpectResult("f(3,2,1)", I(5));
         ExpectResult("f(3,2)", I(6));
         ExpectResult("f(3)", I(3));
@@ -58,5 +58,11 @@ public class FuncTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
         Execute("func add(it1, it2)*{yield* it1;yield* it2;};");
         Execute("l:=list(range(5));l=list(add(l,square(l)));");
         ExpectResult("l", L(I(0), I(1), I(2), I(3), I(4), I(0), I(1), I(4), I(9), I(16)));
+    }
+
+    [Fact]
+    public void TestDeconstruct()
+    {
+        ExpectResult("(([a,..b])=>a*b)([3,2,1])", L(I(2), I(1), I(2), I(1), I(2), I(1)));
     }
 }

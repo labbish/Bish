@@ -25,10 +25,10 @@ public class RestAttribute : Attribute;
 
 public static class BishBuiltinBinder
 {
-    public static void Bind<TObject>() where TObject : BishObject
+    public static void Bind<TObject>(BishObject? target = null)
     {
         var type = typeof(TObject);
-        var staticType = BishType.GetStaticType(type);
+        target ??= BishType.GetStaticType(type);
         foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
         {
             var attr = method.GetCustomAttribute<BuiltinAttribute>();
@@ -36,7 +36,7 @@ public static class BishBuiltinBinder
             var name = attr.GetName(method.Name);
             var func = Builtin(name, method, attr.Tag);
             if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
-            staticType.Members[name] = func;
+            target.Members[name] = func;
         }
     }
 

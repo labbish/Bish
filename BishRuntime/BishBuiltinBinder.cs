@@ -47,7 +47,7 @@ public static class BishBuiltinBinder
     {
         var parameters = method.GetParameters();
         var inArgs = parameters
-            .Select(info => new BishArg(info.Name!, BishType.GetStaticType(info.ParameterType), Default(info),
+            .Select(info => new BishArg(info.Name!, () => BishType.GetStaticType(info.ParameterType), Default(info),
                 Rest: info.GetCustomAttribute<RestAttribute>() is not null))
             .ToList();
 

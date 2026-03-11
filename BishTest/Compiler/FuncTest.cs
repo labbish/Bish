@@ -39,7 +39,7 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestRecursive()
     {
-        Execute("func f(n) => n <= 0 ? 1 : n * f(n - 1);");
+        Execute("func f(n)=>n<=0?1:n*f(n-1);");
         ExpectResult("f(4)", I(24));
     }
 

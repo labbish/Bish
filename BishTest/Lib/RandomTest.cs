@@ -2,8 +2,9 @@
 
 public class RandomTest(TestInfoFixture fixture) : LibTest(fixture, "random", ["Random", "random"])
 {
-    [Fact]
-    public void TestRandom() => Parallel.For(0, 5, _ =>
+    [Theory]
+    [Repeat(5)]
+    public void TestRandom(int _)
     {
         Result("random.rand()").Should().BeOfType<BishNum>().Which.Value
             .Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(1);
@@ -24,10 +25,11 @@ public class RandomTest(TestInfoFixture fixture) : LibTest(fixture, "random", ["
             .And.OnlyHaveUniqueItems(x => x is BishInt ? ((BishInt)x).Value : -1)
             .And.AllSatisfy(x => x.Should().BeOfType<BishInt>().Which.Value
                 .Should().BeGreaterThanOrEqualTo(1).And.BeLessThan(5));
-    });
+    }
 
-    [Fact]
-    public void TestRandomSeed()
+    [Theory]
+    [Repeat(5)]
+    public void TestRandomSeed(int _)
     {
         var a = Result("Random(114514).rand()");
         var b = Result("Random(114514).rand()");

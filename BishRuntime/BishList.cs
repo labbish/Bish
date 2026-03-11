@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Collections;
+
+namespace BishRuntime;
 
 public class BishList(IList<BishObject> list) : BishObject
 {
@@ -152,13 +154,72 @@ public static class IListHelper
         {
             foreach (var item in items.Reverse()) list.Insert(index, item);
         }
+    }
+}
 
-        public int FindIndex(Predicate<T> predicate)
+public abstract class ProxyList<TSource, TItem>(List<TSource> list) : IList<TItem>
+{
+    public List<TSource> List => list;
+
+    protected abstract TItem ToItem(TSource source);
+
+    protected abstract TSource ToSource(TItem item);
+
+    protected virtual void OnModify()
+    {
+    }
+
+    public IEnumerator<TItem> GetEnumerator() => List.Select(ToItem).GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public void Add(TItem item)
+    {
+        List.Add(ToSource(item));
+        OnModify();
+    }
+
+    public void Clear()
+    {
+        List.Clear();
+        OnModify();
+    }
+
+    public bool Contains(TItem item) => List.Contains(ToSource(item));
+
+    public void CopyTo(TItem[] array, int arrayIndex)
+    {
+        for (var i = 0; i < List.Count; i++)
+            array[arrayIndex + i] = ToItem(List[i]);
+    }
+
+    public bool Remove(TItem item) => List.Remove(ToSource(item));
+
+    public int Count => List.Count;
+    public bool IsReadOnly => false;
+    public int IndexOf(TItem item) => List.IndexOf(ToSource(item));
+
+    public void Insert(int index, TItem item)
+    {
+        List.Insert(index, ToSource(item));
+        OnModify();
+    }
+
+    public void RemoveAt(int index)
+    {
+        List.RemoveAt(index);
+        OnModify();
+    }
+
+    public TItem this[int index]
+    {
+        get => ToItem(List[index]);
+        set
         {
-            for (var i = 0; i < list.Count; i++)
-                if (predicate(list[i]))
-                    return i;
-            return -1;
+            List[index] = ToSource(value);
+            OnModify();
         }
     }
 }
+
+public abstract class ProxyList<T>(List<T> list) : ProxyList<T, BishObject>(list);

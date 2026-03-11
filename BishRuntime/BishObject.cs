@@ -114,7 +114,7 @@ public class BishObject(BishType? type = null)
     [Builtin("hook", tag: "ignore")]
     public static BishObject Get(BishObject self, BishString name) => self.GetMember(name.Value, BishLookupMode.NoHook);
 
-    public virtual BishObject SetMember(string name, BishObject value, BishObject? mroRoot = null)
+    public virtual BishObject SetMember(string name, BishObject value, BishType? mroRoot = null)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
         var hooked = this is BishType
@@ -130,7 +130,7 @@ public class BishObject(BishType? type = null)
     public BishObject DelMember(string name) =>
         TryDelMember(name) ?? throw BishException.OfAttribute("delete", this, name);
 
-    public virtual BishObject? TryDelMember(string name, BishObject? mroRoot = null)
+    public virtual BishObject? TryDelMember(string name, BishType? mroRoot = null)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
         return self.TryCallHook($"hook_del_{name}", []) ?? (Members.Remove(name, out var member)
@@ -185,13 +185,10 @@ public class BishObject(BishType? type = null)
     [Builtin("op")]
     public static BishBool Ge(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) >= 0);
 
-    // Cannot write `[DefaultNull] BishType? root` because it causes cycle reference in static initialization
     [Builtin(special: false)]
-    public static BishBaseObject Base(BishObject self, [DefaultNull] BishObject? root) =>
-        new(self,
-            root?.ExpectToBe<BishType>("root") ??
-            self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
-            throw BishException.OfType_NoBase(self));
+    public static BishBaseObject Base(BishObject self, [DefaultNull] BishType? root) => new(self,
+        root ?? self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
+        throw BishException.OfType_NoBase(self));
 
     public virtual BishReflect Reflect() => new(this);
 

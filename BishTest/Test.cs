@@ -3,7 +3,9 @@ global using BishBytecode;
 global using BishCompiler;
 global using FluentAssertions;
 global using Bytecodes = BishBytecode.Bytecodes;
+using System.Reflection;
 using FluentAssertions.Specialized;
+using Xunit.Sdk;
 
 namespace BishTest;
 
@@ -13,7 +15,7 @@ public class Test(TestInfoFixture fixture)
     public TestInfoFixture Fixture => fixture;
 
     public readonly BishScope Scope = BishScope.Globals;
-    
+
     protected static Action Action(Action action) => action;
 
     protected static BishInt I(int x) => BishInt.Of(x);
@@ -81,4 +83,11 @@ public sealed class TestInfoFixture : IDisposable
     public void Dispose() =>
         Console.WriteLine(
             $"Before Optimization: {Before}; After Optimization: {After}; Optimized {1 - (double)After / Before:P}");
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+public class RepeatAttribute(int count) : DataAttribute
+{
+    public override IEnumerable<object[]> GetData(MethodInfo testMethod) =>
+        Enumerable.Range(0, count).Select(i => new object[] { i });
 }

@@ -49,10 +49,10 @@ public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
         BishType? _ = null, List<BishObject>? excludes = null, BishObject? boundSelf = null) =>
         Inner.TryGetMember(name, mode, MRORoot, excludes, boundSelf ?? this);
 
-    public override BishObject SetMember(string name, BishObject value, BishObject? root = null) =>
+    public override BishObject SetMember(string name, BishObject value, BishType? root = null) =>
         Inner.SetMember(name, value, root ?? MRORoot);
 
-    public override BishObject? TryDelMember(string name, BishObject? root = null) => Inner.TryDelMember(name, root);
+    public override BishObject? TryDelMember(string name, BishType? root = null) => Inner.TryDelMember(name, root);
 
     public override string ToString() => $"base({inner}, root={MRORoot})";
 }

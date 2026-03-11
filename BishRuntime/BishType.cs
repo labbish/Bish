@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
 {
@@ -71,61 +69,13 @@ public class BishTypeReflect(BishType type) : BishReflect(type)
     static BishTypeReflect() => BishBuiltinBinder.Bind<BishTypeReflect>();
 }
 
-public class ParentsProxyList(BishType type, List<BishType> list) : IList<BishObject>
+public class ParentsProxyList(BishType type, List<BishType> list) : ProxyList<BishType>(list)
 {
     public BishType Type => type;
-    public List<BishType> List => list;
 
-    public IEnumerator<BishObject> GetEnumerator() => list.GetEnumerator();
+    protected override BishObject ToItem(BishType source) => source;
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    protected override BishType ToSource(BishObject item) => item.ExpectToBe<BishType>("type");
 
-    private BishType Convert(BishObject item)
-    {
-        if (item is not BishType t) throw BishException.OfType_Argument(item, BishType.StaticType);
-        Refresh();
-        return t;
-    }
-
-    private void Refresh() => Type.ClearMROCache();
-
-    public void Add(BishObject item) => List.Add(Convert(item));
-
-    public void Clear()
-    {
-        Refresh();
-        List.Clear();
-    }
-
-    public bool Contains(BishObject item) => item is BishType t && List.Contains(t);
-
-    public void CopyTo(BishObject[] array, int arrayIndex)
-    {
-        // God knows why I can't use List.CopyTo(array, arrayIndex). It looks pretty safe to me.
-        for (var i = 0; i < List.Count; i++) array[arrayIndex + i] = List[i];
-    }
-
-    public bool Remove(BishObject item)
-    {
-        Refresh();
-        return item is BishType t && List.Remove(t);
-    }
-
-    public int Count => List.Count;
-    public bool IsReadOnly => false;
-    public int IndexOf(BishObject item) => item is BishType t ? List.IndexOf(t) : -1;
-
-    public void Insert(int index, BishObject item) => List.Insert(index, Convert(item));
-
-    public void RemoveAt(int index)
-    {
-        Refresh();
-        List.RemoveAt(index);
-    }
-
-    public BishObject this[int index]
-    {
-        get => List[index];
-        set => List[index] = Convert(value);
-    }
+    protected override void OnModify() => Type.ClearMROCache();
 }

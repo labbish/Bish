@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Lib;
 
-public class RandomTest(OptimizeInfoFixture fixture) : LibTest(fixture, "random", ["Random", "random"])
+public class RandomTest(TestInfoFixture fixture) : LibTest(fixture, "random", ["Random", "random"])
 {
     [Fact]
     public void TestRandom() => Parallel.For(0, 5, _ =>

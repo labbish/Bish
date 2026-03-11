@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class NullableTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class NullableTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestNullableCombine()

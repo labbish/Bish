@@ -4,10 +4,7 @@ public class MemberHookTest : Test
 {
     public readonly BishObject X = T1.StaticType.CreateInstance([]), Y = T2.StaticType.CreateInstance([]);
 
-    public MemberHookTest()
-    {
-        X.Members.Add("a", I(0));
-    }
+    public MemberHookTest(TestInfoFixture fixture) : base(fixture) => X.Members.Add("a", I(0));
 
     [Fact]
     public void TestObjectGetHook()

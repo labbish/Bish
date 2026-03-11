@@ -2,7 +2,7 @@
 
 namespace BishTest.Runtime;
 
-public class BuiltinsTest : Test
+public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestInt()

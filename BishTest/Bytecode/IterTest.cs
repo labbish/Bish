@@ -1,9 +1,7 @@
 ﻿namespace BishTest.Bytecode;
 
-public class IterTest : Test
+public class IterTest(TestInfoFixture fixture) : Test(fixture)
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
     [Fact]
     public void TestIterString()
     {

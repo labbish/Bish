@@ -1,8 +1,8 @@
 ﻿namespace BishTest.Compiler;
 
-public class ReflectTest : CompilerTest
+public class ReflectTest : Test
 {
-    public ReflectTest(OptimizeInfoFixture fixture) : base(fixture)
+    public ReflectTest(TestInfoFixture fixture) : base(fixture)
     {
         Execute("class B{a:=3;};");
         Execute("class C:B{a:=0;init(self)=>self.b=0;func f(self)=>self.a;};");

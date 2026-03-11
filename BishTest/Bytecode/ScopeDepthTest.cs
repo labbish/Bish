@@ -2,9 +2,7 @@
 
 public class ScopeDepthTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
-    public ScopeDepthTest() => Scope.DefVar("a", I(0));
+    public ScopeDepthTest(TestInfoFixture fixture) : base(fixture) => Scope.DefVar("a", I(0));
 
     [Fact]
     public void TestScope()

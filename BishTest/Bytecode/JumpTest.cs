@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Bytecode;
 
-public class JumpTest : Test
+public class JumpTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestJump()

@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class CommentTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class CommentTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestComment()

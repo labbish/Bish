@@ -2,9 +2,7 @@
 
 public class CallTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
-    public CallTest()
+    public CallTest(TestInfoFixture fixture) : base(fixture)
     {
         Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
         Scope.DefVar("S", BishBuiltinBinder.Builtin("S", Sum));

@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class PatternTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class PatternTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestMatch()

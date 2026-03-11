@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Runtime;
 
-public class MethodTest : Test
+public class MethodTest(TestInfoFixture fixture) : Test(fixture)
 {
     public readonly BishObject X = T1.StaticType.CreateInstance([S("x")]);
 

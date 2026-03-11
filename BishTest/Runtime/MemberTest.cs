@@ -5,7 +5,7 @@ public class MemberTest : Test
     public readonly BishType T1, T2;
     public readonly BishObject X;
 
-    public MemberTest()
+    public MemberTest(TestInfoFixture fixture) : base(fixture)
     {
         T1 = T("T1");
         T1.Members.Add("a", I(0));

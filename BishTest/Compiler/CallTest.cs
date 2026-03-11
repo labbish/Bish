@@ -1,8 +1,8 @@
 ﻿namespace BishTest.Compiler;
 
-public class CallTest : CompilerTest
+public class CallTest : Test
 {
-    public CallTest(OptimizeInfoFixture fixture) : base(fixture) =>
+    public CallTest(TestInfoFixture fixture) : base(fixture) =>
         Scope.DefVar("S", BishBuiltinBinder.Builtin("S", Sum));
 
     public static BishInt Sum([Rest] BishList nums) =>

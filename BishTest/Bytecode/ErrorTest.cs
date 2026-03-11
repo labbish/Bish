@@ -1,9 +1,7 @@
 ﻿namespace BishTest.Bytecode;
 
-public class ErrorTest : Test
+public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
     [Fact]
     public void TestThrow()
     {

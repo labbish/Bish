@@ -2,9 +2,9 @@
 
 namespace BishTest.Compiler;
 
-public class OperatorTest : CompilerTest
+public class OperatorTest : Test
 {
-    public OperatorTest(OptimizeInfoFixture fixture) : base(fixture) =>
+    public OperatorTest(TestInfoFixture fixture) : base(fixture) =>
         Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
 
     [SuppressMessage("Usage", "CA2211")] public static int Count;

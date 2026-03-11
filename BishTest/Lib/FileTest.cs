@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Lib;
 
-public class FileTest(OptimizeInfoFixture fixture) : LibTest(fixture, "file", ["Reader", "Writer"])
+public class FileTest(TestInfoFixture fixture) : LibTest(fixture, "file", ["Reader", "Writer"])
 {
     [Fact]
     public void TestFile()

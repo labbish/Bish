@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Runtime;
 
-public class OperatorTest : Test
+public class OperatorTest(TestInfoFixture fixture) : Test(fixture)
 {
     // This is somehow duplicate with tests of builtin int and num types
     [Fact]

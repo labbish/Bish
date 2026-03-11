@@ -2,9 +2,7 @@
 
 public class MemberTest : Test
 {
-    public readonly BishScope Scope = BishScope.Globals;
-
-    public MemberTest()
+    public MemberTest(TestInfoFixture fixture) : base(fixture)
     {
         var x = new BishObject();
         x.SetMember("a", I(1));

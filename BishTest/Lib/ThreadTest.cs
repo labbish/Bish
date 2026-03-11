@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Lib;
 
-public class ThreadTest(OptimizeInfoFixture fixture) : LibTest(fixture, "thread", ["Thread", "Lock"])
+public class ThreadTest(TestInfoFixture fixture) : LibTest(fixture, "thread", ["Thread", "Lock"])
 {
     [Fact]
     public void TestThread()

@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class StatementsTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class StatementsTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestIf()

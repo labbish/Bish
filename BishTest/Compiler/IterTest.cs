@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class IterTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class IterTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestIter()

@@ -4,7 +4,7 @@ public class ScopeTest : Test
 {
     public readonly BishScope Outer, Inner;
 
-    public ScopeTest()
+    public ScopeTest(TestInfoFixture fixture) : base(fixture)
     {
         Outer = BishScope.Globals;
         Outer.DefVar("a", I(0));

@@ -5,7 +5,7 @@ public class MROTest : Test
 {
     public readonly BishType O, A, B, C, D, E;
 
-    public MROTest()
+    public MROTest(TestInfoFixture fixture) : base(fixture)
     {
         O = T("O");
         A = T("A", O);

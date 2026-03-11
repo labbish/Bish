@@ -1,8 +1,8 @@
 ﻿namespace BishTest.Compiler;
 
-public class AccessTest : CompilerTest
+public class AccessTest : Test
 {
-    public AccessTest(OptimizeInfoFixture fixture) : base(fixture)
+    public AccessTest(TestInfoFixture fixture) : base(fixture)
     {
         Scope.DefVar("a", I(5));
         Scope.DefVar("b", S("abc"));

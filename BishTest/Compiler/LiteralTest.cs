@@ -1,6 +1,6 @@
 ﻿namespace BishTest.Compiler;
 
-public class LiteralTest(OptimizeInfoFixture fixture) : CompilerTest(fixture)
+public class LiteralTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestIntNum()

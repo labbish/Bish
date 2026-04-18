@@ -1,4 +1,4 @@
-﻿namespace BishTest.Compiler;
+﻿namespace BishTest.Core;
 
 public class FuncTest(TestInfoFixture fixture) : Test(fixture)
 {
@@ -37,10 +37,27 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     }
 
     [Fact]
+    public void TestScope()
+    {
+        Execute("a:=1;f:=(x)=>x-a;x1:=f(3);a=2;x2:=f(5);");
+        Scope.GetVar("x1").Should().BeEquivalentTo(I(2));
+        Scope.GetVar("x2").Should().BeEquivalentTo(I(3));
+    }
+
+    [Fact]
     public void TestRecursive()
     {
         Execute("func f(n)=>n<=0?1:n*f(n-1);");
         ExpectResult("f(4)", I(24));
+    }
+
+    [Fact]
+    public void TestClosure()
+    {
+        Execute("counter:=(){count:=0;add:=()=>count+=1;return add;};c1:=counter();c2:=counter();");
+        ExpectResult("c1()", I(1));
+        Execute("c2();");
+        ExpectResult("c2()", I(2));
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-﻿namespace BishTest.Compiler;
+﻿namespace BishTest.Core;
 
 public class StatementsTest(TestInfoFixture fixture) : Test(fixture)
 {

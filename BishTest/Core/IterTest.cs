@@ -1,10 +1,14 @@
-﻿namespace BishTest.Compiler;
+﻿namespace BishTest.Core;
 
 public class IterTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestIter()
     {
+        Execute("s:='';x:='abc';for(c:x)s=c+s;");
+        ExpectResult("x", S("abc"));
+        ExpectResult("s", S("cba"));
+
         ExpectResult("range(5).toList()", L(I(0), I(1), I(2), I(3), I(4)));
         ExpectResult("range(5).entries.toList()",
             L(L(I(0), I(0)), L(I(1), I(1)), L(I(2), I(2)), L(I(3), I(3)), L(I(4), I(4))));

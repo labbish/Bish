@@ -4,7 +4,7 @@ public class MemberHookTest : Test
 {
     public readonly BishObject X = T1.StaticType.CreateInstance([]), Y = T2.StaticType.CreateInstance([]);
 
-    public MemberHookTest(TestInfoFixture fixture) : base(fixture) => X.Members.Add("a", I(0));
+    public MemberHookTest(TestInfoFixture fixture) : base(fixture) => X.Vars.Add("a", I(0));
 
     [Fact]
     public void TestObjectGetHook()
@@ -18,8 +18,8 @@ public class MemberHookTest : Test
     {
         X.SetMember("a", Null).Should().BeEquivalentTo(Null);
         X.SetMember("b", Null).Should().BeEquivalentTo(S("set"));
-        X.Members.Should().HaveCount(1);
-        X.Members["a"].Should().BeEquivalentTo(Null);
+        X.Vars.Should().HaveCount(1);
+        X.Vars["a"].Should().BeEquivalentTo(Null);
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public class MemberHookTest : Test
     {
         X.DefMember("a", Null).Should().BeEquivalentTo(S("def"));
         X.DefMember("b", Null).Should().BeEquivalentTo(S("def"));
-        X.Members.Should().HaveCount(1);
-        X.Members["a"].Should().BeEquivalentTo(I(0));
+        X.Vars.Should().HaveCount(1);
+        X.Vars["a"].Should().BeEquivalentTo(I(0));
     }
 
 
@@ -37,7 +37,7 @@ public class MemberHookTest : Test
     {
         X.TryDelMember("a").Should().BeEquivalentTo(I(0));
         X.TryDelMember("b").Should().BeEquivalentTo(S("del"));
-        X.Members.Should().HaveCount(0);
+        X.Vars.Should().HaveCount(0);
     }
 
     [Fact]

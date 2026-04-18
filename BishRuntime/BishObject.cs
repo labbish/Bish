@@ -24,7 +24,7 @@ public class BishObject(BishType? type = null)
         internal set;
     } = type;
 
-    public Dictionary<string, BishObject> Members = [];
+    public Dictionary<string, BishObject> Vars = [];
 
     public BishObject? TryCallHook(string name, List<BishObject> args, bool ignores = false)
     {
@@ -95,7 +95,7 @@ public class BishObject(BishType? type = null)
             member = null;
             if (obj is null) return false;
             excludes.Add(obj);
-            member = obj.Members.GetValueOrDefault(name) ??
+            member = obj.Vars.GetValueOrDefault(name) ??
                      (mode.HasFlag(BishLookupMode.NoAccessor) ? null : obj.TryCallHook($"hook_get_{name}", []));
             return member is not null;
         }
@@ -164,7 +164,7 @@ public class BishObject(BishType? type = null)
             member = null;
             if (obj is null) return false;
             excludes.Add(obj);
-            if (obj.Members.ContainsKey(name)) member = obj.Members[name] = value;
+            if (obj.Vars.ContainsKey(name)) member = obj.Vars[name] = value;
             else member = mode.HasFlag(BishLookupMode.NoAccessor) ? null : obj.TryCallHook($"hook_set_{name}", [value]);
             return member is not null;
         }
@@ -180,35 +180,42 @@ public class BishObject(BishType? type = null)
         return Type.TryCallSetHook(name, value, excludes);
     }
 
-    public BishObject SetMember(string name, BishObject value) =>
-        TrySetMember(name, value) ?? throw BishException.OfAttribute("set", this, name);
+    public BishObject SetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None) =>
+        TrySetMember(name, value, mode) ?? throw BishException.OfAttribute("set", this, name);
 
     [Builtin("hook", tag: "ignore")]
     public static BishObject Set(BishObject self, BishString name, BishObject value) =>
         self.SetMember(name.Value, value);
 
-    public virtual BishObject DefMember(string name, BishObject value, BishType? mroRoot = null)
+    public virtual BishObject DefMember(string name, BishObject value, BishType? mroRoot = null,
+        BishLookupMode mode = BishLookupMode.None)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
-        var hooked = this is BishType
+        var hooked = this is BishType || mode.HasFlag(BishLookupMode.NoHook)
             ? null
             : self.TryCallHook("hook_def", [new BishString(name), value], ignores: true);
-        return hooked ?? self.TryCallHook($"hook_def_{name}", [value]) ?? (Members[name] = value);
+        return hooked ??
+               (mode.HasFlag(BishLookupMode.NoAccessor) ? null : self.TryCallHook($"hook_def_{name}", [value])) ??
+               (Vars[name] = value);
     }
 
     [Builtin("hook", tag: "ignore")]
     public static BishObject Def(BishObject self, BishString name, BishObject value) =>
         self.DefMember(name.Value, value);
 
-    public BishObject DelMember(string name) =>
-        TryDelMember(name) ?? throw BishException.OfAttribute("delete", this, name);
+    public BishObject DelMember(string name, BishLookupMode mode = BishLookupMode.None) =>
+        TryDelMember(name, mode: mode) ?? throw BishException.OfAttribute("del", this, name);
 
-    public virtual BishObject? TryDelMember(string name, BishType? mroRoot = null)
+    public virtual BishObject? TryDelMember(string name, BishType? mroRoot = null,
+        BishLookupMode mode = BishLookupMode.None)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
-        return self.TryCallHook($"hook_del_{name}", []) ?? (Members.Remove(name, out var member)
-            ? member
-            : self.TryCallHook("hook_del", [new BishString(name)], ignores: true));
+        return (mode.HasFlag(BishLookupMode.NoAccessor) ? null : self.TryCallHook($"hook_del_{name}", [])) ??
+               (Vars.Remove(name, out var member)
+                   ? member
+                   : mode.HasFlag(BishLookupMode.NoHook)
+                       ? null
+                       : self.TryCallHook("hook_del", [new BishString(name)], ignores: true));
     }
 
     [Builtin("hook", tag: "ignore")]
@@ -263,32 +270,14 @@ public class BishObject(BishType? type = null)
         root ?? self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
         throw BishException.OfType_NoBase(self));
 
-    public virtual BishReflect Reflect() => new(this);
+    [Builtin("hook")]
+    public static BishProxyMap Get_vars(BishObject self) => new(self.Vars);
+
+    [Builtin("hook")]
+    public static BishType Get_type(BishObject self) => self.Type;
+
+    [Builtin("hook")]
+    public static BishType Set_type(BishObject self, BishType type) => self.Type = type;
 
     static BishObject() => BishBuiltinBinder.Bind<BishObject>();
-}
-
-public class BishReflect(BishObject obj) : BishObject
-{
-    public BishObject Object => obj;
-
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("reflect");
-
-    [Builtin("hook")]
-    public static BishObject Get_object(BishReflect self) => self.Object;
-
-    [Builtin("hook")]
-    public static BishProxyMap Get_members(BishReflect self) => new(self.Object.Members);
-
-    [Builtin("hook")]
-    public static BishType Get_type(BishReflect self) => self.Object.Type;
-
-    [Builtin("hook")]
-    public static BishType Set_type(BishReflect self, BishType type) => self.Object.Type = type;
-
-    public override string ToString() => $"[{Object} reflect]";
-
-    static BishReflect() => BishBuiltinBinder.Bind<BishReflect>();
 }

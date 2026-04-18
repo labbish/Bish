@@ -5,7 +5,7 @@ public class MethodTest(TestInfoFixture fixture) : Test(fixture)
     public readonly BishObject X = T1.StaticType.CreateInstance([S("x")]);
 
     private void Inject() =>
-        X.Members.Add("f", new BishFunc("f", [new BishArg("_", Default: Null)], _ => I(1)));
+        X.Vars.Add("f", new BishFunc("f", [new BishArg("_", Default: Null)], _ => I(1)));
 
     [Fact]
     public void TestObjectInitialization()

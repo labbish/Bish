@@ -6,7 +6,7 @@ public static class BishThreadModule
 {
     public static BishObject Module => new BishObject
     {
-        Members = new Dictionary<string, BishObject>
+        Vars = new Dictionary<string, BishObject>
         {
             ["Thread"] = BishThread.StaticType,
             ["Lock"] = BishLock.StaticType

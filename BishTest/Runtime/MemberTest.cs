@@ -8,13 +8,13 @@ public class MemberTest : Test
     public MemberTest(TestInfoFixture fixture) : base(fixture)
     {
         T1 = T("T1");
-        T1.Members.Add("a", I(0));
-        T1.Members.Add("b", I(0));
+        T1.Vars.Add("a", I(0));
+        T1.Vars.Add("b", I(0));
         T2 = T("T2", T1);
-        T2.Members.Add("a", I(1));
-        T2.Members.Add("c", I(1));
+        T2.Vars.Add("a", I(1));
+        T2.Vars.Add("c", I(1));
         X = new BishObject(T2);
-        X.Members.Add("c", I(2));
+        X.Vars.Add("c", I(2));
     }
 
     [Fact]

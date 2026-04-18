@@ -93,7 +93,7 @@ public class BishArgObject(BishArg arg) : BishObject
     public static BishBool Get_hasDefault(BishArgObject self) => BishBool.Of(self.Arg.Default is not null);
 
     [Builtin("hook")]
-    public static BishObject Get_defaultValue(BishArgObject self) => self.Arg.Default ?? BishNull.Instance;
+    public static BishObject? Get_defaultValue(BishArgObject self) => self.Arg.Default;
 
     [Builtin("hook")]
     public static BishBool Get_isRest(BishArgObject self) => BishBool.Of(self.Arg.Rest);

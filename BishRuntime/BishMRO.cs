@@ -2,13 +2,12 @@
 
 public partial class BishType
 {
-    
     private List<BishType>? _mroCache;
-    
+
     public void ClearMROCache() => _mroCache = null;
 
     public List<BishType> GetMRO() => (_mroCache ??= CalcMRO()).ToList();
-    
+
     private List<BishType> CalcMRO()
     {
         if (Parents.Count == 0) return [this];
@@ -49,14 +48,16 @@ public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
         BishType? _ = null, List<BishObject>? excludes = null, BishObject? boundSelf = null) =>
         Inner.TryGetMember(name, mode, MRORoot, excludes, boundSelf ?? this);
 
-    public override BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None, 
+    public override BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None,
         BishType? root = null, List<BishObject>? excludes = null) =>
         Inner.TrySetMember(name, value, mode, root ?? MRORoot, excludes);
 
-    public override BishObject DefMember(string name, BishObject value, BishType? root = null) => 
-        Inner.DefMember(name, value, root ?? MRORoot);
+    public override BishObject DefMember(string name, BishObject value, BishType? root = null,
+        BishLookupMode mode = BishLookupMode.None) =>
+        Inner.DefMember(name, value, root ?? MRORoot, mode);
 
-    public override BishObject? TryDelMember(string name, BishType? root = null) => Inner.TryDelMember(name, root);
+    public override BishObject? TryDelMember(string name, BishType? root = null,
+        BishLookupMode mode = BishLookupMode.None) => Inner.TryDelMember(name, root, mode);
 
     public override string ToString() => $"base({inner}, root={MRORoot})";
 }

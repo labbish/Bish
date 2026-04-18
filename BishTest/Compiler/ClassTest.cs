@@ -63,11 +63,13 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("(C(3)+C('a')).x", S("aaa"));
         ExpectResult("(+C(2.5)).x", N(-2.5));
 
-        Execute("class C{init(self,x)=>self._x:=x;get x(self)=>self._x;"
-                + "set x(self,x)=>self._x:=x;del x(self)=>del self._x;};c:=C(5);");
+        Execute("class C{init(self,x)=>self._x:=x;get x(self)=>self._x;set x(self,x)=>self._x=x;"
+                + "def x(self,x)=>self._x:=x;del x(self)=>del self._x;};c:=C(5);");
         ExpectResult("c.x", I(5));
-        ExpectResult("c.x=3", I(3));
+        ExpectResult("c.x:=3", I(3));
         ExpectResult("c.x", I(3));
+        ExpectResult("c.x=6", I(6));
+        ExpectResult("c.x", I(6));
         Execute("del c.x;");
         Action(() => Execute("c.x;")).Should().Excepts();
 

@@ -6,7 +6,7 @@ public static class BishRandomModule
 {
     public static BishObject Module => new BishObject
     {
-        Members = new Dictionary<string, BishObject>
+        Vars = new Dictionary<string, BishObject>
         {
             ["Random"] = BishRandom.StaticType,
             ["random"] = BishRandom.Shared

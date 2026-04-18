@@ -16,7 +16,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
         types.Reverse();
         foreach (var type in types)
         {
-            var created = type.Members.GetValueOrDefault("hook_create")?.TryCall([instance]);
+            var created = type.Vars.GetValueOrDefault("hook_create")?.TryCall([instance]);
             instance = created ?? instance;
             instance.Type = type;
         }
@@ -45,31 +45,18 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
     public BishType WithMRORoot(BishType mroRoot) => mroRoot == this
         ? this
         : new BishType(Name, Parents,
-            GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot)) { Members = Members };
+            GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot)) { Vars = Vars };
 
-    public override BishTypeReflect Reflect() => new(this);
+    [Builtin("hook")]
+    public static BishList Get_parents(BishType self) => new(new ParentsProxyList(self));
+
+    [Builtin("hook")]
+    public static BishList Get_MRO(BishType self) => new(self.GetMRO().ToList<BishObject>());
 
     static BishType() => BishBuiltinBinder.Bind<BishType>();
 }
 
-public class BishTypeReflect(BishType type) : BishReflect(type)
-{
-    public new BishType Type => type;
-
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("reflect", [BishReflect.StaticType]);
-
-    [Builtin("hook")]
-    public static BishList Get_parents(BishTypeReflect self) => new(new ParentsProxyList(self.Type, self.Type.Parents));
-
-    [Builtin("hook")]
-    public static BishList Get_MRO(BishTypeReflect self) => new(self.Type.GetMRO().ToList<BishObject>());
-
-    static BishTypeReflect() => BishBuiltinBinder.Bind<BishTypeReflect>();
-}
-
-public class ParentsProxyList(BishType type, List<BishType> list) : ProxyList<BishType>(list)
+public class ParentsProxyList(BishType type) : ProxyList<BishType>(type.Parents)
 {
     public BishType Type => type;
 

@@ -36,7 +36,7 @@ public static class BishBuiltinBinder
             var name = attr.GetName(method.Name);
             var func = Builtin(name, method, attr.Tag);
             if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
-            target.Members[name] = func;
+            target.Vars[name] = func;
         }
     }
 

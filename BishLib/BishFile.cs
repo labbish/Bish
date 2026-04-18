@@ -7,7 +7,7 @@ public static class BishFileModule
 {
     public static BishObject Module => new BishObject
     {
-        Members = new Dictionary<string, BishObject>
+        Vars = new Dictionary<string, BishObject>
         {
             ["Reader"] = BishReader.StaticType,
             ["Writer"] = BishWriter.StaticType
@@ -67,7 +67,7 @@ public class BishReader(StreamReader reader) : BishObject
     };
 
     [Builtin(special: false)]
-    public static BishObject ReadChar(BishReader self) => self.ReadChar() as BishObject ?? BishNull.Instance;
+    public static BishString? ReadChar(BishReader self) => self.ReadChar();
 
     public BishString? ReadLine() => BishFileModule.FileOperation(Reader.ReadLine) switch
     {
@@ -76,7 +76,7 @@ public class BishReader(StreamReader reader) : BishObject
     };
 
     [Builtin(special: false)]
-    public static BishObject ReadLine(BishReader self) => self.ReadLine() as BishObject ?? BishNull.Instance;
+    public static BishString? ReadLine(BishReader self) => self.ReadLine();
 
     [Builtin("hook")]
     public static BishFileCharIterator Get_chars(BishReader self) => new(self);

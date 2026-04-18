@@ -3,55 +3,51 @@ using BishRuntime;
 
 namespace BishBytecode;
 
-public class BishScope
+public class BishScope : BishObject
 {
     public readonly BishScope? Outer;
-    public readonly Dictionary<string, BishObject> Vars;
+
+    protected override List<BishObject> LookupChain => GetLookupChain().ToList<BishObject>();
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("scope", [BishNum.StaticType]);
 
     internal BishScope(BishScope? outer = null, Dictionary<string, BishObject>? vars = null)
     {
         Outer = outer;
         Vars = vars ?? [];
-
-        Vars.Add("reflect", new BishFunc("reflect", [new BishArg("object", Default: new ReflectDefaultNull())], args =>
-            args[0] switch
-            {
-                ReflectDefaultNull => new BishScopeReflect(this),
-                { } obj => obj.Reflect()
-            }, noCheck: true));
+        Vars.Add("this", this);
     }
 
-    internal class ReflectDefaultNull : BishObject
+    private IEnumerable<BishScope> GetLookupChain()
     {
-        public override string ToString() => "[scope]";
+        yield return this;
+        if (Outer is null) yield break;
+        foreach (var scope in Outer.GetLookupChain())
+            yield return scope;
     }
 
-    public BishObject? TryGetVar(string name) => Vars.TryGetValue(name, out var value) ? value : Outer?.TryGetVar(name);
+    private const BishLookupMode Mode = BishLookupMode.NoHook | BishLookupMode.NoAccessor;
 
-    public BishObject GetVar(string name)
-    {
-        var tip = Discard(name) ? " (note: vars named _, __, ... will be discarded)" :
-            name == "$" ? " (did you mean to use it in pipe expression?)" : "";
-        return TryGetVar(name) ?? throw BishException.OfName(name)
-            .WithExtraMsg(tip);
-    }
+    public BishObject? TryGetVar(string name) => TryGetMember(name, mode: Mode);
 
-    public BishObject DefVar(string? name, BishObject value) =>
-        name is null || Discard(name) ? value : Vars[name] = value;
-
-    public BishObject? TrySetVar(string name, BishObject value) =>
-        Discard(name) ? value : Vars.ContainsKey(name) ? Vars[name] = value : Outer?.TrySetVar(name, value);
+    public BishObject GetVar(string name) => GetMember(name, mode: Mode);
 
     public BishObject SetVar(string name, BishObject value) =>
-        TrySetVar(name, value) ?? throw BishException.OfName(name).WithExtraMsg(" (did you mean to use `:=`?)");
+        Discard(name) ? value : SetMember(name, value, mode: Mode);
+
+    public BishObject DefVar(string name, BishObject value) =>
+        Discard(name) ? value : DefMember(name, value, mode: Mode);
+
+    public BishObject DelVar(string name) => DelMember(name, mode: Mode);
 
     public static bool Discard(string name) => name.All(c => c == '_');
 
-    public BishObject? TryDelVar(string name) => Vars.Remove(name, out var value) ? value : null;
-
-    public BishObject DelVar(string name) => TryDelVar(name) ?? throw BishException.OfName(name);
-
     public BishScope CreateInner() => new(this);
+    
+    [Builtin("hook")]
+    public static BishScope? Get_outer(BishScope self) => self.Outer;
 
     public static readonly Dictionary<string, BishObject> GlobalVars = [];
 
@@ -70,6 +66,8 @@ public class BishScope
 
     static BishScope()
     {
+        BishBuiltinBinder.Bind<BishScope>();
+
         GlobalVars.Add("object", BishObject.StaticType);
         GlobalVars.Add("type", BishType.StaticType);
         GlobalVars.Add("int", BishInt.StaticType);
@@ -100,25 +98,4 @@ public class BishScope
         BuiltinModules.Add("func", BishFuncModule.Module);
         // TODO: time
     }
-}
-
-public class BishScopeReflect(BishScope scope) : BishObject
-{
-    public BishScope Scope => scope;
-
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("reflect");
-
-    [Builtin("hook")]
-    public static BishObject Get_outer(BishScopeReflect self) =>
-        self.Scope.Outer is null ? BishNull.Instance : new BishScopeReflect(self.Scope.Outer);
-
-    [Builtin("hook")]
-    public static BishProxyMap Get_vars(BishScopeReflect self) => new(self.Scope.Vars);
-
-    [Builtin("op")]
-    public static BishBool Eq(BishScopeReflect a, BishScopeReflect b) => BishBool.Of(a.Scope == b.Scope);
-
-    static BishScopeReflect() => BishBuiltinBinder.Bind<BishScopeReflect>();
 }

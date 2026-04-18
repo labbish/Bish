@@ -91,7 +91,7 @@ funcBody
     ;
 
 accessOp
-    : GET | SET | DEL
+    : GET | SET | DEF | DEL
     ;
 
 accessItem 
@@ -250,6 +250,7 @@ DO  : 'do' ;
 FOR : 'for' ;
 GET : 'get' ;
 SET : 'set' ;
+DEF : 'def' ;
 DEL : 'del' ;
 FUN : 'func' ;
 OP  : 'oper' ;

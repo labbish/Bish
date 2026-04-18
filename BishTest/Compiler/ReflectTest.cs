@@ -13,38 +13,36 @@ public class ReflectTest : Test
     [Fact]
     public void TestObjectReflect()
     {
-        Execute("r:=reflect(c);");
-        ExpectResult("r.object===c", True);
-        ExpectResult("r.members['a']", I(1));
-        ExpectResult("r.members['b']", I(1));
-        Execute("r.members['a']=2;del r.members['b'];");
+        ExpectResult("c.vars['a']", I(1));
+        ExpectResult("c.vars['b']", I(1));
+        Execute("c.vars['a']=2;del c.vars['b'];c.vars['c']:=3;");
         ExpectResult("c.a", I(2));
         Action(() => Execute("c.b;")).Should().Excepts();
-        ExpectResult("r.type===C", True);
-        Execute("r.type=D;");
+        ExpectResult("c.c", I(3));
+        ExpectResult("c.type===C", True);
+        Execute("c.type=D;");
         ExpectResult("c.f()", I(-1));
     }
     
     [Fact]
     public void TestTypeReflect()
     {
-        Execute("R:=reflect(C);");
-        ExpectResult("R.parents==[B]", True);
-        ExpectResult("R.MRO==[B,object]", True);
-        Execute("R.parents[:]=[D];");
+        ExpectResult("C.parents==[B]", True);
+        ExpectResult("C.MRO==[B,object]", True);
+        Execute("C.parents[:]=[D];");
         ExpectResult("C.o", S("d"));
     }
 
     [Fact]
     public void TestScopeReflect()
     {
-        Execute("s:=reflect();");
+        Execute("s:=this;f:=()=>'f';g:=()=>'g';h:=()=>'h';");
         ExpectResult("s.outer", Null);
-        Execute("s1:=null;{s1=reflect();}");
-        ExpectResult("s1.outer==s", True);
-        ExpectResult("s.vars['int']===int", True);
-        Execute("s.vars['int']=string;del s.vars['num'];");
-        ExpectResult("int()", S(""));
-        Action(() => Execute("num();")).Should().Excepts();
+        Execute("s1:=null;{s1=this;}");
+        ExpectResult("s1.outer===s", True);
+        ExpectResult("s.vars['f']===f", True);
+        Execute("s.vars['f']=g;del s.vars['h'];");
+        ExpectResult("f()", S("g"));
+        Action(() => Execute("h();")).Should().Excepts();
     }
 }

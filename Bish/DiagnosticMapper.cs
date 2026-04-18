@@ -1,6 +1,6 @@
 ﻿using BishCompiler;
 
-namespace BishLSP;
+namespace Bish;
 
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 

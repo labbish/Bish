@@ -1,5 +1,0 @@
-out/
-*.vsix
-.vscode-test/
-node_modules/
-build.bat

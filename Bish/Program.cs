@@ -10,7 +10,7 @@ async Task RunOptions(Options options)
     switch (options)
     {
         case { Server: true }:
-            await BishLSP.Server.RunAsync();
+            await Server.RunAsync();
             break;
         case { SkipExecution: true, Output: null }:
             throw new ArgumentException("-s is invalid without output file");

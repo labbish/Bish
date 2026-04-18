@@ -225,6 +225,9 @@ public class BishFunc(
     public static BishFunc Bind(BishFunc self, [Rest] BishList args) =>
         args.List.Aggregate(self, (current, arg) => current.Bind(arg));
 
+    [Builtin("hook", special: false)]
+    public static BishType Get_Arg() => BishArgObject.StaticType;
+
     static BishFunc() => BishBuiltinBinder.Bind<BishFunc>();
 }
 

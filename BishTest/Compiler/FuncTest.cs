@@ -65,4 +65,25 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     {
         ExpectResult("(([a,..b])=>a*b)([3,2,1])", L(I(2), I(1), I(2), I(1), I(2), I(1)));
     }
+
+    [Fact]
+    public void TestFuncType()
+    {
+        Execute("Arg:=Func.Arg;");
+
+        // func f(x,y:1,z:0)=>x*y-z;
+        Execute("f:=Func('f',[Arg('x'),Arg('y').default(1),Arg('z').default(0)],([x,y,z])=>x*y-z);");
+        ExpectResult("f(3,2,1)", I(5));
+        ExpectResult("f(3,2)", I(6));
+        ExpectResult("f(3)", I(3));
+
+        // func f(..rest)=>rest;
+        Execute("f:=Func('f',[Arg('rest').rest()],([rest])=>rest);");
+        ExpectResult("f(1,2,3)", L(I(1), I(2), I(3)));
+
+        Execute("func f(a,b,c)=>a*b*c;");
+        ExpectResult("f(2,3,4)", I(24));
+        ExpectResult("f.bind(2)(3,4)", I(24));
+        ExpectResult("f.bind(2,3)(4)", I(24));
+    }
 }

@@ -69,7 +69,6 @@ public class BishScope : BishObject
         BuiltinModules.Add("thread", BishThreadModule.Module);
         BuiltinModules.Add("file", BishFileModule.Module);
         BuiltinModules.Add("random", BishRandomModule.Module);
-        BuiltinModules.Add("func", BishFuncModule.Module);
         // TODO: time
     }
 }
@@ -94,6 +93,7 @@ public class BishBuiltinScope : BishScope
         Init("null", BishNull.Instance);
         Init("print", BishBuiltinBinder.Builtin("print", Print));
         Init("input", BishBuiltinBinder.Builtin("input", Input));
+        Init("Func", BishFunc.StaticType);
         Init("Error", BishError.StaticType);
         Init("Iterator", BishIterator.StaticType);
         Init("AttributeError", BishError.AttributeErrorType);

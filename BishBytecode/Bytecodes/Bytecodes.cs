@@ -56,6 +56,11 @@ public record Get(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.GetVar(Name));
 }
 
+public record GetBuiltin(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(BishBuiltinScope.Instance.GetVar(Name));
+}
+
 public record Def(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.DefVar(Name, frame.Stack.Pop()));

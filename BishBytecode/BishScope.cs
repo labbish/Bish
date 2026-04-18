@@ -28,7 +28,7 @@ public class BishScope : BishObject
             yield return scope;
     }
 
-    private const BishLookupMode Mode = BishLookupMode.NoHook | BishLookupMode.NoAccessor;
+    protected const BishLookupMode Mode = BishLookupMode.NoHook | BishLookupMode.NoAccessor;
 
     public BishObject? TryGetVar(string name) => TryGetMember(name, mode: Mode);
 
@@ -45,15 +45,13 @@ public class BishScope : BishObject
     public static bool Discard(string name) => name.All(c => c == '_');
 
     public BishScope CreateInner() => new(this);
-    
+
     [Builtin("hook")]
     public static BishScope? Get_outer(BishScope self) => self.Outer;
 
-    public static readonly Dictionary<string, BishObject> GlobalVars = [];
-
-    public static BishScope Globals => new(vars: new Dictionary<string, BishObject>(GlobalVars));
-
     public static readonly Dictionary<string, BishObject> BuiltinModules = [];
+
+    public static BishScope Globals => new(BishBuiltinScope.Instance);
 
     public static BishNull Print([Rest] BishList args)
     {
@@ -68,34 +66,44 @@ public class BishScope : BishObject
     {
         BishBuiltinBinder.Bind<BishScope>();
 
-        GlobalVars.Add("object", BishObject.StaticType);
-        GlobalVars.Add("type", BishType.StaticType);
-        GlobalVars.Add("int", BishInt.StaticType);
-        GlobalVars.Add("num", BishNum.StaticType);
-        GlobalVars.Add("bool", BishBool.StaticType);
-        GlobalVars.Add("string", BishString.StaticType);
-        GlobalVars.Add("list", BishList.StaticType);
-        GlobalVars.Add("map", BishMap.StaticType);
-        GlobalVars.Add("range", BishRange.StaticType);
-        GlobalVars.Add("true", BishBool.True);
-        GlobalVars.Add("false", BishBool.False);
-        GlobalVars.Add("null", BishNull.Instance);
-        GlobalVars.Add("print", BishBuiltinBinder.Builtin("print", Print));
-        GlobalVars.Add("input", BishBuiltinBinder.Builtin("input", Input));
-        GlobalVars.Add("Error", BishError.StaticType);
-        GlobalVars.Add("Iterator", BishIterator.StaticType);
-        GlobalVars.Add("AttributeError", BishError.AttributeErrorType);
-        GlobalVars.Add("ArgumentError", BishError.ArgumentErrorType);
-        GlobalVars.Add("TypeError", BishError.TypeErrorType);
-        GlobalVars.Add("NullError", BishError.NullErrorType);
-        GlobalVars.Add("NameError", BishError.NameErrorType);
-        GlobalVars.Add("ZeroDivisionError", BishError.ZeroDivisionErrorType);
-        GlobalVars.Add("IterationStop", BishError.IteratorStopType);
-
         BuiltinModules.Add("thread", BishThreadModule.Module);
         BuiltinModules.Add("file", BishFileModule.Module);
         BuiltinModules.Add("random", BishRandomModule.Module);
         BuiltinModules.Add("func", BishFuncModule.Module);
         // TODO: time
     }
+}
+
+public class BishBuiltinScope : BishScope
+{
+    private void Init(string name, BishObject obj) => Vars[name] = obj;
+
+    private BishBuiltinScope()
+    {
+        Init("object", BishObject.StaticType);
+        Init("type", BishType.StaticType);
+        Init("int", BishInt.StaticType);
+        Init("num", BishNum.StaticType);
+        Init("bool", BishBool.StaticType);
+        Init("string", BishString.StaticType);
+        Init("list", BishList.StaticType);
+        Init("map", BishMap.StaticType);
+        Init("range", BishRange.StaticType);
+        Init("true", BishBool.True);
+        Init("false", BishBool.False);
+        Init("null", BishNull.Instance);
+        Init("print", BishBuiltinBinder.Builtin("print", Print));
+        Init("input", BishBuiltinBinder.Builtin("input", Input));
+        Init("Error", BishError.StaticType);
+        Init("Iterator", BishIterator.StaticType);
+        Init("AttributeError", BishError.AttributeErrorType);
+        Init("ArgumentError", BishError.ArgumentErrorType);
+        Init("TypeError", BishError.TypeErrorType);
+        Init("NullError", BishError.NullErrorType);
+        Init("NameError", BishError.NameErrorType);
+        Init("ZeroDivisionError", BishError.ZeroDivisionErrorType);
+        Init("IterationStop", BishError.IteratorStopType);
+    }
+
+    public static readonly BishBuiltinScope Instance = new();
 }

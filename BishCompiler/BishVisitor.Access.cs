@@ -78,7 +78,7 @@ public partial class BishVisitor
                     return Error(context, "Rest entry must be the last one in map deconstruction");
                 return
                 [
-                    new Get("map"),
+                    new GetBuiltin("map"),
                     ..value,
                     new Call(1),
                     ..entries.SelectMany((entry, i) => entry switch
@@ -176,7 +176,7 @@ public partial class BishVisitor
                     return Error(context, "Rest entry must be the last one in map deconstruction");
                 return
                 [
-                    new Get("map"),
+                    new GetBuiltin("map"),
                     ..value,
                     new Call(1),
                     ..entries.SelectMany((entry, i) => entry switch

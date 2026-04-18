@@ -45,11 +45,11 @@ public partial class BishVisitor
         return
         [
             new Copy(),
-            new Get("map"),
+            new GetBuiltin("map"),
             new TestType(),
             new Pop(),
             new JumpIfNot(tag),
-            new Get("map"),
+            new GetBuiltin("map"),
             new Swap(),
             new Call(1),
             ..entries.SelectMany(entry => entry switch
@@ -112,7 +112,7 @@ public partial class BishVisitor
         var tag = Symbols.Get("is_of");
         return
         [
-            ..context.type.GetText() == "_" ? [new Get("object")] : Visit(context.type),
+            ..context.type.GetText() == "_" ? [new GetBuiltin("object")] : Visit(context.type),
             new TestType(tag),
             name is null ? new Nop() : new Def(name),
             new Pop().Tagged(tag)

@@ -105,4 +105,11 @@ public class AccessTest : Test
         Scope.TryGetVar("b").Should().BeNull();
         ExpectResult("o.a", I(0));
     }
+
+    [Fact]
+    public void TestBuiltins()
+    {
+        Execute("map:=0;");
+        ExpectResult("{0:0,1:1}", M((I(0), I(0)), (I(1), I(1))));
+    }
 }

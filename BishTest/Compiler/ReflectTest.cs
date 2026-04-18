@@ -37,7 +37,7 @@ public class ReflectTest : Test
     public void TestScopeReflect()
     {
         Execute("s:=this;f:=()=>'f';g:=()=>'g';h:=()=>'h';");
-        ExpectResult("s.outer", Null);
+        ExpectResult("s.outer.outer", Null);
         Execute("s1:=null;{s1=this;}");
         ExpectResult("s1.outer===s", True);
         ExpectResult("s.vars['f']===f", True);

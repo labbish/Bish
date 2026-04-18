@@ -53,6 +53,14 @@ public class BishException(BishError error) : Exception
                 ["name"] = new BishString(name)
             });
 
+    public static BishException OfAttribute_Builtins(string op, string name) =>
+        Create(BishError.AttributeErrorType, $"Cannot {op} {name} on builtins scope",
+            new Dictionary<string, BishObject>
+            {
+                ["operation"] = new BishString(op),
+                ["name"] = new BishString(name)
+            });
+
     public static BishException OfType(string message, Dictionary<string, BishObject> data) =>
         Create(BishError.TypeErrorType, message, data);
 
@@ -181,12 +189,6 @@ public class BishException(BishError error) : Exception
         {
             ["type"] = type,
             ["string"] = str
-        });
-
-    public static BishException OfName(string name) => Create(BishError.NameErrorType,
-        $"Name {name} is not defined", new Dictionary<string, BishObject>
-        {
-            ["name"] = new BishString(name)
         });
 
     public static BishException OfImport(string file, string message) => Create(BishError.ImportErrorType,

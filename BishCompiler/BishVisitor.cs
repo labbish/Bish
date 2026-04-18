@@ -105,7 +105,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
     [
-        new Get("range"),
+        new GetBuiltin("range"),
         ..EvalOrNull(context.start),
         ..EvalOrNull(context.end),
         ..EvalOrNull(context.step),
@@ -174,7 +174,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         new BuildList(0),
         ..args.SelectMany(arg => Visit(arg).Concat(arg switch
         {
-            BishParser.RestArgContext => [new Get("list"), new Swap(), new Call(1), new Op("op_add", 2)],
+            BishParser.RestArgContext => [new GetBuiltin("list"), new Swap(), new Call(1), new Op("op_add", 2)],
             _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
         }))
     ];
@@ -183,7 +183,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
 
     public override Codes VisitMapExpr(BishParser.MapExprContext context) =>
     [
-        new Get("map"),
+        new GetBuiltin("map"),
         new Call(0),
         ..context.entries().entry().SelectMany(entry => (Codes)(entry switch
         {
@@ -195,7 +195,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
     ];
 
     public override Codes VisitObjExpr(BishParser.ObjExprContext context) => [
-        new Get("object"),
+        new GetBuiltin("object"),
         new Call(0),
         ..context.objEntries().objEntry().SelectMany(entry => (Codes)([
             new Copy(),

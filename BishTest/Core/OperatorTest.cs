@@ -96,10 +96,10 @@ public class OperatorTest : Test
         Count.Should().Be(1);
 
         Count = 0;
-        Execute("o:=0;o.x:=true;o.x&&=f();");
+        Execute("o:=object();o.x:=true;o.x&&=f();");
         ExpectResult("o.x", False);
         Count.Should().Be(1);
-        Execute("o:=0;o.x=false;o.x&&=f();");
+        Execute("o:=object();o.x:=false;o.x&&=f();");
         ExpectResult("o.x", False);
         Count.Should().Be(1);
     }

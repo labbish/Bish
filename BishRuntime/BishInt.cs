@@ -22,7 +22,7 @@ public class BishInt : BishObject
 
     [Builtin(special: false)]
     public static BishInt Parse(BishString a) => int.TryParse(a.Value, out var value)
-        ? BishInt.Of(value)
+        ? Of(value)
         : throw BishException.OfArgument_Parse(a, StaticType);
 
     [Builtin("op")]

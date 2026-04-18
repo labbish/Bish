@@ -12,7 +12,7 @@ jobs:
         include:
           - os: windows-latest
             runtime: win-x64
-            asset_suffix: .exe
+            asset_suffix: '.exe'
           - os: ubuntu-latest
             runtime: linux-x64
             asset_suffix: ''
@@ -44,8 +44,13 @@ jobs:
         run: |
           mkdir ./BishCompiler/tools
           curl -L https://www.antlr.org/download/antlr-4.13.2-complete.jar -o ./BishCompiler/tools/antlr.jar
+          
+      - name: Run tests
+        shell: bash
+        run: dotnet test
 
       - name: Publish main project
+        shell: bash
         run: |
           dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true /p:PublishSingleFile=true -o ./publish
 

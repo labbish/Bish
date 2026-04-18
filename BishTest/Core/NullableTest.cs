@@ -9,7 +9,7 @@ public class NullableTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("null??2", I(2));
         Execute("x:=null;x??=2;");
         ExpectResult("x", I(2));
-        Execute("o:=0;o.x:=null;o.x??=2;");
+        Execute("o:=object();o.x:=null;o.x??=2;");
         ExpectResult("o.x", I(2));
     }
 

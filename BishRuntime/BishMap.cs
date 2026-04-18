@@ -76,6 +76,12 @@ public class BishMap(List<Entry> entries) : BishObject
 
     [Builtin("op")]
     public static BishObject SetIndex(BishMap self, BishObject key, BishObject value) =>
+        self.Entries.Any(e => BishOperator.Eq(e.Key, key))
+            ? DefIndex(self, key, value)
+            : throw BishException.OfArgument_KeyNotFound(key);
+
+    [Builtin("op")]
+    public static BishObject DefIndex(BishMap self, BishObject key, BishObject value) =>
         self.Add(new Entry(key, value));
 
     public virtual BishObject Remove(Entry entry)

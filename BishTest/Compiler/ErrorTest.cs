@@ -20,9 +20,9 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestWhen()
     {
-        Action(() => Execute("try{e:=Error('error');e.data=-1;throw e;}catch(e)when(e.data>0){}"))
+        Action(() => Execute("try{e:=Error('error');e.data:=-1;throw e;}catch(e)when(e.data>0){}"))
             .Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
-        Execute("try{e:=Error('error');e.data=1;throw e;}catch(e)when(e.data>0){}");
+        Execute("try{e:=Error('error');e.data:=1;throw e;}catch(e)when(e.data>0){}");
     }
 
     [Fact]

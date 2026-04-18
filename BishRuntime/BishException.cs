@@ -33,7 +33,7 @@ public class BishException(BishError error) : Exception
     {
         var error = (BishError)errorType.CreateInstance([new BishString(message)]);
         foreach (var (key, value) in data)
-            error.SetMember(key, value);
+            error.DefMember(key, value);
         return new BishException(error);
     }
 

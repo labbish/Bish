@@ -5,8 +5,8 @@ public class MemberTest : Test
     public MemberTest(TestInfoFixture fixture) : base(fixture)
     {
         var x = new BishObject();
-        x.SetMember("a", I(1));
-        x.SetMember("b", I(2));
+        x.DefMember("a", I(1));
+        x.DefMember("b", I(2));
         Scope.DefVar("x", x);
     }
 

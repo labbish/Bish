@@ -107,7 +107,7 @@ public class BishNum(double value) : BishObject
     static BishNum()
     {
         BishBuiltinBinder.Bind<BishNum>();
-        StaticType.SetMember("PI", new BishNum(Math.PI));
-        StaticType.SetMember("E", new BishNum(Math.E));
+        StaticType.DefMember("PI", new BishNum(Math.PI));
+        StaticType.DefMember("E", new BishNum(Math.E));
     }
 }

@@ -8,8 +8,8 @@ public class AccessTest : Test
         Scope.DefVar("b", S("abc"));
         Scope.DefVar("n", Null);
         var x = new BishObject();
-        x.SetMember("y", new BishObject());
-        x.SetMember("z", I(4));
+        x.DefMember("y", new BishObject());
+        x.DefMember("z", I(4));
         Scope.DefVar("x", x);
         Scope.DefVar("l", L(I(0), I(1), I(2), I(3), I(4)));
     }
@@ -17,7 +17,7 @@ public class AccessTest : Test
     [Fact]
     public void TestAccess()
     {
-        Execute("a=b.length;c:='c';x.y.z=0;del x.z;m:=del n;");
+        Execute("a=b.length;c:='c';x.y.z:=0;del x.z;m:=del n;");
         Scope.GetVar("a").Should().BeEquivalentTo(I(3));
         Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
         Scope.GetVar("c").Should().BeEquivalentTo(S("c"));

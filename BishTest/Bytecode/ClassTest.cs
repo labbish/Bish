@@ -26,9 +26,9 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
             // hook_init = (self, x) => {
             new Bytecodes.FuncStart("init", ["self", "x"]),
             new Bytecodes.Inner(),
-            // self.x = x
+            // self.x := x
             new Bytecodes.Swap(),
-            new Bytecodes.SetMember("x"),
+            new Bytecodes.DefMember("x"),
             // } (end f)
             new Bytecodes.Outer(),
             new Bytecodes.FuncEnd("init"),

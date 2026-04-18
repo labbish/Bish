@@ -25,9 +25,14 @@ public class BishNull : BishObject
     public static BishObject Set(BishNull self, BishString name, BishObject _) =>
         throw BishException.OfNull("set", name.Value);
 
+
+    [Builtin("hook")]
+    public static BishObject Def(BishNull self, BishString name, BishObject _) =>
+        throw BishException.OfNull("def", name.Value);
+
     [Builtin("hook")]
     public static BishObject Del(BishNull self, BishString name) =>
-        throw BishException.OfNull("delete", name.Value);
+        throw BishException.OfNull("del", name.Value);
 
     [Builtin]
     public static BishBool Bool(BishNull a) => BishBool.False;

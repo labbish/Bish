@@ -53,6 +53,24 @@ public class MemberTest : Test
         X.SetMember("c", I(5));
 
         T1.TryGetMember("a").Should().BeEquivalentTo(I(0));
+        T1.TryGetMember("b").Should().BeEquivalentTo(I(4));
+        T1.TryGetMember("c").Should().BeNull();
+        T2.TryGetMember("a").Should().BeEquivalentTo(I(3));
+        T2.TryGetMember("b").Should().BeEquivalentTo(I(4));
+        T2.TryGetMember("c").Should().BeEquivalentTo(I(1));
+        X.TryGetMember("a").Should().BeEquivalentTo(I(3));
+        X.TryGetMember("b").Should().BeEquivalentTo(I(4));
+        X.TryGetMember("c").Should().BeEquivalentTo(I(5));
+    }
+
+    [Fact]
+    public void TestDefMember()
+    {
+        T2.DefMember("a", I(3));
+        X.DefMember("b", I(4));
+        X.DefMember("c", I(5));
+
+        T1.TryGetMember("a").Should().BeEquivalentTo(I(0));
         T1.TryGetMember("b").Should().BeEquivalentTo(I(0));
         T1.TryGetMember("c").Should().BeNull();
         T2.TryGetMember("a").Should().BeEquivalentTo(I(3));

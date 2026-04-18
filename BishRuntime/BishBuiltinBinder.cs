@@ -135,12 +135,12 @@ public static class BishBuiltinIteratorBinder
     public static void Bind(BishType type, Func<BishObject, BishObject?> next, bool noParent = false)
     {
         if (!noParent) type.Parents.Add(BishIterator.StaticType);
-        type.SetMember("hook_create", new BishFunc("hook_create", [], _ =>
+        type.DefMember("hook_create", new BishFunc("hook_create", [], _ =>
             throw BishException.OfType($"Cannot manually create {type.Name}; did you mean to call .iter()?", [])));
-        type.SetMember("next",
+        type.DefMember("next",
             new BishFunc("next", [new BishArg("iter", type)],
                 args => next(args[0]) ?? throw BishException.OfIteratorStop()));
-        type.SetMember("iter", new BishFunc("iter",
+        type.DefMember("iter", new BishFunc("iter",
             [new BishArg("self", type)], args => args[0]));
     }
 }

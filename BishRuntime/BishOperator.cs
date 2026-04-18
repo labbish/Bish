@@ -45,6 +45,7 @@ public static partial class BishOperator
         new("toString", ["self"]),
         new("hook_get", ["self", "member"], "get()"),
         new("hook_set", ["self", "member", "value"], "set()"),
+        new("hook_def", ["self", "member", "value"], "def()"),
         new("hook_del", ["self", "member"], "del()"),
         new("hook_create", ["self"], "create"),
         new("hook_init", null, "init"),
@@ -68,9 +69,11 @@ public static partial class BishOperator
         new("bool", ["self"], "bool", () => BishBool.True),
         new(GetterRegex(), ["self"], "get"),
         new(SetterRegex(), ["self", "value"], "set"),
+        new(DefferRegex(), ["self", "value"], "def"),
         new(DellerRegex(), ["self"], "del"),
         new("op_getIndex", ["self", "index"], "get[]"),
         new("op_setIndex", ["self", "index", "value"], "set[]"),
+        new("op_defIndex", ["self", "index", "value"], "def[]"),
         new("op_delIndex", ["self", "index"], "del[]"),
         new("iter", ["self"], "iter"),
         new("hook_enter", ["self"], "enter"),
@@ -138,6 +141,9 @@ public static partial class BishOperator
 
     [GeneratedRegex("hook_set_[A-Za-z_][A-Za-z0-9_]*")]
     private static partial Regex SetterRegex();
+
+    [GeneratedRegex("hook_def_[A-Za-z_][A-Za-z0-9_]*")]
+    private static partial Regex DefferRegex();
 
     [GeneratedRegex("hook_del_[A-Za-z_][A-Za-z0-9_]*")]
     private static partial Regex DellerRegex();

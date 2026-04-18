@@ -89,6 +89,9 @@ public class BishList(IList<BishObject> list) : BishObject
     }
 
     [Builtin("op")]
+    public static BishObject DefIndex(BishList self, BishObject x, BishObject value) => SetIndex(self, x, value);
+
+    [Builtin("op")]
     public static BishObject DelIndex(BishList self, BishObject x)
     {
         var result = GetIndex(self, x);

@@ -91,6 +91,16 @@ public record SetMember(string Name) : BishBytecode
     }
 }
 
+public record DefMember(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var value = frame.Stack.Pop();
+        var obj = frame.Stack.Pop();
+        frame.Stack.Push(obj.DefMember(Name, value));
+    }
+}
+
 public record DelMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));
@@ -311,7 +321,7 @@ public static class ClassHelper
     {
         var inner = slice.Execute(frame);
         var type = new BishType(name, parents.Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList());
-        foreach (var (key, value) in inner.Scope.Vars) type.SetMember(key, value);
+        foreach (var (key, value) in inner.Scope.Vars) type.DefMember(key, value);
         frame.Stack.Push(type);
     }
 }

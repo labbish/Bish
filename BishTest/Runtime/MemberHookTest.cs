@@ -16,8 +16,17 @@ public class MemberHookTest : Test
     [Fact]
     public void TestObjectSetHook()
     {
-        X.SetMember("a", Null).Should().BeEquivalentTo(S("set"));
+        X.SetMember("a", Null).Should().BeEquivalentTo(Null);
         X.SetMember("b", Null).Should().BeEquivalentTo(S("set"));
+        X.Members.Should().HaveCount(1);
+        X.Members["a"].Should().BeEquivalentTo(Null);
+    }
+
+    [Fact]
+    public void TestObjectDefHook()
+    {
+        X.DefMember("a", Null).Should().BeEquivalentTo(S("def"));
+        X.DefMember("b", Null).Should().BeEquivalentTo(S("def"));
         X.Members.Should().HaveCount(1);
         X.Members["a"].Should().BeEquivalentTo(I(0));
     }
@@ -45,6 +54,13 @@ public class MemberHookTest : Test
     }
 
     [Fact]
+    public void TestMemberDeffer()
+    {
+        Y.DefMember("a", I(2)).Should().BeEquivalentTo(Null);
+        Y.TryGetMember("a").Should().BeEquivalentTo(I(2));
+    }
+
+    [Fact]
     public void TestMemberDeller()
     {
         Y.TryDelMember("a").Should().BeEquivalentTo(Null);
@@ -57,7 +73,9 @@ public class MemberHookTest : Test
         var n = BishNull.StaticType.CreateInstance([]);
         Action(() => n.TryGetMember("")).Should().Excepts(BishError.NullErrorType);
         Action(() => n.GetMember("")).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.TrySetMember("", n)).Should().Excepts(BishError.NullErrorType);
         Action(() => n.SetMember("", n)).Should().Excepts(BishError.NullErrorType);
+        Action(() => n.DefMember("", n)).Should().Excepts(BishError.NullErrorType);
         Action(() => n.TryDelMember("")).Should().Excepts(BishError.NullErrorType);
         Action(() => n.DelMember("")).Should().Excepts(BishError.NullErrorType);
     }
@@ -77,6 +95,9 @@ file class T1 : BishObject
 
     [Builtin("hook")]
     public static BishString Set(T1 self, BishString name, BishObject value) => new("set");
+
+    [Builtin("hook")]
+    public static BishString Def(T1 self, BishString name, BishObject value) => new("def");
 
     [Builtin("hook")]
     public static BishString Del(T1 self, BishString name) => new("del");
@@ -100,6 +121,9 @@ file class T2 : BishObject
 
     [Builtin("hook")]
     public static void Set_a(T2 self, BishInt value) => self.A = value.Value;
+
+    [Builtin("hook")]
+    public static void Def_a(T2 self, BishInt value) => self.A = value.Value;
 
     [Builtin("hook")]
     public static BishNull Del_a(T2 self) => BishNull.Instance;

@@ -218,7 +218,7 @@ public partial class BishVisitor
             case BishParser.GetAccessContext access:
                 var tag = Symbols.Get("def");
                 var last = access.nullAccess()[^1];
-                return [..GetExceptLast(access, tag), ..value, ..Set(last, tag), Tag(tag)];
+                return [..GetExceptLast(access, tag), ..value, ..Def(last, tag), Tag(tag)];
         }
 
         return Error(context, "Invalid def expression");
@@ -283,6 +283,16 @@ public partial class BishVisitor
 
     private Codes Set(BishParser.NullAccessContext access, string tag) =>
         [..JumpIfNull(access, tag), ..JustSet(access.access())];
+
+    private Codes JustDef(BishParser.AccessContext access) => access switch
+    {
+        BishParser.MemberAccessContext member => [new DefMember(member.ID().GetText())],
+        BishParser.IndexAccessContext index => [..Visit(index.index()), new Swap(), Op("def[]", 3)],
+        _ => Error(access, "Invalid def expression")
+    };
+
+    private Codes Def(BishParser.NullAccessContext access, string tag) =>
+        [..JumpIfNull(access, tag), ..JustDef(access.access())];
 
     private Codes JustDel(BishParser.AccessContext access) => access switch
     {

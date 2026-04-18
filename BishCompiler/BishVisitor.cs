@@ -189,7 +189,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         {
             BishParser.RestEntryContext rest => [..Visit(rest.expr()), Op("+", 2)],
             BishParser.SingleEntryContext single =>
-                [new Copy(), ..Visit(single.key), ..Visit(single.value), Op("set[]", 3), new Pop()],
+                [new Copy(), ..Visit(single.key), ..Visit(single.value), Op("def[]", 3), new Pop()],
             _ => throw new ArgumentException("impossible")
         }))
     ];
@@ -200,7 +200,7 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         ..context.objEntries().objEntry().SelectMany(entry => (Codes)([
             new Copy(),
             ..entry.expr() is null ? [new Get(entry.ID().GetText())] : Visit(entry.expr()),
-            new SetMember(entry.ID().GetText()),
+            new DefMember(entry.ID().GetText()),
             new Pop()
         ]))
     ];

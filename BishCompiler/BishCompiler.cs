@@ -56,7 +56,7 @@ public static class BishCompiler
                         var exports = new PluginExports();
                         plugin?.Initialize(exports);
                         foreach (var (name, value) in exports.Exports)
-                            module.SetMember(name, value);
+                            module.DefMember(name, value);
                     }
                 }
                 else
@@ -65,7 +65,7 @@ public static class BishCompiler
                     if (errors.Count != 0) throw new ArgumentException(errors[0].Message);
                     imported.Execute();
                     foreach (var (name, value) in imported.Scope.Vars)
-                        module.SetMember(name, value);
+                        module.DefMember(name, value);
                 }
 
                 ImportCache.Add(path, module);

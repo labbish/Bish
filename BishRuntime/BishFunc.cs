@@ -198,6 +198,9 @@ public class BishFunc(
         self.Func = list => func.Call([new BishList(list)]);
     }
 
+    [Builtin("op", tag: "ignore")]
+    public static BishObject Call(BishFunc func, [Rest] BishList args) => func.Call(args.List.ToList());
+
     [Builtin("hook")]
     public static BishString Get_name(BishFunc self) => new(self.Name);
 

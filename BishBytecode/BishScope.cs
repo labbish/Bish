@@ -98,6 +98,7 @@ public class BishScope
         BuiltinModules.Add("file", BishFileModule.Module);
         BuiltinModules.Add("random", BishRandomModule.Module);
         BuiltinModules.Add("func", BishFuncModule.Module);
+        // TODO: time
     }
 }
 

@@ -54,7 +54,7 @@ public class BishLock(BishObject obj) : BishObject
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Thread");
-    
+
     [Builtin("hook")]
     public static BishLock Create(BishObject _) => new(null!);
 
@@ -69,3 +69,5 @@ public class BishLock(BishObject obj) : BishObject
 
     static BishLock() => BishBuiltinBinder.Bind<BishLock>();
 }
+
+// TODO: semaphore (& channel?)

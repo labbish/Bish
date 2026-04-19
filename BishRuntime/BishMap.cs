@@ -135,7 +135,7 @@ public class BishMapIterator(List<Entry> entries) : BishObject
     static BishMapIterator() => BishBuiltinIteratorBinder.Bind<BishMapIterator>();
 }
 
-public class BishProxyMap(Dictionary<string, BishObject> dictionary)
+public class BishProxyMap(IDictionary<string, BishObject> dictionary)
     : BishMap(dictionary.Select(pair => new Entry(new BishString(pair.Key), pair.Value)).ToList())
 {
     public override BishObject Add(Entry entry)

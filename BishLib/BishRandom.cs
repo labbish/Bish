@@ -32,7 +32,7 @@ public class BishRandom(Random random) : BishObject
 
     [Builtin(special: false)]
     public static BishInt RandInt(BishRandom self, BishInt min, BishInt max) => min.Value > max.Value
-        ? throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}", [])
+        ? throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}")
         : BishInt.Of(self.Random.Next(min.Value, max.Value));
 
     public BishObject Choice(BishObject[] array) => array[Random.Next(array.Length)];
@@ -53,7 +53,7 @@ public class BishRandom(Random random) : BishObject
         var shuffled = self.Shuffled(iter);
         return shuffled.Length >= count.Value
             ? new BishList(shuffled[..count.Value])
-            : throw BishException.OfArgument($"Cannot select {count.Value} samples from {shuffled.Length} items", []);
+            : throw BishException.OfArgument($"Cannot select {count.Value} samples from {shuffled.Length} items");
     }
 
     public BishObject[] Shuffled(BishObject iter)

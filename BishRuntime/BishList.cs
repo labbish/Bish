@@ -77,8 +77,7 @@ public class BishList(IList<BishObject> list) : BishObject
 
                 var indexes = range.ToInts().ToList();
                 if (indexes.Count != list.List.Count)
-                    throw BishException.OfArgument(
-                        $"Setting {indexes.Count} indexes with {list.List.Count} elements", []);
+                    throw BishException.OfArgument_ListSetCount(indexes.Count, list.List.Count);
                 foreach (var (i, obj) in indexes.Zip(list.List))
                     SetIndex(self, i, obj);
                 break;

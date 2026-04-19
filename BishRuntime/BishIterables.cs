@@ -29,14 +29,13 @@ public class BishRange(int? start, int? end, int step) : BishObject
         if (b is null) (self.Start, self.End) = (0, ToInt(a));
         else (self.Start, self.End) = (ToInt(a), ToInt(b));
         self.Step = ToInt(step) ?? 1;
-        if (self.Step == 0) throw BishException.OfArgument("Range step cannot be 0", []);
+        if (self.Step == 0) throw BishException.OfArgument_RangeZeroStep();
     }
 
     [Iter]
     public BishInt? Next()
     {
-        if (Start is null || End is null)
-            throw BishException.OfArgument("Cannot iterate range with start=null or end=null", []);
+        if (Start is null || End is null) throw BishException.OfArgument_RangeNull();
         Current ??= Start;
         if (Current * Step >= End * Step) return null;
         var result = Current;

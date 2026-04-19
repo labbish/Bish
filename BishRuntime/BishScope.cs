@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Collections.Concurrent;
+
+namespace BishRuntime;
 
 public class BishScope : BishObject
 {
@@ -10,10 +12,9 @@ public class BishScope : BishObject
 
     public new static readonly BishType StaticType = new("scope", [BishNum.StaticType]);
 
-    internal BishScope(BishScope? outer = null, Dictionary<string, BishObject>? vars = null)
+    internal BishScope(BishScope? outer = null)
     {
         Outer = outer;
-        Vars = vars ?? [];
         Vars.Add("this", this);
     }
 
@@ -46,7 +47,7 @@ public class BishScope : BishObject
     [Builtin("hook")]
     public static BishScope? Get_outer(BishScope self) => self.Outer;
 
-    public static readonly Dictionary<string, BishObject> BuiltinModules = [];
+    public static readonly IDictionary<string, BishObject> BuiltinModules = new ConcurrentDictionary<string, BishObject>();
 
     public static BishScope Globals => new(BishBuiltinScope.Instance);
 

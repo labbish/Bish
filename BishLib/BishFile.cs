@@ -12,7 +12,7 @@ public static class BishFileModule
 
     public static readonly BishType FileError = new("FileError", [BishError.StaticType]);
 
-    public static BishException FileException(string msg) => BishException.Create(FileError, msg, []);
+    public static BishException FileException(string msg) => BishException.Create(FileError, msg);
 
     public static T FileOperation<T>(Func<T> func)
     {

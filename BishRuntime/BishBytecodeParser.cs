@@ -1,6 +1,8 @@
 ﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -8,7 +10,7 @@ public static partial class BytecodeParser
 {
     // Reserved for user-defined bytecodes in other assemblies
     // ReSharper disable once CollectionNeverUpdated.Global
-    public static readonly Dictionary<string, Type> Mappings = [];
+    public static readonly IDictionary<string, Type> Mappings = new ConcurrentDictionary<string, Type>();
 
     public static string ToString(BishBytecode bytecode)
     {

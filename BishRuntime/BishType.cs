@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using BishUtils;
+
+namespace BishRuntime;
 
 public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
 {

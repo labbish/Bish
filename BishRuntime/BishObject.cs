@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -24,7 +26,7 @@ public class BishObject(BishType? type = null)
         internal set;
     } = type;
 
-    public Dictionary<string, BishObject> Vars = [];
+    public IDictionary<string, BishObject> Vars = new ConcurrentDictionary<string, BishObject>();
 
     public BishObject? TryCallHook(string name, List<BishObject> args, bool ignores = false)
     {

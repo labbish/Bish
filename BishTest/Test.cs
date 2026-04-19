@@ -68,10 +68,10 @@ public class Test(TestInfoFixture fixture)
 public static class BishExceptionAssertion
 {
     public static ExceptionAssertions<BishException> Excepts<TDelegate, TAssertions>(
-        this DelegateAssertions<TDelegate, TAssertions> assertions, BishType? errorType = null)
+        this DelegateAssertions<TDelegate, TAssertions> assertions, BishType errorType)
         where TDelegate : Delegate
         where TAssertions : DelegateAssertions<TDelegate, TAssertions>
-        => assertions.Throw<BishException>().Where(ex => ex.Error.Type.CanAssignTo(errorType ?? BishError.StaticType));
+        => assertions.Throw<BishException>().Where(ex => ex.Error.Type.CanAssignTo(errorType));
 }
 
 [CollectionDefinition("opt")]

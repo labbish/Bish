@@ -22,15 +22,15 @@ public class BishBool : BishObject
     public static void Init(BishBool self, [DefaultNull] BishBool? other) => self.Value = other?.Value ?? false;
 
     [Builtin("op")]
-    public static BishBool Invert(BishBool a) => new(!a.Value);
+    public static BishBool Invert(BishBool a) => Of(!a.Value);
 
     [Builtin("op")]
-    public static BishBool Eq(BishBool a, BishBool b) => new(a.Value == b.Value);
+    public static BishBool Eq(BishBool a, BishBool b) => Of(a.Value == b.Value);
 
     public override string ToString() => Value ? "true" : "false";
 
     [Builtin]
-    public static BishBool Bool(BishBool a) => new(a.Value);
+    public static BishBool Bool(BishBool a) => a;
 
     public static bool CallToBool(BishObject obj) =>
         BishOperator.Call("bool", [obj]).ExpectToBe<BishBool>("bool").Value;

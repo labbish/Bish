@@ -71,7 +71,7 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("c.x=6", I(6));
         ExpectResult("c.x", I(6));
         Execute("del c.x;");
-        Action(() => Execute("c.x;")).Should().Excepts();
+        Action(() => Execute("c.x;")).Should().Excepts(BishError.AttributeErrorType);
 
         Execute("class C{init(self,x)self._x:=x;get [](self,_)self._x;"
                 + "set [](self,_,x)self._x:=x;del [](self,_)del self._x;};c:=C(5);");
@@ -79,7 +79,7 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("c[1]=3", I(3));
         ExpectResult("c[2]", I(3));
         Execute("del c[3];");
-        Action(() => Execute("c[4];")).Should().Excepts();
+        Action(() => Execute("c[4];")).Should().Excepts(BishError.ArgumentErrorType);
 
         Execute("class C{init(self,x)self.base()._x:=x;get(self,_)self.base()._x;"
                 + "set(self,_,x)self.base()._x:=x;del(self,_)del self.base()._x;};c:=C(5);");
@@ -87,7 +87,7 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("c.x1=3", I(3));
         ExpectResult("c.x2", I(3));
         Execute("del c.x3;");
-        Action(() => Execute("c.x4;")).Should().Excepts();
+        Action(() => Execute("c.x4;")).Should().Excepts(BishError.AttributeErrorType);
 
         Execute("class C{instance:=null;create(self)instance??=self;};");
         ExpectResult("C()===C()", True);

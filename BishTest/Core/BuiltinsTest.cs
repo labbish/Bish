@@ -16,7 +16,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("3/2", N(1.5));
         ExpectResult("3%2", I(1));
         ExpectResult("(-3)%2", I(-1));
-        Action(() => Execute("3%0;")).Should().Excepts();
+        Action(() => Execute("3%0;")).Should().Excepts(BishError.ArgumentErrorType);
         ExpectResult("3^2", N(9));
 
         ExpectResult("(3).abs()", I(3));
@@ -110,8 +110,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("'a'.bool()", True);
         ExpectResult("('abc')[1]", S("b"));
         ExpectResult("('abc')[-1]", S("c"));
-        Action(() => Execute("('abc')[3];")).Should().Excepts();
-        Action(() => Execute("('abc')[-4];")).Should().Excepts();
+        Action(() => Execute("('abc')[3];")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Execute("('abc')[-4];")).Should().Excepts(BishError.ArgumentErrorType);
         ExpectResult("('abc').length", I(3));
 
         Execute("iter:='abc'.iter();");
@@ -172,8 +172,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("l", L(I(0), S("x"), True));
         ExpectResult("l.length", I(3));
 
-        Action(() => Execute("l[3];")).Should().Excepts();
-        Action(() => Execute("dell[-4];")).Should().Excepts();
+        Action(() => Execute("l[3];")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Execute("del l[-4];")).Should().Excepts(BishError.ArgumentErrorType);
 
         Execute("iter:=l.iter();");
         ExpectResult("iter.next()", I(0));
@@ -231,8 +231,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("l", M((I(0), True)));
         ExpectResult("l.length", I(1));
 
-        Action(() => Execute("l[b];")).Should().Excepts();
-        Action(() => Execute("dell[c];")).Should().Excepts();
+        Action(() => Execute("l[b];")).Should().Excepts(BishError.ArgumentErrorType);
+        Action(() => Execute("del l[c];")).Should().Excepts(BishError.ArgumentErrorType);
 
         Execute("l={a:b,c:d};");
         Execute("iter:=l.iter();");
@@ -244,5 +244,26 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("l.keys", L(I(0), True));
         ExpectResult("l.values", L(S("x"), Null));
         ExpectResult("l.entries", L(L(I(0), S("x")), L(True, Null)));
+    }
+
+    [Fact]
+    public void TestType()
+    {
+        Execute("class C{a:=b:=0};");
+        Execute("D:=type('X',[C]);");
+        Execute("D.a:=1;");
+        ExpectResult("D().a", I(1));
+        ExpectResult("D().b", I(0));
+        
+        ExpectResult("C.name", S("C"));
+        ExpectResult("D.name", S("X"));
+        
+        ExpectResult("C.MRO==[object]", True);
+        ExpectResult("D.MRO==[C,object]", True);
+        
+        ExpectResult("C.parents==[]", True);
+        ExpectResult("D.parents==[C]", True);
+        Execute("del D.parents[0];");
+        Action(() => Execute("D().b")).Should().Excepts(BishError.AttributeErrorType);
     }
 }

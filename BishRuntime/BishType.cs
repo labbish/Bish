@@ -2,12 +2,24 @@
 
 public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
 {
-    public readonly string Name = name;
-    public readonly List<BishType> Parents = parents ?? [];
+    public string Name { get; private set; } = name;
+    public List<BishType> Parents { get; private set; } = parents ?? [];
     public readonly int Skips = skips;
 
     protected override List<BishObject> LookupChain =>
         GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToList<BishObject>();
+
+    [Builtin("hook")]
+    public static BishType Create(BishObject _) => new(null!);
+
+    [Builtin("hook")]
+    public static void Init(BishType self, BishString name, [DefaultNull] BishList? parents)
+    {
+        self.Name = name.Value;
+        if (parents is null) return;
+        self.Parents = parents.List.Select(parent => parent.ExpectToBe<BishType>("parent type")).ToList();
+        self.ClearMROCache();
+    }
 
     public BishObject CreateInstance(List<BishObject> args)
     {

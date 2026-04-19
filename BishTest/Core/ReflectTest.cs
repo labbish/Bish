@@ -17,20 +17,11 @@ public class ReflectTest : Test
         ExpectResult("c.vars['b']", I(1));
         Execute("c.vars['a']=2;del c.vars['b'];c.vars['c']:=3;");
         ExpectResult("c.a", I(2));
-        Action(() => Execute("c.b;")).Should().Excepts();
+        Action(() => Execute("c.b;")).Should().Excepts(BishError.AttributeErrorType);
         ExpectResult("c.c", I(3));
         ExpectResult("c.type===C", True);
         Execute("c.type=D;");
         ExpectResult("c.f()", I(-1));
-    }
-    
-    [Fact]
-    public void TestTypeReflect()
-    {
-        ExpectResult("C.parents==[B]", True);
-        ExpectResult("C.MRO==[B,object]", True);
-        Execute("C.parents[:]=[D];");
-        ExpectResult("C.o", S("d"));
     }
 
     [Fact]
@@ -43,6 +34,6 @@ public class ReflectTest : Test
         ExpectResult("s.vars['f']===f", True);
         Execute("s.vars['f']=g;del s.vars['h'];");
         ExpectResult("f()", S("g"));
-        Action(() => Execute("h();")).Should().Excepts();
+        Action(() => Execute("h();")).Should().Excepts(BishError.AttributeErrorType);
     }
 }

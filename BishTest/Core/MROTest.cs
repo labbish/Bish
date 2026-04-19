@@ -8,7 +8,7 @@ public class MROTest : Test
     [Fact]
     public void TestMRO()
     {
-        Execute("func f(t)=>t.MRO.iter().join();");
+        Execute("func f(t)t.MRO.iter().join();");
         ExpectResult("f(O)", S("O"));
         ExpectResult("f(A)", S("AO"));
         ExpectResult("f(B)", S("BO"));

@@ -50,16 +50,15 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
             ("of string seq or of list seq", "seq[0]"),
             ("{'a':of int a, ..of _ rest}", "a*rest.length"),
             ("{.a:of int a}", "a^2"),
-            ("of _ x", "x && -1")
+            ("of _ x", "x&&-1")
         ];
-        var expr = $"s1:=({value}) switch" + "{" +
-                   string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "};";
-        var stat = $"s2:=null;switch ({value})" + "{" +
-                   string.Join("", cases.Select(branch => $"case {branch.Pattern}: s2={branch.Expr};")) + "}";
-        Execute(expr);
-        Execute(stat);
-        Execute($"s:={expect};");
-        BishObject s = Scope.GetVar("s"), s1 = Scope.GetVar("s1"), s2 = Scope.GetVar("s2");
+        var expr = $"({value}) switch" + "{" +
+                   string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "}";
+        var stat = $"s:=null;({value}) switch" + "{" +
+                   string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{{s={branch.Expr};}}")) + "};s";
+        var s1 = Result(expr);
+        var s2 = Result(stat);
+        var s = Result(expect);
         s1.Should().BeEquivalentTo(s);
         s2.Should().BeEquivalentTo(s);
     }

@@ -109,7 +109,7 @@ public partial class BishVisitor
                             result.Add(new Move($"${i}"))
                                 .Add(Set(rest.expr(), op, CompileResult.Expr(null).Add(new Del($"${i}"))));
                             break;
-                        default: throw new ArgumentException("impossible!");
+                        default: return result.Error("Invalid set expression!");
                     }
 
                 break;
@@ -177,7 +177,7 @@ public partial class BishVisitor
 
                 break;
             }
-            default: throw new ArgumentException("impossible!");
+            default: return result.Error("Invalid set expression!");
         }
 
         return result;
@@ -252,7 +252,7 @@ public partial class BishVisitor
                 result.Add(GetExceptLast(access, tag)).Add(value, StackEffect.Expr).Add(Def(last, tag)).Add(Tag(tag));
                 break;
             }
-            default: throw new ArgumentException("impossible!");
+            default: return result.Error("Invalid def expression!");
         }
 
         return result;
@@ -280,7 +280,7 @@ public partial class BishVisitor
                 var last = access.nullAccess()[^1];
                 return CompileResult.Expr(context).Add(GetExceptLast(access, tag))
                     .Add(Del(last, tag)).Add(Tag(tag));
-            default: throw new ArgumentException("impossible!");
+            default: return CompileResult.Expr(context).Error("Invalid del expression!");
         }
     }
 

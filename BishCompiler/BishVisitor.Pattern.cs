@@ -143,15 +143,10 @@ public partial class BishVisitor
         Switch(context, Visit(context.expr()),
             context.caseExpr().Select(branch => (Visit(branch.pattern()), Visit(branch.expr()).Wrap())).ToList());
 
-    public override CompileResult VisitSwitchStat(BishParser.SwitchStatContext context) =>
-        Switch(context, Visit(context.expr()),
-            context.caseStat().Select(branch => (Visit(branch.pattern()), Visit(branch.stat()).Wrap())).ToList());
-
     private CompileResult Switch(ParserRuleContext context, CompileResult expr,
         List<(CompileResult pattern, CompileResult codes)> branches)
     {
         var result = CompileResult.Same(context, branches.Select(pair => pair.codes).ToList());
-        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         var count = result.Effect switch
         {
             StackEffect.Stat => 0,

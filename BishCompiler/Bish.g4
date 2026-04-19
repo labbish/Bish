@@ -1,30 +1,7 @@
 grammar Bish;
 
 program
-    : stat* EOF
-    ;
-
-stat
-    : expr END                                                  # ExprStat
-    | BRK ID? END                                               # BreakStat
-    | CTN ID? END                                               # ContinueStat
-    | RET expr END                                              # ReturnStat
-    | YLD gen='*'? expr END                                     # YieldStat
-    | IF '(' cond=expr ')' left=stat (ELS right=stat)?          # IfStat
-    | tag? WHL '(' expr ')' stat                                # WhileStat
-    | tag? DO stat WHL '(' expr ')' END                         # DoWhileStat
-    | tag? FOR '(' forStats ')' stat                            # ForStat
-    // obj is Setable
-    | tag? FOR '(' obj=expr set=':'? ':' iter=expr ')' stat     # ForIterStat
-    | TRY tryStat=stat (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
-        (('=>' catchExpr=expr END) | ('{' catchStat+=stat* '}'))))?
-        (FIN finallyStat=stat)?                                 # ErrorStat
-    // obj is Setable
-    // Unlike ForIterStat, we don't support with (obj :: cont) because it's usually wrong here.
-    | WTH '(' (obj=expr ':')? cont=expr ')' stat                # WithStat
-    | SWC expr '{' caseStat* '}'                                # SwitchStat
-    | '{' stat* '}'                                             # BlockStat
-    | END                                                       # EmptyStat
+    : (front+=expr END)* last=expr? EOF
     ;
 
 expr
@@ -34,13 +11,12 @@ expr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* INI funcBody                                        # InitExpr
     | deco* CRT funcBody                                        # CreateExpr
-    | deco* CLS ID? (':' args)? ('{' stat* '}')?                # ClassExpr
+    | deco* CLS ID? (':' args)? expr?                           # ClassExpr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr
     | '{' objEntries '}'                                        # ObjExpr
     | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
-    | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
     | <assoc=right> op=('+'|'-'|'!'|'~') expr                   # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
     | left=expr op=('*'|'/'|'%') right=expr                     # BinOpExpr
@@ -53,14 +29,28 @@ expr
     | left=expr '&&' right=expr                                 # LogicAndExpr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | left=expr '??' right=expr                                 # NullCombExpr
-    | <assoc=right> cond=expr '?' left=expr ':' right=expr      # TernOpExpr
-    | <assoc=right> THR expr                                    # ThrowExpr
     | expr pipe+                                                # PipeExpr
     // In the following 3 cases, obj should be Setable, defined as:
     // Setable : AtomExpr(IdAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
     | <assoc=right> obj=expr setOp? '=' value=expr              # Set
     | <assoc=right> obj=expr ':=' value=expr                    # Def
     | <assoc=right> DEL obj=expr                                # Del
+    | IF '(' cond=expr ')' left=expr (ELS right=expr)?          # IfExpr
+    | tag? WHL '(' cond=expr ')' loop=expr                      # WhileExpr
+    | tag? DO loop=expr WHL '(' cond=expr ')'                   # DoWhileExpr
+    // obj is Setable
+    | tag? FOR '(' obj=expr ':' iter=expr ')' loop=expr         # ForExpr
+    | TRY tryStat=expr (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
+        catchStat=expr))? (FIN finallyStat=expr)?               # ErrorExpr
+    // obj is Setable
+    | WTH '(' (obj=expr ':')? cont=expr ')' main=expr           # WithExpr
+    | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
+    | <assoc=right> THR expr                                    # ThrowExpr
+    | <assoc=right> BRK ID?                                     # BreakExpr
+    | <assoc=right> CTN ID?                                     # ContinueExpr
+    | <assoc=right> RET expr                                    # ReturnExpr
+    | <assoc=right> YLD gen='*'? expr                           # YieldExpr
+    | '{' (front+=expr END)* last=expr? '}'                     # BlockExpr
     | atom                                                      # AtomExpr
     | '$'                                                       # PipeVarExpr
     ;
@@ -87,7 +77,7 @@ pipe
     ;
 
 funcBody
-    : '(' defArgs ')' gen='*'? (('=>' expr) | ('{' stat* '}'))
+    : '(' defArgs ')' gen='*'? expr
     ;
 
 accessOp
@@ -116,10 +106,6 @@ access
     | '.' ID                                                    # MemberAccess
     ;
 
-forStats
-    : init=expr END cond=expr END step=expr
-    ;
-
 tag : ID ':' ;
 
 index
@@ -129,10 +115,6 @@ index
 
 caseExpr
     : pattern '=>' expr
-    ;
-
-caseStat
-    : CAS pattern ':' stat
     ;
 
 // We handle _ in ExprPattern to allow it to be used as an ID in other places

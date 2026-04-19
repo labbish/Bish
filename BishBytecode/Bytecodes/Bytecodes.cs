@@ -15,15 +15,6 @@ public record Pop(int Count = 1) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Pop(Count);
 }
 
-public record EndStat : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        var obj = frame.Stack.Pop();
-        frame.EndStatHandler?.Invoke(obj);
-    }
-}
-
 public abstract record Value : BishBytecode;
 
 public record Int(int Value) : Value

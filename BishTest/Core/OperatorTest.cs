@@ -79,8 +79,8 @@ public class OperatorTest : Test
         Count.Should().Be(1);
 
         Count = 0;
-        ExpectResult("true?3:f()", I(3));
-        ExpectResult("false?f():3", I(3));
+        ExpectResult("if(true)3else f()", I(3));
+        ExpectResult("if(false)f()else 3", I(3));
         Count.Should().Be(0);
     }
 

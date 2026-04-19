@@ -5,7 +5,7 @@ public class MethodTest : Test
     public MethodTest(TestInfoFixture fixture) : base(fixture)
     {
         Scope.DefVar("T1", T1.StaticType);
-        Execute("x:=T1('x');x.f:=(_:null)=>1;");
+        Execute("x:=T1('x');x.f:=(_:null)1;");
     }
 
     [Fact]
@@ -39,8 +39,8 @@ public class MethodTest : Test
     [Fact]
     public void TestBase()
     {
-        Execute("class C1{func f(self)=>self.a;};");
-        Execute("class C2:C1{func f(self)=>self.b;};");
+        Execute("class C1{func f(self)self.a;};");
+        Execute("class C2:C1{func f(self)self.b;};");
         Execute("x:=C2();x.a:=1;x.b:=2;");
         ExpectResult("x.f()", I(2));
         ExpectResult("x.base().f()", I(1));

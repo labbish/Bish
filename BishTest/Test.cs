@@ -2,7 +2,6 @@
 global using BishBytecode;
 global using BishCompiler;
 global using FluentAssertions;
-global using Bytecodes = BishBytecode.Bytecodes;
 using System.Reflection;
 using FluentAssertions.Specialized;
 using Xunit.Sdk;
@@ -56,8 +55,12 @@ public class Test(TestInfoFixture fixture)
 
     protected BishObject Result(string expr)
     {
-        Execute($"result:={expr};");
-        return Scope.GetVar("result");
+        var frame = Compile(expr);
+        frame.Execute();
+        var result = frame.Stack.Pop();
+        frame.Stack.Should().BeEmpty();
+        frame.Scope.Vars.Keys.Where(key => key.StartsWith('$')).Should().BeEmpty();
+        return result;
     }
 
     protected void ExpectResult(string expr, BishObject result) => Result(expr).Should().BeEquivalentTo(result);

@@ -49,15 +49,10 @@ public class Repl(BishScope? scope = null)
                 default:
                     Handled(() =>
                     {
-                        BishObject? result = null;
-                        var frame = Compile(code + ';');
-                        frame.EndStatHandler = obj => result = obj;
+                        var frame = Compile(code);
                         frame.Execute();
-                        if (frame.Stack.Count > 0)
-                            Console.Error.WriteLine(
-                                "Warning: Stack is non-empty; this might come from a compiler BUG.");
-                        if (result is null) return;
-                        Scope.DefVar("_", result);
+                        if (!frame.Stack.TryPeek(out var result)) return;
+                        Scope.DefMember("_", result);
                         Console.WriteLine(result);
                     });
                     break;

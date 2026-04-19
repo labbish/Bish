@@ -119,8 +119,13 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
             .Add(Tag(tag));
     }
 
-    private CompileResult Condition(string name, CompileResult cond, CompileResult left, CompileResult right)
+    private CompileResult Condition(string name, CompileResult cond, CompileResult left, CompileResult? right)
     {
+        if (right is null)
+        {
+            right = CompileResult.Same(null, left);
+            if (left.Effect == StackEffect.Expr) right.Add(new Null());
+        }
         var result = CompileResult.Same(null, left, right);
         var (tag, end) = Symbols.GetPair(name);
         return result.Add(cond, StackEffect.Expr)
@@ -132,9 +137,6 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
             .Add(Tag(end))
             .Wrap();
     }
-
-    public override CompileResult VisitTernOpExpr(BishParser.TernOpExprContext context) =>
-        Condition("tern", Visit(context.cond), Visit(context.left), Visit(context.right));
 
     private CompileResult Call(BishParser.ArgContext[] args)
     {
@@ -209,24 +211,19 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
         return result;
     }
 
-    public override CompileResult VisitEmptyStat(BishParser.EmptyStatContext context) => CompileResult.Stat(context);
-
-    public override CompileResult VisitExprStat(BishParser.ExprStatContext context) =>
-        CompileResult.Stat(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new EndStat());
-
-    public override CompileResult VisitBlockStat(BishParser.BlockStatContext context)
+    public CompileResult VisitMulti(IList<BishParser.ExprContext> fronts, BishParser.ExprContext? last)
     {
-        var result = CompileResult.Stat(context);
-        foreach (var stat in context.stat()) result.Add(Visit(stat), StackEffect.Stat);
-        return result.Wrap();
+        var expr = last is null ? CompileResult.Stat(last) : Visit(last);
+        var result = CompileResult.Same(null, expr);
+        foreach (var front in fronts) result.Add(Visit(front).IntoStat());
+        return result.Add(expr);
     }
 
-    public override CompileResult VisitProgram(BishParser.ProgramContext context)
-    {
-        var result = CompileResult.Stat(context);
-        foreach (var stat in context.stat()) result.Add(Visit(stat), StackEffect.Stat);
-        return result;
-    }
+    public override CompileResult VisitBlockExpr(BishParser.BlockExprContext context) =>
+        VisitMulti(context._front, context.last).Wrap();
+
+    public override CompileResult VisitProgram(BishParser.ProgramContext context) =>
+        VisitMulti(context._front, context.last);
 
     public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);
 }
@@ -237,4 +234,41 @@ public static class EnumeratorHelper
     {
         public IEnumerable<(T, int)> Enumerate() => enumerable.Select((x, i) => (x, i));
     }
+}
+
+public static class CompileResultHelper
+{
+    extension(CompileResult result)
+    {
+        internal CompileResult WrapLoop(string @break, string @continue, string? loopTag, bool pops = false)
+        {
+            result.Wrap();
+            result.Codes = result.Codes.SelectMany(code => code switch
+            {
+                BishVisitor.Break x when MatchLoopTag(x.LoopTag, loopTag) =>
+                    [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@break)],
+                BishVisitor.Continue x when MatchLoopTag(x.LoopTag, loopTag) =>
+                    [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@continue)],
+                BishVisitor.LoopUnbound x when pops => [x.Deeper()],
+                _ => (Codes)([code])
+            }).ToList();
+            return result;
+        }
+
+        internal CompileResult IntoStat() => result.Effect switch
+        {
+            StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Pop()),
+            StackEffect.Stat => result,
+            _ => throw new ArgumentException("impossible!")
+        };
+
+        internal CompileResult IntoReturn() => result.Effect switch
+        {
+            StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Ret()),
+            StackEffect.Stat => result,
+            _ => throw new ArgumentException("impossible!")
+        };
+    }
+
+    private static bool MatchLoopTag(string? unbound, string? loop) => unbound is null || unbound == loop;
 }

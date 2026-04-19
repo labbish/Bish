@@ -48,7 +48,7 @@ public class CompileResult(
         return this;
     }
 
-    public void Error(string message) => Error(Context, message);
+    public CompileResult Error(string message) => Error(Context, message);
 
     public T? Try<T>(Func<T> action)
     {
@@ -81,8 +81,14 @@ public class CompileResult(
 
     public CompileResult Wrap()
     {
-        Codes.Insert(0, new Inner());
-        Codes.Add(new Outer());
+        Codes = [new Inner(), ..Codes, new Outer()];
+        return this;
+    }
+
+    public CompileResult Unwrap()
+    {
+        if (Codes.FirstOrDefault() is Inner && Codes.LastOrDefault() is Outer)
+            Codes = Codes[1..^1];
         return this;
     }
 
@@ -108,11 +114,7 @@ public class CompileResult(
     {
         Codes.AddRange(result.Codes);
         Errors.AddRange(result.Errors);
-        if (expect is not null && expect != result.Effect)
-        {
-            Console.WriteLine(string.Join(" | ", result.Codes.Select(BytecodeParser.ToString)));
-            Error($"Expect {expect}, got {result.Effect}");
-        }
+        if (expect is not null && expect != result.Effect) Error($"Expect {expect}, got {result.Effect}");
 
         return this;
     }

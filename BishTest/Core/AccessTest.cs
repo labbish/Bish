@@ -2,37 +2,28 @@
 
 public class AccessTest : Test
 {
-    public AccessTest(TestInfoFixture fixture) : base(fixture)
-    {
-        Scope.DefVar("a", I(5));
-        Scope.DefVar("b", S("abc"));
-        Scope.DefVar("n", Null);
-        var x = new BishObject();
-        x.DefMember("y", new BishObject());
-        x.DefMember("z", I(4));
-        Scope.DefVar("x", x);
-        Scope.DefVar("l", L(I(0), I(1), I(2), I(3), I(4)));
-    }
+    public AccessTest(TestInfoFixture fixture) : base(fixture) =>
+        Execute("a:=5;b:='abc';n:=null;x:={.y:object(),.z:4};l:=[0,1,2,3,4];");
 
     [Fact]
     public void TestAccess()
     {
         Execute("a=b.length;c:='c';x.y.z:=0;del x.z;m:=del n;");
-        Scope.GetVar("a").Should().BeEquivalentTo(I(3));
-        Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
-        Scope.GetVar("c").Should().BeEquivalentTo(S("c"));
-        Scope.GetVar("x").GetMember("y").GetMember("z").Should().BeEquivalentTo(I(0));
-        Scope.GetVar("x").TryGetMember("z").Should().BeNull();
-        Scope.TryGetVar("n").Should().BeNull();
-        Scope.GetVar("m").Should().BeEquivalentTo(Null);
+        ExpectResult("a", I(3));
+        ExpectResult("b", S("abc"));
+        ExpectResult("c", S("c"));
+        ExpectResult("x.y.z", I(0));
+        Action(() => Execute("x.z;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("n;")).Should().Excepts(BishError.AttributeErrorType);
+        ExpectResult("m", Null);
     }
 
     [Fact]
     public void TestScopeDepth()
     {
         Execute("{a=b.length;b:='b';}");
-        Scope.GetVar("a").Should().BeEquivalentTo(I(3));
-        Scope.GetVar("b").Should().BeEquivalentTo(S("abc"));
+        ExpectResult("a", I(3));
+        ExpectResult("b", S("abc"));
     }
 
     [Fact]
@@ -40,9 +31,9 @@ public class AccessTest : Test
     {
         ExpectResult("l[0]", I(0));
         Execute("l[1]=-1;l[2]*=3;");
-        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(-1), I(6), I(3), I(4)));
+        ExpectResult("l", L(I(0), I(-1), I(6), I(3), I(4)));
         Execute("del l[3];");
-        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(-1), I(6), I(3)));
+        ExpectResult("l", L(I(0), I(-1), I(6), I(3)));
     }
 
     [Fact]
@@ -51,11 +42,11 @@ public class AccessTest : Test
         Execute("l:=list(range(11));");
         ExpectResult("l[1:7:2]", L(I(1), I(3), I(5)));
         Execute("l[2:8]=['a','b'];");
-        Scope.GetVar("l").Should().BeEquivalentTo(L(I(0), I(1), S("a"), S("b"), I(8), I(9), I(10)));
+        ExpectResult("l", L(I(0), I(1), S("a"), S("b"), I(8), I(9), I(10)));
         Execute("l[::3]=[null]*3;");
-        Scope.GetVar("l").Should().BeEquivalentTo(L(Null, I(1), S("a"), Null, I(8), I(9), Null));
+        ExpectResult("l", L(Null, I(1), S("a"), Null, I(8), I(9), Null));
         Execute("del l[1::2];");
-        Scope.GetVar("l").Should().BeEquivalentTo(L(Null, S("a"), I(8), Null));
+        ExpectResult("l", L(Null, S("a"), I(8), Null));
     }
 
     [Fact]
@@ -63,21 +54,21 @@ public class AccessTest : Test
     {
         Execute("o:=object();");
         Execute("[a,[o.b,c],..l]:=[0,[1,2],3,4];");
-        Scope.GetVar("a").Should().BeEquivalentTo(I(0));
-        Scope.GetVar("o").GetMember("b").Should().BeEquivalentTo(I(1));
-        Scope.GetVar("c").Should().BeEquivalentTo(I(2));
-        Scope.GetVar("l").Should().BeEquivalentTo(L(I(3), I(4)));
+        ExpectResult("a", I(0));
+        ExpectResult("o.b", I(1));
+        ExpectResult("c", I(2));
+        ExpectResult("l", L(I(3), I(4)));
         Execute("[a,[o.b,c],..l]=['a',['b','c'],'l1','l2'];");
-        Scope.GetVar("a").Should().BeEquivalentTo(S("a"));
-        Scope.GetVar("o").GetMember("b").Should().BeEquivalentTo(S("b"));
-        Scope.GetVar("c").Should().BeEquivalentTo(S("c"));
-        Scope.GetVar("l").Should().BeEquivalentTo(L(S("l1"), S("l2")));
+        ExpectResult("a", S("a"));
+        ExpectResult("o.b", S("b"));
+        ExpectResult("c", S("c"));
+        ExpectResult("l", L(S("l1"), S("l2")));
         Execute("del [a,[o.b,c],..l];");
-        Scope.TryGetVar("a").Should().BeNull();
-        Scope.GetVar("o").TryGetMember("b").Should().BeNull();
-        Scope.TryGetVar("c").Should().BeNull();
-        Scope.TryGetVar("l").Should().BeNull();
-        
+        Action(() => Execute("a;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("o.b;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("c;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("l;")).Should().Excepts(BishError.AttributeErrorType);
+
         Execute("o:={'a':0,'b':1,'c':2};");
         Execute("{'a':a,'b':b,..c}:=o;");
         ExpectResult("a", I(0));
@@ -88,11 +79,11 @@ public class AccessTest : Test
         ExpectResult("b", I(-2));
         ExpectResult("c['c']", I(-3));
         Execute("del {'a':a,'b':b,..c};");
-        Scope.TryGetVar("a").Should().BeNull();
-        Scope.TryGetVar("b").Should().BeNull();
-        Scope.TryGetVar("c").Should().BeNull();
+        Action(() => Execute("a;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("b;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("c;")).Should().Excepts(BishError.AttributeErrorType);
         ExpectResult("o['a']", I(0));
-        
+
         Execute("o:={.a:0,.b:1,.c:2};");
         Execute("{.a,.b}:=o;");
         ExpectResult("a", I(0));
@@ -101,8 +92,8 @@ public class AccessTest : Test
         ExpectResult("a", I(-1));
         ExpectResult("b", I(-2));
         Execute("del {.a,.b};");
-        Scope.TryGetVar("a").Should().BeNull();
-        Scope.TryGetVar("b").Should().BeNull();
+        Action(() => Execute("a;")).Should().Excepts(BishError.AttributeErrorType);
+        Action(() => Execute("b;")).Should().Excepts(BishError.AttributeErrorType);
         ExpectResult("o.a", I(0));
     }
 

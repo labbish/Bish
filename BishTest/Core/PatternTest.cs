@@ -15,9 +15,9 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("0 is of int x", True);
         ExpectResult("1 is of num y", True);
         ExpectResult("2 is of string z", False);
-        Scope.GetVar("x").Should().BeEquivalentTo(I(0));
-        Scope.GetVar("y").Should().BeEquivalentTo(N(1));
-        Scope.TryGetVar("z").Should().BeNull();
+        ExpectResult("x", I(0));
+        ExpectResult("y", N(1));
+        Action(() => Execute("z")).Should().Excepts(BishError.AttributeErrorType);
     }
 
     [Theory]

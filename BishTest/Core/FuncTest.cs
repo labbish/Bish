@@ -6,13 +6,13 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     public void TestFunc()
     {
         Execute("x:=((x)x+1)(3);");
-        Scope.GetVar("x").Should().BeEquivalentTo(I(4));
+        ExpectResult("x", I(4));
         Execute("x:=((x){return x+1;})(3);");
-        Scope.GetVar("x").Should().BeEquivalentTo(I(4));
+        ExpectResult("x", I(4));
         Execute("func f(x)x+1;x:=f(3);");
-        Scope.GetVar("x").Should().BeEquivalentTo(I(4));
+        ExpectResult("x", I(4));
         Execute("func f(x){return x+1;};x:=f(3);");
-        Scope.GetVar("x").Should().BeEquivalentTo(I(4));
+        ExpectResult("x", I(4));
         Execute("func f(){return};");
         ExpectResult("f()", Null);
         Action(() => Compile("func f(x,y,x)null;")).Should().Throw();
@@ -42,8 +42,8 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     public void TestScope()
     {
         Execute("a:=1;f:=(x)x-a;x1:=f(3);a=2;x2:=f(5);");
-        Scope.GetVar("x1").Should().BeEquivalentTo(I(2));
-        Scope.GetVar("x2").Should().BeEquivalentTo(I(3));
+        ExpectResult("x1", I(2));
+        ExpectResult("x2", I(3));
     }
 
     [Fact]

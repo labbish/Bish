@@ -13,8 +13,8 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     public void TestError()
     {
         Execute("x:=s:=0;try throw Error('error') catch(e)x=e finally{s=1;}");
-        Scope.GetVar("x").Should().BeOfType<BishError>().Which.Message.Should().Be("error");
-        Scope.GetVar("s").Should().BeEquivalentTo(I(1));
+        ExpectResult("x.message", S("error"));
+        ExpectResult("s", I(1));
     }
 
     [Fact]

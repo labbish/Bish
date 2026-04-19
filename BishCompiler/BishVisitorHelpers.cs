@@ -1,9 +1,4 @@
-﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
-using Antlr4.Runtime;
-using BishBytecode;
-using BishBytecode.Bytecodes;
-
-namespace BishCompiler;
+﻿namespace BishCompiler;
 
 public class SymbolAllocator
 {
@@ -92,13 +87,13 @@ public class CompileResult(
         return this;
     }
 
-    public CompileResult Add(BishBytecode.BishBytecode code)
+    public CompileResult Add(BishBytecode code)
     {
         Codes.Add(code);
         return this;
     }
 
-    public CompileResult TryAdd(Func<BishBytecode.BishBytecode> func)
+    public CompileResult TryAdd(Func<BishBytecode> func)
     {
         var code = Try(func);
         return code is null ? this : Add(code);
@@ -129,7 +124,7 @@ public class CompileResult(
     }
 }
 
-internal abstract record Unbound(ParserRuleContext Context) : BishBytecode.BishBytecode
+internal abstract record Unbound(ParserRuleContext Context) : BishBytecode
 {
     public abstract string ErrorMessage();
     public override void Execute(BishFrame frame) => throw new ArgumentException(ErrorMessage());

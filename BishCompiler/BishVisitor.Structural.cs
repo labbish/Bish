@@ -1,8 +1,4 @@
-﻿using BishBytecode;
-using BishBytecode.Bytecodes;
-using BishRuntime;
-
-namespace BishCompiler;
+﻿namespace BishCompiler;
 
 public partial class BishVisitor
 {
@@ -78,7 +74,7 @@ public partial class BishVisitor
                 $"Definition of {funcName} should contain no optional or rest argument");
         var defaults = args.Select(arg => arg.Default).OfType<BishParser.ExprContext>().ToList();
         result.Add(new FuncStart(symbol, args.Select(arg => arg.Name).ToList()), new Inner())
-            .Add(args.Select(arg => new Move(arg.Name)).ToList<BishBytecode.BishBytecode>());
+            .Add(args.Select(arg => new Move(arg.Name)).ToList<BishBytecode>());
         foreach (var arg in defArgs)
             if (!BishScope.Discard(arg.obj.GetText()))
                 result.Add(Def(arg.obj, CompileResult.Expr(null).Add(new Del(arg.obj.GetText())))).Add(new Pop());

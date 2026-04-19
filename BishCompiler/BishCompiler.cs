@@ -1,7 +1,8 @@
-﻿using System.Reflection;
-using Antlr4.Runtime;
-using BishBytecode;
-using BishRuntime;
+﻿global using Codes = System.Collections.Generic.List<BishRuntime.BishBytecode>;
+global using Antlr4.Runtime.Tree;
+global using Antlr4.Runtime;
+global using BishRuntime;
+using System.Reflection;
 using BishSdk;
 
 namespace BishCompiler;
@@ -84,13 +85,21 @@ public static class BishCompiler
     }
 
     public static readonly Dictionary<string, BishObject> ImportCache = [];
+
+    static BishCompiler() => BishLib.BishLib.Initialize();
 }
 
-public record CompilationError(int Line, int Column, string Message, int StopLine, int StopColumn, string? StackTrace = null)
+public record CompilationError(
+    int Line,
+    int Column,
+    string Message,
+    int StopLine,
+    int StopColumn,
+    string? StackTrace = null)
 {
     public override string ToString() =>
         $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}"
-            + (StackTrace is null ? "" : "\n" + StackTrace);
+        + (StackTrace is null ? "" : "\n" + StackTrace);
 }
 
 public class ErrorListener : BaseErrorListener, IAntlrErrorListener<int>

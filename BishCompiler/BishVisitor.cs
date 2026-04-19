@@ -1,8 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using Antlr4.Runtime.Tree;
-using BishBytecode.Bytecodes;
-using BishRuntime;
-using String = BishBytecode.Bytecodes.String;
+using String = BishRuntime.String;
 
 namespace BishCompiler;
 
@@ -10,7 +7,7 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
 {
     protected readonly SymbolAllocator Symbols = new();
 
-    private static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
+    private static BishBytecode Tag(string tag) => new Nop().Tagged(tag);
 
     private static int ToInt(string text)
     {

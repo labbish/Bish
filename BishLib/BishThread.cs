@@ -4,14 +4,10 @@ namespace BishLib;
 
 public static class BishThreadModule
 {
-    public static BishObject Module => new BishObject
-    {
-        Vars = new Dictionary<string, BishObject>
-        {
-            ["Thread"] = BishThread.StaticType,
-            ["Lock"] = BishLock.StaticType
-        }
-    };
+    public static void Initialize() => BishLib.InitializeModule("thread",
+        ("Thread", BishThread.StaticType),
+        ("Lock", BishLock.StaticType)
+    );
 }
 
 public class BishThread(Thread thread) : BishObject

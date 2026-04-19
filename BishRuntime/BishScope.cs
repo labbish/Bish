@@ -1,7 +1,4 @@
-﻿using BishLib;
-using BishRuntime;
-
-namespace BishBytecode;
+﻿namespace BishRuntime;
 
 public class BishScope : BishObject
 {
@@ -62,15 +59,7 @@ public class BishScope : BishObject
 
     public static BishString Input() => new(Console.ReadLine() ?? "");
 
-    static BishScope()
-    {
-        BishBuiltinBinder.Bind<BishScope>();
-
-        BuiltinModules.Add("thread", BishThreadModule.Module);
-        BuiltinModules.Add("file", BishFileModule.Module);
-        BuiltinModules.Add("random", BishRandomModule.Module);
-        // TODO: time
-    }
+    static BishScope() => BishBuiltinBinder.Bind<BishScope>();
 }
 
 public class BishBuiltinScope : BishScope

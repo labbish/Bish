@@ -1,6 +1,4 @@
-﻿using BishRuntime;
-
-namespace BishBytecode;
+﻿namespace BishRuntime;
 
 public class BishFrame(List<BishBytecode> bytecodes, BishScope? scope = null, BishFrame? outer = null)
 {

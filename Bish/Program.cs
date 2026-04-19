@@ -1,5 +1,5 @@
 ﻿using Bish;
-using BishBytecode.Bytecodes;
+using BishRuntime;
 using CommandLine;
 
 await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(RunOptions);

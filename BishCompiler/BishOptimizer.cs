@@ -1,6 +1,4 @@
-﻿using BishBytecode.Bytecodes;
-
-namespace BishCompiler;
+﻿namespace BishCompiler;
 
 public static class BishOptimizer
 {
@@ -20,7 +18,7 @@ public static class BishOptimizer
             }
         }
 
-        public void Replace(int i, BishBytecode.BishBytecode code) => codes[i] = code.Tagged(codes[i].Tag);
+        public void Replace(int i, BishBytecode code) => codes[i] = code.Tagged(codes[i].Tag);
 
         public Codes RemoveUnusedTag()
         {

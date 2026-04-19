@@ -1,6 +1,4 @@
-﻿using BishBytecode.Bytecodes;
-
-namespace BishCompiler;
+﻿namespace BishCompiler;
 
 public partial class BishVisitor
 {

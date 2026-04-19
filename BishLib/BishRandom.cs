@@ -4,14 +4,10 @@ namespace BishLib;
 
 public static class BishRandomModule
 {
-    public static BishObject Module => new BishObject
-    {
-        Vars = new Dictionary<string, BishObject>
-        {
-            ["Random"] = BishRandom.StaticType,
-            ["random"] = BishRandom.Shared
-        }
-    };
+    public static void Initialize() => BishLib.InitializeModule("random",
+        ("Random", BishRandom.StaticType),
+        ("random", BishRandom.Shared)
+    );
 }
 
 public class BishRandom(Random random) : BishObject

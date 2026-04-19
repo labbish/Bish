@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\BishBytecode\BishBytecode.csproj" />
+      <ProjectReference Include="..\BishLib\BishLib.csproj" />
       <ProjectReference Include="..\BishSdk\BishSdk.csproj" />
     </ItemGroup>
 

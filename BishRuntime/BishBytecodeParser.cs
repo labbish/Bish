@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace BishBytecode.Bytecodes;
+namespace BishRuntime;
 
 public static partial class BytecodeParser
 {

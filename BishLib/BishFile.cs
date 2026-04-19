@@ -5,14 +5,10 @@ namespace BishLib;
 
 public static class BishFileModule
 {
-    public static BishObject Module => new BishObject
-    {
-        Vars = new Dictionary<string, BishObject>
-        {
-            ["Reader"] = BishReader.StaticType,
-            ["Writer"] = BishWriter.StaticType
-        }
-    };
+    public static void Initialize() => BishLib.InitializeModule("file",
+        ("Reader", BishReader.StaticType),
+        ("Writer", BishWriter.StaticType)
+    );
 
     public static readonly BishType FileError = new("FileError", [BishError.StaticType]);
 

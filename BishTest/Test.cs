@@ -1,5 +1,4 @@
 ﻿global using BishRuntime;
-global using BishBytecode;
 global using BishCompiler;
 global using FluentAssertions;
 using System.Reflection;

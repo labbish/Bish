@@ -4,10 +4,13 @@ public partial class BishVisitor
 {
     public const string Anonymous = "anonymous";
 
-    private CompileResult Return(BishParser.ExprContext expr) => CompileResult.Expr(null)
-        .Add(Visit(expr), StackEffect.Expr).Add(new Ret());
-
-    public override CompileResult VisitReturnExpr(BishParser.ReturnExprContext context) => Return(context.expr());
+    public override CompileResult VisitReturnExpr(BishParser.ReturnExprContext context)
+    {
+        var result = CompileResult.Expr(null);
+        if (context.expr() is null) result.Add(new Null());
+        else result.Add(Visit(context.expr()), StackEffect.Expr);
+        return result.Add(new Ret());
+    }
 
     public override CompileResult VisitYieldExpr(BishParser.YieldExprContext context)
     {

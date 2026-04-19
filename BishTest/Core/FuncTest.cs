@@ -13,6 +13,8 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
         Execute("func f(x){return x+1;};x:=f(3);");
         Scope.GetVar("x").Should().BeEquivalentTo(I(4));
+        Execute("func f(){return};");
+        ExpectResult("f()", Null);
         Action(() => Compile("func f(x,y,x)null;")).Should().Throw();
     }
 

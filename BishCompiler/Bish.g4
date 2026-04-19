@@ -4,6 +4,7 @@ program
     : (front+=expr END)* last=expr? EOF
     ;
 
+// define Setable : AtomExpr(IdAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
 expr
     : '(' expr ')'                                              # ParenExpr
     | deco* (FUN ID?)? funcBody                                 # FuncExpr
@@ -30,8 +31,7 @@ expr
     | left=expr '||' right=expr                                 # LogicOrExpr
     | left=expr '??' right=expr                                 # NullCombExpr
     | expr pipe+                                                # PipeExpr
-    // In the following 3 cases, obj should be Setable, defined as:
-    // Setable : AtomExpr(IdAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
+    // In the following 3 cases, obj is Setable
     | <assoc=right> obj=expr setOp? '=' value=expr              # Set
     | <assoc=right> obj=expr ':=' value=expr                    # Def
     | <assoc=right> DEL obj=expr                                # Del
@@ -48,7 +48,7 @@ expr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> BRK ID?                                     # BreakExpr
     | <assoc=right> CTN ID?                                     # ContinueExpr
-    | <assoc=right> RET expr                                    # ReturnExpr
+    | <assoc=right> RET expr?                                   # ReturnExpr
     | <assoc=right> YLD gen='*'? expr                           # YieldExpr
     | '{' (front+=expr END)* last=expr? '}'                     # BlockExpr
     | atom                                                      # AtomExpr

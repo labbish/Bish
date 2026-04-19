@@ -1,219 +1,192 @@
-﻿using BishBytecode;
+﻿using Antlr4.Runtime;
+using BishBytecode;
 using BishBytecode.Bytecodes;
 
 namespace BishCompiler;
 
 public partial class BishVisitor
 {
-    public override Codes VisitNullPattern(BishParser.NullPatternContext context) => [new IsNull()];
+    public override CompileResult VisitNullPattern(BishParser.NullPatternContext context) =>
+        CompileResult.Pattern(context).Add(new IsNull());
 
-    public override Codes VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
+    public override CompileResult VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
 
-    public override Codes VisitListPattern(BishParser.ListPatternContext context)
+    public override CompileResult VisitListPattern(BishParser.ListPatternContext context)
     {
+        var result = CompileResult.Pattern(context);
         var items = context.patternItem();
         var pos = -1;
         for (var i = 0; i < items.Length; i++)
             if (items[i].dots is not null)
             {
                 if (pos == -1) pos = i;
-                else return Error(context, "Found list deconstruct pattern with multiple rest pattern");
+                else result.Error("Found list deconstruct pattern with multiple rest pattern");
             }
 
         var end = Symbols.Get("list");
         var tags = Enumerable.Range(0, items.Length).Select(_ => Symbols.Get("list")).ToList();
-        return
-        [
-            new ListDeconstruct(items.Length, pos, Pattern: true),
-            new JumpIfNot(tags[^1]),
-            ..items.SelectMany((item, i) => Visit(item.pattern()).Concat([new JumpIfNot(tags[i])])),
-            new Bool(true),
-            new Jump(end),
-            ..tags[..^1].Select(t => new Pop().Tagged(t)),
-            Tag(tags[^1]),
-            new Bool(false),
-            Tag(end)
-        ];
+        result.Add(new ListDeconstruct(items.Length, pos, Pattern: true), new JumpIfNot(tags[^1]));
+        foreach (var (item, i) in items.Enumerate())
+            result.Add(Visit(item.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tags[i]));
+        result.Add(new Bool(true), new Jump(end));
+        foreach (var tag in tags[..^1]) result.Add(new Pop().Tagged(tag));
+        result.Add(Tag(tags[^1]), new Bool(false), Tag(end));
+        return result;
     }
 
-    public override Codes VisitMapPattern(BishParser.MapPatternContext context)
+    public override CompileResult VisitMapPattern(BishParser.MapPatternContext context)
     {
+        var result = CompileResult.Pattern(context);
         var entries = context.patternEntry();
         if (entries.SkipLast(1).Any(entry => entry is BishParser.RestPatternEntryContext))
-            return Error(context, "Rest entry must be the last one in map deconstruction");
+            result.Error(context, "Rest entry must be the last one in map deconstruction");
         var (tag, end) = Symbols.GetPair("map");
-        return
-        [
-            new Copy(),
-            new GetBuiltin("map"),
-            new TestType(),
-            new Pop(),
-            new JumpIfNot(tag),
-            new GetBuiltin("map"),
-            new Swap(),
-            new Call(1),
-            ..entries.SelectMany(entry => entry switch
+        result.Add(new Copy(), new GetBuiltin("map"), new TestType(), new Pop(),
+            new JumpIfNot(tag), new GetBuiltin("map"), new Swap(), new Call(1));
+        foreach (var entry in entries)
+            switch (entry)
             {
-                BishParser.SinglePatternEntryContext single =>
-                [
-                    new Copy(),
-                    ..Visit(single.expr()),
-                    new TryDelIndex(),
-                    new JumpIfNot(tag),
-                    ..Visit(single.pattern()),
-                    new JumpIfNot(tag)
-                ],
-                BishParser.RestPatternEntryContext rest => (Codes)(
-                    [new Copy(), ..Visit(rest.pattern()), new JumpIfNot(tag)]),
-                _ => throw new ArgumentException("Invalid entry!")
-            }),
-            new Bool(true),
-            new Jump(end),
-            Tag(tag),
-            new Bool(false),
-            Tag(end),
-            new Swap(),
-            new Pop()
-        ];
+                case BishParser.SinglePatternEntryContext single:
+                    result.Add(new Copy())
+                        .Add(Visit(single.expr()), StackEffect.Expr)
+                        .Add(new TryDelIndex(), new JumpIfNot(tag))
+                        .Add(Visit(single.pattern()), StackEffect.Pattern)
+                        .Add(new JumpIfNot(tag));
+                    break;
+                case BishParser.RestPatternEntryContext rest:
+                    result.Add(new Copy()).Add(Visit(rest.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tag));
+                    break;
+                default: throw new ArgumentException("impossible!");
+            }
+
+        result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());
+        return result;
     }
 
-    public override Codes VisitObjPattern(BishParser.ObjPatternContext context)
+    public override CompileResult VisitObjPattern(BishParser.ObjPatternContext context)
     {
+        var result = CompileResult.Pattern(context);
         var (tag, end) = Symbols.GetPair("map");
-        return
-        [
-            ..context.patternObjEntry().SelectMany(entry => (Codes)(
-            [
-                new Copy(),
-                new TryGetMember(entry.ID().GetText()),
-                new JumpIfNot(tag),
-                ..Visit(entry.pattern()),
-                new JumpIfNot(tag)
-            ])),
-            new Bool(true),
-            new Jump(end),
-            Tag(tag),
-            new Bool(false),
-            Tag(end),
-            new Swap(),
-            new Pop()
-        ];
+        foreach (var entry in context.patternObjEntry())
+            result.Add(new Copy(), new TryGetMember(entry.ID().GetText()), new JumpIfNot(tag))
+                .Add(Visit(entry.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tag));
+        return result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());
     }
 
-    public override Codes VisitExprPattern(BishParser.ExprPatternContext context) =>
-        context.expr().GetText() == "_" ? [new Pop(), new Bool(true)] : [..Visit(context.expr()), Op("==", 2)];
+    public override CompileResult VisitExprPattern(BishParser.ExprPatternContext context) =>
+        context.expr().GetText() == "_"
+            ? CompileResult.Pattern(context).Add(new Pop(), new Bool(true))
+            : CompileResult.Pattern(context).Add(Visit(context.expr()), StackEffect.Expr).Add(Op("==", 2));
 
-    public override Codes VisitOpPattern(BishParser.OpPatternContext context) =>
-        [..Visit(context.expr()), Op(context.op.GetText(), 2)];
+    public override CompileResult VisitOpPattern(BishParser.OpPatternContext context) =>
+        CompileResult.Pattern(context)
+            .Add(Visit(context.expr()), StackEffect.Expr).Add(Op(context.op.GetText(), 2));
 
-    public override Codes VisitTypePattern(BishParser.TypePatternContext context)
+    public override CompileResult VisitTypePattern(BishParser.TypePatternContext context)
     {
+        var result = CompileResult.Pattern(context);
         var name = context.ID()?.GetText();
         var tag = Symbols.Get("is_of");
-        return
-        [
-            ..context.type.GetText() == "_" ? [new GetBuiltin("object")] : Visit(context.type),
-            new TestType(tag),
-            name is null ? new Nop() : new Def(name),
-            new Pop().Tagged(tag)
-        ];
+        if (context.type.GetText() == "_") result.Add(new GetBuiltin("object"));
+        else result.Add(Visit(context.type), StackEffect.Expr);
+        result.Add(new TestType(tag));
+        if (name is not null) result.Add(new Def(name));
+        return result.Add(new Pop().Tagged(tag));
     }
 
-    public override Codes VisitNotPattern(BishParser.NotPatternContext context) =>
-        [..Visit(context.pattern()), new Not()];
+    public override CompileResult VisitNotPattern(BishParser.NotPatternContext context) =>
+        CompileResult.Pattern(context).Add(Visit(context.pattern()), StackEffect.Pattern).Add(new Not());
 
-    public override Codes VisitAndPattern(BishParser.AndPatternContext context)
+    public override CompileResult VisitAndPattern(BishParser.AndPatternContext context)
     {
         var (tag, end) = Symbols.GetPair("and");
-        return
-        [
-            new Copy(),
-            ..Visit(context.left),
-            Op("bool", 1),
-            new Copy(),
-            new JumpIf(tag),
-            new Swap(),
-            new Pop(),
-            new Jump(end),
-            Tag(tag),
-            new Pop(),
-            ..Visit(context.right),
-            Tag(end)
-        ];
+        return CompileResult.Pattern(context)
+            .Add(new Copy())
+            .Add(Visit(context.left), StackEffect.Pattern)
+            .Add(Op("bool", 1), new Copy(), new JumpIf(tag), new Swap(),
+                new Pop(), new Jump(end), Tag(tag), new Pop())
+            .Add(Visit(context.right), StackEffect.Pattern)
+            .Add(Tag(end));
     }
 
-    public override Codes VisitOrPattern(BishParser.OrPatternContext context)
+    public override CompileResult VisitOrPattern(BishParser.OrPatternContext context)
     {
         var (tag, end) = Symbols.GetPair("or");
-        return
-        [
-            new Copy(),
-            ..Visit(context.left),
-            Op("bool", 1),
-            new Copy(),
-            new JumpIfNot(tag),
-            new Swap(),
-            new Pop(),
-            new Jump(end),
-            Tag(tag),
-            new Pop(),
-            ..Visit(context.right),
-            Tag(end)
-        ];
+        return CompileResult.Pattern(context)
+            .Add(new Copy())
+            .Add(Visit(context.left), StackEffect.Pattern)
+            .Add(Op("bool", 1), new Copy(), new JumpIfNot(tag), new Swap(),
+                new Pop(), new Jump(end), Tag(tag), new Pop())
+            .Add(Visit(context.right), StackEffect.Pattern)
+            .Add(Tag(end));
     }
 
-    public override Codes VisitWhenPattern(BishParser.WhenPatternContext context)
+    public override CompileResult VisitWhenPattern(BishParser.WhenPatternContext context)
     {
         var tag = Symbols.Get("when");
-        return
-        [
-            ..Visit(context.pattern()), Op("bool", 1), new Copy(),
-            new JumpIfNot(tag), new Pop(), ..Visit(context.expr()), Tag(tag)
-        ];
+        return CompileResult.Pattern(context)
+            .Add(Visit(context.pattern()), StackEffect.Pattern)
+            .Add(Op("bool", 1), new Copy(), new JumpIfNot(tag), new Pop())
+            .Add(Visit(context.expr()), StackEffect.Expr)
+            .Add(Tag(tag));
     }
 
-    public override Codes VisitMatchExpr(BishParser.MatchExprContext context) =>
-        [..Visit(context.expr()), ..Visit(context.pattern())];
+    public override CompileResult VisitMatchExpr(BishParser.MatchExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr)
+            .Add(Visit(context.pattern()), StackEffect.Pattern);
 
-    public override Codes VisitAsExpr(BishParser.AsExprContext context) =>
-    [
-        ..Visit(context.obj),
-        ..Visit(context.type),
-        new TestType(),
-        new Swap(),
-        new Pop()
-    ];
+    public override CompileResult VisitAsExpr(BishParser.AsExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.obj), StackEffect.Expr)
+            .Add(Visit(context.type), StackEffect.Expr).Add(new TestType(), new Swap(), new Pop());
 
-    public override Codes VisitSwitchExpr(BishParser.SwitchExprContext context) => Switch(1, Visit(context.expr()),
-        context.caseExpr().Select(branch => (Visit(branch.pattern()), Wrap(Visit(branch.expr())))).ToList());
+    public override CompileResult VisitSwitchExpr(BishParser.SwitchExprContext context) =>
+        Switch(context, Visit(context.expr()),
+            context.caseExpr().Select(branch => (Visit(branch.pattern()), Visit(branch.expr()).Wrap())).ToList());
 
-    public override Codes VisitSwitchStat(BishParser.SwitchStatContext context) => Switch(0, Visit(context.expr()),
-        context.caseStat().Select(branch => (Visit(branch.pattern()), Wrap(Visit(branch.stat())))).ToList());
+    public override CompileResult VisitSwitchStat(BishParser.SwitchStatContext context) =>
+        Switch(context, Visit(context.expr()),
+            context.caseStat().Select(branch => (Visit(branch.pattern()), Visit(branch.stat()).Wrap())).ToList());
 
-    private Codes Switch(int count, Codes expr, List<(Codes pattern, Codes codes)> branches) => Wrap([
-        count == 0 ? new Nop() : new Null(), ..expr,
-        ..branches.Reversed().Aggregate((Codes)(count == 0 ? [] : [new Null()]),
-            (current, branch) => Condition("case",
-                [new Copy(), ..branch.pattern], branch.codes, current)),
-        new Swap(count * 2), new Pop(count + 1)
-    ]);
-
-    public override Codes VisitPipeVarExpr(BishParser.PipeVarExprContext context) => [new Get("$")];
-
-    public override Codes VisitPipe(BishParser.PipeContext context) => Visit(context.expr());
-
-    public override Codes VisitPipeExpr(BishParser.PipeExprContext context)
+    private CompileResult Switch(ParserRuleContext context, CompileResult expr,
+        List<(CompileResult pattern, CompileResult codes)> branches)
     {
-        var tag = Symbols.Get("tag");
-        return Wrap([
-            ..Visit(context.expr()),
-            ..context.pipe().SelectMany(pipe => (Codes)(pipe.op is null
-                ? [new Move("$"), ..Visit(pipe)]
-                : [new Copy(), new IsNull(), new JumpIf(tag), new Move("$"), ..Visit(pipe)])),
-            Tag(tag)
-        ]);
+        var result = CompileResult.Same(context, branches.Select(pair => pair.codes).ToList());
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var count = result.Effect switch
+        {
+            StackEffect.Stat => 0,
+            StackEffect.Expr => 1,
+            _ => throw new ArgumentException("impossible!")
+        };
+        if (count != 0) result.Add(new Null());
+        return result.Add(expr, StackEffect.Expr)
+            .Add(branches.Reversed().Aggregate(
+            count == 0 ? CompileResult.Stat(null) : CompileResult.Expr(null).Add(new Null()),
+            (current, branch) => Condition("case",
+                CompileResult.Expr(null).Add(new Copy()).Add(branch.pattern, StackEffect.Pattern), branch.codes,
+                current)))
+            .Add(new Swap(count * 2), new Pop(count + 1));
     }
 
-    public override Codes VisitTryCallExpr(BishParser.TryCallExprContext context) =>
-        [..Visit(context.expr()), new TryFunc(), ..Call(context.args().arg())];
+    public override CompileResult VisitPipeVarExpr(BishParser.PipeVarExprContext context) => 
+        CompileResult.Expr(context).Add(new Get("$"));
+
+    public override CompileResult VisitPipe(BishParser.PipeContext context) => Visit(context.expr());
+
+    public override CompileResult VisitPipeExpr(BishParser.PipeExprContext context)
+    {
+        var result = new CompileResult(StackEffect.Expr, context);
+        var tag = Symbols.Get("tag");
+        result.Add(Visit(context.expr()), StackEffect.Expr);
+        foreach (var pipe in context.pipe())
+        {
+            if (pipe.op is not null) result.Add(new Copy(), new IsNull(), new JumpIf(tag));
+            result.Add(new Move("$")).Add(Visit(pipe), StackEffect.Expr);
+        }
+        return result.Add(Tag(tag)).Wrap();
+    }
+
+    public override CompileResult VisitTryCallExpr(BishParser.TryCallExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr)
+            .Add(new TryFunc()).Add(Call(context.args().arg()));
 }

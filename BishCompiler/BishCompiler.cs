@@ -22,15 +22,15 @@ public static class BishCompiler
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
 
-        var result = parser.program();
+        var program = parser.program();
         var visitor = new BishVisitor();
-        var codes = visitor.VisitFull(result, optimize: optimize);
+        var result = visitor.VisitFull(program, optimize: optimize);
 
-        if (runs && visitor.Errors.Count > 0)
-            throw new Exception("Crucial compile error(s) occured: " + string.Join("\n", visitor.Errors));
-        errors = [..listener.Errors, ..visitor.Errors];
+        if (runs && result.Errors.Count > 0)
+            throw new Exception("Crucial compile error(s) occured: " + string.Join("\n", result.Errors));
+        errors = [..listener.Errors, ..result.Errors];
 
-        var frame = new BishFrame(codes, scope);
+        var frame = new BishFrame(result.Codes, scope);
         frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file", BishString.StaticType)], args =>
         {
             var path = "(unresolved)";
@@ -86,9 +86,11 @@ public static class BishCompiler
     public static readonly Dictionary<string, BishObject> ImportCache = [];
 }
 
-public record CompilationError(int Line, int Column, string Message, int StopLine, int StopColumn)
+public record CompilationError(int Line, int Column, string Message, int StopLine, int StopColumn, string? StackTrace = null)
 {
-    public override string ToString() => $"Compilation error at line {Line}, column {Column}: {Message}";
+    public override string ToString() =>
+        $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}"
+            + (StackTrace is null ? "" : "\n" + StackTrace);
 }
 
 public class ErrorListener : BaseErrorListener, IAntlrErrorListener<int>

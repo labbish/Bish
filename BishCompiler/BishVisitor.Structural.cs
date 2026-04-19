@@ -6,27 +6,28 @@ namespace BishCompiler;
 
 public partial class BishVisitor
 {
-    private Codes Return(BishParser.ExprContext expr) => [..Visit(expr), new Ret()];
+    public const string Anonymous = "anonymous";
 
-    public override Codes VisitReturnStat(BishParser.ReturnStatContext context) => Return(context.expr());
+    private CompileResult Return(BishParser.ExprContext expr) => CompileResult.Stat(null)
+        .Add(Visit(expr), StackEffect.Expr).Add(new Ret());
 
-    public override Codes VisitYieldStat(BishParser.YieldStatContext context)
+    public override CompileResult VisitReturnStat(BishParser.ReturnStatContext context) => Return(context.expr());
+
+    public override CompileResult VisitYieldStat(BishParser.YieldStatContext context)
     {
         var (tag, end) = Symbols.GetPair("yield");
-        Codes nop = [];
-        return
-        [
-            ..Visit(context.expr()),
-            ..context.gen is null ? nop : [Op("iter", 1), new ForIter(end).Tagged(tag)],
-            new Yield(),
-            ..context.gen is null ? nop : [new Jump(tag), Tag(end)]
-        ];
+        var result = CompileResult.Stat(context);
+        result.Add(Visit(context.expr()), StackEffect.Expr);
+        if (context.gen is not null) result.Add(Op("iter", 1), new ForIter(end).Tagged(tag));
+        result.Add(new Yield());
+        if (context.gen is not null) result.Add(new Jump(tag), Tag(end));
+        return result;
     }
 
-    public override Codes VisitFuncExpr(BishParser.FuncExprContext context) =>
+    public override CompileResult VisitFuncExpr(BishParser.FuncExprContext context) =>
         MakeFunc(context.ID()?.GetText(), context.funcBody(), context.deco());
 
-    public override Codes VisitOperExpr(BishParser.OperExprContext context)
+    public override CompileResult VisitOperExpr(BishParser.OperExprContext context)
     {
         var op = context.defOp().GetText();
         var special = BishOperator.GetOperator(op, context.funcBody().defArgs().defArg().Length);
@@ -34,7 +35,7 @@ public partial class BishVisitor
         return MakeFunc(name, context.funcBody(), context.deco(), special.Args is not null, $"operator {op}");
     }
 
-    public override Codes VisitAccessExpr(BishParser.AccessExprContext context)
+    public override CompileResult VisitAccessExpr(BishParser.AccessExprContext context)
     {
         var op = context.accessOp().GetText();
         var item = context.accessItem();
@@ -54,99 +55,97 @@ public partial class BishVisitor
         return MakeFunc(name, context.funcBody(), context.deco(), true, funcName);
     }
 
-    public override Codes VisitInitExpr(BishParser.InitExprContext context) =>
+    public override CompileResult VisitInitExpr(BishParser.InitExprContext context) =>
         MakeFunc("hook_init", context.funcBody(), context.deco(), false, "initializer");
 
-    public override Codes VisitCreateExpr(BishParser.CreateExprContext context) =>
+    public override CompileResult VisitCreateExpr(BishParser.CreateExprContext context) =>
         MakeFunc("hook_create", context.funcBody(), context.deco(), true, "create hook");
 
-    private Codes MakeFunc(string? name, BishParser.FuncBodyContext body, BishParser.DecoContext[] decos,
+    private CompileResult MakeFunc(string? name, BishParser.FuncBodyContext body, BishParser.DecoContext[] decos,
         bool fixedArgc = false, string funcName = "")
     {
+        var result = CompileResult.Expr(body);
         var symbol = Symbols.Get(name ?? Anonymous);
         var defArgs = body.defArgs()?.defArg() ?? [];
-        var args = Try(body,
-            () => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
+        var args = result.Try(() => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs.Select(arg =>
                     new Arg<BishParser.ExprContext>(arg.obj.GetText(), Default: arg.def, Rest: arg.dots is not null))
                 .ToList()));
-        if (args is null) return [];
+        if (args is null) return result;
         if (fixedArgc && args.Any(arg => arg.Default is not null || arg.Rest))
-            return Error(body.defArgs(), $"Definition of {funcName} should contain no optional or rest argument");
+            return result.Error(body.defArgs(), $"Definition of {funcName} should contain no optional or rest argument");
         var defaults = args.Select(arg => arg.Default).OfType<BishParser.ExprContext>().ToList();
-        return
-        [
-            new FuncStart(symbol, args.Select(arg => arg.Name).ToList()),
-            new Inner(),
-            ..args.Select(arg => new Move(arg.Name)),
-            ..defArgs.SelectMany(arg =>
-                BishScope.Discard(arg.obj.GetText())
-                    ? []
-                    : Def(arg.obj, [new Del(arg.obj.GetText())]).Concat([new Pop()])),
-            ..body.expr() is null ? body.stat()?.SelectMany(Visit) ?? [] : Return(body.expr()),
-            new Outer(),
-            new FuncEnd(symbol),
-            ..defaults.SelectMany(Visit),
-            new MakeFunc(symbol, defaults.Count, Rest: args.Count != 0 && args[^1].Rest, Gen: body.gen is not null),
-            ..decos.Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
-            name is null ? new Nop() : new Def(name)
-        ];
+        result.Add(new FuncStart(symbol, args.Select(arg => arg.Name).ToList()), new Inner())
+            .Add(args.Select(arg => new Move(arg.Name)).ToList<BishBytecode.BishBytecode>());
+        foreach (var arg in defArgs)
+            if (!BishScope.Discard(arg.obj.GetText()))
+                result.Add(Def(arg.obj, CompileResult.Expr(null).Add(new Del(arg.obj.GetText())))).Add(new Pop());
+        if (body.expr() is { } expr) result.Add(Return(expr));
+        if (body.stat() is { } stats)
+            foreach (var stat in stats)
+                result.Add(Visit(stat), StackEffect.Stat);
+        result.Add(new Outer(), new FuncEnd(symbol));
+        foreach (var @default in defaults) result.Add(Visit(@default), StackEffect.Expr);
+        result.Add(new MakeFunc(symbol, defaults.Count, args.Count != 0 && args[^1].Rest, body.gen is not null));
+        foreach (var deco in decos.Reverse()) result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));
+        if (name is not null) result.Add(new Def(name));
+        return result;
     }
 
-    public override Codes VisitClassExpr(BishParser.ClassExprContext context)
+    public override CompileResult VisitClassExpr(BishParser.ClassExprContext context)
     {
+        var result = CompileResult.Expr(context);
         var name = context.ID()?.GetText();
         var symbol = Symbols.Get(name ?? Anonymous);
         var args = context.args()?.arg() ?? [];
         var stats = context.stat() ?? [];
-        return
-        [
-            new ClassStart(symbol),
-            ..stats.SelectMany(Visit),
-            new ClassEnd(symbol),
-            ..(Codes)(NoRest(args)
-                ? [..args.SelectMany(Visit), new MakeClass(symbol, args.Length)]
-                : [..ToList(args), new MakeClassArgs(symbol)]),
-            ..context.deco().Reverse().SelectMany(deco => Visit(deco).Concat([new Swap(), new Call(1)])),
-            name is null ? new Nop() : new Def(name)
-        ];
+        result.Add(new ClassStart(symbol));
+        foreach (var stat in stats) result.Add(Visit(stat), StackEffect.Stat);
+        result.Add(new ClassEnd(symbol));
+        if (HasRest(args)) result.Add(ToList(args)).Add(new MakeClassArgs(symbol));
+        else
+        {
+            foreach (var arg in args) result.Add(Visit(arg), StackEffect.Expr);
+            result.Add(new MakeClass(symbol, args.Length));
+        }
+        foreach (var deco in context.deco().Reverse()) result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));
+        if (name is not null) result.Add(new Def(name));
+        return result;
     }
 
-    public override Codes VisitThrowExpr(BishParser.ThrowExprContext context) => [..Visit(context.expr()), new Throw()];
+    public override CompileResult VisitThrowExpr(BishParser.ThrowExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new Throw());
 
-    public override Codes VisitErrorStat(BishParser.ErrorStatContext context)
+    public override CompileResult VisitErrorStat(BishParser.ErrorStatContext context)
     {
         var tag = Symbols.Get("error");
-        Codes tryPart = [new TryStart(tag), ..Visit(context.tryStat), new TryEnd(tag)];
-        var @catch = VisitOrNull(context.catchExpr) ?? context._catchStat?.SelectMany(Visit) ?? [new Nop()];
+        var tryPart = CompileResult.Stat(context.tryStat).Add(new TryStart(tag))
+            .Add(Visit(context.tryStat), StackEffect.Stat).Add(new TryEnd(tag));
         var id = context.ID()?.GetText();
         var when = Symbols.Get("when");
-        Codes catchPart = context.CTH() is null
-            ? []
-            :
-            [
-                new CatchStart(tag), id is null ? new Nop() : new Def(id),
-                ..context.when is null ? (Codes)[] : [..Visit(context.when), new JumpIf(when), new Throw(), Tag(when)],
-                new Pop(), ..@catch, new CatchEnd(tag)
-            ];
-        var @finally = context.finallyStat;
-        Codes finallyPart =
-            context.FIN() is null
-                ? []
-                : [new FinallyStart(tag), ..VisitOrNull(@finally) ?? [new Nop()], new FinallyEnd(tag)];
-        return [..tryPart, ..catchPart, ..finallyPart];
+        var catchPart = CompileResult.Stat(context);
+        catchPart.Add(new CatchStart(tag));
+        if (id is not null) catchPart.Add(new Def(id));
+        if (context.when is not null) 
+            catchPart.Add(Visit(context.when), StackEffect.Expr).Add(new JumpIf(when), new Throw(), Tag(when));
+        catchPart.Add(new Pop());
+        if (context.catchExpr is not null) catchPart.Add(Visit(context.catchExpr));
+        else foreach (var stat in context._catchStat ?? []) catchPart.Add(Visit(stat), StackEffect.Stat);
+        catchPart.Add(new CatchEnd(tag));
+        var finallyPart = CompileResult.Stat(context.finallyStat);
+        if (context.FIN() is not null) 
+            finallyPart.Add(new FinallyStart(tag)).Add(Visit(context.finallyStat)).Add(new FinallyEnd(tag));
+        return CompileResult.Stat(context).Add(tryPart).Add(catchPart).Add(finallyPart);
     }
 
-    public override Codes VisitWithStat(BishParser.WithStatContext context)
+    public override CompileResult VisitWithStat(BishParser.WithStatContext context)
     {
         var tag = Symbols.Get("with");
-        return
-        [
-            ..Visit(context.cont),
-            new WithStart(tag),
-            ..context.obj is null ? new Codes() : [new Move("$with"), ..Def(context.obj, [new Del("$with")])],
-            new Pop(),
-            ..Visit(context.stat()),
-            new WithEnd(tag)
-        ];
+        var result = CompileResult.Stat(context)
+            .Add(Visit(context.cont), StackEffect.Expr)
+            .Add(new WithStart(tag));
+        if (context.obj is not null)
+            result.Add(new Move("$with")).Add(Def(context.obj,
+                new CompileResult(StackEffect.Expr, null).Add(new Del("$with"))));
+        return result.Add(new Pop()).Add(Visit(context.stat()), StackEffect.Stat).Add(new WithEnd(tag));
     }
 }

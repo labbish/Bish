@@ -1,41 +1,14 @@
-﻿global using Codes = System.Collections.Generic.List<BishBytecode.BishBytecode>;
-using System.Text.RegularExpressions;
-using Antlr4.Runtime;
+﻿using System.Text.RegularExpressions;
 using Antlr4.Runtime.Tree;
-using BishBytecode;
 using BishBytecode.Bytecodes;
 using BishRuntime;
 using String = BishBytecode.Bytecodes.String;
 
 namespace BishCompiler;
 
-public partial class BishVisitor : BishBaseVisitor<Codes>
+public partial class BishVisitor : BishBaseVisitor<CompileResult>
 {
-    public const string Anonymous = "anonymous";
     protected readonly SymbolAllocator Symbols = new();
-    public List<CompilationError> Errors { get; } = [];
-
-    private Codes Error(ParserRuleContext context, string message)
-    {
-        var start = context.Start;
-        var stop = context.Stop;
-        Errors.Add(new CompilationError(start.Line, start.Column, message,
-            stop.Line, stop.Column + (stop.Text?.Length ?? 0)));
-        return [];
-    }
-
-    private T? Try<T>(ParserRuleContext context, Func<T> action)
-    {
-        try
-        {
-            return action();
-        }
-        catch (Exception e)
-        {
-            Error(context, e.Message);
-            return default;
-        }
-    }
 
     private static BishBytecode.BishBytecode Tag(string tag) => new Nop().Tagged(tag);
 
@@ -55,195 +28,213 @@ public partial class BishVisitor : BishBaseVisitor<Codes>
         return double.Parse(text[..pos]) * Math.Pow(10, exp);
     }
 
-    public override Codes VisitIntAtom(BishParser.IntAtomContext context) =>
-        [new Int(ToInt(context.INT().GetText()))];
-
-    public override Codes VisitNumAtom(BishParser.NumAtomContext context) =>
-        [new Num(ToNum(context.NUM().GetText()))];
-
-    public override Codes VisitStrAtom(BishParser.StrAtomContext context)
+    private static string ToStr(string text)
     {
-        var str = context.STR().GetText();
-        var raw = str.StartsWith('r');
-        var text = str.TrimStart('r').Trim('#')[1..^1];
-        return [new String(raw ? text : Regex.Unescape(text))];
+        var raw = text.StartsWith('r');
+        var str = text.TrimStart('r').Trim('#')[1..^1];
+        return raw ? str : Regex.Unescape(str);
     }
 
-    public override Codes VisitNullAtom(BishParser.NullAtomContext context) => [new Null()];
+    public override CompileResult VisitIntAtom(BishParser.IntAtomContext context) =>
+        CompileResult.Expr(context).TryAdd(() => new Int(ToInt(context.INT().GetText())));
 
-    public override Codes VisitBoolAtom(BishParser.BoolAtomContext context) =>
-        [new Bool(context.BOL().GetText() == "true")];
+    public override CompileResult VisitNumAtom(BishParser.NumAtomContext context) =>
+        CompileResult.Expr(context).TryAdd(() => new Num(ToNum(context.NUM().GetText())));
 
-    public override Codes VisitIdAtom(BishParser.IdAtomContext context) => [new Get(context.GetText())];
+    public override CompileResult VisitStrAtom(BishParser.StrAtomContext context) =>
+        CompileResult.Expr(context).TryAdd(() => new String(ToStr(context.STR().GetText())));
 
-    public override Codes VisitParenExpr(BishParser.ParenExprContext context) => Visit(context.expr());
+    public override CompileResult VisitNullAtom(BishParser.NullAtomContext context) =>
+        CompileResult.Expr(context).Add(new Null());
+
+    public override CompileResult VisitBoolAtom(BishParser.BoolAtomContext context) =>
+        CompileResult.Expr(context).Add(new Bool(context.BOL().GetText() == "true"));
+
+    public override CompileResult VisitIdAtom(BishParser.IdAtomContext context) =>
+        CompileResult.Expr(context).Add(new Get(context.GetText()));
+
+    public override CompileResult VisitParenExpr(BishParser.ParenExprContext context) => Visit(context.expr());
 
     private static Op Op(string op, int argc) => new(BishOperator.GetOperatorName(op, argc), argc);
 
-    public override Codes VisitUnOpExpr(BishParser.UnOpExprContext context) =>
-        [..Visit(context.expr()), context.op.Text == "!" ? new Not() : Op(context.op.Text, 1)];
+    public override CompileResult VisitUnOpExpr(BishParser.UnOpExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr)
+            .Add(context.op.Text == "!" ? new Not() : Op(context.op.Text, 1));
 
-    public override Codes VisitBinOpExpr(BishParser.BinOpExprContext context)
-    {
-        return
-        [
-            ..Visit(context.left), ..Visit(context.right),
-            ..(Codes)(context.op.Text switch
+    public override CompileResult VisitBinOpExpr(BishParser.BinOpExprContext context) =>
+        CompileResult.Expr(context)
+            .Add(Visit(context.left), StackEffect.Expr)
+            .Add(Visit(context.right), StackEffect.Expr)
+            .Add(context.op.Text switch
             {
                 "===" => [new RefEq()],
                 "!==" => [new RefEq(), new Not()],
                 { } op => [Op(op, 2)]
-            })
-        ];
+            });
+
+    public override CompileResult VisitSingleIndex(BishParser.SingleIndexContext context) =>
+        new CompileResult(StackEffect.Expr, context).Add(Visit(context.expr()), StackEffect.Expr);
+
+    private CompileResult VisitOrNull(BishParser.ExprContext? expr) => expr is null
+        ? new CompileResult(StackEffect.Expr, expr).Add(new Null())
+        : new CompileResult(StackEffect.Expr, expr).Add(Visit(expr), StackEffect.Expr);
+
+    public override CompileResult VisitRangeIndex(BishParser.RangeIndexContext context)
+    {
+        var result = new CompileResult(StackEffect.Expr, context).Add(new GetBuiltin("range"));
+        result.Add(VisitOrNull(context.start), StackEffect.Expr);
+        result.Add(VisitOrNull(context.end), StackEffect.Expr);
+        result.Add(VisitOrNull(context.step), StackEffect.Expr);
+        result.Add(new Call(3));
+        return result;
     }
 
-    public override Codes VisitSingleIndex(BishParser.SingleIndexContext context) => Visit(context.expr());
-
-    private Codes EvalOrNull(BishParser.ExprContext? context) => context is null ? [new Null()] : Visit(context);
-
-    private Codes? VisitOrNull(ParserRuleContext? context) => context is null ? null : Visit(context);
-
-    public override Codes VisitRangeIndex(BishParser.RangeIndexContext context) =>
-    [
-        new GetBuiltin("range"),
-        ..EvalOrNull(context.start),
-        ..EvalOrNull(context.end),
-        ..EvalOrNull(context.step),
-        new Call(3)
-    ];
-
-    public override Codes VisitLogicAndExpr(BishParser.LogicAndExprContext context)
+    public override CompileResult VisitLogicAndExpr(BishParser.LogicAndExprContext context)
     {
+        var result = CompileResult.Expr(context);
         var tag = Symbols.Get("bin_and");
-        return
-        [
-            ..Visit(context.left), new Op("bool", 1), new Copy(),
-            new JumpIfNot(tag), new Pop(), ..Visit(context.right), Tag(tag)
-        ];
+        return result.Add(Visit(context.left))
+            .Add(new Op("bool", 1), new Copy(), new JumpIfNot(tag), new Pop())
+            .Add(Visit(context.right))
+            .Add(Tag(tag));
     }
 
-    public override Codes VisitLogicOrExpr(BishParser.LogicOrExprContext context)
+    public override CompileResult VisitLogicOrExpr(BishParser.LogicOrExprContext context)
     {
+        var result = CompileResult.Expr(context);
         var tag = Symbols.Get("bin_or");
-        return
-        [
-            ..Visit(context.left), new Op("bool", 1), new Copy(),
-            new JumpIf(tag), new Pop(), ..Visit(context.right), Tag(tag)
-        ];
+        return result.Add(Visit(context.left))
+            .Add(new Op("bool", 1), new Copy(), new JumpIf(tag), new Pop())
+            .Add(Visit(context.right))
+            .Add(Tag(tag));
     }
 
-    public override Codes VisitNullCombExpr(BishParser.NullCombExprContext context)
+    public override CompileResult VisitNullCombExpr(BishParser.NullCombExprContext context)
     {
-        var tag = Symbols.Get("bin_or");
-        return
-        [
-            ..Visit(context.left), new Copy(), new IsNull(),
-            new JumpIfNot(tag), new Pop(), ..Visit(context.right), Tag(tag)
-        ];
+        var result = CompileResult.Expr(context);
+        var tag = Symbols.Get("null_comb");
+        return result.Add(Visit(context.left))
+            .Add(new Copy(), new IsNull(), new JumpIfNot(tag), new Pop())
+            .Add(Visit(context.right))
+            .Add(Tag(tag));
     }
 
-    private Codes Condition(string name, Codes cond, Codes left, Codes right)
+    private CompileResult Condition(string name, CompileResult cond, CompileResult left, CompileResult right)
     {
+        var result = CompileResult.Same(null, left, right);
         var (tag, end) = Symbols.GetPair(name);
-        return Wrap([
-            ..cond,
-            new JumpIfNot(tag),
-            ..left,
-            new Jump(end),
-            Tag(tag),
-            ..right,
-            Tag(end)
-        ]);
+        return result.Add(cond, StackEffect.Expr)
+            .Add(new JumpIfNot(tag))
+            .Add(left)
+            .Add(new Jump(end))
+            .Add(Tag(tag))
+            .Add(right)
+            .Add(Tag(end))
+            .Wrap();
     }
 
-    public override Codes VisitTernOpExpr(BishParser.TernOpExprContext context) =>
+    public override CompileResult VisitTernOpExpr(BishParser.TernOpExprContext context) =>
         Condition("tern", Visit(context.cond), Visit(context.left), Visit(context.right));
 
-    private Codes Call(BishParser.ArgContext[] args) => NoRest(args)
-        ? [..args.SelectMany(Visit), new Call(args.Length)]
-        : [..ToList(args), new CallArgs()];
+    private CompileResult Call(BishParser.ArgContext[] args)
+    {
+        if (HasRest(args)) return ToList(args).Add(new CallArgs());
+        var result = new CompileResult(StackEffect.Trans, null);
+        foreach (var arg in args) result.Add(Visit(arg), StackEffect.Expr);
+        result.Add(new Call(args.Length));
+        return result;
+    }
 
-    public override Codes VisitListExpr(BishParser.ListExprContext context)
+    public override CompileResult VisitListExpr(BishParser.ListExprContext context)
     {
         var args = context.args().arg();
-        return NoRest(args) ? [..args.SelectMany(Visit), new BuildList(args.Length)] : ToList(args);
+        if (HasRest(args)) return ToList(args);
+        var result = CompileResult.Expr(context);
+        foreach (var arg in args) result.Add(Visit(arg), StackEffect.Expr);
+        result.Add(new BuildList(args.Length));
+        return result;
     }
 
-    protected Codes ToList(BishParser.ArgContext[] args) =>
-    [
-        new BuildList(0),
-        ..args.SelectMany(arg => Visit(arg).Concat(arg switch
-        {
-            BishParser.RestArgContext => [new GetBuiltin("list"), new Swap(), new Call(1), new Op("op_add", 2)],
-            _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
-        }))
-    ];
-
-    protected static bool NoRest(BishParser.ArgContext[] args) => !args.Any(arg => arg is BishParser.RestArgContext);
-
-    public override Codes VisitMapExpr(BishParser.MapExprContext context) =>
-    [
-        new GetBuiltin("map"),
-        new Call(0),
-        ..context.entries().entry().SelectMany(entry => (Codes)(entry switch
-        {
-            BishParser.RestEntryContext rest => [..Visit(rest.expr()), Op("+", 2)],
-            BishParser.SingleEntryContext single =>
-                [new Copy(), ..Visit(single.key), ..Visit(single.value), Op("def[]", 3), new Pop()],
-            _ => throw new ArgumentException("impossible")
-        }))
-    ];
-
-    public override Codes VisitObjExpr(BishParser.ObjExprContext context) => [
-        new GetBuiltin("object"),
-        new Call(0),
-        ..context.objEntries().objEntry().SelectMany(entry => (Codes)([
-            new Copy(),
-            ..entry.expr() is null ? [new Get(entry.ID().GetText())] : Visit(entry.expr()),
-            new DefMember(entry.ID().GetText()),
-            new Pop()
-        ]))
-    ];
-
-    public override Codes VisitEmptyStat(BishParser.EmptyStatContext context) => [];
-
-    public override Codes VisitExprStat(BishParser.ExprStatContext context) =>
-        [..Visit(context.expr()), new EndStat()];
-
-    public override Codes VisitBlockStat(BishParser.BlockStatContext context) =>
-        Wrap(context.stat().SelectMany(Visit).ToList());
-
-    private static Codes Wrap(params Codes[] codes) => [new Inner(), ..codes.SelectMany(x => x), new Outer()];
-
-    public override Codes VisitProgram(BishParser.ProgramContext context) =>
-        context.stat().SelectMany(Visit).ToList();
-
-    internal abstract record Unbound(ParserRuleContext Context) : BishBytecode.BishBytecode
+    protected CompileResult ToList(BishParser.ArgContext[] args)
     {
-        public abstract string ErrorMessage();
-        public override void Execute(BishFrame frame) => throw new ArgumentException(ErrorMessage());
+        var result = CompileResult.Expr(null).Add(new BuildList(0));
+        foreach (var arg in args)
+        {
+            result.Add(Visit(arg), StackEffect.Expr);
+            result.Add(arg switch
+            {
+                BishParser.RestArgContext => [new GetBuiltin("list"), new Swap(), new Call(1), new Op("op_add", 2)],
+                _ => [new Swap(), new GetMember("add"), new Swap(), new Call(1)]
+            });
+        }
+
+        return result;
     }
 
-    public Codes VisitFull(IParseTree tree, bool optimize)
+    protected static bool HasRest(BishParser.ArgContext[] args) => args.Any(arg => arg is BishParser.RestArgContext);
+
+    public override CompileResult VisitMapExpr(BishParser.MapExprContext context)
     {
-        var codes = Visit(tree);
-        foreach (var code in codes)
-            if (code is Unbound unbound)
-                Error(unbound.Context, unbound.ErrorMessage());
-        return optimize ? BishOptimizer.Optimize(codes) : codes;
+        var result = CompileResult.Expr(context).Add(new GetBuiltin("map"), new Call(0));
+        foreach (var entry in context.entries().entry())
+            switch (entry)
+            {
+                case BishParser.RestEntryContext rest:
+                    result.Add(Visit(rest.expr()), StackEffect.Expr);
+                    result.Add(Op("+", 2));
+                    break;
+                case BishParser.SingleEntryContext single:
+                    result.Add(new Copy());
+                    result.Add(Visit(single.key), StackEffect.Expr);
+                    result.Add(Visit(single.value), StackEffect.Expr);
+                    result.Add(Op("def[]", 3), new Pop());
+                    break;
+                default: throw new ArgumentException("impossible");
+            }
+
+        return result;
     }
+
+    public override CompileResult VisitObjExpr(BishParser.ObjExprContext context)
+    {
+        var result = CompileResult.Expr(context).Add(new GetBuiltin("object"), new Call(0));
+        foreach (var entry in context.objEntries().objEntry())
+        {
+            result.Add(new Copy());
+            if (entry.expr() is null) result.Add(new Get(entry.ID().GetText()));
+            else result.Add(Visit(entry.expr()), StackEffect.Expr);
+            result.Add(new DefMember(entry.ID().GetText()), new Pop());
+        }
+
+        return result;
+    }
+
+    public override CompileResult VisitEmptyStat(BishParser.EmptyStatContext context) => CompileResult.Stat(context);
+
+    public override CompileResult VisitExprStat(BishParser.ExprStatContext context) =>
+        CompileResult.Stat(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new EndStat());
+
+    public override CompileResult VisitBlockStat(BishParser.BlockStatContext context)
+    {
+        var result = CompileResult.Stat(context);
+        foreach (var stat in context.stat()) result.Add(Visit(stat), StackEffect.Stat);
+        return result.Wrap();
+    }
+
+    public override CompileResult VisitProgram(BishParser.ProgramContext context)
+    {
+        var result = CompileResult.Stat(context);
+        foreach (var stat in context.stat()) result.Add(Visit(stat), StackEffect.Stat);
+        return result;
+    }
+
+    public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);
 }
 
-public class SymbolAllocator
+public static class EnumeratorHelper
 {
-    public readonly Dictionary<string, int> Used = [];
-
-    public string Get(string symbol)
+    extension<T>(IEnumerable<T> enumerable)
     {
-        var used = Used.GetValueOrDefault(symbol);
-        Used[symbol] = used + 1;
-        return symbol + (used == 0 ? "" : $"_{used}");
+        public IEnumerable<(T, int)> Enumerate() => enumerable.Select((x, i) => (x, i));
     }
-
-    public (string, string) GetPair(string symbol) => (Get(symbol), Get(symbol + "_end"));
 }

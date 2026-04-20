@@ -9,17 +9,10 @@ public class BishBool : BishObject
 
     public static BishBool Of(bool value) => value ? True : False;
 
-    public bool Value { get; private set; }
+    public readonly bool Value;
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("bool");
-
-
-    [Builtin("hook")]
-    public static BishBool Create(BishObject _) => new(false);
-
-    [Builtin("hook")]
-    public static void Init(BishBool self, [DefaultNull] BishBool? other) => self.Value = other?.Value ?? false;
+    public new static readonly BishType StaticType = new BishBoolType();
 
     [Builtin("op")]
     public static BishBool Invert(BishBool a) => Of(!a.Value);
@@ -36,4 +29,13 @@ public class BishBool : BishObject
         BishOperator.Call("bool", [obj]).ExpectToBe<BishBool>("bool").Value;
 
     static BishBool() => BishBuiltinBinder.Bind<BishBool>();
+}
+
+internal class BishBoolType() : BishType("bool")
+{
+    private static readonly BishFunc Func = BishBuiltinBinder.Builtin("bool", Inits);
+    
+    public override BishObject TryCall(List<BishObject> args) => Func.TryCall(args);
+
+    private static BishBool Inits([DefaultNull] BishBool? value) => value ?? BishBool.False;
 }

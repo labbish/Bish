@@ -1,4 +1,6 @@
-﻿namespace BishCompiler;
+﻿using BishUtils;
+
+namespace BishCompiler;
 
 public partial class BishVisitor
 {

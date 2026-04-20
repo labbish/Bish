@@ -5,8 +5,9 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestInt()
     {
-        ExpectResult("int()", I(0));
-        ExpectResult("int(3)", I(3));
+        ExpectResult("int()===0", True);
+        ExpectResult("int(128)===128", True);
+        ExpectResult("int(129)==129", True);
 
         ExpectResult("+1", I(1));
         ExpectResult("-1", I(-1));
@@ -79,8 +80,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestBool()
     {
-        ExpectResult("bool()", False);
-        ExpectResult("bool(true)", True);
+        ExpectResult("bool()===false", True);
+        ExpectResult("bool(true)===true", True);
 
         ExpectResult("~false", True);
         ExpectResult("~true", False);

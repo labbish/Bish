@@ -225,14 +225,6 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
     public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);
 }
 
-public static class EnumeratorHelper
-{
-    extension<T>(IEnumerable<T> enumerable)
-    {
-        public IEnumerable<(T, int)> Enumerate() => enumerable.Select((x, i) => (x, i));
-    }
-}
-
 public static class CompileResultHelper
 {
     extension(CompileResult result)

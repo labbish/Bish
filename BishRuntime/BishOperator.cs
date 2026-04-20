@@ -80,10 +80,7 @@ public static partial class BishOperator
         new("hook_exit", ["self", "error"], "exit", () => BishBool.False)
     ];
 
-    public static BishObject? TryCall(string name, List<BishObject> args) =>
-        BishException.Ignored(() => Call(name, args));
-
-    public static BishObject Call(string name, List<BishObject> args)
+    public static BishObject Call(string name, IList<BishObject> args)
     {
         List<BishError> errors = [];
         foreach (var arg in args)

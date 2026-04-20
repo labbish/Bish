@@ -1,15 +1,16 @@
-﻿global using Codes = System.Collections.Generic.List<BishRuntime.BishBytecode>;
+﻿global using Codes = System.Collections.Generic.IList<BishRuntime.BishBytecode>;
 global using Antlr4.Runtime.Tree;
 global using Antlr4.Runtime;
 global using BishRuntime;
 using System.Reflection;
 using BishSdk;
+using BishUtils;
 
 namespace BishCompiler;
 
 public static class BishCompiler
 {
-    public static BishFrame Compile(string code, out List<CompilationError> errors,
+    public static BishFrame Compile(string code, out IList<CompilationError> errors,
         BishScope? scope = null, string? root = null, bool optimize = true, bool runs = true)
     {
         var stream = CharStreams.fromString(code);
@@ -29,7 +30,7 @@ public static class BishCompiler
 
         if (runs && result.Errors.Count > 0)
             throw new Exception("Crucial compile error(s) occured: " + string.Join("\n", result.Errors));
-        errors = [..listener.Errors, ..result.Errors];
+        errors = (ConcurrentList<CompilationError>)[..listener.Errors, ..result.Errors];
 
         var frame = new BishFrame(result.Codes, scope);
         frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file", BishString.StaticType)], args =>
@@ -104,7 +105,7 @@ public record CompilationError(
 
 public class ErrorListener : BaseErrorListener, IAntlrErrorListener<int>
 {
-    public List<CompilationError> Errors { get; } = [];
+    public IList<CompilationError> Errors { get; } = new ConcurrentList<CompilationError>();
 
     public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol,
         int line, int charPositionInLine, string msg, RecognitionException e)

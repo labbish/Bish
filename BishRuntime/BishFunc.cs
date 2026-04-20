@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -103,17 +104,20 @@ public class BishArgObject(BishArg arg) : BishObject
 
 public class BishFunc(
     string name,
-    List<BishArg> inArgs,
-    Func<List<BishObject>, BishObject> func,
+    IList<BishArg> inArgs,
+    Func<IList<BishObject>, BishObject> func,
     string? tag = null,
     bool noCheck = false) : BishObject
 {
     public string? Tag => tag;
     public string Name { get; private set; } = name;
-    public List<BishArg> Args { get; private set; } = noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs);
-    public Func<List<BishObject>, BishObject> Func { get; private set; } = func;
 
-    public static List<TArg> CheckedArgs<TArg, T>(List<TArg> args) where TArg : Arg<T> where T : class
+    public IList<BishArg> Args { get; private set; } =
+        (noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs)).ToConcurrentList();
+
+    public Func<IList<BishObject>, BishObject> Func { get; private set; } = func;
+
+    public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
     {
         var rests = args.Where(arg => arg.Rest).ToList();
         if (rests.Count > 0)
@@ -139,22 +143,22 @@ public class BishFunc(
         return args;
     }
 
-    public List<BishObject> Match(List<BishObject> args)
+    private ConcurrentList<BishObject> Match(IList<BishObject> args)
     {
         if (Args.LastOrDefault()?.Rest == true)
         {
-            var normal = Args[..^1];
+            var normal = Args.Slice(0, -1);
             var rest = Args[^1];
             if (args.Count < normal.Count) throw BishException.OfArgument_Count(args.Count, min: normal.Count);
             return normal.Select((arg, i) => arg.Match(args[i]))
-                .Concat([rest.Match(new BishList(args[normal.Count..]))]).ToList();
+                .Concat([rest.Match(new BishList(args.Slice(normal.Count)))]).ToConcurrentList();
         }
 
         var minArgs = Args.Count(arg => arg.Default is null);
         if (args.Count > Args.Count) throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count);
         return Args.Select((arg, i) =>
             arg.Match(args.ElementAtOrDefault(i)) ??
-            throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToList();
+            throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToConcurrentList();
     }
 
     public BishFunc Bind(BishObject self)
@@ -166,7 +170,7 @@ public class BishFunc(
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
 
-    public override BishObject TryCall(List<BishObject> args)
+    public override BishObject TryCall(IList<BishObject> args)
     {
         try
         {
@@ -231,7 +235,7 @@ public class BishFunc(
     static BishFunc() => BishBuiltinBinder.Bind<BishFunc>();
 }
 
-public class BishArgsProxyList(List<BishArg> list) : ProxyList<BishArg>(list)
+public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)
 {
     protected override BishArgObject ToItem(BishArg source) => new(source);
 

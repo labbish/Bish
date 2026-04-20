@@ -1,13 +1,15 @@
-﻿namespace BishRuntime;
+﻿using BishUtils;
+
+namespace BishRuntime;
 
 public record Entry(BishObject Key, BishObject Value)
 {
     public override string ToString() => $"{BishOperator.ToString(Key).Value}: {BishOperator.ToString(Value).Value}";
 }
 
-public class BishMap(List<Entry> entries) : BishObject
+public class BishMap(IList<Entry> entries) : BishObject
 {
-    public List<Entry> Entries { get; private set; } = entries;
+    public IList<Entry> Entries { get; private set; } = entries.ToConcurrentList();
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("map");
@@ -30,12 +32,12 @@ public class BishMap(List<Entry> entries) : BishObject
         }
     }
 
-    public static List<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
+    public static IList<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
         entry.ExpectToBe<BishList>("map entry") switch
         {
             { List.Count: 2 } list => new Entry(list.List[0], list.List[1]),
             _ => throw BishException.OfType_Expect("map entry", entry, "list with length 2"),
-        }).ToList();
+        }).ToConcurrentList();
 
     public virtual BishObject Add(Entry entry)
     {
@@ -45,7 +47,7 @@ public class BishMap(List<Entry> entries) : BishObject
         return entry.Value;
     }
 
-    public void AddEntries(List<Entry> entries)
+    public void AddEntries(IList<Entry> entries)
     {
         foreach (var entry in entries) Add(entry);
     }
@@ -116,9 +118,9 @@ public class BishMap(List<Entry> entries) : BishObject
     static BishMap() => BishBuiltinBinder.Bind<BishMap>();
 }
 
-public class BishMapIterator(List<Entry> entries) : BishObject
+public class BishMapIterator(IList<Entry> entries) : BishObject
 {
-    public List<Entry> Entries => entries;
+    public readonly IList<Entry> Entries = entries;
     public int Index;
 
     public override BishType DefaultType => StaticType;

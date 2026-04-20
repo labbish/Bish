@@ -35,7 +35,7 @@ internal class BishBoolType() : BishType("bool")
 {
     private static readonly BishFunc Func = BishBuiltinBinder.Builtin("bool", Inits);
     
-    public override BishObject TryCall(List<BishObject> args) => Func.TryCall(args);
+    public override BishObject TryCall(IList<BishObject> args) => Func.TryCall(args);
 
     private static BishBool Inits([DefaultNull] BishBool? value) => value ?? BishBool.False;
 }

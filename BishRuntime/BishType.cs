@@ -2,14 +2,14 @@
 
 namespace BishRuntime;
 
-public partial class BishType(string name, List<BishType>? parents = null, int skips = 0) : BishObject
+public partial class BishType(string name, IEnumerable<BishType>? parents = null, int skips = 0) : BishObject
 {
     public string Name { get; private set; } = name;
-    public List<BishType> Parents { get; private set; } = parents ?? [];
+    public IList<BishType> Parents { get; private set; } = (parents ?? []).ToConcurrentList();
     public readonly int Skips = skips;
 
-    protected override List<BishObject> LookupChain =>
-        GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToList<BishObject>();
+    protected override IList<BishObject> LookupChain =>
+        GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToConcurrentList<BishObject>();
 
     [Builtin("hook")]
     public static BishType Create(BishObject _) => new(null!);
@@ -23,7 +23,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
         self.ClearMROCache();
     }
 
-    public BishObject CreateInstance(List<BishObject> args)
+    public BishObject CreateInstance(IList<BishObject> args)
     {
         var instance = new BishObject();
         var types = GetMRO();
@@ -39,7 +39,7 @@ public partial class BishType(string name, List<BishType>? parents = null, int s
         return instance;
     }
 
-    public override BishObject TryCall(List<BishObject> args) => CreateInstance(args);
+    public override BishObject TryCall(IList<BishObject> args) => CreateInstance(args);
 
     public bool CanAssignTo(BishType other) => this == other || LookupChain.Contains(other);
 

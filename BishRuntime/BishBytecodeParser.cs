@@ -20,7 +20,7 @@ public static partial class BytecodeParser
         return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + name + " " + string.Join(" ",
             args.Select(arg =>
                 ArgToString(type.GetProperty(arg.Name)?.GetValue(bytecode) ??
-                             type.GetField(arg.Name)!.GetValue(bytecode)!)));
+                            type.GetField(arg.Name)!.GetValue(bytecode)!)));
     }
 
     public static BishBytecode FromString(string code) =>
@@ -75,10 +75,8 @@ public static partial class BytecodeParser
         throw new ArgumentException($"Invalid argument type {type} for BytecodeParser");
     }
 
-    private static List<(Type Type, string Name)> Args(Type type)
-    {
-        return type.GetConstructors().First().GetParameters().Select(p => (p.ParameterType, p.Name!)).ToList();
-    }
+    private static List<(Type Type, string Name)> Args(Type type) => type.GetConstructors().First().GetParameters()
+        .Select(p => (p.ParameterType, p.Name!)).ToList();
 
     private static string ToCodeName(string className) => string.IsNullOrEmpty(className)
         ? className

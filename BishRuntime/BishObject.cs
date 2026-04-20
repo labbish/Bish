@@ -28,7 +28,7 @@ public class BishObject(BishType? type = null)
 
     public IDictionary<string, BishObject> Vars = new ConcurrentDictionary<string, BishObject>();
 
-    public BishObject? TryCallHook(string name, List<BishObject> args, bool ignores = false)
+    public BishObject? TryCallHook(string name, IList<BishObject> args, bool ignores = false)
     {
         var hook = TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoAccessor);
         if (ignores && hook is BishFunc { Tag: "ignore" }) return null;
@@ -38,7 +38,7 @@ public class BishObject(BishType? type = null)
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
 
-    protected virtual List<BishObject> LookupChain => [this];
+    protected virtual IList<BishObject> LookupChain => (ConcurrentList<BishObject>)[this];
 
     /**
      * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
@@ -53,7 +53,7 @@ public class BishObject(BishType? type = null)
      * But we prefer class methods (e.g. obj.toString()) to free functions (e.g. str(obj)), so this works better here.
      */
     public virtual BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
-        BishType? mroRoot = null, List<BishObject>? excludes = null, BishObject? boundSelf = null)
+        BishType? mroRoot = null, IList<BishObject>? excludes = null, BishObject? boundSelf = null)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
         excludes ??= [];
@@ -103,7 +103,7 @@ public class BishObject(BishType? type = null)
         }
     }
 
-    private BishObject? TryCallGetHook(string name, List<BishObject>? excludes = null)
+    private BishObject? TryCallGetHook(string name, IList<BishObject>? excludes = null)
     {
         excludes ??= [];
         if (excludes.Contains(this)) return null;
@@ -127,7 +127,7 @@ public class BishObject(BishType? type = null)
      * This should always be consistent with `TryGetMember`.
      */
     public virtual BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None,
-        BishType? mroRoot = null, List<BishObject>? excludes = null)
+        BishType? mroRoot = null, IList<BishObject>? excludes = null)
     {
         var self = mroRoot is null ? this : Base(this, mroRoot);
         excludes ??= [];
@@ -172,7 +172,7 @@ public class BishObject(BishType? type = null)
         }
     }
 
-    private BishObject? TryCallSetHook(string name, BishObject value, List<BishObject>? excludes = null)
+    private BishObject? TryCallSetHook(string name, BishObject value, IList<BishObject>? excludes = null)
     {
         excludes ??= [];
         if (excludes.Contains(this)) return null;
@@ -223,9 +223,9 @@ public class BishObject(BishType? type = null)
     [Builtin("hook", tag: "ignore")]
     public static BishObject Del(BishObject self, BishString name) => self.DelMember(name.Value);
 
-    public BishObject Call(List<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
+    public BishObject Call(IList<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
 
-    public virtual BishObject? TryCall(List<BishObject> args) => TryGetMember("op_call")?.TryCall(args);
+    public virtual BishObject? TryCall(IList<BishObject> args) => TryGetMember("op_call")?.TryCall(args);
 
     public override string ToString() => $"[Object {Type.Name}]";
 

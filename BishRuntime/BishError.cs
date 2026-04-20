@@ -1,9 +1,11 @@
-﻿namespace BishRuntime;
+﻿using BishUtils;
 
-public class BishStackLayer(BishFunc func, List<BishObject> args)
+namespace BishRuntime;
+
+public class BishStackLayer(BishFunc func, IList<BishObject> args)
 {
     public BishFunc Func => func;
-    public List<BishObject> Args => args;
+    public IList<BishObject> Args => args;
 
     public override string ToString() => $"{Func}, calling with ({string.Join(", ", Args)})";
 }
@@ -13,8 +15,8 @@ public class BishError(string message) : BishObject
     public string Message = message;
 
     // From inner to outer
-    public readonly List<BishStackLayer> StackTrace = [];
-    public List<BishError> Causes = [];
+    public readonly IList<BishStackLayer> StackTrace = new ConcurrentList<BishStackLayer>();
+    public IList<BishError> Causes = new ConcurrentList<BishError>();
 
     public override BishType DefaultType => StaticType;
 

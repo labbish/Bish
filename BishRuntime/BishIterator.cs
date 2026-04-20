@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using BishUtils;
+
+namespace BishRuntime;
 
 public class BishIterator(IEnumerator<BishObject> iter) : BishObject
 {
@@ -155,9 +157,9 @@ public static class EnumeratorHelper
             while (iter.MoveNext()) func(iter.Current);
         }
 
-        public List<BishObject> ToList()
+        public IList<BishObject> ToList()
         {
-            List<BishObject> result = [];
+            var result = new ConcurrentList<BishObject>();
             iter.Foreach(result.Add);
             return result;
         }

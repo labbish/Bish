@@ -62,7 +62,7 @@ internal class BishIntType() : BishType("int", [BishNum.StaticType])
 {
     private static readonly BishFunc Func = BishBuiltinBinder.Builtin("int", Inits);
     
-    public override BishObject TryCall(List<BishObject> args) => Func.TryCall(args);
+    public override BishObject TryCall(IList<BishObject> args) => Func.TryCall(args);
 
     private static BishInt Inits([DefaultNull] BishInt? value) => value ?? BishInt.Of(0);
 }

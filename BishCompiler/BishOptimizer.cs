@@ -1,8 +1,10 @@
-﻿namespace BishCompiler;
+﻿using BishUtils;
+
+namespace BishCompiler;
 
 public static class BishOptimizer
 {
-    public static readonly List<Func<Codes, Codes>> Optimizers = [];
+    public static readonly IList<Func<Codes, Codes>> Optimizers = new ConcurrentList<Func<Codes, Codes>>();
 
     public static Codes Optimize(Codes codes) =>
         Optimizers.Aggregate(codes, (current, optimizer) => optimizer(current));
@@ -115,8 +117,8 @@ public static class BishOptimizer
             return codes;
         }
 
-        public Codes RemoveUntaggedNop() =>
-            codes.Where(code => !(code is Nop && code.Tag is null)).ToList();
+        public Codes RemoveUntaggedNop() => 
+            codes.Where(code => !(code is Nop && code.Tag is null)).ToConcurrentList();
     }
 
     static BishOptimizer()

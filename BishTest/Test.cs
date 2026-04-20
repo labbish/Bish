@@ -19,18 +19,18 @@ public class Test(TestInfoFixture fixture)
     protected static BishInt I(int x) => BishInt.Of(x);
     protected static BishNum N(double x) => new(x);
     protected static BishString S(string s) => new(s);
-    protected static BishList L(params List<BishObject> list) => new(list);
+    protected static BishList L(params IList<BishObject> list) => new(list);
 
     protected static BishBool True => BishBool.True;
     protected static BishBool False => BishBool.False;
 
-    protected static BishMap M(params List<(BishObject, BishObject)> entries) =>
+    protected static BishMap M(params IList<(BishObject, BishObject)> entries) =>
         new(entries.Select(entry => new Entry(entry.Item1, entry.Item2)).ToList());
 
     protected static BishRange R(params int[] args) =>
         (BishRange)BishRange.StaticType.CreateInstance(args.Select(I).ToList<BishObject>());
 
-    protected static BishType T(string name, params List<BishType> parents) => new(name, parents);
+    protected static BishType T(string name, params IList<BishType> parents) => new(name, parents);
 
     protected static BishNull Null => BishNull.Instance;
 

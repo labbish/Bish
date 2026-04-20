@@ -142,7 +142,7 @@ public partial class BishVisitor
             context.caseExpr().Select(branch => (Visit(branch.pattern()), Visit(branch.expr()).Wrap())).ToList());
 
     private CompileResult Switch(ParserRuleContext context, CompileResult expr,
-        List<(CompileResult pattern, CompileResult codes)> branches)
+        IList<(CompileResult pattern, CompileResult codes)> branches)
     {
         var result = CompileResult.Same(context, branches.Select(pair => pair.codes).ToList());
         var count = result.Effect switch
@@ -153,7 +153,7 @@ public partial class BishVisitor
         };
         if (count != 0) result.Add(new Null());
         return result.Add(expr, StackEffect.Expr)
-            .Add(branches.Reversed().Aggregate(
+            .Add(branches.Reverse().Aggregate(
             count == 0 ? CompileResult.Stat(null) : CompileResult.Expr(null).Add(new Null()),
             (current, branch) => Condition("case",
                 CompileResult.Expr(null).Add(new Copy()).Add(branch.pattern, StackEffect.Pattern), branch.codes,

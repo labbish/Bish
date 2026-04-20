@@ -1,8 +1,11 @@
-﻿namespace BishCompiler;
+﻿using System.Collections.Concurrent;
+using BishUtils;
+
+namespace BishCompiler;
 
 public class SymbolAllocator
 {
-    public readonly Dictionary<string, int> Used = [];
+    public readonly IDictionary<string, int> Used = new ConcurrentDictionary<string, int>();
 
     public string Get(string symbol)
     {
@@ -26,12 +29,12 @@ public class CompileResult(
     StackEffect effect,
     ParserRuleContext? context,
     Codes? codes = null,
-    List<CompilationError>? errors = null)
+    IList<CompilationError>? errors = null)
 {
     public StackEffect Effect => effect;
     public ParserRuleContext? Context => context;
-    public Codes Codes { get; internal set; } = codes ?? [];
-    public readonly List<CompilationError> Errors = errors ?? [];
+    public Codes Codes { get; internal set; } = (codes ?? []).ToConcurrentList();
+    public readonly IList<CompilationError> Errors = (errors ?? []).ToConcurrentList();
 
     public CompileResult Error(ParserRuleContext? ctx, string message)
     {
@@ -64,7 +67,7 @@ public class CompileResult(
 
     public static CompileResult Pattern(ParserRuleContext? context) => new(StackEffect.Pattern, context);
 
-    public static CompileResult Same(ParserRuleContext? context, params List<CompileResult> results)
+    public static CompileResult Same(ParserRuleContext? context, params IList<CompileResult> results)
     {
         var effect = results[0].Effect;
         var result = new CompileResult(effect, context);
@@ -83,7 +86,7 @@ public class CompileResult(
     public CompileResult Unwrap()
     {
         if (Codes.FirstOrDefault() is Inner && Codes.LastOrDefault() is Outer)
-            Codes = Codes[1..^1];
+            Codes = Codes.Slice(1, -1);
         return this;
     }
 

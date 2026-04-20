@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -207,7 +208,7 @@ public record EndTag(string Name) : BishBytecode
 public static class TagSlicer
 {
     [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
-    public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, List<BishBytecode> Code)
+    public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, IList<BishBytecode> Code)
         where TStart : StartTag<TEnd> where TEnd : EndTag
     {
         public BishFrame Execute(BishFrame frame, Action<BishFrame>? before = null)
@@ -229,7 +230,7 @@ public static class TagSlicer
             var start = (TStart)frame.Bytecodes[startPos];
             var endPos = start.EndPos(frame, startPos);
             var end = (TEnd)frame.Bytecodes[endPos];
-            var code = frame.Bytecodes[(startPos + 1)..endPos];
+            var code = frame.Bytecodes.Slice(startPos + 1, endPos);
             return new CodeSlice<TStart, TEnd>(startPos, start, endPos, end, code);
         }
 
@@ -246,7 +247,7 @@ public abstract record TagBased<TStart, TEnd>(string Name)
     public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame) => frame.Slice<TStart, TEnd>(Name);
 }
 
-public record FuncStart(string Name, List<string> Args) : StartTag<FuncEnd>(Name);
+public record FuncStart(string Name, IList<string> Args) : StartTag<FuncEnd>(Name);
 
 public record FuncEnd(string Name) : EndTag(Name);
 
@@ -263,11 +264,11 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
 
-        BishObject Func(List<BishObject> args)
+        BishObject Func(IList<BishObject> args)
         {
             var inner = new BishFrame(slice.Code, scope, frame);
             // The first argument is in the top
-            foreach (var arg in args.Reversed()) inner.Stack.Push(arg);
+            foreach (var arg in args.Reverse()) inner.Stack.Push(arg);
             if (!Gen) return inner.Execute();
 
             var type = new BishType("gen");
@@ -324,8 +325,8 @@ public record ClassEnd(string Name) : EndTag(Name);
 
 public static class ClassHelper
 {
-    public static void MakeClass(this BishFrame frame, string name, TagSlicer.CodeSlice<ClassStart, ClassEnd> slice,
-        List<BishObject> parents)
+    public static void MakeClass(this BishFrame frame, string name,
+        TagSlicer.CodeSlice<ClassStart, ClassEnd> slice, IList<BishObject> parents)
     {
         var inner = slice.Execute(frame);
         var type = new BishType(name, parents.Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList());
@@ -516,10 +517,10 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
             true when i == RestPos => new BishRange(i, count + i - Count + 1, 1),
             true when i > RestPos => BishInt.Of(i - Count),
             _ => throw new ArgumentException("impossible")
-        }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToList();
+        }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToConcurrentList();
         if (Pattern)
         {
-            foreach (var item in items.Reversed()) frame.Stack.Push(item);
+            foreach (var item in items.Reverse()) frame.Stack.Push(item);
             frame.Stack.Push(BishBool.True);
         }
         else

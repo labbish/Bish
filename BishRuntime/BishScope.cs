@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -6,7 +7,7 @@ public class BishScope : BishObject
 {
     public readonly BishScope? Outer;
 
-    protected override List<BishObject> LookupChain => GetLookupChain().ToList<BishObject>();
+    protected override IList<BishObject> LookupChain => GetLookupChain().ToConcurrentList<BishObject>();
 
     public override BishType DefaultType => StaticType;
 

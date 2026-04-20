@@ -1,11 +1,16 @@
 ﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BishUtils;
 
 public class ConcurrentList<T>(IList<T> list) : IList<T>
 {
+    public ConcurrentList() : this([])
+    {
+    }
+
     private readonly Lock _lock = new();
-    
+
     public IEnumerator<T> GetEnumerator()
     {
         lock (_lock) return list.ToList().GetEnumerator();
@@ -43,7 +48,10 @@ public class ConcurrentList<T>(IList<T> list) : IList<T>
 
     public int Count
     {
-        get { lock (_lock) return list.Count; }
+        get
+        {
+            lock (_lock) return list.Count;
+        }
     }
 
     public bool IsReadOnly => false;
@@ -65,19 +73,30 @@ public class ConcurrentList<T>(IList<T> list) : IList<T>
 
     public T this[int index]
     {
-        get { lock (_lock) return list[index]; }
-        set { lock (_lock) list[index] = value; }
+        get
+        {
+            lock (_lock) return list[index];
+        }
+        set
+        {
+            lock (_lock) list[index] = value;
+        }
     }
 }
 
 public static class ConcurrentListHelper
 {
-    extension<T>(IEnumerable<T> source)
+    extension<T>(IEnumerable<T>? source)
     {
-        public ConcurrentList<T> ToConcurrentList() => new(source switch
+        [return: NotNullIfNotNull(nameof(source))]
+        public ConcurrentList<T>? ToConcurrentList() => source switch
         {
-            IList<T> list => list,
-            _ => source.ToList()
-        });
+            null => null,
+            ConcurrentList<T> concurrent => concurrent,
+            // We need this to handle things like (enumerable ?? []).ToConcurrentList()
+            T[] array => new ConcurrentList<T>(array.ToList()),
+            IList<T> list => new ConcurrentList<T>(list),
+            _ => new ConcurrentList<T>(source.ToList())
+        };
     }
 }

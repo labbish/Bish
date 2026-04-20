@@ -1,10 +1,11 @@
 ﻿using System.Collections;
+using BishUtils;
 
 namespace BishRuntime;
 
 public class BishList(IList<BishObject> list) : BishObject
 {
-    public IList<BishObject> List { get; private set; } = list;
+    public IList<BishObject> List { get; private set; } = list.ToConcurrentList();
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("list");
@@ -15,8 +16,8 @@ public class BishList(IList<BishObject> list) : BishObject
     [Builtin("hook")]
     public static void Init(BishList self, [DefaultNull] BishObject? iterable) => self.List = iterable switch
     {
-        BishList list => list.List.ToList(),
-        not null => iterable.ToEnumerable().ToList(),
+        BishList list => list.List.ToConcurrentList(),
+        not null => iterable.ToEnumerable().ToConcurrentList(),
         _ => self.List
     };
 
@@ -142,26 +143,9 @@ public class BishListIterator(IList<BishObject> list) : BishObject
     static BishListIterator() => BishBuiltinIteratorBinder.Bind<BishListIterator>();
 }
 
-// ReSharper disable once InconsistentNaming
-public static class IListHelper
+public abstract class ProxyList<TSource, TItem>(IList<TSource> list) : IList<TItem>
 {
-    extension<T>(IList<T> list)
-    {
-        public void RemoveRange(int index, int count)
-        {
-            for (var i = index + count - 1; i >= index; i--) list.RemoveAt(i);
-        }
-
-        public void InsertRange(int index, IEnumerable<T> items)
-        {
-            foreach (var item in items.Reverse()) list.Insert(index, item);
-        }
-    }
-}
-
-public abstract class ProxyList<TSource, TItem>(List<TSource> list) : IList<TItem>
-{
-    public List<TSource> List => list;
+    public IList<TSource> List => list;
 
     protected abstract TItem ToItem(TSource source);
 
@@ -224,4 +208,4 @@ public abstract class ProxyList<TSource, TItem>(List<TSource> list) : IList<TIte
     }
 }
 
-public abstract class ProxyList<T>(List<T> list) : ProxyList<T, BishObject>(list);
+public abstract class ProxyList<T>(IList<T> list) : ProxyList<T, BishObject>(list);

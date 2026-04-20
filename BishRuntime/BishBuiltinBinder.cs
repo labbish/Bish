@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.ExceptionServices;
+using BishUtils;
 using JetBrains.Annotations;
 
 namespace BishRuntime;
@@ -51,7 +52,7 @@ public static class BishBuiltinBinder
                 Rest: info.GetCustomAttribute<RestAttribute>() is not null))
             .ToList();
 
-        BishObject Func(List<BishObject> args)
+        BishObject Func(IList<BishObject> args)
         {
             try
             {

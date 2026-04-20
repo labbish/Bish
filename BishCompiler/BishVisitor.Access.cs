@@ -21,7 +21,7 @@ public partial class BishVisitor
     }
 
     private static ListDeconstruct Deconstruct(BishParser.ArgContext[] args) =>
-        new(args.Length, args.ToList().FindIndex(arg => arg is BishParser.RestArgContext), Pattern: false);
+        new(args.Length, args.FindIndex(arg => arg is BishParser.RestArgContext), Pattern: false);
 
     private static IEnumerable<BishParser.ExprContext> ArgsToExpr(BishParser.ArgContext[] args)
     {

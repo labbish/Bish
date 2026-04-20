@@ -1,4 +1,5 @@
 ﻿using BishCompiler;
+using BishUtils;
 using MediatR;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
@@ -17,7 +18,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
 
     private Task ParseAndPublishDiagnosticsAsync(string text, DocumentUri uri)
     {
-        List<CompilationError> errors = [];
+        IList<CompilationError> errors = new ConcurrentList<CompilationError>();
         try
         {
             BishCompiler.BishCompiler.Compile(text, out errors, optimize: false, runs: false);
@@ -27,7 +28,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
             // ignored
         }
 
-        var diagnostics = errors.Select(DiagnosticMapper.ToLspDiagnostic).ToList();
+        var diagnostics = errors.Select(DiagnosticMapper.ToLspDiagnostic).ToConcurrentList();
 
         Facade.TextDocument.PublishDiagnostics(new PublishDiagnosticsParams
         {

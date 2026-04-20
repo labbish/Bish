@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using BishUtils;
+
+namespace BishRuntime;
 
 public class BishException(BishError error) : Exception
 {
@@ -17,9 +19,9 @@ public class BishException(BishError error) : Exception
         }
     }
 
-    public BishException CausedBy(params List<BishError> causes)
+    public BishException CausedBy(params IList<BishError> causes)
     {
-        Error.Causes = causes;
+        Error.Causes = causes.ToConcurrentList();
         return this;
     }
 
@@ -106,7 +108,7 @@ public class BishException(BishError error) : Exception
         OfArgument($"Cannot bind {obj} to {method} because {method} takes no argument")
             .With("method", method).With("object", obj);
 
-    public static BishException OfArgument_Operator(string op, List<BishObject> args) =>
+    public static BishException OfArgument_Operator(string op, IList<BishObject> args) =>
         OfArgument($"Cannot apply operator {op} on type{(args.Count > 1 ? "s" : "")} " +
                    string.Join(", ", args.Select(arg => arg.Type.Name)))
             .With("operator", new BishString(op)).With("arguments", new BishList(args.ToList()));

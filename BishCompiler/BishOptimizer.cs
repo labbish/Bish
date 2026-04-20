@@ -1,13 +1,14 @@
-﻿using BishUtils;
+﻿using System.Runtime.CompilerServices;
+using BishUtils;
 
 namespace BishCompiler;
 
 public static class BishOptimizer
 {
-    public static readonly IList<Func<Codes, Codes>> Optimizers = new ConcurrentList<Func<Codes, Codes>>();
+    public static readonly IList<Optimizer> Optimizers = new ConcurrentList<Optimizer>();
 
     public static Codes Optimize(Codes codes) =>
-        Optimizers.Aggregate(codes, (current, optimizer) => optimizer(current));
+        Optimizers.Aggregate(codes, (current, optimizer) => optimizer.Optimize(current));
 
     extension(Codes codes)
     {
@@ -64,7 +65,7 @@ public static class BishOptimizer
                     Set code when Discarded(code.Name) => new Nop(),
                     Def code when Discarded(code.Name) => new Nop(),
                     Move code when Discarded(code.Name) => new Pop(),
-                    {} code => code
+                    { } code => code
                 };
             }
 
@@ -117,20 +118,53 @@ public static class BishOptimizer
             return codes;
         }
 
-        public Codes RemoveUntaggedNop() => 
+        public Codes RemoveUntaggedNop() =>
             codes.Where(code => !(code is Nop && code.Tag is null)).ToConcurrentList();
+    }
+
+    public static void Add(Func<Codes, Codes> func, [CallerArgumentExpression(nameof(func))] string name = "?") =>
+        Optimizers.Add(new Optimizer(name, func));
+
+    public static string Info()
+    {
+        var infos = Optimizers.Select(optimizer => optimizer.Info).ToList();
+        return string.Join("\n", infos) + "\n" + OptimizeInfo.Total(infos);
     }
 
     static BishOptimizer()
     {
-        // Current optimization percentage 10%~15%
-        Optimizers.Add(RemoveUnusedTag);
-        Optimizers.Add(RemoveInnerOuter);
-        Optimizers.Add(RemoveMoveDel);
-        Optimizers.Add(RemoveDiscarded);
-        Optimizers.Add(RemoveValuePop);
-        Optimizers.Add(CombineDefPop);
-        Optimizers.Add(MoveNopTag);
-        Optimizers.Add(RemoveUntaggedNop);
+        Add(RemoveUntaggedNop);
+        Add(RemoveUnusedTag);
+        Add(RemoveInnerOuter);
+        Add(RemoveMoveDel);
+        Add(RemoveDiscarded);
+        Add(RemoveValuePop);
+        Add(CombineDefPop);
+        Add(MoveNopTag);
     }
+}
+
+public class Optimizer(string name, Func<Codes, Codes> func)
+{
+    public readonly OptimizeInfo Info = new(name);
+    public Func<Codes, Codes> Func => func;
+
+    public Codes Optimize(Codes codes)
+    {
+        Interlocked.Add(ref Info.Before, codes.Count);
+        var result = Func(codes).RemoveUntaggedNop();
+        Interlocked.Add(ref Info.After, result.Count);
+        return result;
+    }
+}
+
+public class OptimizeInfo(string name, int before = 0, int after = 0)
+{
+    public string Name => name;
+    public int Before = before;
+    public int After = after;
+
+    public static OptimizeInfo Total(IList<OptimizeInfo> infos) => new("total", infos[0].Before, infos.Last().After);
+
+    public override string ToString() => $"{Name}: {Before} -> {After} ({1 - (double)After / Before:P})";
 }

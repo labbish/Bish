@@ -10,6 +10,7 @@ namespace BishTest;
 [Collection("opt")]
 public class Test(TestInfoFixture fixture)
 {
+    // ReSharper disable once UnusedMember.Global
     public TestInfoFixture Fixture => fixture;
 
     public readonly BishScope Scope = BishScope.Globals;
@@ -36,11 +37,8 @@ public class Test(TestInfoFixture fixture)
 
     protected BishFrame Compile(string code)
     {
-        var frame = BishCompiler.BishCompiler.Compile(code, out var errors, Scope, optimize: false);
+        var frame = BishCompiler.BishCompiler.Compile(code, out var errors, Scope);
         errors.Should().BeEmpty();
-        Interlocked.Add(ref Fixture.Before, frame.Bytecodes.Count);
-        frame.Bytecodes = BishOptimizer.Optimize(frame.Bytecodes);
-        Interlocked.Add(ref Fixture.After, frame.Bytecodes.Count);
         return frame;
     }
 
@@ -81,12 +79,8 @@ public class TestCollectionWithSummary : ICollectionFixture<TestInfoFixture>;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class TestInfoFixture : IDisposable
-{
-    public int Before, After;
-
-    public void Dispose() =>
-        Console.WriteLine(
-            $"Before Optimization: {Before}; After Optimization: {After}; Optimized {1 - (double)After / Before:P}");
+{ 
+    public void Dispose() => Console.WriteLine(BishOptimizer.Info());
 }
 
 [AttributeUsage(AttributeTargets.Method)]

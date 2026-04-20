@@ -12,17 +12,12 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestError()
     {
-        Execute("x:=s:=0;try throw Error('error') catch(e)x=e finally{s=1;}");
-        ExpectResult("x.message", S("error"));
-        ExpectResult("s", I(1));
-    }
-
-    [Fact]
-    public void TestWhen()
-    {
-        Action(() => Execute("try{e:=Error('error');e.data:=-1;throw e;}catch(e)when(e.data>0){}"))
-            .Should().Excepts(BishError.StaticType).Which.Error.Message.Should().Be("error");
-        Execute("try{e:=Error('error');e.data:=1;throw e;}catch(e)when(e.data>0){}");
+        Execute("x:=try throw Error('error');");
+        ExpectResult("x.error.message", S("error"));
+        ExpectResult("if(x is err e)e.message", S("error"));
+        Action(() => Execute("x.y;")).Should().Excepts(BishError.StaticType);
+        ExpectErrorResult("x?.y");
+        ExpectResult("x??0", I(0));
     }
 
     [Fact]

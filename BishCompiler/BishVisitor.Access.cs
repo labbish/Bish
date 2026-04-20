@@ -57,7 +57,7 @@ public partial class BishVisitor
                     .Add(new Set(id), Tag(tag));
                 break;
             case "??":
-                result.Add(new Get(id), new Copy(), new IsNull(), new JumpIfNot(tag), new Pop())
+                result.Add(new Get(id), new Copy(), Op("nullish", 1), new JumpIfNot(tag), new Pop())
                     .Add(value, StackEffect.Expr)
                     .Add(new Set(id), Tag(tag));
                 break;
@@ -160,7 +160,7 @@ public partial class BishVisitor
                     case "??":
                         result.Add(new Copy())
                             .Add(Get(last, tag))
-                            .Add(new Copy(), new IsNull(), new JumpIfNot(tag), new Pop())
+                            .Add(new Copy(), Op("nullish", 1), new JumpIfNot(tag), new Pop())
                             .Add(value, StackEffect.Expr)
                             .Add(Set(last, tag))
                             .Add(new Null(), new Swap(), Tag(tag), new Swap(), new Pop());
@@ -365,7 +365,7 @@ public partial class BishVisitor
     private static CompileResult JumpIfNull(BishParser.NullAccessContext access, string tag)
     {
         var result = new CompileResult(StackEffect.Trans, access);
-        if (access.op is not null) result.Add(new Copy(), new IsNull(), new JumpIf(tag));
+        if (access.op is not null) result.Add(new Copy(), Op("nullish", 1), new JumpIf(tag));
         return result;
     }
 }

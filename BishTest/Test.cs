@@ -63,6 +63,8 @@ public class Test(TestInfoFixture fixture)
     }
 
     protected void ExpectResult(string expr, BishObject result) => Result(expr).Should().BeEquivalentTo(result);
+
+    protected void ExpectErrorResult(string expr) => Result(expr).Should().BeOfType<BishErrorResult>();
 }
 
 public static class BishExceptionAssertion

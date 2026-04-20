@@ -72,6 +72,8 @@ public class BishException(BishError error) : Exception
     public static BishException OfType_BindIter(BishType type) =>
         OfType($"Cannot manually create {type.Name}; did you mean to call .iter()?").With("type", type);
 
+    public static BishException OfType_ErrorResult() => OfType("Cannot manually create ErrorResult");
+
     public static BishException OfArgument(string message) => Create(BishError.ArgumentErrorType, message);
 
     public static BishException OfArgument_DefineRepeat(string name) => OfArgument(

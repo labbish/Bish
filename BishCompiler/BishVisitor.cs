@@ -111,7 +111,7 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
         var result = CompileResult.Expr(context);
         var tag = Symbols.Get("null_comb");
         return result.Add(Visit(context.left))
-            .Add(new Copy(), new IsNull(), new JumpIfNot(tag), new Pop())
+            .Add(new Copy(), Op("nullish", 1), new JumpIfNot(tag), new Pop())
             .Add(Visit(context.right))
             .Add(Tag(tag));
     }

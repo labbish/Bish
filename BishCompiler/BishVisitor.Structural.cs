@@ -115,24 +115,11 @@ public partial class BishVisitor
     public override CompileResult VisitThrowExpr(BishParser.ThrowExprContext context) =>
         CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new Throw());
 
-    public override CompileResult VisitErrorExpr(BishParser.ErrorExprContext context)
+    public override CompileResult VisitTryExpr(BishParser.TryExprContext context)
     {
-        var tag = Symbols.Get("error");
-        var tryPart = CompileResult.Stat(context.tryStat).Add(new TryStart(tag))
-            .Add(Visit(context.tryStat)).Add(new TryEnd(tag));
-        var id = context.ID()?.GetText();
-        var when = Symbols.Get("when");
-        var catchPart = CompileResult.Stat(context);
-        catchPart.Add(new CatchStart(tag));
-        if (id is not null) catchPart.Add(new Def(id));
-        if (context.when is not null)
-            catchPart.Add(Visit(context.when), StackEffect.Expr).Add(new JumpIf(when), new Throw(), Tag(when));
-        catchPart.Add(new Pop()).Add(Visit(context.catchStat));
-        catchPart.Add(new CatchEnd(tag));
-        var finallyPart = CompileResult.Stat(context.finallyStat);
-        if (context.FIN() is not null)
-            finallyPart.Add(new FinallyStart(tag)).Add(Visit(context.finallyStat)).Add(new FinallyEnd(tag));
-        return CompileResult.Stat(context).Add(tryPart).Add(catchPart).Add(finallyPart);
+        var tag = Symbols.Get("try");
+        return CompileResult.Expr(context).Add(new TryStart(tag))
+            .Add(Visit(context.expr()).IntoReturn()).Add(new TryEnd(tag));
     }
 
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)

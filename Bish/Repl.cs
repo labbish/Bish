@@ -73,7 +73,7 @@ public class Repl(BishScope? scope = null)
         }
         catch (BishException e)
         {
-            Console.Error.WriteLine(e.Error);
+            Console.Error.WriteLine($"Uncaught error: {e.Error}");
         }
         catch (Exception e)
         {

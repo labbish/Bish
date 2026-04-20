@@ -16,7 +16,6 @@ expr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr
     | '{' objEntries '}'                                        # ObjExpr
-    | TRY expr '(' args ')'                                     # TryCallExpr
     | expr nullAccess+                                          # GetAccess
     | <assoc=right> op=('+'|'-'|'!'|'~') expr                   # UnOpExpr
     | <assoc=right> left=expr op='^' right=expr                 # BinOpExpr
@@ -40,8 +39,7 @@ expr
     | tag? DO loop=expr WHL '(' cond=expr ')'                   # DoWhileExpr
     // obj is Setable
     | tag? FOR '(' obj=expr ':' iter=expr ')' loop=expr         # ForExpr
-    | TRY tryStat=expr (CTH ('(' ID ')')? ((WHN '(' when=expr ')')?
-        catchStat=expr))? (FIN finallyStat=expr)?               # ErrorExpr
+    | TRY expr                                                  # TryExpr
     // obj is Setable
     | WTH '(' (obj=expr ':')? cont=expr ')' main=expr           # WithExpr
     | expr SWC '{' (caseExpr (',' caseExpr)* ','?)? '}'         # SwitchExpr
@@ -88,9 +86,6 @@ accessItem
     : ID | '[' ']'
     ;
 
-// We need to spilt '()' to avoid breaking calls like `f()`, and to allow white space between them
-// We don't contain `bool` and `iter`, because they have a same name with their func name,
-// ...which disables users from directly accessing their underlying method
 defOp
     : '=='|'!='|'+'|'-'|'*'|'/'|'%'|'^'
     | ('(' ')')|'<=>'|'<'|'<='|'>'|'>='|'~'
@@ -126,7 +121,8 @@ pattern
     | '{' (patternObjEntry (',' patternObjEntry)* ','?)? '}'    # ObjPattern
     | expr                                                      # ExprPattern
     | op=matchOp expr                                           # OpPattern
-    | 'of' type=expr ID?                                        # TypePattern
+    | 'of' type=expr var=expr?                                  # TypePattern
+    | 'err' expr?                                               # ErrPattern
     | 'not' pattern                                             # NotPattern
     | left=pattern 'and' right=pattern                          # AndPattern
     | left=pattern 'or' right=pattern                           # OrPattern
@@ -243,8 +239,6 @@ YLD : 'yield' ;
 CLS : 'class' ;
 THR : 'throw' ;
 TRY : 'try' ;
-CTH : 'catch' ;
-FIN : 'finally' ;
 WHN : 'when' ;
 AS  : 'as' ;
 IS  : 'is' ;

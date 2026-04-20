@@ -5,7 +5,7 @@ namespace BishCompiler;
 public partial class BishVisitor
 {
     public override CompileResult VisitNullPattern(BishParser.NullPatternContext context) =>
-        CompileResult.Pattern(context).Add(new IsNull());
+        CompileResult.Pattern(context).Add(Op("nullish", 1));
 
     public override CompileResult VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
 
@@ -80,17 +80,33 @@ public partial class BishVisitor
         CompileResult.Pattern(context)
             .Add(Visit(context.expr()), StackEffect.Expr).Add(Op(context.op.GetText(), 2));
 
-    public override CompileResult VisitTypePattern(BishParser.TypePatternContext context)
+    private CompileResult TestType(ParserRuleContext context, string name, CompileResult type,
+        BishParser.ExprContext? var, CompileResult? post = null)
     {
         var result = CompileResult.Pattern(context);
-        var name = context.ID()?.GetText();
-        var tag = Symbols.Get("is_of");
-        if (context.type.GetText() == "_") result.Add(new GetBuiltin("object"));
-        else result.Add(Visit(context.type), StackEffect.Expr);
-        result.Add(new TestType(tag));
-        if (name is not null) result.Add(new Def(name));
+        var tag = Symbols.Get(name);
+        result.Add(type, StackEffect.Expr).Add(new TestType(tag));
+        // ReSharper disable once InvertIf
+        if (var is not null)
+        {
+            var value = CompileResult.Expr(null).Add(new Del("$_"));
+            if (post is not null) result.Add(post, StackEffect.Trans);
+            result.Add(new Move("$_")).Add(Def(var, value));
+        }
+
         return result.Add(new Pop().Tagged(tag));
     }
+
+    public override CompileResult VisitTypePattern(BishParser.TypePatternContext context) =>
+        TestType(context, "is_of",
+            context.type.GetText() == "_"
+                ? CompileResult.Expr(null).Add(new GetBuiltin("object"))
+                : Visit(context.type), context.var);
+
+
+    public override CompileResult VisitErrPattern(BishParser.ErrPatternContext context) =>
+        TestType(context, "is_err", CompileResult.Expr(null).Add(new GetBuiltin("Error$Result")), context.expr(),
+            new CompileResult(StackEffect.Trans, null).Add(new GetMember("error")));
 
     public override CompileResult VisitNotPattern(BishParser.NotPatternContext context) =>
         CompileResult.Pattern(context).Add(Visit(context.pattern()), StackEffect.Pattern).Add(new Not());
@@ -154,14 +170,14 @@ public partial class BishVisitor
         if (count != 0) result.Add(new Null());
         return result.Add(expr, StackEffect.Expr)
             .Add(branches.Reverse().Aggregate(
-            count == 0 ? CompileResult.Stat(null) : CompileResult.Expr(null).Add(new Null()),
-            (current, branch) => Condition("case",
-                CompileResult.Expr(null).Add(new Copy()).Add(branch.pattern, StackEffect.Pattern), branch.codes,
-                current)))
+                count == 0 ? CompileResult.Stat(null) : CompileResult.Expr(null).Add(new Null()),
+                (current, branch) => Condition("case",
+                    CompileResult.Expr(null).Add(new Copy()).Add(branch.pattern, StackEffect.Pattern), branch.codes,
+                    current)))
             .Add(new Swap(count * 2), new Pop(count + 1));
     }
 
-    public override CompileResult VisitPipeVarExpr(BishParser.PipeVarExprContext context) => 
+    public override CompileResult VisitPipeVarExpr(BishParser.PipeVarExprContext context) =>
         CompileResult.Expr(context).Add(new Get("$"));
 
     public override CompileResult VisitPipe(BishParser.PipeContext context) => Visit(context.expr());
@@ -173,13 +189,10 @@ public partial class BishVisitor
         result.Add(Visit(context.expr()), StackEffect.Expr);
         foreach (var pipe in context.pipe())
         {
-            if (pipe.op is not null) result.Add(new Copy(), new IsNull(), new JumpIf(tag));
+            if (pipe.op is not null) result.Add(new Copy(), Op("nullish", 1), new JumpIf(tag));
             result.Add(new Move("$")).Add(Visit(pipe), StackEffect.Expr);
         }
+
         return result.Add(Tag(tag)).Wrap();
     }
-
-    public override CompileResult VisitTryCallExpr(BishParser.TryCallExprContext context) =>
-        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr)
-            .Add(new TryFunc()).Add(Call(context.args().arg()));
 }

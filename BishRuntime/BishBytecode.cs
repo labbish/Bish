@@ -358,60 +358,21 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
 {
     public override void Execute(BishFrame frame)
     {
-        var trySlice = frame.Slice<TryStart, TryEnd>(Name);
-        var catchSlice = frame.TrySlice<CatchStart, CatchEnd>(Name);
-        var finallySlice = frame.TrySlice<FinallyStart, FinallyEnd>(Name);
-
+        var slice = frame.Slice<TryStart, TryEnd>(Name);
         try
         {
-            HandledFinally(trySlice.Execute(frame));
+            var result = slice.Execute(frame);
+            frame.Stack.Push(result.ReturnValue ?? BishNull.Instance);
         }
-        catch (BishException tryException)
+        catch (BishException e)
         {
-            if (catchSlice is null)
-            {
-                HandledFinally();
-                throw;
-            }
-
-            try
-            {
-                HandledFinally(catchSlice.Execute(frame, inner => inner.Stack.Push(tryException.Error)));
-            }
-            catch (BishException)
-            {
-                HandledFinally();
-                throw;
-            }
+            frame.Stack.Push(new BishErrorResult(e.Error));
         }
-
         base.Execute(frame);
-        return;
-
-        void HandledFinally(BishFrame? blockFrame = null)
-        {
-            var result = blockFrame?.ReturnValue;
-            if (finallySlice is null)
-            {
-                frame.ReturnValue = result;
-                return;
-            }
-
-            var finallyFrame = finallySlice.Execute(frame);
-            frame.ReturnValue = finallyFrame.ReturnValue ?? result;
-        }
     }
 }
 
 public record TryEnd(string Name) : EndTag(Name);
-
-public record CatchStart(string Name) : StartTag<CatchEnd>(Name);
-
-public record CatchEnd(string Name) : EndTag(Name);
-
-public record FinallyStart(string Name) : StartTag<FinallyEnd>(Name);
-
-public record FinallyEnd(string Name) : EndTag(Name);
 
 public record ForIter(string GoalTag) : Jumper(GoalTag)
 {
@@ -433,11 +394,6 @@ public record ForIter(string GoalTag) : Jumper(GoalTag)
 public record BuildList(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishList(frame.Stack.Pop(Argc)));
-}
-
-public record IsNull : BishBytecode
-{
-    public override void Execute(BishFrame frame) => frame.Stack.Push(BishBool.Of(frame.Stack.Pop() is BishNull));
 }
 
 public record TestType(string? GoalTag = null) : Jumper(GoalTag)
@@ -464,27 +420,6 @@ public record RefEq : BishBytecode
     public override void Execute(BishFrame frame) =>
         // ReSharper disable once EqualExpressionComparison
         frame.Stack.Push(BishBool.Of(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
-}
-
-public record TryFunc : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        var obj = frame.Stack.Pop();
-        if (obj is BishNull) frame.Stack.Push(BishNull.Instance);
-        var func = obj.ExpectToBe<BishFunc>("operant of try expression");
-        frame.Stack.Push(new BishFunc(func.Name, func.Args, args =>
-        {
-            try
-            {
-                return func.Call(args);
-            }
-            catch (BishException)
-            {
-                return BishNull.Instance;
-            }
-        }, func.Tag));
-    }
 }
 
 public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false) : BishBytecode

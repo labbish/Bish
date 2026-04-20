@@ -94,6 +94,7 @@ public class BishBuiltinScope : BishScope
         Init("NameError", BishError.NameErrorType);
         Init("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         Init("IterationStop", BishError.IteratorStopType);
+        Init("Error$Result", BishErrorResult.StaticType);
     }
 
     public static readonly BishBuiltinScope Instance = new();

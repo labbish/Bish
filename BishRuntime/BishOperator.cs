@@ -67,6 +67,7 @@ public static partial class BishOperator
         new("op_ge", ["left", "right"], ">="),
         new("op_invert", ["self"], "~"),
         new("bool", ["self"], "bool", () => BishBool.True),
+        new("nullish", ["self"], "nullish", () => BishBool.False),
         new(GetterRegex(), ["self"], "get"),
         new(SetterRegex(), ["self", "value"], "set"),
         new(DefferRegex(), ["self", "value"], "def"),

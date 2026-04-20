@@ -76,6 +76,6 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
     {
         ExpectResult("'3'|>int.parse($)|>$*$-$+1", I(7));
         ExpectResult("3|>$ as string|?>$[0]|>$*3", Null);
-        ExpectResult("'3p'|>try int.parse($)|?>$*$-$+1", Null);
+        ExpectErrorResult("'3p'|>try int.parse($)|?>$*$-$+1");
     }
 }

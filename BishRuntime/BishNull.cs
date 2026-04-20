@@ -37,5 +37,8 @@ public class BishNull : BishObject
     [Builtin]
     public static BishBool Bool(BishNull a) => BishBool.False;
 
+    [Builtin]
+    public static BishBool Nullish(BishNull a) => BishBool.True;
+
     static BishNull() => BishBuiltinBinder.Bind<BishNull>();
 }

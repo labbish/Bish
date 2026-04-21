@@ -12,6 +12,7 @@ expr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* INI funcBody                                        # InitExpr
     | deco* CRT funcBody                                        # CreateExpr
+    | deco* BND funcBody                                        # BindExpr
     | deco* CLS ID? (':' args)? expr?                           # ClassExpr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr
@@ -234,6 +235,7 @@ FUN : 'func' ;
 OP  : 'oper' ;
 INI : 'init' ;
 CRT : 'create' ;
+BND : 'bind' ;
 RET : 'return' ;
 YLD : 'yield' ;
 CLS : 'class' ;

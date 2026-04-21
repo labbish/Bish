@@ -22,4 +22,12 @@ public class NullableTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("x?(i).a[b](c)", Null);
         ExpectResult("y?.x?.a[b](c)", Null);
     }
+
+    [Fact]
+    public void TestNullish()
+    {
+        Execute("class N{func nullish(self)true};n:=N();");
+        ExpectResult("n?.a is of N", True);
+        ExpectResult("n??0", I(0));
+    }
 }

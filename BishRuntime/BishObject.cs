@@ -89,8 +89,7 @@ public class BishObject(BishType? type = null)
                 Type.WithMRORoot(mroRoot).TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType,
                     excludes: excludes), mode.HasFlag(BishLookupMode.NoBind));
 
-        BishObject? TryBind(BishObject? member, bool noBind) =>
-            !noBind && member is BishFunc method ? method.Bind(boundSelf) : member;
+        BishObject? TryBind(BishObject? member, bool noBind) => noBind ? member : member?.Bind(boundSelf);
 
         bool TryGetFromMember(BishObject? obj, [NotNullWhen(true)] out BishObject? member)
         {
@@ -102,6 +101,8 @@ public class BishObject(BishType? type = null)
             return member is not null;
         }
     }
+
+    public virtual BishObject Bind(BishObject self) => TryCallHook("hook_bind", [self], ignores: true) ?? this;
 
     private BishObject? TryCallGetHook(string name, IList<BishObject>? excludes = null)
     {

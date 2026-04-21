@@ -102,7 +102,16 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
 
         Execute("func f(a,b,c)a*b*c;");
         ExpectResult("f(2,3,4)", I(24));
-        ExpectResult("f.bind(2)(3,4)", I(24));
-        ExpectResult("f.bind(2,3)(4)", I(24));
+        ExpectResult("f.binds(2)(3,4)", I(24));
+        ExpectResult("f.binds(2,3)(4)", I(24));
+    }
+
+    [Fact]
+    public void TestBindHook()
+    {
+        Execute("class F{bind(self,_)0};");
+        Execute("x:=F();class C{y:=x};c:=C();");
+        ExpectResult("c.y", I(0));
+        ExpectResult("C.y===x", True);
     }
 }

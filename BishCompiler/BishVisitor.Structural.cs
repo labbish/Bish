@@ -61,6 +61,9 @@ public partial class BishVisitor
     public override CompileResult VisitCreateExpr(BishParser.CreateExprContext context) =>
         MakeFunc("hook_create", context.funcBody(), context.deco(), true, "create hook");
 
+    public override CompileResult VisitBindExpr(BishParser.BindExprContext context) =>
+        MakeFunc("hook_bind", context.funcBody(), context.deco(), true, "bind hook");
+
     private CompileResult MakeFunc(string? name, BishParser.FuncBodyContext body, BishParser.DecoContext[] decos,
         bool fixedArgc = false, string funcName = "")
     {

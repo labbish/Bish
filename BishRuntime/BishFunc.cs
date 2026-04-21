@@ -161,7 +161,7 @@ public class BishFunc(
             throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToConcurrentList();
     }
 
-    public BishFunc Bind(BishObject self)
+    public override BishFunc Bind(BishObject self)
     {
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
@@ -169,6 +169,9 @@ public class BishFunc(
             ? new BishFunc(Name, args1, args => Func([self, ..args]), Tag)
             : throw BishException.OfType_Argument(self, Args[0].Type);
     }
+    
+    [Builtin("hook", tag: "ignore")]
+    public static BishFunc Bind(BishFunc func, BishObject obj) => func.Bind(obj);
 
     public override BishObject TryCall(IList<BishObject> args)
     {
@@ -226,7 +229,7 @@ public class BishFunc(
     }
 
     [Builtin(special: false)]
-    public static BishFunc Bind(BishFunc self, [Rest] BishList args) =>
+    public static BishFunc Binds(BishFunc self, [Rest] BishList args) =>
         args.List.Aggregate(self, (current, arg) => current.Bind(arg));
 
     [Builtin("hook", special: false)]

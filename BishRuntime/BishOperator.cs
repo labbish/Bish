@@ -47,6 +47,7 @@ public static partial class BishOperator
         new("hook_set", ["self", "member", "value"], "set()"),
         new("hook_def", ["self", "member", "value"], "def()"),
         new("hook_del", ["self", "member"], "del()"),
+        new("hook_bind", ["self", "object"], "bind"),
         new("hook_create", ["self"], "create"),
         new("hook_init", null, "init"),
         new("op_eq", ["left", "right"], "==", () => BishBool.False),

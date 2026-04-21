@@ -6,21 +6,10 @@ namespace BishRuntime;
 public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T : class;
 
 // `Type` will only be used by builtin functions
-public record BishArg(string Name, Func<BishType?>? TypeProvider = null, BishObject? Default = null, bool Rest = false)
+public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null, bool Rest = false)
     : Arg<BishObject>(Name, Default, Rest)
 {
-    public BishArg(string Name, BishType? Type, BishObject? Default = null, bool Rest = false) : this(Name,
-        () => Type, Default, Rest)
-    {
-    }
-
     public BishType Type => DefType ?? BishObject.StaticType;
-
-    public BishType? DefType
-    {
-        get => field ??= TypeProvider?.Invoke();
-        init;
-    }
 
     public override string ToString() => (Rest ? ".." : "") + Name + (DefType is null ? "" : ": " + DefType.Name) +
                                          (Default is null ? "" : "=" + Default);
@@ -48,14 +37,14 @@ public class BishArgObject(BishArg arg) : BishObject
     public static void Init(BishArgObject self, BishString name, [DefaultNull] BishType? type) =>
         self.Arg = new BishArg(name.Value, type);
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishArgObject Default(BishArgObject self, BishObject value)
     {
         self.Arg = self.Arg with { Default = value };
         return self;
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishArgObject Rest(BishArgObject self)
     {
         self.Arg = self.Arg with { Rest = true };
@@ -98,8 +87,6 @@ public class BishArgObject(BishArg arg) : BishObject
 
     [Builtin("hook")]
     public static BishBool Get_isRest(BishArgObject self) => BishBool.Of(self.Arg.Rest);
-
-    static BishArgObject() => BishBuiltinBinder.Bind<BishArgObject>();
 }
 
 public class BishFunc(
@@ -228,14 +215,12 @@ public class BishFunc(
         return args;
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishFunc Binds(BishFunc self, [Rest] BishList args) =>
         args.List.Aggregate(self, (current, arg) => current.Bind(arg));
 
-    [Builtin("hook", special: false)]
+    [Builtin("hook")]
     public static BishType Get_Arg() => BishArgObject.StaticType;
-
-    static BishFunc() => BishBuiltinBinder.Bind<BishFunc>();
 }
 
 public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)

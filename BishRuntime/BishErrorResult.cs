@@ -35,6 +35,4 @@ public class BishErrorResult(BishError error) : BishObject
 
     [Builtin]
     public static BishBool Nullish(BishErrorResult a) => BishBool.True;
-
-    static BishErrorResult() => BishBuiltinBinder.Bind<BishErrorResult>();
 }

@@ -1,21 +1,23 @@
 ﻿namespace BishRuntime;
 
-public class BishInt : BishObject
+public class BishInt : BishNum
 {
-    private BishInt(int value) => Value = value;
+    private BishInt(int value) : base(value)
+    {
+    }
 
     private static readonly BishInt[] Instances = Enumerable.Range(0, 256).Select(i => new BishInt(i - 127)).ToArray();
 
     public static BishInt Of(int value) => value is > -128 and <= 128 ? Instances[value + 127] : new BishInt(value);
 
-    public readonly int Value;
+    public new int Value => (int) base.Value;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new BishIntType();
 
-    [Builtin(special: false)]
-    public static BishInt Parse(BishString a) => int.TryParse(a.Value, out var value)
+    [Builtin]
+    public new static BishInt Parse(BishString a) => int.TryParse(a.Value, out var value)
         ? Of(value)
         : throw BishException.OfArgument_Parse(a, StaticType);
 
@@ -38,10 +40,10 @@ public class BishInt : BishObject
     public static BishInt Mod(BishInt a, BishInt b) =>
         b.Value != 0 ? Of(a.Value % b.Value) : throw BishException.OfZeroDivision();
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Abs(BishInt a) => Of(Math.Abs(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Sign(BishInt a) => Of(Math.Sign(a.Value));
 
     public override string ToString() => Value.ToString();
@@ -54,15 +56,11 @@ public class BishInt : BishObject
 
     [Builtin]
     public static BishBool Bool(BishInt a) => BishBool.Of(a.Value != 0);
-
-    static BishInt() => BishBuiltinBinder.Bind<BishInt>();
 }
 
 internal class BishIntType() : BishType("int", [BishNum.StaticType])
 {
-    private static readonly BishFunc Func = BishBuiltinBinder.Builtin("int", Inits);
-    
-    public override BishObject TryCall(IList<BishObject> args) => Func.TryCall(args);
-
-    private static BishInt Inits([DefaultNull] BishInt? value) => value ?? BishInt.Of(0);
+    public override BishInt TryCall(IList<BishObject> args) => args.Count > 1
+        ? throw BishException.OfArgument_Count(args.Count, 0, 1)
+        : args.FirstOrDefault()?.ExpectToBe<BishInt>("int() argument") ?? BishInt.Of(0);
 }

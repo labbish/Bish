@@ -1,103 +1,17 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using BishUtils;
 using JetBrains.Annotations;
 
 namespace BishRuntime;
 
-[MeansImplicitUse]
-[AttributeUsage(AttributeTargets.Method)]
-public class BuiltinAttribute(string? prefix = null, bool special = true, string? tag = null) : Attribute
-{
-    public string? Prefix => prefix;
-    public bool Special => special;
-    public string? Tag => tag;
-
-    private static string ToLower(string name) => name == "" ? name : char.ToLower(name[0]) + name[1..];
-
-    public string GetName(string name) => (Prefix is null ? "" : Prefix + "_") + ToLower(name);
-}
-
-[AttributeUsage(AttributeTargets.Parameter)]
-public class DefaultNullAttribute : Attribute;
-
-[AttributeUsage(AttributeTargets.Parameter)]
-public class RestAttribute : Attribute;
-
 public static class BishBuiltinBinder
 {
-    public static void Bind<TObject>(BishObject? target = null)
-    {
-        var type = typeof(TObject);
-        target ??= BishType.GetStaticType(type);
-        foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
-        {
-            var attr = method.GetCustomAttribute<BuiltinAttribute>();
-            if (attr == null) continue;
-            var name = attr.GetName(method.Name);
-            var func = Builtin(name, method, attr.Tag);
-            if (attr.Special) BishOperator.CheckSpecialMethod(name, func);
-            target.Vars[name] = func;
-        }
-    }
-
-    public static BishFunc Builtin(string name, Delegate method, string? tag = null) =>
-        Builtin(name, method.Method, tag);
-
-    public static BishFunc Builtin(string name, MethodInfo method, string? tag = null)
-    {
-        var parameters = method.GetParameters();
-        var inArgs = parameters
-            .Select(info => new BishArg(info.Name!, () => BishType.GetStaticType(info.ParameterType), Default(info),
-                Rest: info.GetCustomAttribute<RestAttribute>() is not null))
-            .ToList();
-
-        BishObject Func(IList<BishObject> args)
-        {
-            try
-            {
-                var converted = args.Select((arg, i) =>
-                        arg is DefaultNull ? null : ConvertImplicit(arg, parameters[i].ParameterType))
-                    .ToArray();
-                return (BishObject?)method.InvokeRaw(null, converted) ?? BishNull.Instance;
-            }
-            catch (Exception e)
-            {
-                if (e is BishException) throw;
-                throw new Exception($"Error occured while invoking method {name} ({method})", e);
-            }
-        }
-
-        return new BishFunc(name, inArgs, Func, tag);
-    }
-
-    public static object ConvertImplicit(BishObject obj, Type target)
-    {
-        if (target.IsInstanceOfType(obj)) return obj;
-        var source = obj.GetType();
-        var method = source.GetImplicitConversionMethod(source, target) ??
-                     target.GetImplicitConversionMethod(source, target);
-        // This might happen when Type doesn't match with underlying type
-        return method?.Invoke(null, [obj]) ??
-               throw BishException.OfType_Argument(obj, BishType.GetStaticType(target));
-    }
-
-    private static MethodInfo? GetImplicitConversionMethod(this Type type, Type source, Type target)
-    {
-        return type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(info =>
-            {
-                var parameters = info.GetParameters();
-                return info.Name == "op_Implicit"
-                       && info.ReturnType == target
-                       && parameters.Length == 1
-                       && parameters[0].ParameterType.IsAssignableFrom(source);
-            });
-    }
-
-    private static DefaultNull? Default(ParameterInfo info) =>
-        info.GetCustomAttribute<DefaultNullAttribute>() is null ? null : new DefaultNull();
-
+    [ModuleInitializer]
+    [SuppressMessage("Usage", "CA2255")]
+    internal static void Initialize() => BuiltinFunctionRegistry.Registry();
+    
     internal static object? InvokeRaw(this MethodInfo method, object? obj, object?[]? parameters)
     {
         try
@@ -111,8 +25,6 @@ public static class BishBuiltinBinder
         }
     }
 }
-
-internal class DefaultNull : BishObject;
 
 [MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]

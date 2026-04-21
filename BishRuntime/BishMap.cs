@@ -114,8 +114,6 @@ public class BishMap(IList<Entry> entries) : BishObject
     [Builtin("hook")]
     public static BishList Get_entries(BishMap self) =>
         new(self.Entries.Select(entry => new BishList([entry.Key, entry.Value])).ToList<BishObject>());
-
-    static BishMap() => BishBuiltinBinder.Bind<BishMap>();
 }
 
 public class BishMapIterator(IList<Entry> entries) : BishObject

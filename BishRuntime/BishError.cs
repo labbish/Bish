@@ -49,8 +49,6 @@ public class BishError(string message) : BishObject
                string.Join("", StackTrace.Select(funcName => $"\n  at {funcName}")) + cause;
     }
 
-    static BishError() => BishBuiltinBinder.Bind<BishError>();
-
     public static readonly BishType AttributeErrorType = new("AttributeError", [StaticType]);
     public static readonly BishType ArgumentErrorType = new("ArgumentError", [StaticType]);
     public static readonly BishType TypeErrorType = new("TypeError", [StaticType]);

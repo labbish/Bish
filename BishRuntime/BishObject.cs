@@ -268,7 +268,7 @@ public class BishObject(BishType? type = null)
     [Builtin("op")]
     public static BishBool Ge(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) >= 0);
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishBaseObject Base(BishObject self, [DefaultNull] BishType? root) => new(self,
         root ?? self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
         throw BishException.OfType_NoBase(self));
@@ -281,6 +281,4 @@ public class BishObject(BishType? type = null)
 
     [Builtin("hook")]
     public static BishType Set_type(BishObject self, BishType type) => self.Type = type;
-
-    static BishObject() => BishBuiltinBinder.Bind<BishObject>();
 }

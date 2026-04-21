@@ -62,7 +62,7 @@ public partial class BishString(string value) : BishObject
     public static string CallToString(BishObject obj) =>
         BishOperator.Call("toString", [obj]).ExpectToBe<BishString>("toString").Value;
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)
     {
         var autoIndex = 0;
@@ -75,11 +75,9 @@ public partial class BishString(string value) : BishObject
         }));
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Split(BishString self, BishString sep) =>
         new(self.Value.Split(sep.Value).Select(s => new BishString(s)).ToList<BishObject>());
-
-    static BishString() => BishBuiltinBinder.Bind<BishString>();
 
     [GeneratedRegex(@"\{(\d*)\}")]
     private static partial Regex MyRegex();

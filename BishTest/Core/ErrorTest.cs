@@ -23,38 +23,11 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestWith()
     {
-        Scope.DefVar("W", WithTest.StaticType);
+        Execute("a:=b:=c:=0;class W{func hook_enter(self)a+=1;func hook_exit(self,error)if(error is null)b+=1 else c+=1;};");
         Execute("with(W()){}");
         Execute("with(_:W()){throw Error('error');}");
-        WithTest.Enters.Should().Be(2);
-        WithTest.NormalExits.Should().Be(1);
-        WithTest.ErrorExits.Should().Be(1);
+        ExpectResult("a", I(2));
+        ExpectResult("b", I(1));
+        ExpectResult("c", I(1));
     }
-}
-
-public class WithTest : BishObject
-{
-    public static int Enters { get; private set; }
-    public static int NormalExits { get; private set; }
-    public static int ErrorExits { get; private set; }
-    
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("bool");
-
-    [Builtin("hook")]
-    public static WithTest Create(BishObject _) => new();
-    
-    [Builtin("hook")]
-    public static void Enter(WithTest _) => Enters++;
-
-    [Builtin("hook")]
-    public static BishBool Exit(WithTest _, BishObject error)
-    {
-        if (error is BishNull) NormalExits++;
-        else ErrorExits++;
-        return BishBool.True;
-    }
-    
-    static WithTest() => BishBuiltinBinder.Bind<WithTest>();
 }

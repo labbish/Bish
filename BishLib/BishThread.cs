@@ -24,23 +24,21 @@ public class BishThread(Thread thread) : BishObject
     [Builtin("hook")]
     public static void Init(BishThread self, BishObject func) => self.Thread = new Thread(() => func.Call([]));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static void Start(BishThread self) => self.Thread.Start();
 
-    [Builtin(special: false)]
+    [Builtin]
     public static void Join(BishThread self, [DefaultNull] BishInt? ms)
     {
         if (ms is null) self.Thread.Join();
         else self.Thread.Join(ms.Value);
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static void Sleep(BishInt ms) => Thread.Sleep(ms.Value);
 
-    [Builtin("hook", special: false)]
+    [Builtin("hook")]
     public static BishInt Get_id() => BishInt.Of(Environment.CurrentManagedThreadId);
-
-    static BishThread() => BishBuiltinBinder.Bind<BishThread>();
 }
 
 public class BishLock(BishObject obj) : BishObject
@@ -62,8 +60,6 @@ public class BishLock(BishObject obj) : BishObject
 
     [Builtin("hook")]
     public static void Exit(BishLock self, BishObject error) => Monitor.Exit(self.Object);
-
-    static BishLock() => BishBuiltinBinder.Bind<BishLock>();
 }
 
 // TODO: semaphore (& channel?)

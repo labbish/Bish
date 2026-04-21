@@ -7,7 +7,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public BishFrame? Outer => outer;
     public BishScope Scope = scope ?? BishScope.Globals;
     public readonly Stack<BishObject> Stack = new();
-    public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
+    public readonly IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
     public BishObject? ReturnValue;

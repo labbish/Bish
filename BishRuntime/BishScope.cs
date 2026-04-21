@@ -27,9 +27,7 @@ public class BishScope : BishObject
             yield return scope;
     }
 
-    protected const BishLookupMode Mode = BishLookupMode.NoHook | BishLookupMode.NoAccessor;
-
-    public BishObject? TryGetVar(string name) => TryGetMember(name, mode: Mode);
+    protected const BishLookupMode Mode = BishLookupMode.NoHook | BishLookupMode.NoAccessor | BishLookupMode.NoBind;
 
     public BishObject GetVar(string name) => GetMember(name, mode: Mode);
 
@@ -52,6 +50,7 @@ public class BishScope : BishObject
 
     public static BishScope Globals => new(BishBuiltinScope.Instance);
 
+    [Builtin]
     public static BishNull Print([Rest] BishList args)
     {
         Console.Write(string.Join("", args.List.Select(BishString.CallToString)));
@@ -59,9 +58,8 @@ public class BishScope : BishObject
         return BishNull.Instance;
     }
 
+    [Builtin]
     public static BishString Input() => new(Console.ReadLine() ?? "");
-
-    static BishScope() => BishBuiltinBinder.Bind<BishScope>();
 }
 
 public class BishBuiltinScope : BishScope
@@ -82,8 +80,6 @@ public class BishBuiltinScope : BishScope
         Init("true", BishBool.True);
         Init("false", BishBool.False);
         Init("null", BishNull.Instance);
-        Init("print", BishBuiltinBinder.Builtin("print", Print));
-        Init("input", BishBuiltinBinder.Builtin("input", Input));
         Init("Func", BishFunc.StaticType);
         Init("Error", BishError.StaticType);
         Init("Iterator", BishIterator.StaticType);

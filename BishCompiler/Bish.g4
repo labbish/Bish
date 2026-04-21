@@ -13,6 +13,7 @@ expr
     | deco* INI funcBody                                        # InitExpr
     | deco* CRT funcBody                                        # CreateExpr
     | deco* BND funcBody                                        # BindExpr
+    // enter & exit
     | deco* CLS ID? (':' args)? expr?                           # ClassExpr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr

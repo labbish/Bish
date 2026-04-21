@@ -9,6 +9,7 @@ public static class BishLib
         BishThreadModule.Initialize();
         BishFileModule.Initialize();
         BishRandomModule.Initialize();
+        BuiltinFunctionRegistry.Registry();
     }
 
     internal static void InitializeModule(string name, params IEnumerable<(string, BishObject)> exports)

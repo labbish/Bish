@@ -66,8 +66,6 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
 
     [Builtin("hook")]
     public static BishList Get_MRO(BishType self) => new(self.GetMRO().ToList<BishObject>());
-
-    static BishType() => BishBuiltinBinder.Bind<BishType>();
 }
 
 public class ParentsProxyList(BishType type) : ProxyList<BishType>(type.Parents)

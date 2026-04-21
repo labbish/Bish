@@ -115,17 +115,15 @@ public class BishList(IList<BishObject> list) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishList self) => BishInt.Of(self.List.Count);
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Add(BishList self, BishObject item)
     {
         self.List.Add(item);
         return self;
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Reverse(BishList self) => new(self.List.ToArray().Reverse().ToList());
-
-    static BishList() => BishBuiltinBinder.Bind<BishList>();
 }
 
 public class BishListIterator(IList<BishObject> list) : BishObject

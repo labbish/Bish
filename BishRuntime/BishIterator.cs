@@ -23,68 +23,64 @@ public class BishIterator(IEnumerator<BishObject> iter) : BishObject
     public static BishIterator Get_entries(BishObject self) =>
         new(self.ToEnumerator().Map((item, i) => new BishList([BishInt.Of(i), item])));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator Map(BishObject self, BishObject func) =>
         new(self.ToEnumerator().Map(item => func.Call([item])));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator Filter(BishObject self, BishObject func) =>
         new(self.ToEnumerator().Filter(item => BishBool.CallToBool(func.Call([item]))));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator Take(BishObject self, BishInt count) => new(self.ToEnumerator().Take(count.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator Skip(BishObject self, BishInt count) => new(self.ToEnumerator().Skip(count.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator FlatMap(BishObject self, BishObject func) =>
         new(self.ToEnumerator().FlatMap(item => func.Call([item]).ToEnumerable()));
 
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishObject Reduce(BishObject self, BishObject func, [DefaultNull] BishObject? init) =>
         self.ToEnumerator().Reduce((acc, x) => func.Call([acc, x]), init);
 
-    [Builtin(special: false)]
+    [Builtin]
     public static void Foreach(BishObject self, BishObject func) =>
         self.ToEnumerator().Foreach(item => func.Call([item]));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList ToList(BishObject self) => new(self.ToEnumerator().ToList());
 
     private static Predicate<BishObject> WrapPredicate(BishObject? predicate) => item =>
         BishBool.CallToBool(predicate is null ? item : predicate.Call([item]));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishBool All(BishObject self, [DefaultNull] BishObject? predicate) =>
         BishBool.Of(self.ToEnumerator().All(WrapPredicate(predicate)));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishBool Any(BishObject self, [DefaultNull] BishObject? predicate) =>
         BishBool.Of(self.ToEnumerator().Any(WrapPredicate(predicate)));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishObject Find(BishObject self, BishObject predicate) =>
         self.ToEnumerator().Find(WrapPredicate(predicate));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishBool Contains(BishObject self, BishObject obj) =>
         BishBool.Of(self.ToEnumerator().Any(item => BishOperator.Eq(item, obj)));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishString Join(BishObject self, [DefaultNull] BishString? sep) =>
         new(string.Join(sep?.Value ?? "", ToList(self).List.Select(BishString.CallToString)));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishIterator Concat(BishObject self, [Rest] BishList others) =>
         new(self.ToEnumerator().Concat(others.List.Select(iter => iter.ToEnumerator())));
 
-    static BishIterator()
-    {
-        BishBuiltinIteratorBinder.Bind<BishIterator>(noParent: true);
-        BishBuiltinBinder.Bind<BishIterator>();
-    }
+    static BishIterator() => BishBuiltinIteratorBinder.Bind<BishIterator>(noParent: true);
 }
 
 public static class EnumeratorHelper

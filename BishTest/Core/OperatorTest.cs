@@ -1,19 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace BishTest.Core;
+﻿namespace BishTest.Core;
 
 public class OperatorTest : Test
 {
     public OperatorTest(TestInfoFixture fixture) : base(fixture) =>
-        Scope.DefVar("f", BishBuiltinBinder.Builtin("f", F));
-
-    [SuppressMessage("Usage", "CA2211")] public static int Count;
-
-    public static BishBool F()
-    {
-        Count++;
-        return False;
-    }
+        Execute("count:=0;func f(){count+=1;false};");
 
     [Fact]
     public void TestOperator()
@@ -74,34 +64,34 @@ public class OperatorTest : Test
         ExpectResult("false||true", True);
         ExpectResult("false||false", False);
 
-        Count = 0;
+        Execute("count=0;");
         ExpectResult("f()&&f()", True);
-        Count.Should().Be(1);
+        ExpectResult("count", I(1));
 
-        Count = 0;
+        Execute("count=0;");
         ExpectResult("if(true)3else f()", I(3));
         ExpectResult("if(false)f()else 3", I(3));
-        Count.Should().Be(0);
+        ExpectResult("count", I(0));
     }
 
     [Fact]
     public void TestLogicAssign()
     {
-        Count = 0;
+        Execute("count=0;");
         Execute("b:=true;b&&=f();");
         ExpectResult("b", False);
-        Count.Should().Be(1);
+        ExpectResult("count", I(1));
         Execute("b:=false;b&&=f();");
         ExpectResult("b", False);
-        Count.Should().Be(1);
+        ExpectResult("count", I(1));
 
-        Count = 0;
+        Execute("count=0;");
         Execute("o:=object();o.x:=true;o.x&&=f();");
         ExpectResult("o.x", False);
-        Count.Should().Be(1);
+        ExpectResult("count", I(1));
         Execute("o:=object();o.x:=false;o.x&&=f();");
         ExpectResult("o.x", False);
-        Count.Should().Be(1);
+        ExpectResult("count", I(1));
     }
 
     [Fact]

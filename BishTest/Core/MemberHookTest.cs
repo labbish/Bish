@@ -4,8 +4,10 @@ public class MemberHookTest : Test
 {
     public MemberHookTest(TestInfoFixture fixture) : base(fixture)
     {
-        Scope.Vars.Add("x", T1.StaticType.CreateInstance([]));
-        Scope.Vars.Add("y", T2.StaticType.CreateInstance([]));
+        Execute("class T1{get(self,name)'get';set(self,name,value)'set';"
+                + "def(self,name,value)'def';del(self,name)'del'};x:=T1();");
+        Execute("class T2{init(self)self.A:=0;get a(self)self.A;set a(self,a){self.A=a;null};"
+                + "def a(self,a){self.A=a;null};del a(self)null};y:=T2();");
         Execute("x.vars['a']:=0;");
     }
 
@@ -77,58 +79,5 @@ public class MemberHookTest : Test
         Action(() => Execute("null.x=0;")).Should().Excepts(BishError.NullErrorType);
         Action(() => Execute("null.x:=0;")).Should().Excepts(BishError.NullErrorType);
         Action(() => Execute("del null.x;")).Should().Excepts(BishError.NullErrorType);
-    }
-}
-
-file class T1 : BishObject
-{
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("T");
-
-    [Builtin("hook")]
-    public static T1 Create(BishObject _) => new();
-
-    [Builtin("hook")]
-    public static BishString Get(T1 self, BishString name) => new("get");
-
-    [Builtin("hook")]
-    public static BishString Set(T1 self, BishString name, BishObject value) => new("set");
-
-    [Builtin("hook")]
-    public static BishString Def(T1 self, BishString name, BishObject value) => new("def");
-
-    [Builtin("hook")]
-    public static BishString Del(T1 self, BishString name) => new("del");
-
-    static T1() => BishBuiltinBinder.Bind<T1>();
-}
-
-file class T2 : BishObject
-{
-    public int A;
-
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("U");
-
-    [Builtin("hook")]
-    public static T2 Create(BishObject _) => new();
-
-    [Builtin("hook")]
-    public static BishInt Get_a(T2 self) => BishInt.Of(self.A);
-
-    [Builtin("hook")]
-    public static void Set_a(T2 self, BishInt value) => self.A = value.Value;
-
-    [Builtin("hook")]
-    public static void Def_a(T2 self, BishInt value) => self.A = value.Value;
-
-    [Builtin("hook")]
-    public static BishNull Del_a(T2 self) => BishNull.Instance;
-
-    static T2()
-    {
-        BishBuiltinBinder.Bind<T2>();
     }
 }

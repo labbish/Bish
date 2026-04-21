@@ -16,7 +16,7 @@ public class BishNum(double value) : BishObject
     [Builtin("hook")]
     public static void Init(BishNum self, [DefaultNull] BishNum? other) => self.Value = other?.Value ?? 0;
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Parse(BishString a) => double.TryParse(a.Value, out var value)
         ? new BishNum(value)
         : throw BishException.OfArgument_Parse(a, StaticType);
@@ -45,52 +45,50 @@ public class BishNum(double value) : BishObject
     [Builtin("op")]
     public static BishNum Pow(BishNum a, BishNum b) => new(Math.Pow(a.Value, b.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Sqrt(BishNum a) => new(Math.Sqrt(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Abs(BishNum a) => new(Math.Abs(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Sign(BishNum a) => BishInt.Of(Math.Sign(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Floor(BishNum a) => BishInt.Of((int)Math.Floor(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Ceil(BishNum a) => BishInt.Of((int)Math.Ceiling(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt Round(BishNum a) => BishInt.Of((int)Math.Round(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Sin(BishNum a) => new(Math.Sin(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Cos(BishNum a) => new(Math.Cos(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Tan(BishNum a) => new(Math.Tan(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Asin(BishNum a) => new(Math.Asin(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Acos(BishNum a) => new(Math.Acos(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Atan(BishNum a) => new(Math.Atan(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Ln(BishNum a) => new(Math.Log(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Lg(BishNum a) => new(Math.Log10(a.Value));
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
-
-    public static implicit operator BishNum(BishInt x) => new(x.Value);
 
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
@@ -106,7 +104,6 @@ public class BishNum(double value) : BishObject
 
     static BishNum()
     {
-        BishBuiltinBinder.Bind<BishNum>();
         StaticType.DefMember("PI", new BishNum(Math.PI));
         StaticType.DefMember("E", new BishNum(Math.E));
     }

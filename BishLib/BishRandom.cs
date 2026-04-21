@@ -27,27 +27,27 @@ public class BishRandom(Random random) : BishObject
     public static void Init(BishRandom self, [DefaultNull] BishInt? seed) =>
         self.Random = seed is null ? new Random() : new Random(seed.Value);
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishNum Rand(BishRandom self) => new(self.Random.NextDouble());
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishInt RandInt(BishRandom self, BishInt min, BishInt max) => min.Value > max.Value
         ? throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}")
         : BishInt.Of(self.Random.Next(min.Value, max.Value));
 
     public BishObject Choice(BishObject[] array) => array[Random.Next(array.Length)];
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishObject Choice(BishRandom self, BishObject iter) => self.Choice(iter.ToEnumerable().ToArray());
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Choices(BishRandom self, BishObject iter, BishInt count)
     {
         var array = iter.ToEnumerable().ToArray();
         return new BishList(Enumerable.Range(0, count.Value).Select(_ => self.Choice(array)).ToList());
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Sample(BishRandom self, BishObject iter, BishInt count)
     {
         var shuffled = self.Shuffled(iter);
@@ -63,8 +63,6 @@ public class BishRandom(Random random) : BishObject
         return array;
     }
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishList Shuffle(BishRandom self, BishObject iter) => new(self.Shuffled(iter));
-
-    static BishRandom() => BishBuiltinBinder.Bind<BishRandom>();
 }

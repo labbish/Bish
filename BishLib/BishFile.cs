@@ -62,7 +62,7 @@ public class BishReader(StreamReader reader) : BishObject
         var chr => new BishString((char)chr)
     };
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishString? ReadChar(BishReader self) => self.ReadChar();
 
     public BishString? ReadLine() => BishFileModule.FileOperation(Reader.ReadLine) switch
@@ -71,7 +71,7 @@ public class BishReader(StreamReader reader) : BishObject
         var line => new BishString(line)
     };
 
-    [Builtin(special: false)]
+    [Builtin]
     public static BishString? ReadLine(BishReader self) => self.ReadLine();
 
     [Builtin("hook")]
@@ -82,8 +82,6 @@ public class BishReader(StreamReader reader) : BishObject
 
     [Builtin("hook")]
     public static BishString Get_content(BishReader self) => new(BishFileModule.FileOperation(self.Reader.ReadToEnd));
-
-    static BishReader() => BishBuiltinBinder.Bind<BishReader>();
 }
 
 public class BishFileCharIterator(BishReader reader) : BishObject
@@ -138,9 +136,7 @@ public class BishWriter(StreamWriter writer) : BishObject
     [Builtin("hook")]
     public static void Exit(BishWriter self, BishObject error) => self.Writer.Dispose();
 
-    [Builtin(special: false)]
+    [Builtin]
     public static void Write(BishWriter self, BishObject content) =>
         self.Writer.Write(BishString.CallToString(content));
-
-    static BishWriter() => BishBuiltinBinder.Bind<BishWriter>();
 }

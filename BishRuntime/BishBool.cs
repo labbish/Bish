@@ -27,15 +27,11 @@ public class BishBool : BishObject
 
     public static bool CallToBool(BishObject obj) =>
         BishOperator.Call("bool", [obj]).ExpectToBe<BishBool>("bool").Value;
-
-    static BishBool() => BishBuiltinBinder.Bind<BishBool>();
 }
 
 internal class BishBoolType() : BishType("bool")
 {
-    private static readonly BishFunc Func = BishBuiltinBinder.Builtin("bool", Inits);
-    
-    public override BishObject TryCall(IList<BishObject> args) => Func.TryCall(args);
-
-    private static BishBool Inits([DefaultNull] BishBool? value) => value ?? BishBool.False;
+    public override BishBool TryCall(IList<BishObject> args) => args.Count > 1
+        ? throw BishException.OfArgument_Count(args.Count, 0, 1)
+        : args.FirstOrDefault()?.ExpectToBe<BishBool>("bool() argument") ?? BishBool.False;
 }

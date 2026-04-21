@@ -14,10 +14,12 @@ public static class BishOptimizer
     {
         public void RenameTag(string from, string to)
         {
-            foreach (var code in codes)
+            for (var i = 0; i < codes.Count; i++)
             {
+                var code = codes[i];
                 if (code.Tag == from) code.Tag = to;
-                if (code is Jumper jumper && jumper.GoalTag == from) jumper.GoalTag = to;
+                if (code is Jumper jumper && jumper.GoalTag == from)
+                    codes[i] = jumper with { GoalTag = to };
             }
         }
 

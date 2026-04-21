@@ -157,8 +157,6 @@ public record Outer : BishBytecode
 
 public abstract record Jumper(string? GoalTag) : BishBytecode
 {
-    public string? GoalTag = GoalTag;
-
     public void Jump(BishFrame frame)
     {
         if (GoalTag is null) return;

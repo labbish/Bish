@@ -10,10 +10,7 @@ expr
     | deco* (FUN ID?)? funcBody                                 # FuncExpr
     | deco* OP defOp funcBody                                   # OperExpr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
-    | deco* INI funcBody                                        # InitExpr
-    | deco* CRT funcBody                                        # CreateExpr
-    | deco* BND funcBody                                        # BindExpr
-    // enter & exit
+    | deco* defHook funcBody                                    # HookExpr
     | deco* CLS ID? (':' args)? expr?                           # ClassExpr
     | '[' args ']'                                              # ListExpr
     | '{' entries '}'                                           # MapExpr
@@ -91,6 +88,10 @@ accessItem
 defOp
     : '=='|'!='|'+'|'-'|'*'|'/'|'%'|'^'
     | ('(' ')')|'<=>'|'<'|'<='|'>'|'>='|'~'
+    ;
+
+defHook
+    : 'init' | 'create' | 'bind' | 'enter' | 'exit'
     ;
 
 nullAccess
@@ -234,9 +235,6 @@ DEF : 'def' ;
 DEL : 'del' ;
 FUN : 'func' ;
 OP  : 'oper' ;
-INI : 'init' ;
-CRT : 'create' ;
-BND : 'bind' ;
 RET : 'return' ;
 YLD : 'yield' ;
 CLS : 'class' ;

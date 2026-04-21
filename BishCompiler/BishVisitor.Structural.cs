@@ -25,49 +25,51 @@ public partial class BishVisitor
     }
 
     public override CompileResult VisitFuncExpr(BishParser.FuncExprContext context) =>
-        MakeFunc(context.ID()?.GetText(), context.funcBody(), context.deco());
+        MakeFunc(CompileResult.Expr(context), context.ID()?.GetText(), context.funcBody(), context.deco());
 
     public override CompileResult VisitOperExpr(BishParser.OperExprContext context)
     {
+        var result = CompileResult.Expr(context);
         var op = context.defOp().GetText();
-        var special = BishOperator.GetOperator(op, context.funcBody().defArgs().defArg().Length);
-        var name = special.NamePattern.Name;
-        return MakeFunc(name, context.funcBody(), context.deco(), special.Args is not null, $"operator {op}");
+        var special = result.Try(() => BishOperator.GetOperator(op, context.funcBody().defArgs().defArg().Length));
+        var name = special?.NamePattern.Name;
+        return MakeFunc(result, name, context.funcBody(), context.deco(), special?.Args is not null, $"operator {op}");
     }
 
     public override CompileResult VisitAccessExpr(BishParser.AccessExprContext context)
     {
+        var result = CompileResult.Expr(context);
         var op = context.accessOp().GetText();
         var item = context.accessItem();
-        var special = BishOperator.GetOperator(op + (item, item?.ID()) switch
+        var opName = op + (item, item?.ID()) switch
         {
             (null, _) => "()",
             (_, null) => "[]",
             (_, _) => ""
-        }, context.funcBody().defArgs().defArg().Length);
+        };
+        var special = result.Try(() => BishOperator.GetOperator(opName, context.funcBody().defArgs().defArg().Length));
         var access = op + op[^1] + "er";
         var (name, funcName) = (item, item?.ID()) switch
         {
-            (null, _) => (special.NamePattern.Name, access),
-            (_, null) => (special.NamePattern.Name, $"index {access}"),
+            (null, _) => (special?.NamePattern.Name, access),
+            (_, null) => (special?.NamePattern.Name, $"index {access}"),
             (_, { } id) => ($"hook_{op}_{id.GetText()}", $"{access} {id.GetText()}")
         };
-        return MakeFunc(name, context.funcBody(), context.deco(), true, funcName);
+        return MakeFunc(result, name, context.funcBody(), context.deco(), true, funcName);
     }
 
-    public override CompileResult VisitInitExpr(BishParser.InitExprContext context) =>
-        MakeFunc("hook_init", context.funcBody(), context.deco(), false, "initializer");
-
-    public override CompileResult VisitCreateExpr(BishParser.CreateExprContext context) =>
-        MakeFunc("hook_create", context.funcBody(), context.deco(), true, "create hook");
-
-    public override CompileResult VisitBindExpr(BishParser.BindExprContext context) =>
-        MakeFunc("hook_bind", context.funcBody(), context.deco(), true, "bind hook");
-
-    private CompileResult MakeFunc(string? name, BishParser.FuncBodyContext body, BishParser.DecoContext[] decos,
-        bool fixedArgc = false, string funcName = "")
+    public override CompileResult VisitHookExpr(BishParser.HookExprContext context)
     {
-        var result = CompileResult.Expr(body);
+        var result = CompileResult.Expr(context);
+        var hook = context.defHook().GetText();
+        var special = result.Try(() => BishOperator.GetOperator(hook, context.funcBody().defArgs().defArg().Length));
+        var name = special?.NamePattern.Name;
+        return MakeFunc(result, name, context.funcBody(), context.deco(), false, $"hook {hook}");
+    }
+
+    private CompileResult MakeFunc(CompileResult result, string? name, BishParser.FuncBodyContext body,
+        BishParser.DecoContext[] decos, bool fixedArgc = false, string funcName = "")
+    {
         var symbol = Symbols.Get(name ?? Anonymous);
         var defArgs = body.defArgs()?.defArg() ?? [];
         var args = result.Try(() => BishFunc.CheckedArgs<Arg<BishParser.ExprContext>, BishParser.ExprContext>(defArgs

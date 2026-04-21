@@ -23,7 +23,7 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestWith()
     {
-        Execute("a:=b:=c:=0;class W{func hook_enter(self)a+=1;func hook_exit(self,error)if(error is null)b+=1 else c+=1;};");
+        Execute("a:=b:=c:=0;class W{enter(self)a+=1;exit(self,error)if(error is null)b+=1 else c+=1;};");
         Execute("with(W()){}");
         Execute("with(_:W()){throw Error('error');}");
         ExpectResult("a", I(2));

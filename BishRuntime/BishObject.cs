@@ -236,25 +236,20 @@ public class BishObject(BishType? type = null)
     [Builtin("op")]
     public static BishBool Eq(BishObject a, BishObject b) => BishBool.Of(a == b);
 
-    public T ExpectToBe<T>(string expr) where T : BishObject => this switch
-    {
-        T t => t,
-        { } result => throw BishException.OfType_Expect(expr, result, BishType.GetStaticType(typeof(T)))
-    };
+    public T As<T>(string expr) where T : BishObject =>
+        this as T ?? throw BishException.OfType_Expect(expr, this, typeof(T).Name);
 
-    public BishObject? TryConvert(BishType type)
-    {
-        // Special case
-        if (Type == BishInt.StaticType && type == BishNum.StaticType) return BishNum.StaticType.CreateInstance([this]);
-        return Type.CanAssignTo(type) ? this : null;
-    }
+    public BishObject As(BishType type, string expr) => 
+        TryConvert(type) ?? throw BishException.OfType_Expect(expr, this, type);
+
+    public BishObject? TryConvert(BishType type) => Type.CanAssignTo(type) ? this : null;
 
     [Builtin("op")]
     public static BishBool Neq(BishObject a, BishObject b) =>
-        BishBool.Invert(BishOperator.Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}"));
+        BishBool.Invert(BishOperator.Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}"));
 
     private static int Compare(BishObject a, BishObject b) =>
-        BishOperator.Call("op_cmp", [a, b]).ExpectToBe<BishInt>($"{a} <=> {b}").Value;
+        BishOperator.Call("op_cmp", [a, b]).As<BishInt>($"{a} <=> {b}").Value;
 
     [Builtin("op")]
     public static BishBool Lt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) < 0);
@@ -270,7 +265,7 @@ public class BishObject(BishType? type = null)
 
     [Builtin]
     public static BishBaseObject Base(BishObject self, [DefaultNull] BishType? root) => new(self,
-        root ?? self.Type.LookupChain.ElementAtOrDefault(1)?.ExpectToBe<BishType>("base type") ??
+        root ?? self.Type.LookupChain.ElementAtOrDefault(1)?.As<BishType>("base type") ??
         throw BishException.OfType_NoBase(self));
 
     [Builtin("hook")]

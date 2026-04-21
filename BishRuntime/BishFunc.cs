@@ -6,20 +6,12 @@ namespace BishRuntime;
 public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T : class;
 
 // `Type` will only be used by builtin functions
-public record BishArg(string Name, BishType? DefType = null, BishObject? Default = null, bool Rest = false)
-    : Arg<BishObject>(Name, Default, Rest)
+public record BishArg(string Name, BishObject? Default = null, bool Rest = false) : Arg<BishObject>(Name, Default, Rest)
 {
-    public BishType Type => DefType ?? BishObject.StaticType;
-
-    public override string ToString() => (Rest ? ".." : "") + Name + (DefType is null ? "" : ": " + DefType.Name) +
-                                         (Default is null ? "" : "=" + Default);
+    public override string ToString() => (Rest ? ".." : "") + Name + (Default is null ? "" : "=" + Default);
 
     [return: NotNullIfNotNull(nameof(arg))]
-    public BishObject? Match(BishObject? arg)
-    {
-        if (arg is null) return Default;
-        return arg.Type.CanAssignTo(Type) ? arg : throw BishException.OfType_Argument(arg, Type);
-    }
+    public BishObject? Match(BishObject? arg) => arg ?? Default;
 }
 
 public class BishArgObject(BishArg arg) : BishObject
@@ -59,24 +51,6 @@ public class BishArgObject(BishArg arg) : BishObject
     {
         self.Arg = self.Arg with { Name = name.Value };
         return name;
-    }
-
-    [Builtin("hook")]
-    public static BishType Get_type(BishArgObject self) => self.Arg.Type;
-
-    [Builtin("hook")]
-    public static BishObject Set_type(BishArgObject self, BishObject type)
-    {
-        self.Arg = self.Arg with
-        {
-            DefType = type switch
-            {
-                BishNull => null,
-                BishType t => t,
-                _ => throw BishException.OfType_Argument(type, BishType.StaticType)
-            }
-        };
-        return type;
     }
 
     [Builtin("hook")]
@@ -152,9 +126,7 @@ public class BishFunc(
     {
         if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
         var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
-        return self.Type.CanAssignTo(Args[0].Type) || Args[0].Rest
-            ? new BishFunc(Name, args1, args => Func([self, ..args]), Tag)
-            : throw BishException.OfType_Argument(self, Args[0].Type);
+        return new BishFunc(Name, args1, args => Func([self, ..args]), Tag);
     }
     
     [Builtin("hook", tag: "ignore")]
@@ -188,7 +160,7 @@ public class BishFunc(
     {
         self.Name = name.Value;
         self.Args = CheckedArgs<BishArg, BishObject>(args.List
-            .Select(arg => arg.ExpectToBe<BishArgObject>("arg").Arg).ToList());
+            .Select(arg => arg.As<BishArgObject>("arg").Arg).ToList());
         self.Func = list => func.Call([new BishList(list)]);
     }
 
@@ -211,7 +183,7 @@ public class BishFunc(
     [Builtin("hook")]
     public static BishList Set_args(BishFunc self, BishList args)
     {
-        self.Args = args.List.Select(arg => arg.ExpectToBe<BishArgObject>("arg").Arg).ToList();
+        self.Args = args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList();
         return args;
     }
 
@@ -227,5 +199,5 @@ public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)
 {
     protected override BishArgObject ToItem(BishArg source) => new(source);
 
-    protected override BishArg ToSource(BishObject item) => item.ExpectToBe<BishArgObject>("arg").Arg;
+    protected override BishArg ToSource(BishObject item) => item.As<BishArgObject>("arg").Arg;
 }

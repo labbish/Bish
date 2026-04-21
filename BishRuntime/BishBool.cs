@@ -26,12 +26,12 @@ public class BishBool : BishObject
     public static BishBool Bool(BishBool a) => a;
 
     public static bool CallToBool(BishObject obj) =>
-        BishOperator.Call("bool", [obj]).ExpectToBe<BishBool>("bool").Value;
+        BishOperator.Call("bool", [obj]).As<BishBool>("bool").Value;
 }
 
 internal class BishBoolType() : BishType("bool")
 {
     public override BishBool TryCall(IList<BishObject> args) => args.Count > 1
         ? throw BishException.OfArgument_Count(args.Count, 0, 1)
-        : args.FirstOrDefault()?.ExpectToBe<BishBool>("bool() argument") ?? BishBool.False;
+        : args.FirstOrDefault()?.As<BishBool>("bool() argument") ?? BishBool.False;
 }

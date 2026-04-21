@@ -60,7 +60,7 @@ public partial class BishString(string value) : BishObject
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
     public static string CallToString(BishObject obj) =>
-        BishOperator.Call("toString", [obj]).ExpectToBe<BishString>("toString").Value;
+        BishOperator.Call("toString", [obj]).As<BishString>("toString").Value;
 
     [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)
@@ -94,6 +94,4 @@ public class BishStringIterator(string value) : BishObject
 
     [Iter]
     public BishString? Next() => Index < Value.Length ? new BishString(Value[Index++]) : null;
-
-    static BishStringIterator() => BishBuiltinIteratorBinder.Bind<BishStringIterator>();
 }

@@ -49,7 +49,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
     [Builtin]
     public static BishRange Regularize(BishRange self, BishInt length) => self.Regularize(length.Value);
 
-    public IEnumerable<BishInt> ToInts() => this.ToEnumerable().Select(value => value.ExpectToBe<BishInt>(""));
+    public IEnumerable<BishInt> ToInts() => this.ToEnumerable().Select(value => value.As<BishInt>(""));
 
     [Builtin("hook")]
     public static BishObject Get_start(BishRange self) => ToObject(self.Start);
@@ -65,8 +65,6 @@ public class BishRange(int? start, int? end, int step) : BishObject
         if (Step != 1) return $"range({Start}, {End}, {Step})";
         return Start == 0 ? $"range({End})" : $"range({Start}, {End})";
     }
-
-    static BishRange() => BishBuiltinIteratorBinder.Bind<BishRange>();
 }
 
 internal static class IndexHelper

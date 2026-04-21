@@ -94,8 +94,6 @@ public class BishFileCharIterator(BishReader reader) : BishObject
 
     [Iter]
     public BishString? Next() => Reader.ReadChar();
-
-    static BishFileCharIterator() => BishBuiltinIteratorBinder.Bind<BishFileCharIterator>();
 }
 
 public class BishFileLineIterator(BishReader reader) : BishObject
@@ -108,8 +106,6 @@ public class BishFileLineIterator(BishReader reader) : BishObject
 
     [Iter]
     public BishString? Next() => Reader.ReadLine();
-
-    static BishFileLineIterator() => BishBuiltinIteratorBinder.Bind<BishFileLineIterator>();
 }
 
 public class BishWriter(StreamWriter writer) : BishObject

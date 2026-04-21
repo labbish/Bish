@@ -16,7 +16,7 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("1 is of num y", True);
         ExpectResult("2 is of string z", False);
         ExpectResult("x", I(0));
-        ExpectResult("y", N(1));
+        ExpectResult("y", I(1));
         Action(() => Execute("z")).Should().Excepts(BishError.AttributeErrorType);
     }
 
@@ -67,7 +67,7 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
     public void TestAs()
     {
         ExpectResult("1 as int", I(1));
-        ExpectResult("1 as num", N(1));
+        ExpectResult("1 as num", I(1));
         ExpectResult("1 as string", Null);
     }
 

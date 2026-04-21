@@ -5,8 +5,10 @@ namespace BishRuntime;
 public partial class BishType(string name, IEnumerable<BishType>? parents = null, int skips = 0) : BishObject
 {
     public string Name { get; private set; } = name;
-    public IList<BishType> Parents { get; private set; } = (parents ?? []).ToConcurrentList();
+    protected IList<BishType> Parents { get; private set; } = (parents ?? []).ToConcurrentList();
     public readonly int Skips = skips;
+
+    public ParentsProxyList ParentsProxy => new(this, Parents);
 
     protected override IList<BishObject> LookupChain =>
         GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToConcurrentList<BishObject>();
@@ -19,7 +21,7 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
     {
         self.Name = name.Value;
         if (parents is null) return;
-        self.Parents = parents.List.Select(parent => parent.ExpectToBe<BishType>("parent type")).ToList();
+        self.Parents = parents.List.Select(parent => parent.As<BishType>("parent type")).ToList();
         self.ClearMROCache();
     }
 
@@ -62,19 +64,19 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
             GetMRO().Concat([BishObject.StaticType]).ToList().FindIndex(type => type == mroRoot)) { Vars = Vars };
 
     [Builtin("hook")]
-    public static BishList Get_parents(BishType self) => new(new ParentsProxyList(self));
+    public static BishList Get_parents(BishType self) => new(self.ParentsProxy);
 
     [Builtin("hook")]
     public static BishList Get_MRO(BishType self) => new(self.GetMRO().ToList<BishObject>());
 }
 
-public class ParentsProxyList(BishType type) : ProxyList<BishType>(type.Parents)
+public class ParentsProxyList(BishType type, IList<BishType> parents) : ProxyList<BishType>(parents)
 {
     public BishType Type => type;
 
     protected override BishObject ToItem(BishType source) => source;
 
-    protected override BishType ToSource(BishObject item) => item.ExpectToBe<BishType>("type");
+    protected override BishType ToSource(BishObject item) => item.As<BishType>("type");
 
     protected override void OnModify() => Type.ClearMROCache();
 }

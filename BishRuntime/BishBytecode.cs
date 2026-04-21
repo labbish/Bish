@@ -129,7 +129,7 @@ public record CallArgs : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var args = frame.Stack.Pop().ExpectToBe<BishList>("args");
+        var args = frame.Stack.Pop().As<BishList>("args");
         var func = frame.Stack.Pop();
         frame.Stack.Push(func.Call(args.List.ToList()));
     }
@@ -178,7 +178,7 @@ public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
     public override void Execute(BishFrame frame)
     {
         var result = BishOperator.Call("bool", [frame.Stack.Pop()]);
-        if (result.ExpectToBe<BishBool>("condition").Value != Reverse) Jump(frame);
+        if (result.As<BishBool>("condition").Value != Reverse) Jump(frame);
     }
 }
 
@@ -329,7 +329,7 @@ public static class ClassHelper
         TagSlicer.CodeSlice<ClassStart, ClassEnd> slice, IList<BishObject> parents)
     {
         var inner = slice.Execute(frame);
-        var type = new BishType(name, parents.Select(obj => obj.ExpectToBe<BishType>("parent class")).ToList());
+        var type = new BishType(name, parents.Select(obj => obj.As<BishType>("parent class")).ToList());
         foreach (var (key, value) in inner.Scope.Vars) type.DefMember(key, value);
         frame.Stack.Push(type);
     }
@@ -343,14 +343,14 @@ public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart,
 public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
 {
     public override void Execute(BishFrame frame) =>
-        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().ExpectToBe<BishList>("parents").List.ToList());
+        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().As<BishList>("parents").List.ToList());
 }
 
 public record Throw : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        throw new BishException(frame.Stack.Pop().ExpectToBe<BishError>("thrown error"));
+        throw new BishException(frame.Stack.Pop().As<BishError>("thrown error"));
     }
 }
 
@@ -400,7 +400,7 @@ public record TestType(string? GoalTag = null) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
-        var type = frame.Stack.Pop().ExpectToBe<BishType>("type");
+        var type = frame.Stack.Pop().As<BishType>("type");
         var obj = frame.Stack.Pop();
         var result = obj.TryConvert(type);
         frame.Stack.Push(BishBool.Of(result is not null));

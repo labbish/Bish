@@ -137,8 +137,6 @@ public class BishListIterator(IList<BishObject> list) : BishObject
 
     [Iter]
     public BishObject? Next() => List.ElementAtOrDefault(Index++);
-
-    static BishListIterator() => BishBuiltinIteratorBinder.Bind<BishListIterator>();
 }
 
 public abstract class ProxyList<TSource, TItem>(IList<TSource> list) : IList<TItem>

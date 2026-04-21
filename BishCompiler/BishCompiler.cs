@@ -33,10 +33,10 @@ public static class BishCompiler
         errors = (ConcurrentList<CompilationError>)[..listener.Errors, ..result.Errors];
 
         var frame = new BishFrame(result.Codes, scope);
-        frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file", BishString.StaticType)], args =>
+        frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file")], args =>
         {
             var path = "(unresolved)";
-            var file = args[0].ExpectToBe<BishString>("file").Value;
+            var file = args[0].As<BishString>("file").Value;
             if (BishScope.BuiltinModules.TryGetValue(file, out var mod)) return mod;
             try
             {

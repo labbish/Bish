@@ -33,7 +33,7 @@ public class BishMap(IList<Entry> entries) : BishObject
     }
 
     public static IList<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
-        entry.ExpectToBe<BishList>("map entry") switch
+        entry.As<BishList>("map entry") switch
         {
             { List.Count: 2 } list => new Entry(list.List[0], list.List[1]),
             _ => throw BishException.OfType_Expect("map entry", entry, "list with length 2"),
@@ -131,8 +131,6 @@ public class BishMapIterator(IList<Entry> entries) : BishObject
         var entry = Entries.ElementAtOrDefault(Index++);
         return entry is null ? null : new BishList([entry.Key, entry.Value]);
     }
-
-    static BishMapIterator() => BishBuiltinIteratorBinder.Bind<BishMapIterator>();
 }
 
 public class BishProxyMap(IDictionary<string, BishObject> dictionary)

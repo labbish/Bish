@@ -62,5 +62,5 @@ internal class BishIntType() : BishType("int", [BishNum.StaticType])
 {
     public override BishInt TryCall(IList<BishObject> args) => args.Count > 1
         ? throw BishException.OfArgument_Count(args.Count, 0, 1)
-        : args.FirstOrDefault()?.ExpectToBe<BishInt>("int() argument") ?? BishInt.Of(0);
+        : args.FirstOrDefault()?.As<BishInt>("int() argument") ?? BishInt.Of(0);
 }

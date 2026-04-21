@@ -103,9 +103,9 @@ public static partial class BishOperator
     }
 
     public static bool Eq(BishObject a, BishObject b) =>
-        Call("op_eq", [a, b]).ExpectToBe<BishBool>($"{a} == {b}").Value;
+        Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}").Value;
 
-    public static BishString ToString(BishObject a) => Call("toString", [a]).ExpectToBe<BishString>("toString()");
+    public static BishString ToString(BishObject a) => Call("toString", [a]).As<BishString>("toString()");
 
     public static SpecialMethod? GetSpecialMethod(string name)
     {

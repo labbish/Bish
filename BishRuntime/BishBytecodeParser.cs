@@ -7,21 +7,20 @@ public class BishBytecodeWriter(BinaryWriter writer)
     public void AddByte(byte value) => writer.Write(value);
     public void AddBytes(byte[] value) => writer.Write(value);
     public void AddInt(int value) => AddBytes(BitConverter.GetBytes(value));
-    public void AddIntN(int? value) => AddInt(value ?? int.MinValue);
     public void AddDouble(double value) => AddBytes(BitConverter.GetBytes(value));
     public void AddBool(bool value) => AddByte(value ? (byte)1 : (byte)0);
 
     public void AddString(string value)
     {
-        AddInt(value.Length);
-        AddBytes(System.Text.Encoding.UTF8.GetBytes(value));
+        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+        AddInt(bytes.Length);
+        AddBytes(bytes);
     }
 
     public void AddStringN(string? value)
     {
-        AddIntN(value?.Length);
-        if (value is null) return;
-        AddBytes(System.Text.Encoding.UTF8.GetBytes(value));
+        if (value is null) AddInt(int.MinValue);
+        else AddString(value);
     }
 
     public void AddStrings(IList<string> value)
@@ -44,25 +43,17 @@ public class BishBytecodeReader(BinaryReader reader)
 
     public int GetInt() => BitConverter.ToInt32(GetBytes(4));
 
-    public int? GetIntN()
-    {
-        var value = GetInt();
-        return value == int.MinValue ? null : value;
-    }
-
     public double GetDouble() => BitConverter.ToDouble(GetBytes(8));
     public bool GetBool() => GetByte() != 0;
 
-    public string GetString()
-    {
-        var length = GetInt();
-        return System.Text.Encoding.UTF8.GetString(GetBytes(length));
-    }
+    public string GetString(int length) => System.Text.Encoding.UTF8.GetString(GetBytes(length));
+
+    public string GetString() => GetString(GetInt());
 
     public string? GetStringN()
     {
-        var length = GetIntN();
-        return length is null ? null : System.Text.Encoding.UTF8.GetString(GetBytes(length.Value));
+        var length = GetInt();
+        return length == int.MinValue ? null : GetString(length);
     }
 
     public string[] GetStrings()

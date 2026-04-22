@@ -39,7 +39,16 @@ public class Test(TestInfoFixture fixture)
     {
         var frame = BishCompiler.BishCompiler.Compile(code, out var errors, Scope);
         errors.Should().BeEmpty();
+        TestParse(frame);
         return frame;
+    }
+
+    private static void TestParse(BishFrame frame)
+    {
+        var stream = new MemoryStream();
+        stream.WriteBytecodes(frame.Bytecodes);
+        stream.Position = 0;
+        frame.Bytecodes = stream.ReadBytecodes().ToList();
     }
 
     protected void Execute(string code)

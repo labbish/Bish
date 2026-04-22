@@ -3,6 +3,9 @@ using BishUtils;
 
 namespace BishRuntime;
 
+[AttributeUsage(AttributeTargets.Class)]
+public class BytecodeAttribute : Attribute;
+
 public abstract record BishBytecode
 {
     public string? Tag;
@@ -16,6 +19,7 @@ public abstract record BishBytecode
     }
 }
 
+[Bytecode]
 public record Nop : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -23,6 +27,7 @@ public record Nop : BishBytecode
     }
 }
 
+[Bytecode]
 public record Pop(int Count = 1) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Pop(Count);
@@ -30,66 +35,79 @@ public record Pop(int Count = 1) : BishBytecode
 
 public abstract record Value : BishBytecode;
 
+[Bytecode]
 public record Int(int Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(BishInt.Of(Value));
 }
 
+[Bytecode]
 public record Num(double Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishNum(Value));
 }
 
+[Bytecode]
 public record String(string Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishString(Value));
 }
 
+[Bytecode]
 public record Bool(bool Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(BishBool.Of(Value));
 }
 
+[Bytecode]
 public record Null : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(BishNull.Instance);
 }
 
+[Bytecode]
 public record Get(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.GetVar(Name));
 }
 
+[Bytecode]
 public record GetBuiltin(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(BishBuiltinScope.Instance.GetVar(Name));
 }
 
+[Bytecode]
 public record Def(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.DefVar(Name, frame.Stack.Pop()));
 }
 
+[Bytecode]
 public record Move(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Scope.DefVar(Name, frame.Stack.Pop());
 }
 
+[Bytecode]
 public record Set(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.SetVar(Name, frame.Stack.Pop()));
 }
 
+[Bytecode]
 public record Del(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.DelVar(Name));
 }
 
+[Bytecode]
 public record GetMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().GetMember(Name));
 }
 
+[Bytecode]
 public record SetMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -100,6 +118,7 @@ public record SetMember(string Name) : BishBytecode
     }
 }
 
+[Bytecode]
 public record DefMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -110,11 +129,13 @@ public record DefMember(string Name) : BishBytecode
     }
 }
 
+[Bytecode]
 public record DelMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));
 }
 
+[Bytecode]
 public record Call(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -125,6 +146,7 @@ public record Call(int Argc) : BishBytecode
     }
 }
 
+[Bytecode]
 public record CallArgs : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -135,6 +157,7 @@ public record CallArgs : BishBytecode
     }
 }
 
+[Bytecode]
 public record Op(string Operator, int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -144,11 +167,13 @@ public record Op(string Operator, int Argc) : BishBytecode
     }
 }
 
+[Bytecode]
 public record Inner : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Scope = frame.Scope.CreateInner();
 }
 
+[Bytecode]
 public record Outer : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
@@ -166,11 +191,13 @@ public abstract record Jumper(string? GoalTag) : BishBytecode
     }
 }
 
+[Bytecode]
 public record Jump(string GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame) => Jump(frame);
 }
 
+[Bytecode]
 public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
@@ -180,6 +207,7 @@ public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
     }
 }
 
+[Bytecode]
 public record JumpIfNot(string GoalTag) : JumpIf(GoalTag, Reverse: true);
 
 public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
@@ -245,10 +273,13 @@ public abstract record TagBased<TStart, TEnd>(string Name)
     public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame) => frame.Slice<TStart, TEnd>(Name);
 }
 
+[Bytecode]
 public record FuncStart(string Name, IList<string> Args) : StartTag<FuncEnd>(Name);
 
+[Bytecode]
 public record FuncEnd(string Name) : EndTag(Name);
 
+[Bytecode]
 public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool Gen = false)
     : TagBased<FuncStart, FuncEnd>(Name)
 {
@@ -290,21 +321,25 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
     }
 }
 
+[Bytecode]
 public record Ret : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.ReturnValue = frame.Stack.Pop();
 }
 
+[Bytecode]
 public record Yield : BishBytecode
 {
     public override void Execute(BishFrame frame) => throw BishException.OfYield(frame.Stack.Pop());
 }
 
+[Bytecode]
 public record Copy : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Peek());
 }
 
+[Bytecode]
 public record Swap(int Count = 1) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -317,8 +352,10 @@ public record Swap(int Count = 1) : BishBytecode
     }
 }
 
+[Bytecode]
 public record ClassStart(string Name) : StartTag<ClassEnd>(Name);
 
+[Bytecode]
 public record ClassEnd(string Name) : EndTag(Name);
 
 public static class ClassHelper
@@ -333,17 +370,20 @@ public static class ClassHelper
     }
 }
 
+[Bytecode]
 public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart, ClassEnd>(Name)
 {
     public override void Execute(BishFrame frame) => frame.MakeClass(Name, Slice(frame), frame.Stack.Pop(ParentCount));
 }
 
+[Bytecode]
 public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
 {
     public override void Execute(BishFrame frame) =>
         frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().As<BishList>("parents").List.ToList());
 }
 
+[Bytecode]
 public record Throw : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -352,6 +392,7 @@ public record Throw : BishBytecode
     }
 }
 
+[Bytecode]
 public record TryStart(string Name) : StartTag<TryEnd>(Name)
 {
     public override void Execute(BishFrame frame)
@@ -366,12 +407,15 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
         {
             frame.Stack.Push(new BishErrorResult(e.Error));
         }
+
         base.Execute(frame);
     }
 }
 
+[Bytecode]
 public record TryEnd(string Name) : EndTag(Name);
 
+[Bytecode]
 public record ForIter(string GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
@@ -389,11 +433,13 @@ public record ForIter(string GoalTag) : Jumper(GoalTag)
     }
 }
 
+[Bytecode]
 public record BuildList(int Argc) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishList(frame.Stack.Pop(Argc)));
 }
 
+[Bytecode]
 public record TestType(string? GoalTag = null) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
@@ -407,12 +453,14 @@ public record TestType(string? GoalTag = null) : Jumper(GoalTag)
     }
 }
 
+[Bytecode]
 public record Not : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
         frame.Stack.Push(BishBool.Of(!BishBool.CallToBool(frame.Stack.Pop())));
 }
 
+[Bytecode]
 public record RefEq : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
@@ -420,6 +468,7 @@ public record RefEq : BishBytecode
         frame.Stack.Push(BishBool.Of(ReferenceEquals(frame.Stack.Pop(), frame.Stack.Pop())));
 }
 
+[Bytecode]
 public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -462,6 +511,7 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
     }
 }
 
+[Bytecode]
 public record TryDelIndex : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -480,6 +530,7 @@ public record TryDelIndex : BishBytecode
     }
 }
 
+[Bytecode]
 public record TryGetMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame)
@@ -496,6 +547,7 @@ public record TryGetMember(string Name) : BishBytecode
     }
 }
 
+[Bytecode]
 public record WithStart(string Name) : StartTag<WithEnd>(Name)
 {
     public override void Execute(BishFrame frame)
@@ -521,9 +573,11 @@ public record WithStart(string Name) : StartTag<WithEnd>(Name)
     }
 }
 
+[Bytecode]
 public record WithEnd(string Name) : EndTag(Name);
 
 // ReSharper disable once UnusedType.Global
+[Bytecode]
 public record DebugStack : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
@@ -531,6 +585,7 @@ public record DebugStack : BishBytecode
 }
 
 // ReSharper disable once UnusedType.Global
+[Bytecode]
 public record DebugVars : BishBytecode
 {
     public override void Execute(BishFrame frame) =>

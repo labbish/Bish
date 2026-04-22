@@ -24,7 +24,7 @@ public class BuiltinsGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 predicate: (node, _) => IsTargetMethod(node),
                 transform: (ctx, _) => GetBuiltinStuff(ctx))
-            .Where(details => details != null);
+            .Where(details => details is not null);
 
         context.RegisterSourceOutput(builtins.Collect(), (spc, methods) =>
         {
@@ -41,7 +41,7 @@ public class BuiltinsGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine("public static class BuiltinsRegistry");
             sb.AppendLine("{");
-            sb.AppendLine("    public static void Registry()");
+            sb.AppendLine("    public static void Register()");
             sb.AppendLine("    {");
             foreach (var method in methods.OfType<IBuiltinStuff>())
             foreach (var line in method.Code.Split('\n'))

@@ -16,7 +16,7 @@ public record BuiltinFunction(
     bool IsNullable,
     string? Namespace) : IBuiltinStuff
 {
-    public string FullName => (Prefix is null ? "" : $"{Prefix}_") + char.ToLower(Name[0]) + Name.Substring(1);
+    public string FullName => (Prefix is null ? "" : $"{Prefix}_") + Name.Lower();
 
     public string Code =>
         $$"""
@@ -33,4 +33,13 @@ public record BuiltinFunction(
               "{{Tag ?? ""}}"
           ));
           """;
+}
+
+public static class StringHelper
+{
+    extension(string str)
+    {
+        public string Lower() => char.ToLower(str[0]) + str.Substring(1);
+        public string Upper() => char.ToUpper(str[0]) + str.Substring(1);
+    }
 }

@@ -25,7 +25,11 @@ public static class BishBuiltinBinder
 {
     [ModuleInitializer]
     [SuppressMessage("Usage", "CA2255")]
-    internal static void Initialize() => BuiltinsRegistry.Registry();
+    internal static void Initialize()
+    {
+        BuiltinsRegistry.Register();
+        BytecodeParserRegistry.Register();
+    }
 }
 
 public static class BishBuiltinIteratorBinder

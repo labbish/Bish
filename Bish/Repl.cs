@@ -44,7 +44,7 @@ public class Repl(BishScope? scope = null)
                     {
                         var frame = Compile(code[5..] + ';');
                         foreach (var bytecode in frame.Bytecodes)
-                            Console.WriteLine(BytecodeParser.ToString(bytecode));
+                            Console.WriteLine(BishBytecodeParser.ToString(bytecode));
                     });
                     break;
                 default:

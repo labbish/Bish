@@ -24,7 +24,7 @@ async Task RunOptions(Options options)
             var root = Repl.FindRoot(options.File);
             var frame = BishCompiler.BishCompiler.Compile(input, out _, root: root);
             if (options.Output is { } output)
-                File.WriteAllText(output, string.Join("\n", frame.Bytecodes.Select(BytecodeParser.ToString)));
+                File.WriteAllText(output, string.Join("\n", frame.Bytecodes.Select(BishBytecodeParser.ToString)));
             if (options.SkipExecution) return;
             Repl.Handled(() => frame.Execute());
             if (options.Interactive) new Repl(frame.Scope).Loop();

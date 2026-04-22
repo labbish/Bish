@@ -1,95 +1,148 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using BishUtils;
+﻿using BishUtils;
 
 namespace BishRuntime;
 
-public static partial class BytecodeParser
+public class BishBytecodeWriter(BinaryWriter writer)
 {
-    // Reserved for user-defined bytecodes in other assemblies
-    // ReSharper disable once CollectionNeverUpdated.Global
-    public static readonly IDictionary<string, Type> Mappings = new ConcurrentDictionary<string, Type>();
+    public void AddByte(byte value) => writer.Write(value);
+    public void AddBytes(byte[] value) => writer.Write(value);
+    public void AddInt(int value) => AddBytes(BitConverter.GetBytes(value));
+    public void AddIntN(int? value) => AddInt(value ?? int.MinValue);
+    public void AddDouble(double value) => AddBytes(BitConverter.GetBytes(value));
+    public void AddBool(bool value) => AddByte(value ? (byte)1 : (byte)0);
+
+    public void AddString(string value)
+    {
+        AddInt(value.Length);
+        AddBytes(System.Text.Encoding.UTF8.GetBytes(value));
+    }
+
+    public void AddStringN(string? value)
+    {
+        AddIntN(value?.Length);
+        if (value is null) return;
+        AddBytes(System.Text.Encoding.UTF8.GetBytes(value));
+    }
+
+    public void AddStrings(IList<string> value)
+    {
+        AddInt(value.Count);
+        foreach (var str in value) AddString(str);
+    }
+}
+
+public class BishBytecodeReader(BinaryReader reader)
+{
+    public byte GetByte() => reader.ReadByte();
+
+    public byte[] GetBytes(int count)
+    {
+        var buffer = new byte[count];
+        reader.ReadExactly(buffer);
+        return buffer;
+    }
+
+    public int GetInt() => BitConverter.ToInt32(GetBytes(4));
+
+    public int? GetIntN()
+    {
+        var value = GetInt();
+        return value == int.MinValue ? null : value;
+    }
+
+    public double GetDouble() => BitConverter.ToDouble(GetBytes(8));
+    public bool GetBool() => GetByte() != 0;
+
+    public string GetString()
+    {
+        var length = GetInt();
+        return System.Text.Encoding.UTF8.GetString(GetBytes(length));
+    }
+
+    public string? GetStringN()
+    {
+        var length = GetIntN();
+        return length is null ? null : System.Text.Encoding.UTF8.GetString(GetBytes(length.Value));
+    }
+
+    public string[] GetStrings()
+    {
+        List<string> list = [];
+        var length = GetInt();
+        for (var i = 0; i < length; i++) list.Add(GetString());
+        return list.ToArray();
+    }
+
+    public bool IsEmpty() => reader.BaseStream.Position >= reader.BaseStream.Length;
+}
+
+public static class BishBytecodeParser
+{
+    public const int Magic = 0x0d000721;
+    public const byte Version = 0;
+
+    public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 
     public static string ToString(BishBytecode bytecode)
     {
-        var type = bytecode.GetType();
-        var name = Mappings.FirstOrDefault(pair => pair.Value == type).Key ?? ToCodeName(type.Name);
-        var args = Args(type);
-        return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + name + " " + string.Join(" ",
-            args.Select(arg =>
-                ArgToString(type.GetProperty(arg.Name)?.GetValue(bytecode) ??
-                            type.GetField(arg.Name)!.GetValue(bytecode)!)));
+        var parser = Parsers.FirstOrDefault(p => p.Type == bytecode.GetType()) ??
+                     throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}");
+        return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + parser.Format(bytecode);
     }
 
-    public static BishBytecode FromString(string code) =>
-        FromString(code.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
-    public static BishBytecode FromString(string[] parts)
+    extension(BishBytecodeWriter writer)
     {
-        if (parts[0].EndsWith(':')) return FromString(parts[1..]).Tagged(parts[0][..^1]);
-        var first = parts[0].ToUpper();
-        var type =
-            Mappings.GetValueOrDefault(first) ??
-            typeof(BytecodeParser).Assembly.GetType($"{typeof(BytecodeParser).Namespace}.{ToClassName(first)}") ??
-            throw new ArgumentException($"Invalid bytecode type {first} for BytecodeParser");
-        var args = Args(type);
-        return (BishBytecode)type.GetConstructors().First()
-            .Invoke(args.Select((arg, i) => ArgFromString(arg.Type, parts[i + 1])).ToArray());
-    }
-
-    private static string ArgToString(object value)
-    {
-        return value switch
+        public void WriteSingle(BishBytecode bytecode)
         {
-            null => "null",
-            int x => x.ToString(),
-            double x => x.ToString(CultureInfo.InvariantCulture),
-            string x => x,
-            bool x => x ? "true" : "false",
-            IList list => "[" + string.Join(",", list.OfType<object>().Select(ArgToString)) + "]",
-            _ => throw new ArgumentException($"Invalid argument type {value.GetType()} for BytecodeParser")
-        };
-    }
-
-    private static object? ArgFromString(Type type, string str)
-    {
-        if (str == "null") return null;
-        if (type == typeof(int)) return int.Parse(str);
-        if (type == typeof(double)) return double.Parse(str);
-        if (type == typeof(string)) return str;
-        if (type == typeof(bool))
-            return str == "true" || (str == "false" ? false : throw new ArgumentException($"Invalid boolean: {str}"));
-        if (typeof(IList).IsAssignableFrom(type))
-        {
-            var innerType = type.GetGenericArguments()[0];
-            var collection = str.TrimStart("[").TrimEnd("]").ToString().Split(",")
-                .Select(part => ArgFromString(innerType, part));
-            // collection.Cast<T>().ToList()
-            var castMethod = typeof(Enumerable).GetMethod("Cast")!.MakeGenericMethod(innerType);
-            var toListMethod = typeof(Enumerable).GetMethod("ToList")!.MakeGenericMethod(innerType);
-            return toListMethod.Invoke(null, [castMethod.Invoke(null, [collection])])!;
+            var index = Parsers.FindIndex(p => p.Type == bytecode.GetType());
+            if (index == -1) throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}");
+            writer.AddByte((byte)index);
+            writer.AddStringN(bytecode.Tag);
+            var parser = Parsers[index];
+            parser.Write(bytecode, writer);
         }
 
-        throw new ArgumentException($"Invalid argument type {type} for BytecodeParser");
+        public void Write(IEnumerable<BishBytecode> bytecodes)
+        {
+            writer.AddInt(Magic);
+            writer.AddByte(Version);
+            foreach (var bytecode in bytecodes)
+                writer.WriteSingle(bytecode);
+        }
     }
 
-    private static List<(Type Type, string Name)> Args(Type type) => type.GetConstructors().First().GetParameters()
-        .Select(p => (p.ParameterType, p.Name!)).ToList();
-
-    private static string ToCodeName(string className) => string.IsNullOrEmpty(className)
-        ? className
-        : CodeNameRegex().Replace(className, "_$1").ToUpper();
-
-    private static string ToClassName(string codeName)
+    extension(BishBytecodeReader reader)
     {
-        return string.IsNullOrEmpty(codeName)
-            ? codeName
-            : string.Join("", codeName.Split('_')
-                .Select(word => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(word.ToLower())));
+        public BishBytecode ReadSingle()
+        {
+            var index = reader.GetByte();
+            var parser = Parsers.ElementAtOrDefault(index) ??
+                         throw new ArgumentException($"Invalid Bytecode Index: {index}");
+            var tag = reader.GetStringN();
+            return parser.Read(reader).Tagged(tag);
+        }
+
+        public IEnumerable<BishBytecode> Read()
+        {
+            if (reader.GetInt() != Magic) throw new ArgumentException("Bad Bytecode Magic Number!");
+            var version = reader.GetByte();
+            if (version != Version) throw new ArgumentException($"Bad Bytecode Version {version}; expected {Version}!");
+            while (!reader.IsEmpty()) yield return reader.ReadSingle();
+        }
     }
 
-    [GeneratedRegex("(?<!^)([A-Z])")]
-    private static partial Regex CodeNameRegex();
+    extension(Stream stream)
+    {
+        public void WriteBytecodes(IEnumerable<BishBytecode> bytecodes) =>
+            new BishBytecodeWriter(new BinaryWriter(stream)).Write(bytecodes);
+
+        public IEnumerable<BishBytecode> ReadBytecodes() =>
+            new BishBytecodeReader(new BinaryReader(stream)).Read();
+    }
 }
+
+public record BytecodeParser(
+    Type Type,
+    Func<BishBytecode, string> Format,
+    Action<BishBytecode, BishBytecodeWriter> Write,
+    Func<BishBytecodeReader, BishBytecode> Read);

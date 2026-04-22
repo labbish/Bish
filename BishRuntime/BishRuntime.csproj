@@ -4,8 +4,6 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RestoreForce>true</RestoreForce>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,5 +14,4 @@
         <ProjectReference Include="..\BishRuntimeGenerators\BishRuntimeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\BishUtils\BishUtils.csproj"/>
     </ItemGroup>
-
 </Project>

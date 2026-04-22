@@ -1,7 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using BishUtils;
+using Codes = System.Collections.Generic.IList<BishRuntime.BishBytecode>;
 
-namespace BishCompiler;
+namespace BishRuntime;
 
 public static class BishOptimizer
 {
@@ -12,7 +13,7 @@ public static class BishOptimizer
 
     extension(Codes codes)
     {
-        public void RenameTag(string from, string to)
+        public void RenameTag(Tag from, Tag to)
         {
             for (var i = 0; i < codes.Count; i++)
             {
@@ -122,6 +123,15 @@ public static class BishOptimizer
 
         public Codes RemoveUntaggedNop() =>
             codes.Where(code => !(code is Nop && code.Tag is null)).ToConcurrentList();
+
+        public Codes CompressTags()
+        {
+            var tags = codes.Select(code => code.Tag)
+                .Concat(codes.Select(code => (code as Jumper)?.GoalTag)).OfType<Tag>().ToArray();
+            for (byte i = 0; i < tags.Length && i < byte.MaxValue; i++)
+                codes.RenameTag(tags[i], i);
+            return codes;
+        }
     }
 
     public static void Add(Func<Codes, Codes> func, [CallerArgumentExpression(nameof(func))] string name = "?") =>
@@ -143,6 +153,7 @@ public static class BishOptimizer
         Add(RemoveValuePop);
         Add(CombineDefPop);
         Add(MoveNopTag);
+        Add(CompressTags);
     }
 }
 

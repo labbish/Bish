@@ -35,6 +35,8 @@ public class BytecodeParserGenerator : IIncrementalGenerator
             sb.AppendLine("using System.Text.RegularExpressions;");
             sb.AppendLine("using BishRuntime;");
             sb.AppendLine();
+            sb.AppendLine("#nullable enable");
+            sb.AppendLine();
             sb.AppendLine("public static class BytecodeParserRegistry");
             sb.AppendLine("{");
             sb.AppendLine("    public static void Register()");
@@ -86,20 +88,22 @@ public record RecordArg(string Type, string Name)
 
     private static string Escape(string var) => $"'\"' + Regex.Escape({var}) + '\"'";
 
+    private static string EscapeTag(string var) => $"{var}.S is null ? {var}.B.ToString() : ({Escape($"{var}.S")})";
+
     public string Format => Type switch
     {
         "int" or "double" => $"bytecode.{Name}.ToString()",
         "bool" => $"bytecode.{Name}.ToString().ToLower()",
         "string" => Escape($"bytecode.{Name}"),
-        "string?" => $"bytecode.{Name} is null ? \"null\" : ({Escape($"bytecode.{Name}")})",
+        "Tag" or "Tag?" => $"bytecode.{Name} is null ? \"null\" : {EscapeTag($"bytecode.{Name}")}",
         "IList<string>" => $"'[' + string.Join(\", \", bytecode.{Name}.Select(s => {Escape("s")})) + ']'",
         _ => throw new ArgumentException($"Invalid bytecode argument type: {Type}")
     };
 
     public string AsType => Type switch
     {
-        "int" or "double" or "bool" or "string" => Type.Upper(),
-        "string?" => "StringN",
+        "int" or "double" or "bool" or "string" or "Tag" => Type.Upper(),
+        "Tag?" => "Tag",
         "IList<string>" => "Strings",
         _ => throw new ArgumentException($"Invalid bytecode argument type: {Type}")
     };
@@ -126,7 +130,7 @@ public record BytecodeInfo(string Name, ImmutableArray<RecordArg> Args)
               reader =>
               {
                   {{string.Join(";\n        ", Args.Select(arg => $"var arg{arg.Name} = reader.Get{arg.AsType}()"))}};
-                  return new {{FullName}}({{string.Join(", ", Args.Select(arg => "arg" + arg.Name))}});
+                  return new {{FullName}}({{string.Join(", ", Args.Select(arg => "arg" + arg.Name + (arg.Type == "Tag" ? "!" : "")))}});
               }
               ));
           """;

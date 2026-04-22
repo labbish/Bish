@@ -32,10 +32,16 @@ public class BishBytecodeWriter(BinaryWriter writer)
         AddBytes(bytes);
     }
 
-    public void AddStringN(string? value)
+    // Note: length is always >=0, so it is fine to make use of 0xff and 0xfe
+    public void AddTag(Tag? value)
     {
         if (value is null) AddByte(0xff);
-        else AddString(value);
+        else if (value.S is null)
+        {
+            AddByte(0xfe);
+            AddByte(value.B);
+        }
+        else AddString(value.S);
     }
 
     public void AddStrings(IList<string> value)
@@ -62,10 +68,12 @@ public class BishBytecodeReader(BinaryReader reader)
     public string GetString(int length) => ProcessBytes(length, Encoding.UTF8.GetString);
     public string GetString() => GetString(GetInt());
 
-    public string? GetStringN()
+    public Tag? GetTag()
     {
         var first = GetByte();
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
         if (first == 0xff) return null;
+        if (first == 0xfe) return GetByte();
         Span<byte> rest = stackalloc byte[3];
         reader.ReadExactly(rest);
         var length = BinaryPrimitives.ReadInt32BigEndian([first, ..rest]);
@@ -86,7 +94,7 @@ public class BishBytecodeReader(BinaryReader reader)
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 0;
+    public const byte Version = 1;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 
@@ -104,7 +112,7 @@ public static class BishBytecodeParser
             var index = Parsers.FindIndex(p => p.Type == bytecode.GetType());
             if (index == -1) throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}");
             writer.AddByte((byte)index);
-            writer.AddStringN(bytecode.Tag);
+            writer.AddTag(bytecode.Tag);
             var parser = Parsers[index];
             parser.Write(bytecode, writer);
         }
@@ -125,7 +133,7 @@ public static class BishBytecodeParser
             var index = reader.GetByte();
             var parser = Parsers.ElementAtOrDefault(index) ??
                          throw new ArgumentException($"Invalid Bytecode Index: {index}");
-            var tag = reader.GetStringN();
+            var tag = reader.GetTag();
             return parser.Read(reader).Tagged(tag);
         }
 

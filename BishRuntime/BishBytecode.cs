@@ -6,13 +6,39 @@ namespace BishRuntime;
 [AttributeUsage(AttributeTargets.Class)]
 public class BytecodeAttribute : Attribute;
 
+// Should be replaced with a union in C#15.
+public class Tag(string? s, byte b = 0)
+{
+    internal string? S => s;
+    internal byte B => b;
+
+    public static bool operator ==(Tag? self, Tag? other)
+    {
+        if (self is null && other is null) return true;
+        if (self is null || other is null) return false;
+        if (self.S is null && other.S is null) return self.B == other.B;
+        return self.S == other.S;
+    }
+
+    public static bool operator !=(Tag? self, Tag? other) => !(self == other);
+
+    [return: NotNullIfNotNull(nameof(s))]
+    public static implicit operator Tag?(string? s) => s is null ? null : new Tag(s);
+
+    public static implicit operator Tag(byte b) => new(null, b);
+
+    public override bool Equals(object? obj) => obj is Tag tag && this == tag;
+
+    public override int GetHashCode() => S is null ? B.GetHashCode() : S.GetHashCode();
+}
+
 public abstract record BishBytecode
 {
-    public string? Tag;
+    public Tag? Tag;
 
     public abstract void Execute(BishFrame frame);
 
-    public BishBytecode Tagged(string? tag)
+    public BishBytecode Tagged(Tag? tag)
     {
         Tag = tag;
         return this;
@@ -180,7 +206,7 @@ public record Outer : BishBytecode
         frame.Scope = frame.Scope.Outer ?? throw new ArgumentException("No outer scope");
 }
 
-public abstract record Jumper(string? GoalTag) : BishBytecode
+public abstract record Jumper(Tag? GoalTag) : BishBytecode
 {
     public void Jump(BishFrame frame)
     {
@@ -192,13 +218,13 @@ public abstract record Jumper(string? GoalTag) : BishBytecode
 }
 
 [Bytecode]
-public record Jump(string GoalTag) : Jumper(GoalTag)
+public record Jump(Tag GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame) => Jump(frame);
 }
 
 [Bytecode]
-public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
+public record JumpIf(Tag GoalTag, bool Reverse = false) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
@@ -208,7 +234,7 @@ public record JumpIf(string GoalTag, bool Reverse = false) : Jumper(GoalTag)
 }
 
 [Bytecode]
-public record JumpIfNot(string GoalTag) : JumpIf(GoalTag, Reverse: true);
+public record JumpIfNot(Tag GoalTag) : JumpIf(GoalTag, Reverse: true);
 
 public record StartTag<TEnd>(string Name) : BishBytecode where TEnd : EndTag
 {
@@ -416,7 +442,7 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
 public record TryEnd(string Name) : EndTag(Name);
 
 [Bytecode]
-public record ForIter(string GoalTag) : Jumper(GoalTag)
+public record ForIter(Tag GoalTag) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
@@ -440,7 +466,7 @@ public record BuildList(int Argc) : BishBytecode
 }
 
 [Bytecode]
-public record TestType(string? GoalTag = null) : Jumper(GoalTag)
+public record TestType(Tag? GoalTag = null) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {

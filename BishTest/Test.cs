@@ -88,7 +88,7 @@ public class TestCollectionWithSummary : ICollectionFixture<TestInfoFixture>;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class TestInfoFixture : IDisposable
-{ 
+{
     public void Dispose() => Console.WriteLine(BishOptimizer.Info());
 }
 

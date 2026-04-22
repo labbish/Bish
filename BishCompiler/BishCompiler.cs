@@ -46,8 +46,10 @@ public static class BishCompiler
 
     public static BishFrame WithRoot(this BishFrame frame, string? root)
     {
-        frame.Scope.DefVar("import", new BishFunc("import", [new BishArg("file")], 
-            args => Import(args[0].As<BishString>("file").Value, root)));
+        var import = new BishFunc("import", [new BishArg("file")],
+            args => Import(args[0].As<BishString>("file").Value, root));
+        import.DefMember("root", root is null ? BishNull.Instance : new BishString(root));
+        frame.Scope.DefVar("import", import);
         return frame;
     }
 

@@ -45,7 +45,7 @@ public class Test(TestInfoFixture fixture)
 
     private static void TestParse(BishFrame frame)
     {
-        var stream = new MemoryStream();
+        using var stream = new MemoryStream();
         stream.WriteBytecodes(frame.Bytecodes);
         stream.Position = 0;
         frame.Bytecodes = stream.ReadBytecodes().ToList();

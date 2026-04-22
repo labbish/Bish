@@ -54,10 +54,6 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
 
     public new static readonly BishType StaticType = new("type");
 
-    internal static BishType GetStaticType(Type type) =>
-        type.GetField("StaticType")?.GetValue(null) as BishType ??
-        throw new ArgumentException($"Cannot find field `StaticType` on type {type}");
-
     public BishType WithMRORoot(BishType mroRoot) => mroRoot == this
         ? this
         : new BishType(Name, Parents,

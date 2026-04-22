@@ -39,7 +39,7 @@ public class BuiltinsGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine("#nullable enable");
             sb.AppendLine();
-            sb.AppendLine("public static class BuiltinsRegistry");
+            sb.AppendLine("internal static class BuiltinsRegistry");
             sb.AppendLine("{");
             sb.AppendLine("    public static void Register()");
             sb.AppendLine("    {");

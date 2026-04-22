@@ -1,33 +1,46 @@
-﻿using Bish;
-using BishRuntime;
+﻿using BishRuntime;
 using CommandLine;
 
-await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(RunOptions);
-return;
+namespace Bish;
 
-async Task RunOptions(Options options)
+public static class Program
 {
-    switch (options)
+    public static async Task Main(string[] args)
     {
-        case { Server: true }:
-            await Server.RunAsync();
-            break;
-        case { SkipExecution: true, Output: null }:
-            throw new ArgumentException("-s is invalid without output file");
-        case { Command : not null, File: not null }: throw new ArgumentException("-c and -f cannot work together");
-        case { Command : null, File: null }:
-            if (options.Output is not null) throw new ArgumentException("-o is invalid without input");
-            new Repl().Loop();
-            break;
-        default:
-            var input = options.Command ?? File.ReadAllText(options.File!);
-            var root = Repl.FindRoot(options.File);
-            var frame = BishCompiler.BishCompiler.Compile(input, out _, root: root);
-            if (options.Output is { } output)
-                File.WriteAllText(output, string.Join("\n", frame.Bytecodes.Select(BishBytecodeParser.ToString)));
-            if (options.SkipExecution) return;
-            Repl.Handled(() => frame.Execute());
-            if (options.Interactive) new Repl(frame.Scope).Loop();
-            break;
+        await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(RunOptions);
+        return;
+
+        async Task RunOptions(Options options)
+        {
+            switch (options)
+            {
+                case { Server: true }:
+                    await Server.RunAsync();
+                    break;
+                case { SkipExecution: true, Output: null }:
+                    throw new ArgumentException("-s is invalid without output file");
+                case { Command : not null, File: not null }:
+                    throw new ArgumentException("-c and -f cannot work together");
+                case { Command : null, File: null }:
+                    if (options.Output is not null) throw new ArgumentException("-o is invalid without input");
+                    new Repl().Loop();
+                    break;
+                default:
+                    var root = Repl.FindRoot(options.File);
+                    var frame = options.Command is null
+                        ? BishCompiler.BishCompiler.CompileFile(options.File!, out _, root: root)
+                        : BishCompiler.BishCompiler.Compile(options.Command, out _, root: root);
+                    if (options.Output is { } output)
+                    {
+                        await using var stream = File.OpenWrite(output);
+                        stream.WriteBytecodes(frame.Bytecodes);
+                    }
+
+                    if (options.SkipExecution) return;
+                    Repl.Handled(() => frame.Execute());
+                    if (options.Interactive) new Repl(frame.Scope).Loop();
+                    break;
+            }
+        }
     }
 }

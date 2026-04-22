@@ -124,11 +124,17 @@ public static class BishBytecodeParser
 
     extension(Stream stream)
     {
-        public void WriteBytecodes(IEnumerable<BishBytecode> bytecodes) =>
-            new BishBytecodeWriter(new BinaryWriter(stream)).Write(bytecodes);
+        public void WriteBytecodes(IEnumerable<BishBytecode> bytecodes)
+        {
+            using var bw = new BinaryWriter(stream);
+            new BishBytecodeWriter(bw).Write(bytecodes);
+        }
 
-        public IEnumerable<BishBytecode> ReadBytecodes() =>
-            new BishBytecodeReader(new BinaryReader(stream)).Read();
+        public BishBytecode[] ReadBytecodes()
+        {
+            using var br = new BinaryReader(stream);
+            return new BishBytecodeReader(br).Read().ToArray();
+        }
     }
 }
 

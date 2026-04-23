@@ -14,70 +14,70 @@ public class MemberHookTest : Test
     [Fact]
     public void TestObjectGetHook()
     {
-        ExpectResult("x.a", I(0));
-        ExpectResult("x.b", S("get"));
+        ExpectResult("x.a", "0");
+        ExpectResult("x.b", "'get'");
     }
 
     [Fact]
     public void TestObjectSetHook()
     {
-        ExpectResult("x.a=null", Null);
-        ExpectResult("x.b=null", S("set"));
-        ExpectResult("x.vars.length", I(1));
-        ExpectResult("x.a", Null);
+        ExpectResult("x.a=null", "null");
+        ExpectResult("x.b=null", "'set'");
+        ExpectResult("x.vars.length", "1");
+        ExpectResult("x.a", "null");
     }
 
     [Fact]
     public void TestObjectDefHook()
     {
-        ExpectResult("x.a:=null", S("def"));
-        ExpectResult("x.b:=null", S("def"));
-        ExpectResult("x.vars.length", I(1));
-        ExpectResult("x.a", I(0));
+        ExpectResult("x.a:=null", "'def'");
+        ExpectResult("x.b:=null", "'def'");
+        ExpectResult("x.vars.length", "1");
+        ExpectResult("x.a", "0");
     }
 
 
     [Fact]
     public void TestObjectDelHook()
     {
-        ExpectResult("del x.a", I(0));
-        ExpectResult("del x.b", S("del"));
-        ExpectResult("x.vars.length", I(0));
+        ExpectResult("del x.a", "0");
+        ExpectResult("del x.b", "'del'");
+        ExpectResult("x.vars.length", "0");
     }
 
     [Fact]
     public void TestMemberGetter()
     {
-        ExpectResult("y.a", I(0));
+        ExpectResult("y.a", "0");
     }
 
     [Fact]
     public void TestMemberSetter()
     {
-        ExpectResult("y.a=2", Null);
-        ExpectResult("y.a", I(2));
+        ExpectResult("y.a=2", "null");
+        ExpectResult("y.a", "2");
     }
 
     [Fact]
     public void TestMemberDeffer()
     {
-        ExpectResult("y.a:=2", Null);
-        ExpectResult("y.a", I(2));
+        ExpectResult("y.a:=2", "null");
+        ExpectResult("y.a", "2");
     }
 
     [Fact]
     public void TestMemberDeller()
     {
-        ExpectResult("del y.a", Null);
-        ExpectResult("y.a", I(0));
+        ExpectResult("del y.a", "null");
+        ExpectResult("y.a", "0");
     }
 
     [Fact]
     public void TestNullAccess()
     {
-        Action(() => Execute("null.x;")).Should().Excepts(BishError.NullErrorType);
-        Action(() => Execute("null.x=0;")).Should().Excepts(BishError.NullErrorType);
-        Action(() => Execute("null.x:=0;")).Should().Excepts(BishError.NullErrorType);
-        Action(() => Execute("del null.x;")).Should().Excepts(BishError.NullErrorType);
+        ExpectError("null.x;", BishError.NullErrorType);
+        ExpectError("null.x=0;", BishError.NullErrorType);
+        ExpectError("null.x:=0;", BishError.NullErrorType);
+        ExpectError("del null.x;", BishError.NullErrorType);
     }
 }

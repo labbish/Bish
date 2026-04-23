@@ -112,12 +112,10 @@ public record CompilationError(
     int Column,
     string Message,
     int StopLine,
-    int StopColumn,
-    string? StackTrace = null)
+    int StopColumn)
 {
     public override string ToString() =>
-        $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}"
-        + (StackTrace is null ? "" : "\n" + StackTrace);
+        $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}";
 }
 
 public class ErrorListener : BaseErrorListener, IAntlrErrorListener<int>

@@ -9,8 +9,8 @@ public class ThreadTest(TestInfoFixture fixture) : LibTest(fixture, "thread", ["
         Execute("t1:=Thread(f);t2:=Thread(f);");
         Execute("t1.start();t2.start();");
         Execute("t1.join();t2.join();");
-        Result("s").Should().BeOfType<BishInt>().Which.Value.Should().BeLessThan(20000);
-        Result("Thread.id").Should().BeOfType<BishInt>();
+        ExpectTrue("s is of int and <20000");
+        ExpectTrue("Thread.id is of int");
     }
     
     [Fact]
@@ -20,6 +20,6 @@ public class ThreadTest(TestInfoFixture fixture) : LibTest(fixture, "thread", ["
         Execute("t1:=Thread(f);t2:=Thread(f);");
         Execute("t1.start();t2.start();");
         Execute("t1.join();t2.join();");
-        ExpectResult("s", I(20000));
+        ExpectResult("s", "20000");
     }
 }

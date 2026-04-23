@@ -1,9 +1,9 @@
 # Bish
-The Bish Language, version 3.x.
+The Bish Language version 3.0.
 
 ## Parts & Tech Stack
 
-This repository consists of 7 parts:
+This repository consists of 9 parts:
 
 * **Bish** - The entry point, containing an REPL and the Language Server.
   - [CommandLineParser](https://github.com/commandlineparser/commandline) - A clean and concise command line parser.
@@ -14,6 +14,7 @@ This repository consists of 7 parts:
   - [ANTLR4](https://www.antlr.org/) - A powerful parser generator.
 * **BishLib** - Builtin Libraries.
 * **BishRuntime** - The VM and object model.
+* **BishRuntimeGenerators** - Code generators for **BishRuntime**.
+* **BishUtils** - Utilities for concurrent containers.
 * **BishTest** - Unit tests.
   - [xUnit](https://xunit.net) - A free, open source, community-focused unit testing tool for .NET.
-  - [Fluent Assertions](https://fluentassertions.com) - A natural way to specify the expected outcome of unit tests.

@@ -13,27 +13,27 @@ public class ReflectTest : Test
     [Fact]
     public void TestObjectReflect()
     {
-        ExpectResult("c.vars['a']", I(1));
-        ExpectResult("c.vars['b']", I(1));
+        ExpectResult("c.vars['a']", "1");
+        ExpectResult("c.vars['b']", "1");
         Execute("c.vars['a']=2;del c.vars['b'];c.vars['c']:=3;");
-        ExpectResult("c.a", I(2));
-        Action(() => Execute("c.b;")).Should().Excepts(BishError.AttributeErrorType);
-        ExpectResult("c.c", I(3));
-        ExpectResult("c.type===C", True);
+        ExpectResult("c.a", "2");
+        ExpectError("c.b;", BishError.AttributeErrorType);
+        ExpectResult("c.c", "3");
+        ExpectTrue("c.type===C");
         Execute("c.type=D;");
-        ExpectResult("c.f()", I(-1));
+        ExpectResult("c.f()", "-1");
     }
 
     [Fact]
     public void TestScopeReflect()
     {
         Execute("s:=this;f:=()'f';g:=()'g';h:=()'h';");
-        ExpectResult("s.outer.outer", Null);
+        ExpectResult("s.outer.outer", "null");
         Execute("s1:=null;{s1=this;}");
-        ExpectResult("s1.outer===s", True);
-        ExpectResult("s.vars['f']===f", True);
+        ExpectTrue("s1.outer===s");
+        ExpectTrue("s.vars['f']===f");
         Execute("s.vars['f']=g;del s.vars['h'];");
-        ExpectResult("f()", S("g"));
-        Action(() => Execute("h();")).Should().Excepts(BishError.AttributeErrorType);
+        ExpectResult("f()", "'g'");
+        ExpectError("h();", BishError.AttributeErrorType);
     }
 }

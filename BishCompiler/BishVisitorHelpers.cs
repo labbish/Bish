@@ -41,8 +41,7 @@ public class CompileResult(
         var start = ctx?.Start;
         var stop = ctx?.Stop;
         Errors.Add(new CompilationError(start?.Line ?? 0, start?.Column ?? 0, message,
-            stop?.Line ?? 0, stop?.Column ?? 0 + (stop?.Text?.Length ?? 0),
-            Environment.StackTrace));
+            stop?.Line ?? 0, stop?.Column ?? 0 + (stop?.Text?.Length ?? 0)));
         return this;
     }
 

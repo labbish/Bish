@@ -8,70 +8,70 @@ public class OperatorTest : Test
     [Fact]
     public void TestOperator()
     {
-        ExpectResult("1+2", I(3));
-        ExpectResult("1+2.5", N(3.5));
-        ExpectResult("1.5+2", N(3.5));
-        Action(() => Execute("1+'2';")).Should().Excepts(BishError.ArgumentErrorType);
+        ExpectResult("1+2", "3");
+        ExpectResult("1+2.5", "3.5");
+        ExpectResult("1.5+2", "3.5");
+        ExpectError("1+'2';", BishError.ArgumentErrorType);
 
-        ExpectResult("-5/2+3*(4-1^6)", N(6.5));
-        ExpectResult("1<2&&3>=3&&5<=>7==-1", True);
+        ExpectResult("-5/2+3*(4-1^6)", "6.5");
+        ExpectTrue("1<2&&3>=3&&5<=>7==-1");
     }
 
     [Fact]
     public void TestEquality()
     {
-        ExpectResult("1==1", True);
-        ExpectResult("1==2", False);
-        ExpectResult("1==1.0", True);
-        ExpectResult("1.0==1", True);
-        ExpectResult("1.0==1", True);
-        ExpectResult("object()==object()", False);
-        ExpectResult("1==''", False);
+        ExpectTrue("1==1");
+        ExpectFalse("1==2");
+        ExpectTrue("1==1.0");
+        ExpectTrue("1.0==1");
+        ExpectTrue("1.0==1");
+        ExpectFalse("object()==object()");
+        ExpectFalse("1==''");
     }
 
     [Fact]
     public void TestAutoCompare()
     {
-        ExpectResult("1!=1", False);
-        ExpectResult("1!=2", True);
+        ExpectFalse("1!=1");
+        ExpectTrue("1!=2");
 
-        ExpectResult("1<2", True);
-        ExpectResult("2<2", False);
-        ExpectResult("2<1", False);
+        ExpectTrue("1<2");
+        ExpectFalse("2<2");
+        ExpectFalse("2<1");
 
-        ExpectResult("1<=2", True);
-        ExpectResult("2<=2", True);
-        ExpectResult("2<=1", False);
+        ExpectTrue("1<=2");
+        ExpectTrue("2<=2");
+        ExpectFalse("2<=1");
 
-        ExpectResult("1>2", False);
-        ExpectResult("2>2", False);
-        ExpectResult("2>1", True);
+        ExpectFalse("1>2");
+        ExpectFalse("2>2");
+        ExpectTrue("2>1");
 
-        ExpectResult("1>=2", False);
-        ExpectResult("2>=2", True);
-        ExpectResult("2>=1", True);
+        ExpectFalse("1>=2");
+        ExpectTrue("2>=2");
+        ExpectTrue("2>=1");
     }
 
     [Fact]
     public void TestLogic()
     {
-        ExpectResult("true&&true", True);
-        ExpectResult("true&&false", False);
-        ExpectResult("false&&true", False);
-        ExpectResult("false&&false", False);
-        ExpectResult("true||true", True);
-        ExpectResult("true||false", True);
-        ExpectResult("false||true", True);
-        ExpectResult("false||false", False);
+        ExpectTrue("true&&true");
+        ExpectFalse("true&&false");
+        ExpectFalse("false&&true");
+        ExpectFalse("false&&false");
+        ExpectTrue("true||true");
+        ExpectTrue("true||false");
+        ExpectTrue("false||true");
+        ExpectFalse("false||false");
 
         Execute("count=0;");
-        ExpectResult("f()&&f()", False);
-        ExpectResult("count", I(1));
+        ExpectFalse("f()&&f()");
+        ExpectResult("count", "1");
 
         Execute("count=0;");
-        ExpectResult("if(true)3else f()", I(3));
-        ExpectResult("if(false)f()else 3", I(3));
-        ExpectResult("count", I(0));
+        ExpectResult("if(true)3else f()", "3");
+        ExpectResult("if(false)f()else 3", "3");
+        ExpectResult("count", "0");
     }
 
     [Fact]
@@ -79,31 +79,31 @@ public class OperatorTest : Test
     {
         Execute("count=0;");
         Execute("b:=true;b&&=f();");
-        ExpectResult("b", False);
-        ExpectResult("count", I(1));
+        ExpectFalse("b");
+        ExpectResult("count", "1");
         Execute("b:=false;b&&=f();");
-        ExpectResult("b", False);
-        ExpectResult("count", I(1));
+        ExpectFalse("b");
+        ExpectResult("count", "1");
 
         Execute("count=0;");
         Execute("o:=object();o.x:=true;o.x&&=f();");
-        ExpectResult("o.x", False);
-        ExpectResult("count", I(1));
+        ExpectFalse("o.x");
+        ExpectResult("count", "1");
         Execute("o:=object();o.x:=false;o.x&&=f();");
-        ExpectResult("o.x", False);
-        ExpectResult("count", I(1));
+        ExpectFalse("o.x");
+        ExpectResult("count", "1");
     }
 
     [Fact]
     public void TestRefEqual()
     {
         Execute("x:=y:=object();z:=x;w:=object();");
-        ExpectResult("x===y", True);
-        ExpectResult("x!==z", False);
-        ExpectResult("x===w", False);
+        ExpectTrue("x===y");
+        ExpectFalse("x!==z");
+        ExpectFalse("x===w");
 
-        ExpectResult("null===null", True);
-        ExpectResult("true===true", True);
-        ExpectResult("false===false", True);
+        ExpectTrue("null===null");
+        ExpectTrue("true===true");
+        ExpectTrue("false===false");
     }
 }

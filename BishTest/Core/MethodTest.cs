@@ -10,38 +10,38 @@ public class MethodTest : Test
     }
 
     [Fact]
-    public void TestObjectInitialization() => ExpectResult("T1('y').tag", S("y"));
+    public void TestObjectInitialization() => ExpectResult("T1('y').tag", "'y'");
 
     [Fact]
     public void TestMethodCall()
     {
-        Action(() => Execute("0();")).Should().Excepts(BishError.TypeErrorType);
-        ExpectResult("x()", I(0));
-        Action(() => Execute("x(null);")).Should().Excepts(BishError.ArgumentErrorType);
-        ExpectResult("x.f()", I(1));
-        ExpectResult("x.f(null)", I(1));
-        Action(() => Execute("x.g();")).Should().Excepts(BishError.ArgumentErrorType);
-        ExpectResult("x.g(null)", I(0));
-        Action(() => Execute("T1.g();")).Should().Excepts(BishError.ArgumentErrorType);
-        ExpectResult("T1.g(null,x)", I(0));
-        ExpectResult("x.toString()", S("T(x)"));
-        ExpectResult("T1.name", S("T1"));
+        ExpectError("0();", BishError.TypeErrorType);
+        ExpectResult("x()", "0");
+        ExpectError("x(null);", BishError.ArgumentErrorType);
+        ExpectResult("x.f()", "1");
+        ExpectResult("x.f(null)", "1");
+        ExpectError("x.g();", BishError.ArgumentErrorType);
+        ExpectResult("x.g(null)", "0");
+        ExpectError("T1.g();", BishError.ArgumentErrorType);
+        ExpectResult("T1.g(null,x)", "0");
+        ExpectResult("x.toString()", "'T(x)'");
+        ExpectResult("T1.name", "'T1'");
     }
 
     [Fact]
     public void TestSpecialBindMethod()
     {
         Execute("x:=1;");
-        ExpectResult("x.toString()", S("1"));
-        ExpectResult("null.toString()", S("null"));
-        ExpectResult("x.type.toString()", S("int"));
+        ExpectResult("x.toString()", "'1'");
+        ExpectResult("null.toString()", "'null'");
+        ExpectResult("x.type.toString()", "'int'");
         
         Execute("class C{func toString(self)'X'};class D:C;");
-        ExpectResult("C().toString()", S("X"));
-        ExpectResult("D().toString()", S("X"));
+        ExpectResult("C().toString()", "'X'");
+        ExpectResult("D().toString()", "'X'");
         // Uses BishOperator.Call("toString", [c])
-        ExpectResult("'{}'.format(C())", S("X"));
-        ExpectResult("'{}'.format(D())", S("X"));
+        ExpectResult("'{}'.format(C())", "'X'");
+        ExpectResult("'{}'.format(D())", "'X'");
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class MethodTest : Test
         Execute("class C1{func f(self)self.a;};");
         Execute("class C2:C1{func f(self)self.b;};");
         Execute("x:=C2();x.a:=1;x.b:=2;");
-        ExpectResult("x.f()", I(2));
-        ExpectResult("x.base().f()", I(1));
+        ExpectResult("x.f()", "2");
+        ExpectResult("x.base().f()", "1");
     }
 }

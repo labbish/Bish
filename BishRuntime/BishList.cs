@@ -123,6 +123,16 @@ public class BishList(IList<BishObject> list) : BishObject
 
     [Builtin]
     public static BishList Reverse(BishList self) => new(self.List.ToArray().Reverse().ToList());
+
+    [Builtin]
+    public static BishList Unique(BishList self)
+    {
+        List<BishObject> list = [];
+        foreach (var item in self.List)
+            if (list.All(other => !BishOperator.Eq(item, other)))
+                list.Add(item);
+        return new BishList(list);
+    }
 }
 
 public class BishListIterator(IList<BishObject> list) : BishObject

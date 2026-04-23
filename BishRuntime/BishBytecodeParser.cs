@@ -4,8 +4,18 @@ using BishUtils;
 
 namespace BishRuntime;
 
+// Note: length of string is always >=0, so it is fine to make use of 0x80~0xff
+public static class StringTags
+{
+    public const byte NullTag = 0xff;
+    public const byte ByteTag = 0xfe;
+    public const byte Repeated = 0xee;
+}
+
 public class BishBytecodeWriter(BinaryWriter writer)
 {
+    private readonly List<string> _strings = [];
+
     public void AddByte(byte value) => writer.Write(value);
     public void AddBytes(Span<byte> value) => writer.Write(value);
 
@@ -27,18 +37,26 @@ public class BishBytecodeWriter(BinaryWriter writer)
 
     public void AddString(string value)
     {
+        var index = _strings.IndexOf(value);
+        if (index != -1)
+        {
+            AddByte(StringTags.Repeated);
+            AddInt(index);
+            return;
+        }
+
         var bytes = Encoding.UTF8.GetBytes(value);
         AddInt(bytes.Length);
+        _strings.Add(value);
         AddBytes(bytes);
     }
 
-    // Note: length is always >=0, so it is fine to make use of 0xff and 0xfe
     public void AddTag(Tag? value)
     {
-        if (value is null) AddByte(0xff);
+        if (value is null) AddByte(StringTags.NullTag);
         else if (value.S is null)
         {
-            AddByte(0xfe);
+            AddByte(StringTags.ByteTag);
             AddByte(value.B);
         }
         else AddString(value.S);
@@ -53,6 +71,8 @@ public class BishBytecodeWriter(BinaryWriter writer)
 
 public class BishBytecodeReader(BinaryReader reader)
 {
+    private readonly List<string> _strings = [];
+
     public byte GetByte() => reader.ReadByte();
 
     protected T ProcessBytes<T>(int count, Func<ReadOnlySpan<byte>, T> processor)
@@ -65,20 +85,26 @@ public class BishBytecodeReader(BinaryReader reader)
     public int GetInt() => ProcessBytes(4, BinaryPrimitives.ReadInt32BigEndian);
     public double GetDouble() => ProcessBytes(8, BinaryPrimitives.ReadDoubleBigEndian);
     public bool GetBool() => GetByte() != 0;
-    public string GetString(int length) => ProcessBytes(length, Encoding.UTF8.GetString);
-    public string GetString() => GetString(GetInt());
 
-    public Tag? GetTag()
+    public string GetString(byte first)
     {
-        var first = GetByte();
-        // ReSharper disable once ConvertIfStatementToSwitchStatement
-        if (first == 0xff) return null;
-        if (first == 0xfe) return GetByte();
+        if (first == StringTags.Repeated) return _strings[GetInt()];
         Span<byte> rest = stackalloc byte[3];
         reader.ReadExactly(rest);
         var length = BinaryPrimitives.ReadInt32BigEndian([first, ..rest]);
-        return GetString(length);
+        var result = ProcessBytes(length, Encoding.UTF8.GetString);
+        _strings.Add(result);
+        return result;
     }
+
+    public string GetString() => GetString(GetByte());
+
+    public Tag? GetTag() => GetByte() switch
+    {
+        0xff => null,
+        0xfe => GetByte(),
+        var first => GetString(first)
+    };
 
     public string[] GetStrings()
     {
@@ -94,7 +120,7 @@ public class BishBytecodeReader(BinaryReader reader)
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 1;
+    public const byte Version = 2;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 

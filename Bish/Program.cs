@@ -32,7 +32,7 @@ public static class Program
                         : BishCompiler.BishCompiler.Compile(options.Command, out _, root: root);
                     if (options.Output is { } output)
                     {
-                        await using var stream = File.OpenWrite(output);
+                        await using var stream = File.Create(output);
                         stream.WriteBytecodes(frame.Bytecodes);
                     }
 

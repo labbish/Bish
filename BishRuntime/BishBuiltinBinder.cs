@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 
 namespace BishRuntime;
 
-[MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]
 #pragma warning disable CS9113
 public class BuiltinAttribute(string? prefix = null, string? tag = null) : Attribute;
+
+[AttributeUsage(AttributeTargets.Method)]
+public class PassCallerAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Parameter)]
 public class DefaultNullAttribute : Attribute;
@@ -17,7 +18,6 @@ public class RestAttribute : Attribute;
 
 public class DefaultNull : BishObject;
 
-[MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method)]
 public class IterAttribute : Attribute;
 

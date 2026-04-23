@@ -13,6 +13,7 @@ namespace Bish;
 public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyncHandlerBase
 {
     private ILanguageServerFacade Facade => facade;
+    private static readonly CompileOptions Options = new(Optimize: false, Throws: false);
 
     public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new(uri, "bish");
 
@@ -21,7 +22,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
         IList<CompilationError> errors = new ConcurrentList<CompilationError>();
         try
         {
-            BishCompiler.BishCompiler.Compile(text, out errors, optimize: false, runs: false);
+            BishCompiler.BishCompiler.Compile(text, out errors, options: Options);
         }
         catch (Exception)
         {

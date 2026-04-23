@@ -168,6 +168,8 @@ public record Call(int Argc) : BishBytecode
     {
         var args = frame.Stack.Pop(Argc);
         var func = frame.Stack.Pop();
+        if (func is BishFunc { PassCaller: true })
+            args = [frame.Scope, ..args];
         frame.Stack.Push(func.Call(args));
     }
 }
@@ -177,9 +179,11 @@ public record CallArgs : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var args = frame.Stack.Pop().As<BishList>("args");
+        var args = frame.Stack.Pop().As<BishList>("args").List.ToList();
         var func = frame.Stack.Pop();
-        frame.Stack.Push(func.Call(args.List.ToList()));
+        if (func is BishFunc { PassCaller: true })
+            args = [frame.Scope, ..args];
+        frame.Stack.Push(func.Call(args));
     }
 }
 

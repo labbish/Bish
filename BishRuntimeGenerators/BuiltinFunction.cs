@@ -14,6 +14,7 @@ public record BuiltinFunction(
     string? Tag,
     bool IsVoid,
     bool IsNullable,
+    bool PassCaller,
     string? Namespace) : IBuiltinStuff
 {
     public string FullName => (Prefix is null ? "" : $"{Prefix}_") + Name.Lower();
@@ -30,7 +31,8 @@ public record BuiltinFunction(
                   {{(IsVoid ? "" : "return ")}}{{Type}}.{{Name}}({{string.Join(", ", Args.Select(arg => arg.Name))}}){{(IsNullable ? " ?? (BishObject)BishNull.Instance" : "")}};
                   {{(IsVoid ? "return BishNull.Instance;" : "")}}
               },
-              "{{Tag ?? ""}}"
+              "{{Tag ?? ""}}",
+              passCaller: {{PassCaller.ToString().ToLower()}}
           ));
           """;
 }

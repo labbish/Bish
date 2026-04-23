@@ -61,8 +61,8 @@ public class BuiltinsGenerator : IIncrementalGenerator
     {
         var method = (MethodDeclarationSyntax)context.Node;
 
-        var attr = method.AttributeLists.SelectMany(al => al.Attributes)
-            .FirstOrDefault(a => a.Name.ToString() == "Builtin");
+        var attrs = method.AttributeLists.SelectMany(al => al.Attributes).ToList();
+        var attr = attrs.FirstOrDefault(a => a.Name.ToString() == "Builtin");
 
         if (attr is null) return null;
 
@@ -75,18 +75,20 @@ public class BuiltinsGenerator : IIncrementalGenerator
         {
             var name = param.Identifier.Text;
             var type = param.Type?.ToString().TrimEnd("?").ToString() ?? "dynamic";
-            var attrs = param.AttributeLists
+            var attrList = param.AttributeLists
                 .SelectMany(al => al.Attributes)
                 .Select(a => a.ToString()).ToList();
-            var isDefault = attrs.Contains("DefaultNull");
-            var isRest = attrs.Contains("Rest");
+            var isDefault = attrList.Contains("DefaultNull");
+            var isRest = attrList.Contains("Rest");
             return new BuiltinFunctionArg(type, name, isDefault, isRest);
         }).ToArray();
 
         var returnType = method.ReturnType.ToString();
+        
+        var passCaller = attrs.Any(a => a.Name.ToString() == "PassCaller");
 
         var details = new BuiltinFunction(className, attrArgs[0], method.Identifier.Text, args, attrArgs[1],
-            returnType == "void", returnType.EndsWith("?"), GetNamespace(method));
+            returnType == "void", returnType.EndsWith("?"), passCaller, GetNamespace(method));
 
         return details;
     }

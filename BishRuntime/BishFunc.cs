@@ -68,7 +68,8 @@ public class BishFunc(
     IList<BishArg> inArgs,
     Func<IList<BishObject>, BishObject> func,
     string? tag = null,
-    bool noCheck = false) : BishObject
+    bool noCheck = false,
+    bool passCaller = false) : BishObject
 {
     public string? Tag => tag;
     public string Name { get; private set; } = name;
@@ -77,6 +78,7 @@ public class BishFunc(
         (noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs)).ToConcurrentList();
 
     public Func<IList<BishObject>, BishObject> Func { get; private set; } = func;
+    public bool PassCaller = passCaller;
 
     public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
     {
@@ -128,7 +130,7 @@ public class BishFunc(
         var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
         return new BishFunc(Name, args1, args => Func([self, ..args]), Tag);
     }
-    
+
     [Builtin("hook", tag: "ignore")]
     public static BishFunc Bind(BishFunc func, BishObject obj) => func.Bind(obj);
 
@@ -193,6 +195,12 @@ public class BishFunc(
 
     [Builtin("hook")]
     public static BishType Get_Arg() => BishArgObject.StaticType;
+
+    [Builtin("hook")]
+    public static BishBool Get_passCaller(BishFunc self) => BishBool.Of(self.PassCaller);
+
+    [Builtin("hook")]
+    public static void Set_passCaller(BishFunc self, BishBool value) => self.PassCaller = value.Value;
 }
 
 public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)

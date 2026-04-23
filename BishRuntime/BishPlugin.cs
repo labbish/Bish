@@ -1,6 +1,4 @@
-﻿using BishRuntime;
-
-namespace BishSdk;
+﻿namespace BishRuntime;
 
 public class PluginExports
 {

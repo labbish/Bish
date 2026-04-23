@@ -2,9 +2,9 @@
 
 This is a simple example for C# plugin development for Bish.
 
-Your plugin should contain at least one class, which implements `IPlugin` in **BishSDK**, and can be constructed with 0 arguments.
+Your plugin should contain at least one class, which implements `BishRuntime.IPlugin`, and can be constructed without arguments.
 
-Your plugin should not contain `BishSdk.dll` and `BishRuntime.dll`, and it should not reference other projects (especially **BishCompiler**, as it would cause cycle referencing).
+Your plugin should not contain `BishRuntime.dll`, and it should not reference other projects, as it would cause cycle referencing.
 
 The `IPlugin` interface requires you to implement `Initialize` method, whose signature is above:
 

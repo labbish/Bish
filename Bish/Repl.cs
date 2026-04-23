@@ -1,5 +1,4 @@
-﻿using BishCompiler;
-using BishRuntime;
+﻿using BishRuntime;
 
 namespace Bish;
 
@@ -33,16 +32,15 @@ public class Repl(BishScope? scope = null)
                     Handled(() =>
                     {
                         var file = code[5..].Trim().Trim('"');
-                        var root = FindRoot(file);
                         var content = File.ReadAllText(file);
-                        var frame = Compile(content, root);
+                        var frame = BishCompiler.BishCompiler.Compile(content);
                         frame.Execute();
                     });
                     break;
                 case not null when code.StartsWith(".comp"):
                     Handled(() =>
                     {
-                        var frame = Compile(code[5..] + ';');
+                        var frame = BishCompiler.BishCompiler.Compile(code[5..]);
                         foreach (var bytecode in frame.Bytecodes)
                             Console.WriteLine(BishBytecodeParser.ToString(bytecode));
                     });
@@ -50,22 +48,15 @@ public class Repl(BishScope? scope = null)
                 default:
                     Handled(() =>
                     {
-                        var frame = Compile(code);
+                        var frame = BishCompiler.BishCompiler.Compile(code);
                         frame.Execute();
                         if (!frame.Stack.TryPeek(out var result)) return;
                         Scope.DefMember("_", result);
-                        Console.WriteLine(result);
+                        Console.WriteLine(BishString.CallToString(result));
                     });
                     break;
             }
         }
-    }
-
-    private BishFrame Compile(string code, string? root = null)
-    {
-        var result = BishCompiler.BishCompiler.Compile(code, out var errors, Scope, root: root);
-        foreach (var error in errors) Console.Error.WriteLine(error);
-        return result;
     }
 
     public static void Handled(Action action)
@@ -82,19 +73,5 @@ public class Repl(BishScope? scope = null)
         {
             Console.Error.WriteLine(e);
         }
-    }
-
-    public static string? FindRoot(string? path)
-    {
-        if (path is null) return null;
-        var current = new DirectoryInfo(path);
-        while (current != null)
-        {
-            if (File.Exists(Path.Combine(current.FullName, "rubbish.json")))
-                return current.FullName;
-            current = current.Parent;
-        }
-
-        return Path.GetDirectoryName(path);
     }
 }

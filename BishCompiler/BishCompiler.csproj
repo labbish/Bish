@@ -19,7 +19,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BishLib\BishLib.csproj" />
-      <ProjectReference Include="..\BishSdk\BishSdk.csproj" />
     </ItemGroup>
 
     <PropertyGroup>

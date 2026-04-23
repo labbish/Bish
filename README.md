@@ -1,6 +1,33 @@
 # Bish
 The Bish Language version 3.0.
 
+## Code Example
+
+```text
+Field := Func.Arg;
+func dataclass(..fields) {
+    for ([i, field] : fields.iter().entries)
+        if (field is of string) fields[i] = Field(field);
+    name := 'dataclass({})'.format(fields.iter().map((field) field.name).join(', '));
+    t := type(name, []);
+    t.hook_init := Func('hook_init', [Field('self'), ..fields], (args) {
+        [self, ..args] := args;
+        for ([i, {.name}] : fields.iter().entries)
+            self.hook_def(name, args[i]);
+    });
+    t.toString := (self) '{}({})'.format(self.type, fields.iter()
+        .map(({.name}) '{}={}'.format(name, self.hook_get(name))).join(', '));
+    // You can also define `op_eq` here to overload operator ==
+    t
+};
+
+class C: dataclass('a', 'b', Field('c').default(0));
+c := C(1, 2);
+print('c={}\n'.format(c));
+```
+
+Output: `c=C(a=1, b=2, c=0)`
+
 ## Parts & Tech Stack
 
 This repository consists of 9 parts:

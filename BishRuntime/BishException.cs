@@ -66,11 +66,8 @@ public class BishException(BishError error) : Exception
             .With("expression", new BishString(expr)).With("result", result).With("expect", expect);
 
     public static BishException OfType_Expect(string expr, BishObject result, string expect) =>
-        OfType($"Expect result of {expr} to be {expect}, found {result}")
-            .With("expression", new BishString(expr)).With("result", result).With("expect", new BishString(expect));
-
-    public static BishException OfType_BindIter(BishType type) =>
-        OfType($"Cannot manually create {type.Name}; did you mean to call .iter()?").With("type", type);
+        OfType($"Expect {expr} to be {expect}, found {result}").With("expression", new BishString(expr))
+            .With("result", result).With("expect", new BishString(expect));
 
     public static BishException OfType_ErrorResult() => OfType("Cannot manually create ErrorResult");
 

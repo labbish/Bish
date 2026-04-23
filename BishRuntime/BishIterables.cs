@@ -23,6 +23,10 @@ public class BishRange(int? start, int? end, int step) : BishObject
 
     private static BishObject ToObject(int? value) => value is null ? BishNull.Instance : BishInt.Of(value.Value);
 
+    [Builtin("op")]
+    public static BishBool Eq(BishRange self, BishRange other) =>
+        BishBool.Of(self.Start == other.Start && self.End == other.End && self.Step == other.Step);
+
     [Builtin("hook")]
     public static void Init(BishRange self, BishObject a, [DefaultNull] BishObject? b, [DefaultNull] BishObject? step)
     {

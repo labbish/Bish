@@ -4,7 +4,7 @@ namespace BishRuntime;
 
 public record Entry(BishObject Key, BishObject Value)
 {
-    public override string ToString() => $"{BishOperator.ToString(Key).Value}: {BishOperator.ToString(Value).Value}";
+    public override string ToString() => $"{BishString.CallToString(Key)}: {BishString.CallToString(Value)}";
 }
 
 public class BishMap(IList<Entry> entries) : BishObject

@@ -89,8 +89,10 @@ public static partial class BishOperator
         {
             try
             {
-                var op = arg.Type.TryGetMember(name, BishLookupMode.NoBind);
-                if (op is not null) return op.Call(args);
+                var result = args.Count == 1
+                    ? arg.TryGetMember(name)?.TryCall([])
+                    : arg.Type.TryGetMember(name, BishLookupMode.NoBind)?.TryCall(args);
+                if (result is not null) return result;
             }
             catch (BishException e)
             {
@@ -102,26 +104,10 @@ public static partial class BishOperator
         return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
     }
 
-    public static bool Eq(BishObject a, BishObject b) =>
-        Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}").Value;
+    public static bool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}").Value;
 
-    public static BishString ToString(BishObject a) => Call("toString", [a]).As<BishString>("toString()");
-
-    public static SpecialMethod? GetSpecialMethod(string name)
-    {
-        return SpecialMethods.FirstOrDefault(s => s.NamePattern.Match(name));
-    }
-
-    internal static void CheckSpecialMethod(string name, BishFunc func)
-    {
-        const string tip = "; consider add `special: false` if this is intended.";
-        var special = GetSpecialMethod(name);
-        if (special is null) throw new ArgumentException($"'{name}' is not a special name" + tip);
-        var opName = special.Op is null ? name : $"{name} (operator {special.Op})";
-        var argc = func.Args.Count;
-        if ((special.Argc is null && argc != 0) || special.Argc == argc) return;
-        throw new ArgumentException($"{opName} expects {special.ExpectArgc()} args, found {func.Args.Count}" + tip);
-    }
+    public static SpecialMethod? GetSpecialMethod(string name) =>
+        SpecialMethods.FirstOrDefault(s => s.NamePattern.Match(name));
 
     public static SpecialMethod GetOperator(string op, int argc)
     {

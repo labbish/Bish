@@ -1,7 +1,7 @@
 ﻿global using BishRuntime;
-global using BishCompiler;
 global using FluentAssertions;
 using System.Reflection;
+using FluentAssertions.Execution;
 using FluentAssertions.Specialized;
 using Xunit.Sdk;
 
@@ -69,7 +69,14 @@ public class Test(TestInfoFixture fixture)
         return result;
     }
 
-    protected void ExpectResult(string expr, BishObject result) => Result(expr).Should().BeEquivalentTo(result);
+    protected void ExpectResult(string expr, BishObject expect)
+    {
+        var result = Result(expr);
+        if (BishOperator.Call("op_eq", [result, expect]) != True)
+            throw new AssertionFailedException($"Expected {expect} but found {result}");
+    }
+
+    protected void ExpectSame(string expr, string expect) => ExpectResult(expr, Result(expect));
 
     protected void ExpectErrorResult(string expr) => Result(expr).Should().BeOfType<BishErrorResult>();
 }

@@ -65,7 +65,7 @@ public class OperatorTest : Test
         ExpectResult("false||false", False);
 
         Execute("count=0;");
-        ExpectResult("f()&&f()", True);
+        ExpectResult("f()&&f()", False);
         ExpectResult("count", I(1));
 
         Execute("count=0;");

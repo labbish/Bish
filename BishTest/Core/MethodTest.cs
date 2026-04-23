@@ -25,7 +25,7 @@ public class MethodTest : Test
         Action(() => Execute("T1.g();")).Should().Excepts(BishError.ArgumentErrorType);
         ExpectResult("T1.g(null,x)", I(0));
         ExpectResult("x.toString()", S("T(x)"));
-        ExpectResult("T1.name", S("T"));
+        ExpectResult("T1.name", S("T1"));
     }
 
     [Fact]
@@ -35,6 +35,13 @@ public class MethodTest : Test
         ExpectResult("x.toString()", S("1"));
         ExpectResult("null.toString()", S("null"));
         ExpectResult("x.type.toString()", S("int"));
+        
+        Execute("class C{func toString(self)'X'};class D:C;");
+        ExpectResult("C().toString()", S("X"));
+        ExpectResult("D().toString()", S("X"));
+        // Uses BishOperator.Call("toString", [c])
+        ExpectResult("'{}'.format(C())", S("X"));
+        ExpectResult("'{}'.format(D())", S("X"));
     }
 
     [Fact]

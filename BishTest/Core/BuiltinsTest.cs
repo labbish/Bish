@@ -144,8 +144,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("reversed.next()", I(4));
         Action(() => Execute("reversed.next();")).Should().Excepts(BishError.IteratorStopType);
 
-        ExpectResult("range(1,10,1)==range(1,10)", True);
-        ExpectResult("range(0,10,1)==range(10)", True);
+        ExpectSame("range(1,10,1)", "range(1,10)");
+        ExpectSame("range(0,10,1)", "range(10)");
 
         Action(() => Execute("range(0,0,0);")).Should().Excepts(BishError.ArgumentErrorType);
     }
@@ -259,8 +259,8 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("C.name", S("C"));
         ExpectResult("D.name", S("X"));
         
-        ExpectResult("C.MRO==[object]", True);
-        ExpectResult("D.MRO==[C,object]", True);
+        ExpectSame("C.MRO", "[C]");
+        ExpectSame("D.MRO", "[D,C]");
         
         ExpectResult("C.parents==[]", True);
         ExpectResult("D.parents==[C]", True);

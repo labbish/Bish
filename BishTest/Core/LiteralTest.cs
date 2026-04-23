@@ -7,7 +7,7 @@ public class LiteralTest(TestInfoFixture fixture) : Test(fixture)
     {
         ExpectResult("123", I(123));
         ExpectResult("0xAb", I(0xAb));
-        ExpectResult("0o35", I(035));
+        ExpectResult("0o35", I(29));
         ExpectResult("0b1101", I(0b1101));
         ExpectResult("1.5", N(1.5));
         ExpectResult("1.", N(1));

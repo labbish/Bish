@@ -33,7 +33,7 @@ public class AccessTest : Test
         Execute("l[1]=-1;l[2]*=3;");
         ExpectResult("l", L(I(0), I(-1), I(6), I(3), I(4)));
         Execute("del l[3];");
-        ExpectResult("l", L(I(0), I(-1), I(6), I(3)));
+        ExpectResult("l", L(I(0), I(-1), I(6), I(4)));
     }
 
     [Fact]

@@ -35,7 +35,7 @@ public static class ListHelper
             var actualStart = start < 0 ? count + start : start;
             var actualEnd = end.HasValue ? end.Value < 0 ? count + end.Value : end.Value : count;
             var sliceLength = actualEnd - actualStart;
-            return list.Skip(actualStart).Take(sliceLength).ToConcurrentList();
+            return list.Skip(actualStart).Take(sliceLength).ToList().ToConcurrentList();
         }
     }
 }

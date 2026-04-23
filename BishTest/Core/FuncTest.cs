@@ -36,6 +36,8 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
         Action(() => Compile("func f(x,y=0,..z)null;")).Should().Throw();
         Action(() => Compile("func f(x,y,..z=0)null;")).Should().Throw();
         Action(() => Compile("func f(x,..y,..z)null;")).Should().Throw();
+        Execute("func f(..rest){rest[0]:=0;rest[0]};");
+        ExpectResult("f(1,2,3)", I(0));
     }
 
     [Fact]

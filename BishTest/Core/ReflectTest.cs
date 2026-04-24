@@ -62,11 +62,16 @@ public class ReflectTest : Test
         ExpectResult("f.bytecodes", "[x,y,z]");
         ExpectResult("f.scope.ip", "3");
         ExpectResult("f.outer", "null");
+
         Execute("a:=bytecode('Int',{.value:0});");
         Execute("b:=bytecode('Def',{.name:'k'});");
         Execute("f:=frame([a,b]);");
         ExpectResult("f.execute()", "null");
         ExpectResult("f.stack", "[0]");
         ExpectResult("f.scope.k", "0");
+
+        ExpectResult("{a:=1;()0}.frame.scope.a", "1");
+        ExpectResult("(()0).gen", "false");
+        ExpectResult("(()*0).gen", "true");
     }
 }

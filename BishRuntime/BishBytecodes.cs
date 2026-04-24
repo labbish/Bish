@@ -300,9 +300,11 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
 
+        BishFrame GetInner() => new(slice.Code, scope, frame);
+
         BishObject Func(IList<BishObject> args)
         {
-            var inner = new BishFrame(slice.Code, scope, frame);
+            var inner = GetInner();
             // The first argument is in the top
             foreach (var arg in args.Reverse()) inner.Stack.Push(arg);
             if (!Gen) return inner.Execute();
@@ -324,7 +326,10 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
             return new BishObject(type);
         }
 
-        frame.Stack.Push(new BishFunc(Name, inArgs, Func));
+        var func = new BishFunc(Name, inArgs, Func);
+        func.DefMember("hook_get_frame", new BishFunc("hook_get_frame", [], _ => GetInner()));
+        func.DefMember("hook_get_gen", new BishFunc("hook_get_gen", [], _ => BishBool.Of(Gen)));
+        frame.Stack.Push(func);
     }
 }
 

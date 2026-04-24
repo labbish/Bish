@@ -9,7 +9,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     protected static void CreateDirectory(string path) => Directory.CreateDirectory(path);
     protected static void CreateFile(string path, string content = "") => File.WriteAllText(path, content);
 
-    protected async Task<string> GetOutputAsync(string[] args)
+    protected async Task<string> GetOutputAsync(params string[] args)
     {
         await Semaphore.WaitAsync();
         try
@@ -82,22 +82,49 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     }
 
     [Fact]
+    public async Task TestCompiled()
+    {
+        CreateFile("./a/a3.bish", "a:='a';");
+        CreateFile("./a/b/b3.bish", "b:='b';");
+        CreateFile("./a/b/c/c3.bish", "c:='c';");
+
+        const string s0 = "print(import('a/a3.bishc').a+import('a/b/b3.bishc').b+import('a/b/c/c3.bishc').c);";
+        const string s1 = "print(import('a3.bishc').a+import('b/b3.bishc').b+import('b/c/c3.bishc').c);";
+        const string s2 = "print(import('../../a3.bishc').a+import('../b3.bishc').b+import('c3.bishc').c);";
+        
+        CreateFile("./a/a4.bish", s1);
+        CreateFile("./a/b/b4.bish", s1);
+        CreateFile("./a/b/c/c4.bish", s2);
+
+        foreach (var file in new[] { "./a/a", "./a/b/b", "./a/b/c/c" })
+        {
+            await GetOutputAsync("-f", $"{file}3.bish", "-o", $"{file}3.bishc", "-s");
+            await GetOutputAsync("-f", $"{file}4.bish", "-o", $"{file}4.bishc", "-s");
+        }
+
+        await ExpectOutputAsync("-c", s0, "abc");
+        await ExpectOutputAsync("-f", "./a/a4.bishc", "abc");
+        await ExpectOutputAsync("-f", "./a/b/b4.bishc", "abc");
+        await ExpectOutputAsync("-f", "./a/b/c/c4.bishc", "abc");
+    }
+
+    [Fact]
     public async Task TestMeta()
     {
         const string s = "print(meta.root);";
         
-        CreateFile("./a/a3.bish", s);
-        CreateFile("./a/b/b3.bish", s);
-        CreateFile("./a/b/c/c3.bish", s);
+        CreateFile("./a/a5.bish", s);
+        CreateFile("./a/b/b5.bish", s);
+        CreateFile("./a/b/c/c5.bish", s);
 
         var p0 = Path.GetFullPath(".");
         var p1 = Path.GetFullPath("a");
         var p2 = Path.GetFullPath("a/b/c");
 
         await ExpectOutputAsync("-c", s, p0);
-        await ExpectOutputAsync("-f", "./a/a3.bish", p1);
-        await ExpectOutputAsync("-f", "./a/b/b3.bish", p1);
-        await ExpectOutputAsync("-f", "./a/b/c/c3.bish", p2);
+        await ExpectOutputAsync("-f", "./a/a5.bish", p1);
+        await ExpectOutputAsync("-f", "./a/b/b5.bish", p1);
+        await ExpectOutputAsync("-f", "./a/b/c/c5.bish", p2);
     }
 
     public void Dispose()

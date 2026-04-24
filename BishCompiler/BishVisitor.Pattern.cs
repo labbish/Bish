@@ -12,7 +12,7 @@ public partial class BishVisitor
     public override CompileResult VisitListPattern(BishParser.ListPatternContext context)
     {
         var result = CompileResult.Pattern(context);
-        var items = context.patternItem();
+        var items = context.patItem();
         var pos = -1;
         for (var i = 0; i < items.Length; i++)
             if (items[i].dots is not null)
@@ -35,7 +35,7 @@ public partial class BishVisitor
     public override CompileResult VisitMapPattern(BishParser.MapPatternContext context)
     {
         var result = CompileResult.Pattern(context);
-        var entries = context.patternEntry();
+        var entries = context.patEntry();
         if (entries.SkipLast(1).Any(entry => entry is BishParser.RestPatternEntryContext))
             result.Error(context, "Rest entry must be the last one in map deconstruction");
         var (tag, end) = Symbols.GetPair("map");
@@ -65,7 +65,7 @@ public partial class BishVisitor
     {
         var result = CompileResult.Pattern(context);
         var (tag, end) = Symbols.GetPair("map");
-        foreach (var entry in context.patternObjEntry())
+        foreach (var entry in context.patObjEntry())
             result.Add(new Copy(), new TryGetMember(entry.ID().GetText()), new JumpIfNot(tag))
                 .Add(Visit(entry.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tag));
         return result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());

@@ -3,7 +3,7 @@ using String = BishRuntime.String;
 
 namespace BishCompiler;
 
-public partial class BishVisitor : BishBaseVisitor<CompileResult>
+public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
 {
     protected readonly SymbolAllocator Symbols = new();
 
@@ -123,6 +123,7 @@ public partial class BishVisitor : BishBaseVisitor<CompileResult>
             right = CompileResult.Same(null, left);
             if (left.Effect == StackEffect.Expr) right.Add(new Null());
         }
+
         var result = CompileResult.Same(null, left, right);
         var (tag, end) = Symbols.GetPair(name);
         return result.Add(cond, StackEffect.Expr)

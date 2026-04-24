@@ -7,8 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Antlr4 Include="Bish.g4">
+        <Antlr4 Include="BishLexer.g4">
+            <Generator>MSBuild:Compile</Generator>
             <CustomToolNamespace>BishCompiler</CustomToolNamespace>
+            <TargetLanguage>CSharp</TargetLanguage>
+        </Antlr4>
+        <Antlr4 Include="BishParser.g4">
+            <Generator>MSBuild:Compile</Generator>
+            <CustomToolNamespace>BishCompiler</CustomToolNamespace>
+            <TargetLanguage>CSharp</TargetLanguage>
+            <Antlr4GenVisitor>True</Antlr4GenVisitor>
+            <Antlr4GenListener>False</Antlr4GenListener>
         </Antlr4>
     </ItemGroup>
 

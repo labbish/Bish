@@ -44,6 +44,10 @@ public class ReflectTest : Test
         ExpectResult("f()", "1");
         ExpectResult("{a:=2;f()}", "2");
         ExpectResult("f()", "1");
+        Execute("a:=1;class F{oper()(self,s)s.scope.a;passCaller:=true};f:=F();");
+        ExpectResult("f()", "1");
+        ExpectResult("{a:=2;f()}", "2");
+        ExpectResult("f()", "1");
     }
 
     [Fact]

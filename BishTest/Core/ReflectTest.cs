@@ -73,5 +73,7 @@ public class ReflectTest : Test
         ExpectResult("{a:=1;()0}.frame.scope.a", "1");
         ExpectResult("(()0).gen", "false");
         ExpectResult("(()*0).gen", "true");
+        
+        ExpectResult("meta.compile('return 0;').execute()", "0");
     }
 }

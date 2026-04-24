@@ -6,7 +6,7 @@ public class BishMeta(string? root) : BishObject
 {
     public string? Root = root;
 
-    public static BishMeta Default => new(null);
+    public static BishMeta Builtin => new(null);
 
     public override BishType DefaultType => StaticType;
 
@@ -19,12 +19,19 @@ public class BishMeta(string? root) : BishObject
     public static void Set_root(BishMeta self, BishObject value) =>
         self.Root = value is BishNull ? null : value.As<BishString>("meta.root").Value;
 
-    // TODO: compile method
+    [Builtin("hook")]
+    public static BishProxyMap Get_cache(BishMeta _) => new(BishImporter.Cache);
+
+    [Builtin]
+    public static BishFrame Compile(BishMeta _, BishString code) => BishCompileService.Compile(code.Value);
+
+    [Builtin]
+    public static BishFrame CompileFile(BishMeta _, BishString path) => BishCompileService.CompileFile(path.Value);
 }
 
 public static class BishImporter
 {
-    private static readonly Dictionary<string, BishObject> Cache = [];
+    public static readonly Dictionary<string, BishObject> Cache = [];
 
     public static BishObject Import(BishMeta meta, string file)
     {
@@ -51,21 +58,8 @@ public static class BishImporter
     private static BishObject ImportFull(string path)
     {
         var ext = Path.GetExtension(path);
-        switch (ext)
-        {
-            case ".bish": return RunAndCopy(BishCompileService.CompileFile(path));
-            case ".bishc":
-            {
-                using var stream = File.OpenRead(path);
-                return RunAndCopy(new BishFrame(stream.ReadBytecodes()));
-            }
-            case ".dll": return ImportDll(path);
-            default: throw new ArgumentException($"Invalid file extension: {ext}");
-        }
-    }
-
-    private static BishObject RunAndCopy(BishFrame frame)
-    {
+        if (ext == ".dll") return ImportDll(path);
+        var frame = BishCompileService.CompileFile(path);
         frame.Execute();
         var module = new BishObject();
         foreach (var (name, value) in frame.Scope.Vars) module.DefMember(name, value);

@@ -125,6 +125,11 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-f", "./a/a5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/b5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/c/c5.bish", p2);
+        
+        CreateFile("./a/ax.bish", "return 0;");
+        await GetOutputAsync("-f", "./a/ax.bish", "-o", "./a/ax.bishc", "-s");
+        await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bish').execute());", "0");
+        await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bishc').execute());", "0");
     }
 
     public void Dispose()

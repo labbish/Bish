@@ -9,7 +9,7 @@ public static class BishCompileService
     [SuppressMessage("Usage", "CA2211")]
     public static Func<string, CompileOptions, (IList<CompilationError>, IList<BishBytecode>)>? Compiler;
 
-    public static string? FindRoot(string? path)
+    private static string? FindRoot(string? path)
     {
         if (path is null) return null;
         var current = new DirectoryInfo(path);
@@ -64,13 +64,13 @@ public static class BishCompileService
         return new BishFrame(codes, scope).AddMeta(root);
     }
 
-    public static BishFrame AddMeta(this BishFrame frame, string? root)
+    private static BishFrame AddMeta(this BishFrame frame, string? root)
     {
         frame.Scope.DefVar("meta", new BishMeta(root ?? Environment.CurrentDirectory));
         return frame;
     }
 
-    static BishCompileService() => BishMeta.Default.Root = Environment.CurrentDirectory;
+    static BishCompileService() => BishMeta.Builtin.Root = Environment.CurrentDirectory;
 }
 
 public record CompilationError(

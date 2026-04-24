@@ -96,7 +96,7 @@ public class BishBuiltinScope : BishScope
         Init("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         Init("IterationStop", BishError.IteratorStopType);
         Init("Error$Result", BishErrorResult.StaticType);
-        Init("meta", BishMeta.Default);
+        Init("meta", BishMeta.Builtin);
         Init("scope", StaticType);
         Init("frame", BishFrame.StaticType);
         Init("bytecode", BishBytecodeObject.StaticType);

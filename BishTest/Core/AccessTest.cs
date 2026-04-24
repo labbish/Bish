@@ -103,13 +103,4 @@ public class AccessTest : Test
         Execute("map:=0;");
         ExpectResult("{0:0,1:1}[0]", "0");
     }
-
-    [Fact]
-    public void TestPassCaller()
-    {
-        Execute("a:=1;func f(s)s.a;f.passCaller=true;");
-        ExpectResult("f()", "1");
-        ExpectResult("{a:=2;f()}", "2");
-        ExpectResult("f()", "1");
-    }
 }

@@ -10,6 +10,7 @@ public static class Program
 
     private static async Task RunOptionsAsync(Options options)
     {
+        BishCompiler.BishCompiler.Init();
         switch (options)
         {
             case { Server: true }:
@@ -25,8 +26,8 @@ public static class Program
                 break;
             default:
                 var frame = options.Command is null
-                    ? BishCompiler.BishCompiler.CompileFile(options.File!)
-                    : BishCompiler.BishCompiler.Compile(options.Command);
+                    ? BishCompileService.CompileFile(options.File!)
+                    : BishCompileService.Compile(options.Command);
                 if (options.Output is { } output)
                 {
                     await using var stream = File.Create(output);

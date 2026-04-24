@@ -10,14 +10,9 @@ public class BishScope : BishObject
     protected override IList<BishObject> LookupChain => GetLookupChain().ToConcurrentList<BishObject>();
 
     public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("scope");
 
-    public new static readonly BishType StaticType = new("scope", [BishNum.StaticType]);
-
-    internal BishScope(BishScope? outer = null)
-    {
-        Outer = outer;
-        Vars.Add("this", this);
-    }
+    internal BishScope(BishScope? outer = null) => Outer = outer;
 
     private IEnumerable<BishScope> GetLookupChain()
     {
@@ -46,7 +41,8 @@ public class BishScope : BishObject
     [Builtin("hook")]
     public static BishScope? Get_outer(BishScope self) => self.Outer;
 
-    public static readonly IDictionary<string, BishObject> BuiltinModules = new ConcurrentDictionary<string, BishObject>();
+    public static readonly IDictionary<string, BishObject> BuiltinModules =
+        new ConcurrentDictionary<string, BishObject>();
 
     public static BishScope Globals => new(BishBuiltinScope.Instance);
 
@@ -60,6 +56,15 @@ public class BishScope : BishObject
 
     [Builtin]
     public static BishString Input() => new(Console.ReadLine() ?? "");
+
+    [Builtin]
+    [PassCaller]
+    public static BishFrame This(BishFrame frame) => frame;
+
+    [Builtin]
+    [PassCaller]
+    public static BishObject Import(BishFrame frame, BishString file) =>
+        BishImporter.Import(frame.Scope.GetVar("meta").As<BishMeta>("meta"), file.Value);
 }
 
 public class BishBuiltinScope : BishScope
@@ -92,7 +97,9 @@ public class BishBuiltinScope : BishScope
         Init("IterationStop", BishError.IteratorStopType);
         Init("Error$Result", BishErrorResult.StaticType);
         Init("meta", BishMeta.Default);
-        Init("import", BishImporter.Import);
+        Init("scope", StaticType);
+        Init("frame", BishFrame.StaticType);
+        Init("bytecode", BishBytecodeObject.StaticType);
     }
 
     public static readonly BishBuiltinScope Instance = new();

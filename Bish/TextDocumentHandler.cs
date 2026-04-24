@@ -1,4 +1,4 @@
-﻿using BishCompiler;
+﻿using BishRuntime;
 using BishUtils;
 using MediatR;
 using OmniSharp.Extensions.LanguageServer.Protocol;
@@ -22,7 +22,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
         IList<CompilationError> errors = new ConcurrentList<CompilationError>();
         try
         {
-            BishCompiler.BishCompiler.Compile(text, out errors, options: Options);
+            BishCompileService.Compile(text, out errors, options: Options);
         }
         catch (Exception)
         {
@@ -53,11 +53,14 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
         return Unit.Value;
     }
 
-    public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken) => Unit.Task;
-    public override Task<Unit> Handle(DidCloseTextDocumentParams request, CancellationToken cancellationToken) => Unit.Task;
+    public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken) =>
+        Unit.Task;
+
+    public override Task<Unit> Handle(DidCloseTextDocumentParams request, CancellationToken cancellationToken) =>
+        Unit.Task;
 
     protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(
-        TextSynchronizationCapability capability, 
+        TextSynchronizationCapability capability,
         ClientCapabilities clientCapabilities) =>
         new()
         {

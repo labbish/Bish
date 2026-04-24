@@ -124,10 +124,17 @@ public static class BishBytecodeParser
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 
+    private static (BytecodeParser Parser, byte Index) GetParser(BishBytecode bytecode)
+    {
+        var index = Parsers.FindIndex(p => p.Type == bytecode.GetType());
+        return index == -1
+            ? throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}")
+            : (Parsers[index], (byte)index);
+    }
+
     public static string ToString(BishBytecode bytecode)
     {
-        var parser = Parsers.FirstOrDefault(p => p.Type == bytecode.GetType()) ??
-                     throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}");
+        var (parser, _) = GetParser(bytecode);
         return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + parser.Format(bytecode);
     }
 
@@ -135,11 +142,9 @@ public static class BishBytecodeParser
     {
         public void WriteSingle(BishBytecode bytecode)
         {
-            var index = Parsers.FindIndex(p => p.Type == bytecode.GetType());
-            if (index == -1) throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}");
-            writer.AddByte((byte)index);
+            var (parser, index) = GetParser(bytecode);
+            writer.AddByte(index);
             writer.AddTag(bytecode.Tag);
-            var parser = Parsers[index];
             parser.Write(bytecode, writer);
         }
 
@@ -186,10 +191,30 @@ public static class BishBytecodeParser
             return new BishBytecodeReader(br).Read().ToArray();
         }
     }
+
+    public static BishBytecodeObject ToObject(BishBytecode bytecode)
+    {
+        var result = new BishBytecodeObject();
+        GetParser(bytecode).Parser.WriteObject(bytecode, result);
+        result.AddString("type", bytecode.GetType().Name);
+        result.AddTag("tag", bytecode.Tag);
+        return result;
+    }
+
+    public static BishBytecode FromObject(BishBytecodeObject bytecode)
+    {
+        var type = bytecode.GetString("type");
+        var index = Parsers.FindIndex(parser => parser.Type.Name == type);
+        if (index == -1) throw new ArgumentException($"Invalid Bytecode: {type}");
+        var tag = bytecode.GetTag("tag");
+        return Parsers[index].ReadObject(bytecode).Tagged(tag);
+    }
 }
 
 public record BytecodeParser(
     Type Type,
     Func<BishBytecode, string> Format,
     Action<BishBytecode, BishBytecodeWriter> Write,
-    Func<BishBytecodeReader, BishBytecode> Read);
+    Func<BishBytecodeReader, BishBytecode> Read,
+    Action<BishBytecode, BishBytecodeObject> WriteObject,
+    Func<BishBytecodeObject, BishBytecode> ReadObject);

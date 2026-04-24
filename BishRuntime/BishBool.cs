@@ -25,8 +25,8 @@ public class BishBool : BishObject
     [Builtin]
     public static BishBool Bool(BishBool a) => a;
 
-    public static bool CallToBool(BishObject obj) =>
-        BishOperator.Call("bool", [obj]).As<BishBool>("bool").Value;
+    public static bool CallToBool(BishObject? obj) =>
+        obj is not null && BishOperator.Call("bool", [obj]).As<BishBool>("bool").Value;
 }
 
 internal class BishBoolType() : BishType("bool")

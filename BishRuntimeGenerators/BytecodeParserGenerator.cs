@@ -78,12 +78,14 @@ public class BytecodeParserGenerator : IIncrementalGenerator
     }
 }
 
-public record RecordArg(string Type, string Name)
+public record RecordArg(string Type, string Name, string? Default)
 {
     public static RecordArg From(string full)
     {
-        var parts = full.Split(' ');
-        return new RecordArg(parts[0], parts[1]);
+        var spiltDefault = full.Split('=');
+        var defaultValue = spiltDefault.Length > 1 ? spiltDefault[1] : null;
+        var parts = spiltDefault[0].Split(' ');
+        return new RecordArg(parts[0].Trim(), parts[1].Trim(), defaultValue?.Trim());
     }
 
     private static string Escape(string var) => $"'\"' + Regex.Escape({var}) + '\"'";
@@ -130,6 +132,16 @@ public record BytecodeInfo(string Name, ImmutableArray<RecordArg> Args)
               reader =>
               {
                   {{string.Join(";\n        ", Args.Select(arg => $"var arg{arg.Name} = reader.Get{arg.AsType}()"))}};
+                  return new {{FullName}}({{string.Join(", ", Args.Select(arg => "arg" + arg.Name + (arg.Type == "Tag" ? "!" : "")))}});
+              },
+              (b, obj) =>
+              {
+                  var bytecode = ({{FullName}})b;
+                  {{string.Join(";\n        ", Args.Select(arg => $"obj.Add{arg.AsType}(\"{arg.Name.Lower()}\", bytecode.{arg.Name})"))}};
+              },
+              obj =>
+              {
+                  {{string.Join(";\n        ", Args.Select(arg => $"var arg{arg.Name} = obj.Get{arg.AsType}(\"{arg.Name.Lower()}\"{(arg.Default is null or "null" ? "" : ", " + arg.Default)})"))}};
                   return new {{FullName}}({{string.Join(", ", Args.Select(arg => "arg" + arg.Name + (arg.Type == "Tag" ? "!" : "")))}});
               }
               ));

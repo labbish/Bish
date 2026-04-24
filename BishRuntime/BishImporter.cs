@@ -1,14 +1,12 @@
 ﻿using System.Reflection;
-using FileCompiler = System.Func<string, BishRuntime.BishFrame>;
 
 namespace BishRuntime;
 
-public class BishMeta(string? root, FileCompiler? compileFile) : BishObject
+public class BishMeta(string? root) : BishObject
 {
     public string? Root = root;
-    public FileCompiler? CompileFile = compileFile;
 
-    public static BishMeta Default => new(null, null);
+    public static BishMeta Default => new(null);
 
     public override BishType DefaultType => StaticType;
 
@@ -20,15 +18,15 @@ public class BishMeta(string? root, FileCompiler? compileFile) : BishObject
     [Builtin("hook")]
     public static void Set_root(BishMeta self, BishObject value) =>
         self.Root = value is BishNull ? null : value.As<BishString>("meta.root").Value;
+
+    // TODO: compile method
 }
 
 public static class BishImporter
 {
-    public static readonly BishFunc Import;
-
     private static readonly Dictionary<string, BishObject> Cache = [];
 
-    private static BishObject Importer(BishMeta meta, string file)
+    public static BishObject Import(BishMeta meta, string file)
     {
         var root = meta.Root;
         if (BishScope.BuiltinModules.TryGetValue(file, out var module)) return module;
@@ -36,7 +34,7 @@ public static class BishImporter
         {
             var path = Path.GetFullPath(root is null ? file : Path.Combine(root, file));
             if (Cache.TryGetValue(path, out var cached)) return cached;
-            var result = ImportFull(path, meta.CompileFile);
+            var result = ImportFull(path);
             Cache.Add(path, result);
             return result;
         }
@@ -50,17 +48,12 @@ public static class BishImporter
         }
     }
 
-    private static BishObject ImportFull(string path, FileCompiler? compileFile)
+    private static BishObject ImportFull(string path)
     {
         var ext = Path.GetExtension(path);
         switch (ext)
         {
-            case ".bish":
-            {
-                return compileFile is null
-                    ? throw new ArgumentException("Compile service is invalid!")
-                    : RunAndCopy(compileFile(path));
-            }
+            case ".bish": return RunAndCopy(BishCompileService.CompileFile(path));
             case ".bishc":
             {
                 using var stream = File.OpenRead(path);
@@ -99,19 +92,5 @@ public static class BishImporter
         }
 
         return module;
-    }
-
-    static BishImporter()
-    {
-        Import = new BishFunc("import", [new BishArg("scope"), new BishArg("file")], static args =>
-        {
-            var scope = args[0].As<BishScope>("scope");
-            var meta = scope.GetVar("meta").As<BishMeta>("meta");
-            var file = args[1].As<BishString>("file").Value;
-            return Importer(meta, file);
-        })
-        {
-            PassCaller = true
-        };
     }
 }

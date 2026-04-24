@@ -17,7 +17,7 @@ public class Test(TestInfoFixture fixture)
 
     private BishFrame Compile(string code)
     {
-        var frame = BishCompiler.BishCompiler.Compile(code, scope: Scope);
+        var frame = BishCompileService.Compile(code, scope: Scope);
         using var stream = new MemoryStream();
         stream.WriteBytecodes(frame.Bytecodes);
         stream.Position = 0;
@@ -102,6 +102,8 @@ public class Test(TestInfoFixture fixture)
         if (result is BishErrorResult) return;
         Fail($"Expected ErrorResult but found {result}");
     }
+
+    static Test() => BishCompiler.BishCompiler.Init();
 }
 
 public class AssertionFailedException(string message) : Exception(message);

@@ -14,6 +14,6 @@ public class MROTest : Test
         ExpectResult("f(B)", "'BO'");
         ExpectResult("f(C)", "'CABO'");
         ExpectResult("f(D)", "'DBAO'");
-        ExpectError("class E:C,D;", BishError.ArgumentErrorType);
+        ExpectError("class E:C,D;f(E);", BishError.ArgumentErrorType);
     }
 }

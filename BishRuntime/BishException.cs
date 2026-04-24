@@ -45,10 +45,6 @@ public class BishException(BishError error) : Exception
         Create(BishError.AttributeErrorType, $"No such member: trying to {op} {name} on {obj}")
             .With("operation", new BishString(op)).With("object", obj).With("name", new BishString(name));
 
-    public static BishException OfAttribute_Builtins(string op, string name) =>
-        Create(BishError.AttributeErrorType, $"Cannot {op} {name} on builtins scope")
-            .With("operation", new BishString(op)).With("name", new BishString(name));
-
     public static BishException OfType(string message) => Create(BishError.TypeErrorType, message);
 
     public static BishException OfType_NoBase(BishObject obj) =>

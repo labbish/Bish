@@ -84,7 +84,7 @@ public class BuiltinsGenerator : IIncrementalGenerator
         }).ToArray();
 
         var returnType = method.ReturnType.ToString();
-        
+
         var passCaller = attrs.Any(a => a.Name.ToString() == "PassCaller");
 
         var details = new BuiltinFunction(className, attrArgs[0], method.Identifier.Text, args, attrArgs[1],
@@ -134,6 +134,34 @@ public class BuiltinsGenerator : IIncrementalGenerator
         return new BuiltinIterator(className, GetNamespace(method));
     }
 
+    private static BuiltinAsync? GetBuiltinAsync(GeneratorSyntaxContext context)
+    {
+        var method = (MethodDeclarationSyntax)context.Node;
+
+        var attr = method.AttributeLists.SelectMany(al => al.Attributes)
+            .FirstOrDefault(a => a.Name.ToString() == "Async");
+
+        if (attr is null) return null;
+
+        var classDecl = method.Parent as ClassDeclarationSyntax;
+        var className = classDecl?.Identifier.Text ?? "Global";
+
+        return new BuiltinAsync(className, GetNamespace(method));
+    }
+
     private static IBuiltinStuff? GetBuiltinStuff(GeneratorSyntaxContext context) =>
-        (IBuiltinStuff?)GetBuiltinFunction(context) ?? GetBuiltinIter(context);
+        GetBuiltinFunction(context) ?? GetBuiltinIter(context) ?? (IBuiltinStuff?)GetBuiltinAsync(context);
+}
+
+public record BuiltinIterator(string Type, string? Namespace) : IBuiltinStuff
+{
+    public string Code =>
+        $"BishBuiltinIteratorBinder.Bind({Type}.StaticType, " +
+        $"obj => obj.As<{Type}>(\"self\").Next(), {(Type == "BishIterator").ToString().ToLower()});";
+}
+
+public record BuiltinAsync(string Type, string? Namespace) : IBuiltinStuff
+{
+    public string Code =>
+        $"BishBuiltinTaskBinder.Bind({Type}.StaticType, (obj, ctx) => obj.As<{Type}>(\"self\").Poll(ctx));";
 }

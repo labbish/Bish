@@ -100,6 +100,8 @@ public class BishBuiltinScope : BishScope
         Init("scope", StaticType);
         Init("frame", BishFrame.StaticType);
         Init("bytecode", BishBytecodeObject.StaticType);
+        Init("Runner", BishTaskRunner.StaticType);
+        Init("Task", BishTask.StaticType);
     }
 
     public static readonly BishBuiltinScope Instance = new();

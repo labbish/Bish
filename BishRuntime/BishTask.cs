@@ -61,7 +61,7 @@ public class BishErrorTask(BishError error) : BishTask
 
 public class BishRunTask(Func<BishObject> func) : BishTask
 {
-    private BishObject? _value;
+    private volatile BishObject? _value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Task.run");
@@ -70,7 +70,7 @@ public class BishRunTask(Func<BishObject> func) : BishTask
     public BishObject? Poll(BishTaskContext ctx)
     {
         if (_value is not null) return _value;
-        new Thread(() =>
+        Task.Run(() =>
         {
             try
             {
@@ -82,7 +82,7 @@ public class BishRunTask(Func<BishObject> func) : BishTask
             }
 
             ctx.Waker.Awake();
-        }) { IsBackground = true }.Start();
+        });
         return null;
     }
 }
@@ -100,6 +100,7 @@ public class BishAllTask(IList<BishObject> tasks) : BishTask
     {
         foreach (var (task, i) in tasks.Enumerate())
         {
+            if (_results[i] is not null) continue;
             if (BishBool.CallToBool(task.GetMember("completed")))
                 _results[i] = task.GetMember("result");
             task.GetMember("poll").Call([ctx]);
@@ -134,7 +135,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
 
 public class BishSleepTask(int ms) : BishTask
 {
-    private bool _done;
+    private volatile bool _done;
     // ReSharper disable once NotAccessedField.Local
     private Timer? _timer;
 
@@ -145,7 +146,11 @@ public class BishSleepTask(int ms) : BishTask
     [Async]
     public BishObject? Poll(BishTaskContext ctx)
     {
-        if (_done) return BishNull.Instance;
+        if (_done)
+        {
+            _timer?.Dispose();
+            return BishNull.Instance;
+        }
         _timer = new Timer(_ =>
         {
             ctx.Waker.Awake();

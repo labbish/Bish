@@ -46,7 +46,6 @@ public static class BishTaskRunner
     public static int GlobalInterval => 114;
     internal static int Called;
     internal static long Counter;
-    internal static readonly AutoResetEvent Event = new(false);
     internal static readonly Thread[] Threads = Array(i => new Thread(() => Loop(i)) { IsBackground = true });
     internal static readonly TaskDeque[] ThreadTasks = Array(_ => new TaskDeque());
     internal static readonly TaskDeque GlobalTasks = new();
@@ -59,7 +58,10 @@ public static class BishTaskRunner
         foreach (var thread in Threads) thread.Start();
     }
 
-    public static void Add(BishObject task) => GlobalTasks.Push(task);
+    public static void Add(BishObject task)
+    {
+        GlobalTasks.Push(task);
+    }
 
     public static void Block(BishObject task)
     {
@@ -78,7 +80,7 @@ public static class BishTaskRunner
     public static void SingleLoop(int index)
     {
         var task = GetTask(index);
-        if (task is null) Event.WaitOne();
+        if (task is null) Thread.Yield();
         else if (BishBool.CallToBool(task.TryGetMember("cancelled"))) task.SetMember("completed", BishBool.True);
         else task.GetMember("poll").Call([new BishTaskContext(index, task)]);
     }
@@ -94,9 +96,9 @@ public static class BishTaskRunner
 
         var selfTask = ThreadTasks[index].TryPop();
         if (selfTask is not null) return selfTask;
-        for (var i = index; i < index + Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var otherTask = ThreadTasks[i % Count].TryPopLast();
+            var otherTask = ThreadTasks[(i + index) % Count].TryPopLast();
             if (otherTask is not null) return otherTask;
         }
 
@@ -113,7 +115,6 @@ internal class TaskDeque
     {
         lock (_lock) _tasks.AddLast(task);
         BishTaskRunner.Start();
-        BishTaskRunner.Event.Set();
     }
 
     public BishObject? TryPop()

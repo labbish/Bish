@@ -47,18 +47,26 @@ public class Test(TestInfoFixture fixture)
         if (specials.Count != 0)
             Fail($"Expect special vars to be empty, found {string.Join(", ", specials)}");
     }
-
-    protected void Execute(string code)
+    
+    [SuppressMessage("Usage", "VSTHRD002")]
+    public static BishFrame ExecuteWithTimeout(BishFrame frame)
     {
-        var frame = Compile(code);
-        frame.Execute();
-        PostCheck(frame);
+        try
+        {
+            var task = Task.Run(frame.Execute);
+            return task.Wait(3000) ? frame : throw new TimeoutException("Time limit exceeded");
+        }
+        catch (AggregateException e)
+        {
+            throw e.Flatten().InnerExceptions.First();
+        }
     }
+
+    protected void Execute(string code) => PostCheck(ExecuteWithTimeout(Compile(code)));
 
     protected BishObject Result(string expr)
     {
-        var frame = Compile(expr);
-        frame.Execute();
+        var frame = ExecuteWithTimeout(Compile(expr));
         var result = frame.Stack.Pop();
         PostCheck(frame);
         return result;

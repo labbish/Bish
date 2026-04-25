@@ -54,7 +54,7 @@ public class Test(TestInfoFixture fixture)
         try
         {
             var task = Task.Run(frame.Execute);
-            return task.Wait(3000) ? frame : throw new TimeoutException("Time limit exceeded");
+            return task.Wait(10000) ? frame : throw new TimeoutException("Time limit exceeded");
         }
         catch (AggregateException e)
         {

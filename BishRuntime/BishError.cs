@@ -59,4 +59,5 @@ public class BishError(string message) : BishObject
 
     public static readonly BishType IteratorStopType = new("IteratorStop", [StaticType]);
     public static readonly BishType YieldValueType = new("YieldValue", [StaticType]);
+    public static readonly BishType AwaitValueType = new("AwaitValue", [StaticType]);
 }

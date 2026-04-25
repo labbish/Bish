@@ -96,6 +96,8 @@ ENT : 'enter' ;
 EXI : 'exit' ;
 RET : 'return' ;
 YLD : 'yield' ;
+AWT : 'await' ;
+ASY : 'async' ;
 CLS : 'class' ;
 THR : 'throw' ;
 TRY : 'try' ;

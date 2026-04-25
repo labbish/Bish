@@ -17,6 +17,7 @@ expr
     | LBRACE entries RBRACE                                     # MapExpr
     | LBRACE objEntries RBRACE                                  # ObjExpr
     | expr nullAccess+                                          # GetAccess
+    | <assoc=right> AWT expr                                    # AwaitExpr
     | <assoc=right> op=(ADD|SUB|BANG|INVERT) expr               # UnOpExpr
     | <assoc=right> left=expr op=POW right=expr                 # BinOpExpr
     | left=expr op=(MUL|DIV|MOD) right=expr                     # BinOpExpr
@@ -75,7 +76,7 @@ pipe
     ;
 
 funcBody
-    : LPAREN defArgs RPAREN gen=MUL? expr
+    : LPAREN defArgs RPAREN async=ASY? gen=MUL? expr
     ;
 
 accessOp

@@ -124,6 +124,28 @@ public class CompileResult(
         if (optimize) Codes = BishOptimizer.Optimize(Codes);
         return this;
     }
+
+    public bool IsAsync()
+    {
+        var starts = 0;
+        var ends = 0;
+        foreach (var code in Codes)
+        {
+            switch (code)
+            {
+                case FuncStart:
+                    starts++;
+                    break;
+                case FuncEnd:
+                    ends++;
+                    break;
+                case Await when starts <= ends:
+                    return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 internal abstract record Unbound(ParserRuleContext Context) : BishBytecode

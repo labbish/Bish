@@ -24,4 +24,16 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("Runner.blocked(Task.sleep(10))", "null");
         ExpectResult("task:=Task.completed(0);task.cancel();Runner.blocked(task)", "null");
     }
+
+    [Theory]
+    [Repeat(5)]
+    public void TestAsync(int _)
+    {
+        Execute("func f()async 0;func g()async{await f()+1};");
+        ExpectResult("Runner.blocked(f())", "0");
+        ExpectResult("Runner.blocked(g())", "1");
+        ExpectResult("x:=await f()", "0");
+        ExpectResult("x", "0");
+        ExpectResult("s:={.g};await s.g()", "1");
+    }
 }

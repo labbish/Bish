@@ -287,7 +287,7 @@ public record FuncStart(string Name, IList<string> Args) : StartTag<FuncEnd>(Nam
 public record FuncEnd(string Name) : EndTag(Name);
 
 [Bytecode]
-public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool IsGen = false)
+public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool IsGen = false, bool IsAsync = false)
     : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
@@ -300,7 +300,7 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
         BishFrame GetInner() => new(slice.Code, scope, frame);
-        frame.Stack.Push(new BishCodedFunc(Name, inArgs, GetInner, IsGen));
+        frame.Stack.Push(new BishCodedFunc(Name, inArgs, GetInner, IsGen, IsAsync));
     }
 }
 
@@ -314,6 +314,24 @@ public record Ret : BishBytecode
 public record Yield : BishBytecode
 {
     public override void Execute(BishFrame frame) => throw BishException.OfYield(frame.Stack.Pop());
+}
+
+[Bytecode]
+public record Await : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var value = frame.Stack.Pop();
+        if (BishBool.CallToBool(value.GetMember("completed")))
+        {
+            frame.Stack.Push(value.GetMember("result"));
+            return;
+        }
+
+        frame.Ip--;
+        frame.Stack.Push(value);
+        throw BishException.OfAwait(value);
+    }
 }
 
 [Bytecode]

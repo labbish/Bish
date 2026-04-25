@@ -61,12 +61,14 @@ public static class BishBuiltinTaskBinder
                 {
                     self.SetMember("completed", BishBool.True);
                     self.SetMember("result", result);
+                    ctx.Waker.Awake();
                 }
             }
             catch (BishException e)
             {
                 self.SetMember("completed", BishBool.True);
                 self.SetMember("result", new BishErrorResult(e.Error));
+                ctx.Waker.Awake();
             }
 
             return BishNull.Instance;

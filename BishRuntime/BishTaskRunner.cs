@@ -80,7 +80,7 @@ public static class BishTaskRunner
     public static void SingleLoop(int index)
     {
         var task = GetTask(index);
-        if (task is null) Thread.Yield();
+        if (task is null || BishBool.CallToBool(task.TryGetMember("completed"))) Thread.Yield();
         else if (BishBool.CallToBool(task.TryGetMember("cancelled"))) task.SetMember("completed", BishBool.True);
         else task.GetMember("poll").Call([new BishTaskContext(index, task)]);
     }

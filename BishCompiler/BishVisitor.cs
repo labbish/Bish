@@ -220,8 +220,15 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     public override CompileResult VisitBlockExpr(BishParser.BlockExprContext context) =>
         VisitMulti(context._front, context.last).Wrap();
 
-    public override CompileResult VisitProgram(BishParser.ProgramContext context) =>
-        VisitMulti(context._front, context.last);
+    public override CompileResult VisitProgram(BishParser.ProgramContext context)
+    {
+        var result = VisitMulti(context._front, context.last);
+        const string name = "main$async";
+        if (!result.IsAsync()) return result;
+        return CompileResult.Expr(context).Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
+            .Add(new GetBuiltin("Runner")).Add(new GetMember("blocked")).Add(new MakeFunc(name, IsAsync: true))
+            .Add(new Call(0)).Add(new Call(1));
+    }
 
     public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);
 }

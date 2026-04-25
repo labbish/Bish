@@ -73,6 +73,8 @@ public class ReflectTest : Test
         ExpectResult("{a:=1;()0}.frame.scope.a", "1");
         ExpectResult("(()0).isGen", "false");
         ExpectResult("(()*0).isGen", "true");
+        ExpectResult("(()0).isAsync", "false");
+        ExpectResult("(()async 0).isAsync", "true");
         
         ExpectResult("meta.compile('return 0;').execute()", "0");
     }

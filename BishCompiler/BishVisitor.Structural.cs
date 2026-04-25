@@ -24,6 +24,9 @@ public partial class BishVisitor
         return result;
     }
 
+    public override CompileResult VisitAwaitExpr(BishParser.AwaitExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new Await());
+
     public override CompileResult VisitFuncExpr(BishParser.FuncExprContext context) =>
         MakeFunc(CompileResult.Expr(context), context.ID()?.GetText(), context.funcBody(), context.deco());
 
@@ -89,7 +92,8 @@ public partial class BishVisitor
         result.Add(Visit(body.expr()).Wrap().IntoReturn());
         result.Add(new Outer(), new FuncEnd(symbol));
         foreach (var @default in defaults) result.Add(Visit(@default), StackEffect.Expr);
-        result.Add(new MakeFunc(symbol, defaults.Count, args.Count != 0 && args[^1].Rest, body.gen is not null));
+        result.Add(new MakeFunc(symbol, defaults.Count, args.Count != 0 && args[^1].Rest,
+            body.gen is not null, body.async is not null));
         foreach (var deco in decos.Reverse()) result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));
         if (name is not null) result.Add(new Def(name));
         return result;

@@ -82,6 +82,19 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     }
 
     [Fact]
+    public void TestGenerator()
+    {
+        Execute("func f()*{yield 1;yield 2;};g:=f();");
+        ExpectResult("g.stage", "0");
+        ExpectResult("g.next()", "1");
+        ExpectResult("g.stage", "1");
+        ExpectResult("g.next()", "2");
+        ExpectResult("g.stage", "2");
+        ExpectErrorResult("try g.next()");
+        ExpectResult("g.stage", "-1");
+    }
+
+    [Fact]
     public void TestDeconstruct()
     {
         ExpectResult("(([a,..b])a*b)([3,2,1])", "[2,1,2,1,2,1]");

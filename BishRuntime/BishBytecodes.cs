@@ -287,7 +287,7 @@ public record FuncStart(string Name, IList<string> Args) : StartTag<FuncEnd>(Nam
 public record FuncEnd(string Name) : EndTag(Name);
 
 [Bytecode]
-public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool Gen = false)
+public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool IsGen = false)
     : TagBased<FuncStart, FuncEnd>(Name)
 {
     public override void Execute(BishFrame frame)
@@ -299,37 +299,8 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
         var inArgs = names
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
-
         BishFrame GetInner() => new(slice.Code, scope, frame);
-
-        BishObject Func(IList<BishObject> args)
-        {
-            var inner = GetInner();
-            // The first argument is in the top
-            foreach (var arg in args.Reverse()) inner.Stack.Push(arg);
-            if (!Gen) return inner.Execute();
-
-            var type = new BishType("gen");
-            BishBuiltinIteratorBinder.Bind(type, _ =>
-            {
-                try
-                {
-                    inner.Execute();
-                }
-                catch (BishException e) when (e.Error.Type.CanAssignTo(BishError.YieldValueType))
-                {
-                    return e.Error.GetMember("value");
-                }
-
-                return null;
-            });
-            return new BishObject(type);
-        }
-
-        var func = new BishFunc(Name, inArgs, Func);
-        func.DefMember("hook_get_frame", new BishFunc("hook_get_frame", [], _ => GetInner()));
-        func.DefMember("hook_get_gen", new BishFunc("hook_get_gen", [], _ => BishBool.Of(Gen)));
-        frame.Stack.Push(func);
+        frame.Stack.Push(new BishCodedFunc(Name, inArgs, GetInner, IsGen));
     }
 }
 

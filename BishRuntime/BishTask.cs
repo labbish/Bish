@@ -14,7 +14,7 @@ public abstract class BishTask : BishObject
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Task");
-    
+
     [Builtin]
     public static void Cancel(BishTask self) => self.SetMember("cancelled", BishBool.True);
 
@@ -36,7 +36,11 @@ public abstract class BishTask : BishObject
     [Builtin]
     public static BishSleepTask Sleep(BishInt ms) => new(ms.Value);
 
-    // TODO: combine: Task<T>[] -> AsyncIterator<T>
+    [Builtin]
+    public static BishMergeTasks Merge([Rest] BishList tasks) => new(tasks.List);
+
+    [Builtin]
+    public static BishConcatTasks Concat([Rest] BishList tasks) => new(tasks.List);
 }
 
 public class BishCompletedTask(BishObject value) : BishTask
@@ -136,6 +140,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
 public class BishSleepTask(int ms) : BishTask
 {
     private volatile bool _done;
+
     // ReSharper disable once NotAccessedField.Local
     private Timer? _timer;
 
@@ -151,11 +156,68 @@ public class BishSleepTask(int ms) : BishTask
             _timer?.Dispose();
             return BishNull.Instance;
         }
+
         _timer = new Timer(_ =>
         {
-            ctx.Waker.Awake();
             _done = true;
+            ctx.Waker.Awake();
         }, null, ms, Timeout.Infinite);
+        return null;
+    }
+}
+
+public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIterator
+{
+    private readonly LinkedList<BishObject> _tasks = new(tasks);
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("Task.merge");
+
+    [Iter]
+    public BishObject Next() => new BishAsyncIteratorTask(this);
+
+    public BishObject? NextPoll(BishTaskContext ctx)
+    {
+        var task = _tasks.First?.Value;
+        if (task is null) return BishIterator.Stop.Instance;
+        _tasks.RemoveFirst();
+        task.GetMember("poll").Call([ctx]);
+        if (BishBool.CallToBool(task.GetMember("completed")))
+            return task.GetMember("result");
+        _tasks.AddLast(task);
+        ctx.Waker.Awake();
+        return null;
+    }
+}
+
+public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIterator
+{
+    private readonly BishObject?[] _results = new BishObject?[tasks.Count];
+    private int _count;
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("Task.concat");
+
+    [Iter]
+    public BishObject Next() => new BishAsyncIteratorTask(this);
+
+    public BishObject? NextPoll(BishTaskContext ctx)
+    {
+        if (_count == tasks.Count) return BishIterator.Stop.Instance;
+        foreach (var (task, i) in tasks.Enumerate())
+        {
+            if (i < _count) continue;
+            if (_results[i] is not null) continue;
+            if (BishBool.CallToBool(task.GetMember("completed")))
+                _results[i] = task.GetMember("result");
+            task.GetMember("poll").Call([ctx]);
+        }
+
+        if (_results[_count] is { } result)
+        {
+            Interlocked.Increment(ref _count);
+            return result;
+        }
+
+        ctx.Waker.Awake();
         return null;
     }
 }

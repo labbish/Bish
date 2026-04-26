@@ -75,3 +75,17 @@ public static class BishBuiltinTaskBinder
         }));
     }
 }
+
+public interface IBishAsyncIterator
+{
+    public BishObject? NextPoll(BishTaskContext ctx);
+}
+
+public class BishAsyncIteratorTask(IBishAsyncIterator parent) : BishTask
+{
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("async.iter");
+
+    [Async]
+    public BishObject? Poll(BishTaskContext ctx) => parent.NextPoll(ctx);
+}

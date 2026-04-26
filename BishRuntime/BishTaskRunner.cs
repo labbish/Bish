@@ -60,10 +60,7 @@ public static class BishTaskRunner
         foreach (var thread in Threads) thread.Start();
     }
 
-    public static void Add(BishObject task)
-    {
-        GlobalTasks.Push(task);
-    }
+    public static void Add(BishObject task) => GlobalTasks.Push(task);
 
     public static void Block(BishObject task)
     {
@@ -87,29 +84,25 @@ public static class BishTaskRunner
 
     private static void Execute(int index, BishObject task)
     {
-        if (BishBool.CallToBool(task.TryGetMember("cancelled")))
-            task.SetMember("completed", BishBool.True);
-        else if (!BishBool.CallToBool(task.TryGetMember("completed")))
-            task.GetMember("poll").Call([new BishTaskContext(index, task)]);
+        // This lock is necessary, because a same task might be waked more than once
+        // Another solution is to check whether the task is in deque or running when waking, but this one is simpler :)
+        lock (task)
+        {
+            if (BishBool.CallToBool(task.TryGetMember("cancelled")))
+                task.SetMember("completed", BishBool.True);
+            else if (!BishBool.CallToBool(task.TryGetMember("completed")))
+                task.GetMember("poll").Call([new BishTaskContext(index, task)]);
+        }
     }
 
     public static BishObject? GetTask(int index)
     {
         Interlocked.Increment(ref Counter);
-        if (Counter % GlobalInterval == 0)
-        {
-            var globalTask = GlobalTasks.TryPop();
-            if (globalTask is not null) return globalTask;
-        }
-
-        var selfTask = ThreadTasks[index].TryPop();
-        if (selfTask is not null) return selfTask;
+        if (Counter % GlobalInterval == 0 && GlobalTasks.TryPop() is { } global) return global;
+        if (ThreadTasks[index].TryPop() is { } self) return self;
         for (var i = 0; i < Count - 1; i++)
-        {
-            var otherTask = ThreadTasks[(i + index) % Count].TryPopLast();
-            if (otherTask is not null) return otherTask;
-        }
-
+            if (ThreadTasks[(i + index) % Count].TryPopLast() is { } other)
+                return other;
         return GlobalTasks.TryPop();
     }
 }

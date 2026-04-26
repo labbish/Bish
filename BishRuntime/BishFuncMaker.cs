@@ -94,32 +94,16 @@ public class BishAsyncTask(BishFrame inner) : BishTask
     public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
 }
 
-public class BishAsyncGenerator(BishFrame inner) : BishObject
+public class BishAsyncGenerator(BishFrame inner) : BishObject, IBishAsyncIterator
 {
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("async.gen");
     public int Stage { get; internal set; }
 
     [Iter]
-    public BishObject? Next()
-    {
-        var task = new BishAsyncGeneratorTask(this, inner);
-        if (Stage == -1 || task.Stage == -1) return null;
-        return task;
-    }
+    public BishObject Next() => new BishAsyncIteratorTask(this);
 
-    [Builtin("hook")]
-    public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
-}
-
-public class BishAsyncGeneratorTask(BishAsyncGenerator parent, BishFrame inner) : BishTask
-{
-    public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("async.gen.Task");
-    public int Stage { get; private set; }
-
-    [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? NextPoll(BishTaskContext ctx)
     {
         BishObject? yielded = null;
         BishObject? awaited = null;
@@ -134,7 +118,7 @@ public class BishAsyncGeneratorTask(BishAsyncGenerator parent, BishFrame inner) 
             if (yielded is not null)
             {
                 inner.Paused = false;
-                parent.Stage++;
+                Stage++;
                 return yielded;
             }
 
@@ -146,16 +130,16 @@ public class BishAsyncGeneratorTask(BishAsyncGenerator parent, BishFrame inner) 
                 return null;
             }
 
-            parent.Stage = Stage = -1;
+            Stage = -1;
             return BishIterator.Stop.Instance;
         }
         catch (BishException e)
         {
-            parent.Stage = Stage = -1;
+            Stage = -1;
             return new BishErrorResult(e.Error);
         }
     }
 
     [Builtin("hook")]
-    public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
+    public static BishInt Get_stage(BishAsyncGenerator self) => BishInt.Of(self.Stage);
 }

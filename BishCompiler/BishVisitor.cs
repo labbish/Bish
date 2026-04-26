@@ -227,8 +227,9 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         if (!result.IsAsync()) return result;
         var expr = CompileResult.Expr(context)
             .Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
-            .Add(new GetBuiltin("Runner")).Add(new GetMember("blocked")).Add(new MakeFunc(name, IsAsync: true))
-            .Add(new Call(0)).Add(new Call(1));
+            .Add(new MakeFunc(name, IsAsync: true)).Add(new Call(0))
+            .Add(new GetBuiltin("Runner")).Add(new GetMember("blocked"))
+            .Add(new Swap(), new Call(1));
         return result.Effect == StackEffect.Stat ? expr.IntoStat() : expr;
     }
 

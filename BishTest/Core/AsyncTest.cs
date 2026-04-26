@@ -23,6 +23,10 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("Runner.blocked(Task.any(Task.completed(1),Task.completed(2)))", "1");
         ExpectResult("Runner.blocked(Task.sleep(10))", "null");
         ExpectResult("task:=Task.completed(0);task.cancel();Runner.blocked(task)", "null");
+        Execute("x:=1;for await(i:Task.merge(Task.run(()1),Task.run(()2),Task.run(()3),Task.run(()4)))x*=i;");
+        ExpectResult("x", "24");
+        Execute("l:=[];for await(i:Task.concat(Task.run(()1),Task.run(()2),Task.run(()3),Task.run(()4)))l.add(i);");
+        ExpectResult("l", "[1,2,3,4]");
     }
 
     [Theory]

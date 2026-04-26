@@ -1,4 +1,6 @@
-﻿namespace BishCompiler;
+﻿using String = BishRuntime.String;
+
+namespace BishCompiler;
 
 public partial class BishVisitor
 {
@@ -101,17 +103,14 @@ public partial class BishVisitor
     {
         var result = CompileResult.Expr(context);
         var name = context.ID()?.GetText();
-        var symbol = Symbols.Get(name ?? Anonymous);
         var args = context.args()?.arg() ?? [];
-        result.Add(new ClassStart(symbol));
+        
+        result.Add(new GetBuiltin("type"), new String(name ?? Anonymous)).Add(ToList(args)).Add(new Call(2));
+        
+        result.Add(new Inner());
         result.Add(context.expr() is null ? CompileResult.Stat(null) : Visit(context.expr()).Unwrap().IntoStat());
-        result.Add(new ClassEnd(symbol));
-        if (HasRest(args)) result.Add(ToList(args)).Add(new MakeClassArgs(symbol));
-        else
-        {
-            foreach (var arg in args) result.Add(Visit(arg), StackEffect.Expr);
-            result.Add(new MakeClass(symbol, args.Length));
-        }
+        result.Add(new CopyVars());
+        result.Add(new Outer());
 
         foreach (var deco in context.deco().Reverse())
             result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));

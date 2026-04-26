@@ -377,34 +377,14 @@ public record Swap(int Count = 1) : BishBytecode
 }
 
 [Bytecode]
-public record ClassStart(string Name) : StartTag<ClassEnd>(Name);
-
-[Bytecode]
-public record ClassEnd(string Name) : EndTag(Name);
-
-public static class ClassHelper
+public record CopyVars : BishBytecode
 {
-    public static void MakeClass(this BishFrame frame, string name,
-        TagSlicer.CodeSlice<ClassStart, ClassEnd> slice, IList<BishObject> parents)
+    public override void Execute(BishFrame frame)
     {
-        var inner = slice.Execute(frame);
-        var type = new BishType(name, parents.Select(obj => obj.As<BishType>("parent class")).ToList());
-        foreach (var (key, value) in inner.Scope.Vars) type.DefMember(key, value);
-        frame.Stack.Push(type);
+        var goal = frame.Stack.Peek();
+        foreach (var (key, value) in frame.Scope.Vars)
+            goal.DefMember(key, value);
     }
-}
-
-[Bytecode]
-public record MakeClass(string Name, int ParentCount = 0) : TagBased<ClassStart, ClassEnd>(Name)
-{
-    public override void Execute(BishFrame frame) => frame.MakeClass(Name, Slice(frame), frame.Stack.Pop(ParentCount));
-}
-
-[Bytecode]
-public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
-{
-    public override void Execute(BishFrame frame) =>
-        frame.MakeClass(Name, Slice(frame), frame.Stack.Pop().As<BishList>("parents").List.ToList());
 }
 
 [Bytecode]

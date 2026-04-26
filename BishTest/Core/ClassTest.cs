@@ -1,6 +1,4 @@
-﻿// ReSharper disable InconsistentNaming
-
-namespace BishTest.Core;
+﻿namespace BishTest.Core;
 
 public class ClassTest(TestInfoFixture fixture) : Test(fixture)
 {

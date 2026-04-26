@@ -39,10 +39,10 @@ expr
     | tag? WHL LPAREN cond=expr RPAREN loop=expr                # WhileExpr
     | tag? DO loop=expr WHL LPAREN cond=expr RPAREN             # DoWhileExpr
     // obj is Setable
-    | tag? FOR LPAREN obj=expr COL iter=expr RPAREN loop=expr   # ForExpr
+    | tag? forBody loop=expr                                    # ForExpr
     | TRY expr                                                  # TryExpr
     // obj is Setable
-    | WTH LPAREN (obj=expr COL)? cont=expr RPAREN main=expr     # WithExpr
+    | withBody main=expr                                        # WithExpr
     | expr SWC LBRACE (caseExpr (COM caseExpr)* COM?)? RBRACE   # SwitchExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> BRK ID?                                     # BreakExpr
@@ -52,6 +52,14 @@ expr
     | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr
+    ;
+
+forBody
+    : FOR AWT? LPAREN obj=expr COL iter=expr RPAREN
+    ;
+
+withBody
+    : WTH AWT? LPAREN (obj=expr COL)? cont=expr RPAREN
     ;
 
 objEntries

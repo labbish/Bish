@@ -41,7 +41,7 @@ public static class BishBuiltinIteratorBinder
     {
         if (!noParent) type.ParentsProxy.Add(BishIterator.StaticType);
         type.DefMember("next", new BishFunc("next", [new BishArg("self")],
-            args => next(args[0]) ?? throw BishException.OfIteratorStop()));
+            args => next(args[0]) ?? BishIterator.Stop.Instance));
         type.DefMember("iter", new BishFunc("iter", [new BishArg("self")], args => args[0]));
     }
 }

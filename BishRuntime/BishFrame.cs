@@ -6,11 +6,15 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
 {
     public BishFrame? Outer { get; private set; } = outer;
     public BishScope Scope = scope ?? BishScope.Globals;
-    public readonly Stack<BishObject> Stack = new();
+    public Stack<BishObject> Stack = new();
     public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
+    public bool Resumed;
     public BishObject? ReturnValue;
+    public Action<BishObject>? YieldHandler;
+    public Action<BishObject>? AwaitHandler;
+    protected readonly Stack<ErrorHandler> ErrorHandlers = [];
 
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("frame");
@@ -28,18 +32,29 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         self.Outer = outer;
     }
 
+    public void AddErrorHandler(int ip, Action<BishError> handler) =>
+        ErrorHandlers.Push(new ErrorHandler(Scope, new Stack<BishObject>(Stack.Reverse()), ip, handler));
+
     public BishObject Execute()
     {
         while (Ip < Bytecodes.Count)
         {
+            if (Resumed) return BishNull.Instance;
             var bytecode = Bytecodes[Ip++];
             try
             {
                 bytecode.Execute(this);
             }
+            catch (BishException e)
+            {
+                if (!ErrorHandlers.TryPop(out var handler)) throw;
+                Scope = handler.Scope;
+                Stack = handler.Stack;
+                Ip = handler.Ip;
+                handler.Handler(e.Error);
+            }
             catch (Exception e)
             {
-                if (e is BishException) throw;
                 throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);
             }
 
@@ -68,6 +83,8 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     [Builtin]
     public static BishObject Execute(BishFrame self) => self.Execute();
 }
+
+public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Action<BishError> Handler);
 
 public static class Helper
 {

@@ -17,6 +17,7 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
         ExpectError("x.y;", BishError.StaticType);
         ExpectErrorResult("x?.y");
         ExpectResult("x??0", "0");
+        ExpectResult("x is null", "false");
     }
 
     [Fact]

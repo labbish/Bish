@@ -252,6 +252,13 @@ public static class CompileResultHelper
             return result;
         }
 
+        internal CompileResult IntoExpr() => result.Effect switch
+        {
+            StackEffect.Expr => result,
+            StackEffect.Stat => CompileResult.Expr(result.Context).Add(result).Add(new Null()),
+            _ => throw new ArgumentException("impossible!")
+        };
+
         internal CompileResult IntoStat() => result.Effect switch
         {
             StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Pop()),

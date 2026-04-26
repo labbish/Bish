@@ -79,6 +79,15 @@ public class BishIterator(IEnumerator<BishObject> iter) : BishObject
     [Builtin]
     public static BishIterator Concat(BishObject self, [Rest] BishList others) =>
         new(self.ToEnumerator().Concat(others.List.Select(iter => iter.ToEnumerator())));
+
+    public class Stop : BishObject
+    {
+        public static readonly Stop Instance = new();
+
+        private Stop()
+        {
+        }
+    }
 }
 
 public static class EnumeratorHelper

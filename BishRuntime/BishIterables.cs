@@ -89,18 +89,9 @@ public static class IteratorHelper
     {
         while (true)
         {
-            BishObject current;
-            try
-            {
-                current = iterator.GetMember("next").Call([]);
-            }
-            catch (BishException e)
-            {
-                if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) yield break;
-                throw;
-            }
-
-            yield return current;
+            var result = iterator.GetMember("next").Call([]);
+            if (result is BishIterator.Stop) yield break;
+            yield return result;
         }
     }
 

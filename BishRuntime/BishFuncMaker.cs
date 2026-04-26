@@ -40,14 +40,14 @@ public class BishGenerator(BishFrame inner) : BishObject
     [Iter]
     public BishObject? Next()
     {
-        try
+        BishObject? value = null;
+        inner.YieldHandler = result => value = result;
+        inner.Execute();
+        if (value is not null)
         {
-            inner.Execute();
-        }
-        catch (BishException e) when (e.Error.Type.CanAssignTo(BishError.YieldValueType))
-        {
+            inner.Resumed = false;
             Stage++;
-            return e.Error.GetMember("value");
+            return value;
         }
 
         Stage = -1;
@@ -67,27 +67,27 @@ public class BishAsyncFunc(BishFrame inner) : BishTask
     [Async]
     public BishObject? Poll(BishTaskContext ctx)
     {
+        BishObject? value = null;
+        inner.AwaitHandler = result => value = result;
         try
         {
-            try
+            var execute = inner.Execute();
+            if (value is not null)
             {
-                Stage = -1;
-                return inner.Execute();
-            }
-            catch (BishException e) when (e.Error.Type.CanAssignTo(BishError.AwaitValueType))
-            {
+                inner.Resumed = false;
                 Stage++;
-                var value = e.Error.GetMember("value");
                 value.GetMember("poll").Call([ctx]);
+                return null;
             }
+
+            Stage = -1;
+            return execute;
         }
         catch (BishException e)
         {
             Stage = -1;
             return new BishErrorResult(e.Error);
         }
-
-        return null;
     }
 
     [Builtin("hook")]

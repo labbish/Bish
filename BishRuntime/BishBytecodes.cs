@@ -313,24 +313,47 @@ public record Ret : BishBytecode
 [Bytecode]
 public record Yield : BishBytecode
 {
-    public override void Execute(BishFrame frame) => throw BishException.OfYield(frame.Stack.Pop());
+    public override void Execute(BishFrame frame)
+    {
+        frame.Resumed = true;
+        if (frame.YieldHandler is null) throw BishException.OfType_Yield();
+        frame.YieldHandler(frame.Stack.Pop());
+    }
 }
 
 [Bytecode]
 public record Await : BishBytecode
 {
-    public override void Execute(BishFrame frame)
-    {
-        var value = frame.Stack.Pop();
-        if (BishBool.CallToBool(value.GetMember("completed")))
-        {
-            frame.Stack.Push(value.GetMember("result"));
-            return;
-        }
+    public override void Execute(BishFrame frame) => frame.Await();
+}
 
-        frame.Ip--;
-        frame.Stack.Push(value);
-        throw BishException.OfAwait(value);
+public static class AwaitHelper
+{
+    extension(BishFrame frame)
+    {
+        public void Await()
+        {
+            var value = frame.Stack.Pop();
+            if (value.TryGetMember("poll") is null)
+            {
+                frame.Stack.Push(value);
+                return;
+            }
+
+            if (BishBool.CallToBool(value.GetMember("completed")))
+            {
+                var result = value.GetMember("result");
+                if (result is BishErrorResult error) throw new BishException(error.Error);
+                frame.Stack.Push(result);
+                return;
+            }
+
+            frame.Ip--;
+            frame.Stack.Push(value);
+            frame.Resumed = true;
+            if (frame.AwaitHandler is null) throw BishException.OfType_Await();
+            frame.AwaitHandler(value);
+        }
     }
 }
 
@@ -387,30 +410,15 @@ public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
 [Bytecode]
 public record Throw : BishBytecode
 {
-    public override void Execute(BishFrame frame)
-    {
+    public override void Execute(BishFrame frame) =>
         throw new BishException(frame.Stack.Pop().As<BishError>("thrown error"));
-    }
 }
 
 [Bytecode]
 public record TryStart(string Name) : StartTag<TryEnd>(Name)
 {
-    public override void Execute(BishFrame frame)
-    {
-        var slice = frame.Slice<TryStart, TryEnd>(Name);
-        try
-        {
-            var result = slice.Execute(frame);
-            frame.Stack.Push(result.ReturnValue ?? BishNull.Instance);
-        }
-        catch (BishException e)
-        {
-            frame.Stack.Push(new BishErrorResult(e.Error));
-        }
-
-        base.Execute(frame);
-    }
+    public override void Execute(BishFrame frame) => frame.AddErrorHandler(frame.Slice<TryStart, TryEnd>(Name).EndPos,
+        error => frame.Stack.Push(new BishErrorResult(error)));
 }
 
 [Bytecode]
@@ -422,15 +430,9 @@ public record ForIter(Tag GoalTag) : Jumper(GoalTag)
     public override void Execute(BishFrame frame)
     {
         var iter = frame.Stack.Peek();
-        try
-        {
-            frame.Stack.Push(iter.GetMember("next").Call([]));
-        }
-        catch (BishException e)
-        {
-            if (e.Error.Type.CanAssignTo(BishError.IteratorStopType)) Jump(frame);
-            else throw;
-        }
+        var result = iter.GetMember("next").Call([]);
+        if (result is BishIterator.Stop) Jump(frame);
+        else frame.Stack.Push(result);
     }
 }
 
@@ -551,33 +553,18 @@ public record TryGetMember(string Name) : BishBytecode
 [Bytecode]
 public record WithStart(string Name) : StartTag<WithEnd>(Name)
 {
-    public override void Execute(BishFrame frame)
-    {
-        var manager = frame.Stack.Pop();
-        var slice = frame.Slice<WithStart, WithEnd>(Name);
-        var done = false;
-        try
+    public override void Execute(BishFrame frame) => frame.AddErrorHandler(frame.Slice<WithStart, WithEnd>(Name).EndPos,
+        error =>
         {
-            var inner = slice.Execute(frame, inner => inner.Stack.Push(BishOperator.Call("hook_enter", [manager])));
-            done = true;
-            BishOperator.Call("hook_exit", [manager, BishNull.Instance]);
-            if (inner.ReturnValue is not null) frame.ReturnValue = inner.ReturnValue;
-        }
-        catch (BishException e)
-        {
-            if (done) throw;
-            var result = BishOperator.Call("hook_exit", [manager, e.Error]);
-            if (!BishBool.CallToBool(result)) throw;
-        }
-
-        base.Execute(frame);
-    }
+            var manager = frame.Stack.Pop();
+            var result = BishOperator.Call("hook_exit", [manager, error]);
+            if (!BishBool.CallToBool(result)) throw new BishException(error);
+        });
 }
 
 [Bytecode]
 public record WithEnd(string Name) : EndTag(Name);
 
-// ReSharper disable once UnusedType.Global
 [Bytecode]
 public record DebugStack : BishBytecode
 {
@@ -585,7 +572,6 @@ public record DebugStack : BishBytecode
         Console.WriteLine(string.Join(", ", frame.Stack.ToArray()));
 }
 
-// ReSharper disable once UnusedType.Global
 [Bytecode]
 public record DebugVars : BishBytecode
 {

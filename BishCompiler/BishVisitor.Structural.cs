@@ -128,18 +128,19 @@ public partial class BishVisitor
     {
         var tag = Symbols.Get("try");
         return CompileResult.Expr(context).Add(new TryStart(tag))
-            .Add(Visit(context.expr()).IntoReturn()).Add(new TryEnd(tag));
+            .Add(Visit(context.expr()).IntoExpr()).Add(new TryEnd(tag));
     }
 
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)
     {
         var tag = Symbols.Get("with");
         var result = CompileResult.Stat(context)
-            .Add(Visit(context.cont), StackEffect.Expr)
-            .Add(new WithStart(tag));
-        if (context.obj is not null)
-            result.Add(new Move("$with")).Add(Def(context.obj,
-                new CompileResult(StackEffect.Expr, null).Add(new Del("$with"))));
-        return result.Add(new Pop()).Add(Visit(context.main).IntoStat()).Add(new WithEnd(tag));
+            .Add(Visit(context.withBody().cont), StackEffect.Expr)
+            .Add(new Copy(), Op("enter", 1));
+        if (context.withBody().obj is { } obj)
+            result.Add(new Move("$with"))
+                .Add(Def(obj, new CompileResult(StackEffect.Expr, null).Add(new Del("$with"))));
+        result.Add(new Pop(), new WithStart(tag));
+        return result.Add(Visit(context.main).IntoStat()).Add(new Null(), Op("exit", 2), new Pop(), new WithEnd(tag));
     }
 }

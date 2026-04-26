@@ -119,7 +119,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("iter.next()", "'a'");
         ExpectResult("iter.next()", "'b'");
         ExpectResult("iter.next()", "'c'");
-        ExpectError("iter.next();", BishError.IteratorStopType);
+        ExpectResult("iter.next()", "IteratorStop");
 
         ExpectResult("'{1},{},{},{0},{}'.format(0,1,2)", "'1,0,1,0,2'");
         ExpectResult("'0,1,,2'.split(',')", "['0','1','','2']");
@@ -132,7 +132,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("r.next()", "1");
         ExpectResult("r.next()", "4");
         ExpectResult("r.next()", "7");
-        ExpectError("r.next();", BishError.IteratorStopType);
+        ExpectResult("r.next()", "IteratorStop");
 
         ExpectResult("r.start", "1");
         ExpectResult("r.end", "10");
@@ -142,7 +142,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("reversed.next()", "10");
         ExpectResult("reversed.next()", "7");
         ExpectResult("reversed.next()", "4");
-        ExpectError("reversed.next();", BishError.IteratorStopType);
+        ExpectResult("reversed.next()", "IteratorStop");
 
         ExpectResult("range(1,10,1)", "range(1,10)");
         ExpectResult("range(0,10,1)", "range(10)");
@@ -180,7 +180,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("iter.next()", "0");
         ExpectResult("iter.next()", "'x'");
         ExpectTrue("iter.next()");
-        ExpectError("iter.next();", BishError.IteratorStopType);
+        ExpectResult("iter.next()", "IteratorStop");
         ExpectResult("l", "[0,'x',true]");
 
         ExpectResult("list(range(5))", "[0,1,2,3,4]");
@@ -239,7 +239,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         Execute("iter:=l.iter();");
         ExpectResult("iter.next()", "[0,'x']");
         ExpectResult("iter.next()", "[true,null]");
-        ExpectError("iter.next();", BishError.IteratorStopType);
+        ExpectResult("iter.next()", "IteratorStop");
         ExpectResult("l", "{0:'x',true:null}");
 
         ExpectResult("l.keys", "[0,true]");

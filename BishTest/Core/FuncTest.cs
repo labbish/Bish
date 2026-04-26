@@ -74,7 +74,7 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestYield()
     {
-        ExpectError("yield 0;", BishError.YieldValueType);
+        ExpectError("yield 0;", BishError.TypeErrorType);
         Execute("func square(it)*{for(i:it)yield i^2;};");
         Execute("func add(it1, it2)*{yield* it1;yield* it2;};");
         Execute("l:=list(range(5));l=list(add(l,square(l)));");
@@ -90,7 +90,7 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("g.stage", "1");
         ExpectResult("g.next()", "2");
         ExpectResult("g.stage", "2");
-        ExpectErrorResult("try g.next()");
+        ExpectResult("g.next()", "IteratorStop");
         ExpectResult("g.stage", "-1");
     }
 

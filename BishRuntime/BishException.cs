@@ -67,6 +67,12 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfType_ErrorResult() => OfType("Cannot manually create ErrorResult");
 
+    public static BishException OfType_Yield() =>
+        Create(BishError.TypeErrorType, "Yield expression out of generator function");
+
+    public static BishException OfType_Await() =>
+        Create(BishError.TypeErrorType, "Await expression out of async function");
+
     public static BishException OfArgument(string message) => Create(BishError.ArgumentErrorType, message);
 
     public static BishException OfArgument_DefineRepeat(string name) => OfArgument(
@@ -135,12 +141,4 @@ public class BishException(BishError error) : Exception
             .With("file", new BishString(file)).With("message", new BishString(message));
 
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero");
-
-    public static BishException OfIteratorStop() => Create(BishError.IteratorStopType, "Iterator stopped");
-
-    public static BishException OfYield(BishObject value) =>
-        Create(BishError.YieldValueType, "Yield expression out of generator function").With("value", value);
-
-    public static BishException OfAwait(BishObject value) =>
-        Create(BishError.AwaitValueType, "Await expression out of async function").With("value", value);
 }

@@ -5,7 +5,7 @@ namespace BishCompiler;
 public partial class BishVisitor
 {
     public override CompileResult VisitNullPattern(BishParser.NullPatternContext context) =>
-        CompileResult.Pattern(context).Add(Op("nullish", 1));
+        CompileResult.Pattern(context).Add(new GetBuiltin("null")).Add(new RefEq());
 
     public override CompileResult VisitParenPattern(BishParser.ParenPatternContext context) => Visit(context.pattern());
 
@@ -80,11 +80,11 @@ public partial class BishVisitor
         CompileResult.Pattern(context)
             .Add(Visit(context.expr()), StackEffect.Expr).Add(Op(context.op.GetText(), 2));
 
-    private CompileResult TestType(ParserRuleContext context, string name, CompileResult type,
+    private CompileResult TestType(ParserRuleContext? context, string tagName, CompileResult type,
         BishParser.ExprContext? var, CompileResult? post = null)
     {
         var result = CompileResult.Pattern(context);
-        var tag = Symbols.Get(name);
+        var tag = Symbols.Get(tagName);
         result.Add(type, StackEffect.Expr).Add(new TestType(tag));
         // ReSharper disable once InvertIf
         if (var is not null)
@@ -102,7 +102,6 @@ public partial class BishVisitor
             context.type.GetText() == "_"
                 ? CompileResult.Expr(null).Add(new GetBuiltin("object"))
                 : Visit(context.type), context.var);
-
 
     public override CompileResult VisitErrPattern(BishParser.ErrPatternContext context) =>
         TestType(context, "is_err", CompileResult.Expr(null).Add(new GetBuiltin("Error$Result")), context.expr(),

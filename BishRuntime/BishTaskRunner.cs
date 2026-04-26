@@ -39,7 +39,9 @@ public static class BishTaskRunner
     public static BishObject Blocked(BishObject task)
     {
         Block(task);
-        return task.GetMember("result");
+        var result = task.GetMember("result");
+        if (result is BishErrorResult error) throw new BishException(error.Error);
+        return result;
     }
 
     public static int Count => Environment.ProcessorCount * 2;
@@ -79,10 +81,16 @@ public static class BishTaskRunner
 
     public static void SingleLoop(int index)
     {
-        var task = GetTask(index);
-        if (task is null || BishBool.CallToBool(task.TryGetMember("completed"))) Thread.Yield();
-        else if (BishBool.CallToBool(task.TryGetMember("cancelled"))) task.SetMember("completed", BishBool.True);
-        else task.GetMember("poll").Call([new BishTaskContext(index, task)]);
+        if (GetTask(index) is { } task) Execute(index, task);
+        else Thread.Yield();
+    }
+
+    private static void Execute(int index, BishObject task)
+    {
+        if (BishBool.CallToBool(task.TryGetMember("cancelled")))
+            task.SetMember("completed", BishBool.True);
+        else if (!BishBool.CallToBool(task.TryGetMember("completed")))
+            task.GetMember("poll").Call([new BishTaskContext(index, task)]);
     }
 
     public static BishObject? GetTask(int index)

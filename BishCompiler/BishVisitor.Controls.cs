@@ -61,12 +61,12 @@ public partial class BishVisitor
     {
         var (tag, end) = Symbols.GetPair("for_iter");
         return CompileResult.Expr(context)
-            .Add(Visit(context.iter), StackEffect.Expr)
+            .Add(Visit(context.forBody().iter), StackEffect.Expr)
             .Add(Op("iter", 1), new ForIter(end).Tagged(tag))
             .Add(new Inner(), new Move("$for"))
-            .Add(Def(context.obj, CompileResult.Expr(null).Add(new Del("$for"))))
+            .Add(Def(context.forBody().obj, CompileResult.Expr(null).Add(new Del("$for"))))
             .Add(new Pop())
-            .Add(Visit(context.loop).IntoStat(), StackEffect.Stat)
+            .Add(Visit(context.loop).IntoStat())
             .Add(new Outer())
             .Add(new Jump(tag), new Pop().Tagged(end))
             .WrapLoop(end, tag, context.tag()?.ID().GetText(), true)

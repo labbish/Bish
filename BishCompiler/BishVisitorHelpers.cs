@@ -22,7 +22,8 @@ public enum StackEffect
     Stat, // 0
     Expr, // +1
     Trans, // 0
-    Pattern // 0
+    Pattern, // 0
+    Consume // -1
 }
 
 public class CompileResult(

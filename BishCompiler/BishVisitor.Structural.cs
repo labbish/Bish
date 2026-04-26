@@ -14,12 +14,10 @@ public partial class BishVisitor
 
     public override CompileResult VisitYieldExpr(BishParser.YieldExprContext context)
     {
-        var (tag, end) = Symbols.GetPair("yield");
         var result = CompileResult.Expr(context);
         result.Add(Visit(context.expr()), StackEffect.Expr);
-        if (context.gen is not null) result.Add(Op("iter", 1), new ForIter(end).Tagged(tag));
-        result.Add(new Yield());
-        if (context.gen is not null) result.Add(new Jump(tag), Tag(end));
+        if (context.gen is null) result.Add(new Yield());
+        else result.Add(ForIter(context, new CompileResult(StackEffect.Consume, null).Add(new Yield()), null));
         result.Add(new Null());
         return result;
     }
@@ -134,13 +132,23 @@ public partial class BishVisitor
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)
     {
         var tag = Symbols.Get("with");
-        var result = CompileResult.Stat(context)
+        var result = CompileResult.Expr(context)
             .Add(Visit(context.withBody().cont), StackEffect.Expr)
             .Add(new Copy(), Op("enter", 1));
         if (context.withBody().obj is { } obj)
             result.Add(new Move("$with"))
-                .Add(Def(obj, new CompileResult(StackEffect.Expr, null).Add(new Del("$with"))));
-        result.Add(new Pop(), new WithStart(tag));
-        return result.Add(Visit(context.main).IntoStat()).Add(new Null(), Op("exit", 2), new Pop(), new WithEnd(tag));
+                .Add(Def(obj, CompileResult.Expr(null).Add(new Del("$with"))));
+        result.Add(new Pop(), new TryStart(tag)).Add(Visit(context.main).IntoExpr()).Add(new TryEnd(tag));
+        result.Add(new Copy(), new Swap(2)).Add(IsErr(context, "$err")).Add(new Move("$isErr"));
+        result.Add(Condition("with_err", CompileResult.Expr(null).Add(new Get("$isErr")),
+            CompileResult.Stat(null)
+                .Add(new Get("$err"), Op("exit", 2), new Move("$noErr"))
+                .Add(Condition("with_no_err", CompileResult.Expr(null).Add(new Get("$noErr")),
+                    CompileResult.Stat(null),
+                    CompileResult.Stat(null).Add(new Get("$err"), new Throw())
+                )),
+            CompileResult.Stat(null).Add(new Null(), Op("exit", 2), new Pop())
+        ));
+        return result.Wrap();
     }
 }

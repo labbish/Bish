@@ -29,6 +29,8 @@ public class Tag(string? s, byte b = 0)
     public override bool Equals(object? obj) => obj is Tag tag && this == tag;
 
     public override int GetHashCode() => S is null ? B.GetHashCode() : S.GetHashCode();
+
+    public override string ToString() => S ?? B.ToString();
 }
 
 public abstract record BishBytecode
@@ -117,5 +119,6 @@ public class BishBytecodeObject : BishObject
     public string[] GetStrings(string name) => GetMember(name).As<BishList>("list").List
         .Select(item => item.As<BishString>("list item").Value).ToArray();
 
-    public override string ToString() => $"bytecode({BishBytecodeParser.ToString(BishBytecodeParser.FromObject(this))})";
+    public override string ToString() =>
+        $"bytecode({BishBytecodeParser.ToString(BishBytecodeParser.FromObject(this))})";
 }

@@ -10,11 +10,11 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
-    public bool Resumed;
+    public bool Paused;
     public BishObject? ReturnValue;
     public Action<BishObject>? YieldHandler;
     public Action<BishObject>? AwaitHandler;
-    protected readonly Stack<ErrorHandler> ErrorHandlers = [];
+    public readonly Stack<ErrorHandler> ErrorHandlers = [];
 
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("frame");
@@ -39,7 +39,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     {
         while (Ip < Bytecodes.Count)
         {
-            if (Resumed) return BishNull.Instance;
+            if (Paused) return BishNull.Instance;
             var bytecode = Bytecodes[Ip++];
             try
             {
@@ -58,6 +58,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
                 throw new InvalidOperationException($"An exception occurred while executing {bytecode} at {Ip}.", e);
             }
 
+            ErrorHandlers.PopWhile(item => item.Ip <= Ip);
             if (ReturnValue is not null) return ReturnValue;
         }
 
@@ -89,11 +90,19 @@ public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Act
 public static class Helper
 {
     // FIFO order
-    public static IList<T> Pop<T>(this Stack<T> stack, int count)
+    extension<T>(Stack<T> stack)
     {
-        List<T> list = [];
-        for (var i = 0; i < count; i++)
-            list.Add(stack.Pop());
-        return ((IEnumerable<T>)list).Reverse().ToConcurrentList();
+        public IList<T> Pop(int count)
+        {
+            List<T> list = [];
+            for (var i = 0; i < count; i++)
+                list.Add(stack.Pop());
+            return ((IEnumerable<T>)list).Reverse().ToConcurrentList();
+        }
+
+        public void PopWhile(Predicate<T> predicate)
+        {
+            while (stack.TryPeek(out var item) && predicate(item)) stack.Pop();
+        }
     }
 }

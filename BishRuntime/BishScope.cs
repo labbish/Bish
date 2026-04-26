@@ -14,7 +14,7 @@ public class BishScope : BishObject
 
     internal BishScope(BishScope? outer = null) => Outer = outer;
 
-    private IEnumerable<BishScope> GetLookupChain()
+    public IEnumerable<BishScope> GetLookupChain()
     {
         yield return this;
         if (Outer is null) yield break;

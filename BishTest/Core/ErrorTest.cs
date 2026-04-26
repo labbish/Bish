@@ -24,8 +24,8 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     public void TestWith()
     {
         Execute("a:=b:=c:=0;class W{enter(self)a+=1;exit(self,error)if(error is null)b+=1 else c+=1;};");
-        Execute("with(W()){}");
-        Execute("with(_:W()){throw Error('error');}");
+        Execute("with(W()){};");
+        Execute("with(_:W())throw Error('error');");
         ExpectResult("a", "2");
         ExpectResult("b", "1");
         ExpectResult("c", "1");

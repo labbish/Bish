@@ -81,7 +81,7 @@ public partial class BishVisitor
             .Add(Visit(context.expr()), StackEffect.Expr).Add(Op(context.op.GetText(), 2));
 
     private CompileResult TestType(ParserRuleContext? context, string tagName, CompileResult type,
-        BishParser.ExprContext? var, CompileResult? post = null)
+        object? var, CompileResult? post = null)
     {
         var result = CompileResult.Pattern(context);
         var tag = Symbols.Get(tagName);
@@ -91,7 +91,12 @@ public partial class BishVisitor
         {
             var value = CompileResult.Expr(null).Add(new Del("$_"));
             if (post is not null) result.Add(post, StackEffect.Trans);
-            result.Add(new Move("$_")).Add(Def(var, value));
+            result.Add(new Move("$_")).Add(var switch
+            {
+                BishParser.ExprContext expr => Def(expr, value),
+                string id => Def(id, value),
+                _ => throw new ArgumentException("impossible!")
+            });
         }
 
         return result.Add(new Pop().Tagged(tag));
@@ -103,9 +108,12 @@ public partial class BishVisitor
                 ? CompileResult.Expr(null).Add(new GetBuiltin("object"))
                 : Visit(context.type), context.var);
 
-    public override CompileResult VisitErrPattern(BishParser.ErrPatternContext context) =>
-        TestType(context, "is_err", CompileResult.Expr(null).Add(new GetBuiltin("Error$Result")), context.expr(),
+    private CompileResult IsErr(ParserRuleContext context, object? var) =>
+        TestType(context, "is_err", CompileResult.Expr(null).Add(new GetBuiltin("Error$Result")), var,
             new CompileResult(StackEffect.Trans, null).Add(new GetMember("error")));
+
+    public override CompileResult VisitErrPattern(BishParser.ErrPatternContext context) =>
+        IsErr(context, context.expr());
 
     public override CompileResult VisitNotPattern(BishParser.NotPatternContext context) =>
         CompileResult.Pattern(context).Add(Visit(context.pattern()), StackEffect.Pattern).Add(new Not());

@@ -236,7 +236,7 @@ public record EndTag(string Name) : BishBytecode
     public override void Execute(BishFrame frame)
     {
     }
-};
+}
 
 public static class TagSlicer
 {
@@ -315,7 +315,7 @@ public record Yield : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        frame.Resumed = true;
+        frame.Paused = true;
         if (frame.YieldHandler is null) throw BishException.OfType_Yield();
         frame.YieldHandler(frame.Stack.Pop());
     }
@@ -350,7 +350,7 @@ public static class AwaitHelper
 
             frame.Ip--;
             frame.Stack.Push(value);
-            frame.Resumed = true;
+            frame.Paused = true;
             if (frame.AwaitHandler is null) throw BishException.OfType_Await();
             frame.AwaitHandler(value);
         }
@@ -410,8 +410,12 @@ public record MakeClassArgs(string Name) : TagBased<ClassStart, ClassEnd>(Name)
 [Bytecode]
 public record Throw : BishBytecode
 {
-    public override void Execute(BishFrame frame) =>
-        throw new BishException(frame.Stack.Pop().As<BishError>("thrown error"));
+    public override void Execute(BishFrame frame)
+    {
+        var error = frame.Stack.Pop();
+        if (error is BishErrorResult result) throw new BishException(result.Error);
+        throw new BishException(error.As<BishError>("thrown error"));
+    }
 }
 
 [Bytecode]
@@ -423,18 +427,6 @@ public record TryStart(string Name) : StartTag<TryEnd>(Name)
 
 [Bytecode]
 public record TryEnd(string Name) : EndTag(Name);
-
-[Bytecode]
-public record ForIter(Tag GoalTag) : Jumper(GoalTag)
-{
-    public override void Execute(BishFrame frame)
-    {
-        var iter = frame.Stack.Peek();
-        var result = iter.GetMember("next").Call([]);
-        if (result is BishIterator.Stop) Jump(frame);
-        else frame.Stack.Push(result);
-    }
-}
 
 [Bytecode]
 public record BuildList(int Argc) : BishBytecode
@@ -551,21 +543,6 @@ public record TryGetMember(string Name) : BishBytecode
 }
 
 [Bytecode]
-public record WithStart(string Name) : StartTag<WithEnd>(Name)
-{
-    public override void Execute(BishFrame frame) => frame.AddErrorHandler(frame.Slice<WithStart, WithEnd>(Name).EndPos,
-        error =>
-        {
-            var manager = frame.Stack.Pop();
-            var result = BishOperator.Call("hook_exit", [manager, error]);
-            if (!BishBool.CallToBool(result)) throw new BishException(error);
-        });
-}
-
-[Bytecode]
-public record WithEnd(string Name) : EndTag(Name);
-
-[Bytecode]
 public record DebugStack : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
@@ -576,5 +553,5 @@ public record DebugStack : BishBytecode
 public record DebugVars : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
-        Console.WriteLine(string.Join(", ", frame.Scope.Vars.Keys));
+        Console.WriteLine(string.Join(", ", frame.Scope.GetLookupChain().SelectMany(scope => scope.Vars.Keys)));
 }

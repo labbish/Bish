@@ -45,7 +45,7 @@ public class BishGenerator(BishFrame inner) : BishObject
         inner.Execute();
         if (value is not null)
         {
-            inner.Resumed = false;
+            inner.Paused = false;
             Stage++;
             return value;
         }
@@ -74,7 +74,7 @@ public class BishAsyncFunc(BishFrame inner) : BishTask
             var execute = inner.Execute();
             if (value is not null)
             {
-                inner.Resumed = false;
+                inner.Paused = false;
                 Stage++;
                 value.GetMember("poll").Call([ctx]);
                 return null;

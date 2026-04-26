@@ -324,36 +324,28 @@ public record Yield : BishBytecode
 [Bytecode]
 public record Await : BishBytecode
 {
-    public override void Execute(BishFrame frame) => frame.Await();
-}
-
-public static class AwaitHelper
-{
-    extension(BishFrame frame)
+    public override void Execute(BishFrame frame)
     {
-        public void Await()
+        var value = frame.Stack.Pop();
+        if (value.TryGetMember("poll") is null)
         {
-            var value = frame.Stack.Pop();
-            if (value.TryGetMember("poll") is null)
-            {
-                frame.Stack.Push(value);
-                return;
-            }
-
-            if (BishBool.CallToBool(value.GetMember("completed")))
-            {
-                var result = value.GetMember("result");
-                if (result is BishErrorResult error) throw new BishException(error.Error);
-                frame.Stack.Push(result);
-                return;
-            }
-
-            frame.Ip--;
             frame.Stack.Push(value);
-            frame.Paused = true;
-            if (frame.AwaitHandler is null) throw BishException.OfType_Await();
-            frame.AwaitHandler(value);
+            return;
         }
+
+        if (BishBool.CallToBool(value.GetMember("completed")))
+        {
+            var result = value.GetMember("result");
+            if (result is BishErrorResult error) throw new BishException(error.Error);
+            frame.Stack.Push(result);
+            return;
+        }
+
+        frame.Ip--;
+        frame.Stack.Push(value);
+        frame.Paused = true;
+        if (frame.AwaitHandler is null) throw BishException.OfType_Await();
+        frame.AwaitHandler(value);
     }
 }
 

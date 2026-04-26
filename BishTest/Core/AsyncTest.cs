@@ -38,4 +38,37 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("await 0", "0");
         ExpectError("func h()async throw Error('error');await h();", BishError.StaticType, "error");
     }
+
+    [Theory]
+    [Repeat(5)]
+    public void TestForAwait(int _)
+    {
+        Execute("class I:Iterator{init(self)self.r:=range(1,5);func next(self)async self.r.next()};");
+        Execute("x:=1;for await(i:I())x*=i;");
+        ExpectResult("x", "24");
+    }
+
+    [Theory]
+    [Repeat(5)]
+    public void TestWithAwait(int _)
+    {
+        Execute("a:=b:=c:=0;class W{enter(self)async a+=1;exit(self,error)async if(error is null)b+=1 else c+=1;};");
+        Execute("with await(W()){};");
+        Execute("with await(_:W())throw Error('error');");
+        ExpectResult("a", "2");
+        ExpectResult("b", "1");
+        ExpectResult("c", "1");
+    }
+
+    [Theory]
+    [Repeat(5)]
+    public void TestAsyncGen(int _)
+    {
+        Execute("func f()async*{for(i:range(1,5)){await i;yield await i;}};");
+        Execute("x:=1;for await(i:f())x*=i;");
+        ExpectResult("x", "24");
+        Execute("func g()async*{yield 2;yield await* f()};");
+        Execute("x:=1;for await(i:g())x*=i;");
+        ExpectResult("x", "48");
+    }
 }

@@ -61,17 +61,20 @@ public partial class BishVisitor
         CompileResult.Expr(context)
             .Add(Visit(context.forBody().iter), StackEffect.Consume)
             .Add(ForIter(context, new CompileResult(StackEffect.Trans, context).Add(new Move("$for"))
-                .Add(Def(context.forBody().obj, CompileResult.Expr(null).Add(new Del("$for"))))
-                .Add(new Pop())
-                .Add(Visit(context.loop).IntoStat()), context.tag()?.ID().GetText()));
+                    .Add(Def(context.forBody().obj, CompileResult.Expr(null).Add(new Del("$for"))))
+                    .Add(new Pop())
+                    .Add(Visit(context.loop).IntoStat()), context.tag()?.ID().GetText(),
+                context.forBody().AWT() is not null));
 
-    private CompileResult ForIter(ParserRuleContext context, CompileResult body, string? loopTag)
+    private CompileResult ForIter(ParserRuleContext context, CompileResult body, string? loopTag, bool await = false)
     {
         var (tag, end) = Symbols.GetPair("for_iter");
         var @break = Symbols.Get("for_iter_break");
-        return new CompileResult(StackEffect.Trans, context)
+        var result = new CompileResult(StackEffect.Trans, context)
             .Add(Op("iter", 1), new Copy().Tagged(tag))
-            .Add(new GetMember("next"), new Call(0), new Copy(), new GetBuiltin("IteratorStop"), new RefEq())
+            .Add(new GetMember("next"), new Call(0));
+        if (await) result.Add(new Await());
+        return result.Add(new Copy(), new GetBuiltin("IteratorStop"), new RefEq())
             .Add(new JumpIf(end))
             .Add(new Inner())
             .Add(body, StackEffect.Consume)

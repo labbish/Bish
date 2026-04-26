@@ -9,8 +9,8 @@ public class BishCodedFunc(string name, IList<BishArg> inArgs, Func<BishFrame> g
         {
             (false, false) => inner.Execute(),
             (true, false) => new BishGenerator(inner),
-            (false, true) => new BishAsyncFunc(inner),
-            (true, true) => throw new NotImplementedException(),
+            (false, true) => new BishAsyncTask(inner),
+            (true, true) => new BishAsyncGenerator(inner)
         };
     })
 {
@@ -58,10 +58,10 @@ public class BishGenerator(BishFrame inner) : BishObject
     public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
 }
 
-public class BishAsyncFunc(BishFrame inner) : BishTask
+public class BishAsyncTask(BishFrame inner) : BishTask
 {
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("gen");
+    public new static readonly BishType StaticType = new("async.Task");
     public int Stage { get; private set; }
 
     [Async]
@@ -86,6 +86,72 @@ public class BishAsyncFunc(BishFrame inner) : BishTask
         catch (BishException e)
         {
             Stage = -1;
+            return new BishErrorResult(e.Error);
+        }
+    }
+
+    [Builtin("hook")]
+    public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
+}
+
+public class BishAsyncGenerator(BishFrame inner) : BishObject
+{
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("async.gen");
+    public int Stage { get; internal set; }
+
+    [Iter]
+    public BishObject? Next()
+    {
+        var task = new BishAsyncGeneratorTask(this, inner);
+        if (Stage == -1 || task.Stage == -1) return null;
+        return task;
+    }
+
+    [Builtin("hook")]
+    public static BishInt Get_stage(BishGenerator self) => BishInt.Of(self.Stage);
+}
+
+public class BishAsyncGeneratorTask(BishAsyncGenerator parent, BishFrame inner) : BishTask
+{
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("async.gen.Task");
+    public int Stage { get; private set; }
+
+    [Async]
+    public BishObject? Poll(BishTaskContext ctx)
+    {
+        BishObject? yielded = null;
+        BishObject? awaited = null;
+
+        inner.YieldHandler = result => yielded = result;
+        inner.AwaitHandler = result => awaited = result;
+
+        try
+        {
+            inner.Execute();
+
+            if (yielded is not null)
+            {
+                inner.Paused = false;
+                parent.Stage++;
+                return yielded;
+            }
+
+            if (awaited is not null)
+            {
+                inner.Paused = false;
+                Stage++;
+                awaited.GetMember("poll").Call([ctx]);
+                return null;
+            }
+
+            parent.Stage = Stage = -1;
+            return BishIterator.Stop.Instance;
+        }
+        catch (BishException e)
+        {
+            parent.Stage = Stage = -1;
             return new BishErrorResult(e.Error);
         }
     }

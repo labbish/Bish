@@ -18,8 +18,11 @@ public partial class BishVisitor
     {
         var result = CompileResult.Expr(context);
         result.Add(Visit(context.expr()), StackEffect.Expr);
-        if (context.gen is null) result.Add(new Yield());
-        else result.Add(ForIter(context, new CompileResult(StackEffect.Consume, null).Add(new Yield()), null));
+        var await = context.await is not null;
+        if (context.gen is not null)
+            result.Add(ForIter(context, new CompileResult(StackEffect.Consume, null).Add(new Yield()), null, await));
+        else if (await) result.Add(new Await(), new Yield());
+        else result.Add(new Yield());
         result.Add(new Null());
         return result;
     }
@@ -104,9 +107,9 @@ public partial class BishVisitor
         var result = CompileResult.Expr(context);
         var name = context.ID()?.GetText();
         var args = context.args()?.arg() ?? [];
-        
+
         result.Add(new GetBuiltin("type"), new String(name ?? Anonymous)).Add(ToList(args)).Add(new Call(2));
-        
+
         result.Add(new Inner());
         result.Add(context.expr() is null ? CompileResult.Stat(null) : Visit(context.expr()).Unwrap().IntoStat());
         result.Add(new CopyVars());
@@ -130,23 +133,27 @@ public partial class BishVisitor
 
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)
     {
+        var await = context.withBody().AWT() is not null;
         var tag = Symbols.Get("with");
         var result = CompileResult.Expr(context)
             .Add(Visit(context.withBody().cont), StackEffect.Expr)
             .Add(new Copy(), Op("enter", 1));
+        if (await) result.Add(new Await());
         if (context.withBody().obj is { } obj)
             result.Add(new Move("$with"))
                 .Add(Def(obj, CompileResult.Expr(null).Add(new Del("$with"))));
+        var exit = new CompileResult(StackEffect.Consume, null).Add(Op("exit", 2));
+        if (await) exit.Add(new Await());
         result.Add(new Pop(), new TryStart(tag)).Add(Visit(context.main).IntoExpr()).Add(new TryEnd(tag));
         result.Add(new Copy(), new Swap(2)).Add(IsErr(context, "$err")).Add(new Move("$isErr"));
         result.Add(Condition("with_err", CompileResult.Expr(null).Add(new Get("$isErr")),
             CompileResult.Stat(null)
-                .Add(new Get("$err"), Op("exit", 2), new Move("$noErr"))
+                .Add(new Get("$err")).Add(exit).Add(new Move("$noErr"))
                 .Add(Condition("with_no_err", CompileResult.Expr(null).Add(new Get("$noErr")),
                     CompileResult.Stat(null),
                     CompileResult.Stat(null).Add(new Get("$err"), new Throw())
                 )),
-            CompileResult.Stat(null).Add(new Null(), Op("exit", 2), new Pop())
+            CompileResult.Stat(null).Add(new Null()).Add(exit).Add(new Pop())
         ));
         return result.Wrap();
     }

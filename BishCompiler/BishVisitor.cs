@@ -225,9 +225,11 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         var result = VisitMulti(context._front, context.last);
         const string name = "main$async";
         if (!result.IsAsync()) return result;
-        return CompileResult.Expr(context).Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
+        var expr = CompileResult.Expr(context)
+            .Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
             .Add(new GetBuiltin("Runner")).Add(new GetMember("blocked")).Add(new MakeFunc(name, IsAsync: true))
             .Add(new Call(0)).Add(new Call(1));
+        return result.Effect == StackEffect.Stat ? expr.IntoStat() : expr;
     }
 
     public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);

@@ -48,7 +48,7 @@ expr
     | <assoc=right> BRK ID?                                     # BreakExpr
     | <assoc=right> CTN ID?                                     # ContinueExpr
     | <assoc=right> RET expr?                                   # ReturnExpr
-    | <assoc=right> YLD gen=MUL? expr                           # YieldExpr
+    | <assoc=right> YLD await=AWT? gen=MUL? expr                # YieldExpr
     | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr

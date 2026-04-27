@@ -189,7 +189,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
                     result.Add(Visit(single.value), StackEffect.Expr);
                     result.Add(Op("def[]", 3), new Pop());
                     break;
-                default: throw new ArgumentException("impossible");
+                default: throw Impossible;
             }
 
         return result;
@@ -234,6 +234,8 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     }
 
     public CompileResult VisitFull(IParseTree tree, bool optimize) => Visit(tree).Full(optimize);
+
+    internal static ArgumentException Impossible => new("impossible!");
 }
 
 public static class CompileResultHelper
@@ -259,21 +261,21 @@ public static class CompileResultHelper
         {
             StackEffect.Expr => result,
             StackEffect.Stat => CompileResult.Expr(result.Context).Add(result).Add(new Null()),
-            _ => throw new ArgumentException("impossible!")
+            _ => throw BishVisitor.Impossible
         };
 
         internal CompileResult IntoStat() => result.Effect switch
         {
             StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Pop()),
             StackEffect.Stat => result,
-            _ => throw new ArgumentException("impossible!")
+            _ => throw BishVisitor.Impossible
         };
 
         internal CompileResult IntoReturn() => result.Effect switch
         {
             StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Ret()),
             StackEffect.Stat => result,
-            _ => throw new ArgumentException("impossible!")
+            _ => throw BishVisitor.Impossible
         };
     }
 

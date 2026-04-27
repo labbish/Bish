@@ -152,5 +152,5 @@ public class CompileResult(
 internal abstract record Unbound(ParserRuleContext Context) : BishBytecode
 {
     public abstract string ErrorMessage();
-    public override void Execute(BishFrame frame) => throw new ArgumentException(ErrorMessage());
+    public override void Execute(BishFrame frame) => throw BishVisitor.Impossible;
 }

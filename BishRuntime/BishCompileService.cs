@@ -26,7 +26,8 @@ public static class BishCompileService
     public static BishFrame CompileFile(string path, BishScope? scope = null, CompileOptions? options = null)
     {
         var frame = CompileFile(path, out var errors, scope, options);
-        return errors.Count != 0 ? throw new ArgumentException($"Compilation Error: {errors[0]}") : frame;
+        CheckErrors(errors);
+        return frame;
     }
 
     public static BishFrame CompileFile(string path, out IList<CompilationError> errors,
@@ -44,7 +45,7 @@ public static class BishCompileService
                 errors = [];
                 return new BishFrame(stream.ReadBytecodes(), scope).AddMeta(root);
             }
-            default: throw new ArgumentException($"Invalid file extension: {ext}");
+            default: throw BishException.OfCompile_InvalidExt(ext);
         }
     }
 
@@ -52,13 +53,14 @@ public static class BishCompileService
         BishScope? scope = null, CompileOptions? options = null)
     {
         var frame = Compile(code, out var errors, root, scope, options);
-        return errors.Count != 0 ? throw new ArgumentException($"Compilation Error: {errors[0]}") : frame;
+        CheckErrors(errors);
+        return frame;
     }
 
     public static BishFrame Compile(string code, out IList<CompilationError> errors,
         string? root = null, BishScope? scope = null, CompileOptions? options = null)
     {
-        if (Compiler is null) throw new ArgumentException("Compile service is invalid!");
+        if (Compiler is null) throw BishException.OfCompile_NoService();
         var (e, codes) = Compiler(code, options ?? new CompileOptions());
         errors = e;
         return new BishFrame(codes, scope).AddMeta(root);
@@ -68,6 +70,11 @@ public static class BishCompileService
     {
         frame.Scope.DefVar("meta", new BishMeta(root ?? Environment.CurrentDirectory));
         return frame;
+    }
+    
+    public static void CheckErrors(IList<CompilationError> errors)
+    {
+        if (errors.Count > 0) throw BishException.OfCompile_Errors(errors);
     }
 
     static BishCompileService() => BishMeta.Builtin.Root = Environment.CurrentDirectory;
@@ -82,4 +89,9 @@ public record CompilationError(
 {
     public override string ToString() =>
         $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}";
+
+    public BishError ToError() => BishException.OfCompile(ToString())
+        .With("start", new BishList([BishInt.Of(Line), BishInt.Of(Column)]))
+        .With("end", new BishList([BishInt.Of(StopLine), BishInt.Of(StopColumn)]))
+        .With("info", new BishString(Message)).Error;
 }

@@ -119,6 +119,8 @@ public class BishBytecodeObject : BishObject
     public string[] GetStrings(string name) => GetMember(name).As<BishList>("list").List
         .Select(item => item.As<BishString>("list item").Value).ToArray();
 
-    public override string ToString() =>
-        $"bytecode({BishBytecodeParser.ToString(BishBytecodeParser.FromObject(this))})";
+    // Cannot override the ToString method, because it causes StackOverFlow on bytecode with errors
+    [Builtin]
+    public static BishString ToString(BishBytecodeObject self) =>
+        new($"bytecode({BishBytecodeParser.ToString(BishBytecodeParser.FromObject(self))})");
 }

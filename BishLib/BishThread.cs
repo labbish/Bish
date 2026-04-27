@@ -28,10 +28,11 @@ public class BishThread(Thread thread) : BishObject
     public static void Start(BishThread self) => self.Thread.Start();
 
     [Builtin]
-    public static void Join(BishThread self, [DefaultNull] BishInt? ms)
+    public static BishBool Join(BishThread self, [DefaultNull] BishInt? ms)
     {
-        if (ms is null) self.Thread.Join();
-        else self.Thread.Join(ms.Value);
+        if (ms is not null) return BishBool.Of(self.Thread.Join(ms.Value));
+        self.Thread.Join();
+        return BishBool.True;
     }
 
     [Builtin]
@@ -39,6 +40,9 @@ public class BishThread(Thread thread) : BishObject
 
     [Builtin("hook")]
     public static BishInt Get_id() => BishInt.Of(Environment.CurrentManagedThreadId);
+
+    [Builtin]
+    public static BishThread OfRunner(BishRunnerThread thread) => new(thread.Thread);
 }
 
 public class BishLock(BishObject obj) : BishObject
@@ -59,7 +63,7 @@ public class BishLock(BishObject obj) : BishObject
     public static void Enter(BishLock self) => Monitor.Enter(self.Object);
 
     [Builtin("hook")]
-    public static void Exit(BishLock self, BishObject error) => Monitor.Exit(self.Object);
+    public static void Exit(BishLock self, BishObject _) => Monitor.Exit(self.Object);
 }
 
 // TODO: semaphore (& channel?)

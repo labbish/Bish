@@ -54,7 +54,7 @@ public partial class BishVisitor
                 case BishParser.RestPatternEntryContext rest:
                     result.Add(new Copy()).Add(Visit(rest.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tag));
                     break;
-                default: throw new ArgumentException("impossible!");
+                default: throw Impossible;
             }
 
         result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());
@@ -95,7 +95,7 @@ public partial class BishVisitor
             {
                 BishParser.ExprContext expr => Def(expr, value),
                 string id => Def(id, value),
-                _ => throw new ArgumentException("impossible!")
+                _ => throw Impossible
             });
         }
 
@@ -172,7 +172,7 @@ public partial class BishVisitor
         {
             StackEffect.Stat => 0,
             StackEffect.Expr => 1,
-            _ => throw new ArgumentException("impossible!")
+            _ => throw Impossible
         };
         if (count != 0) result.Add(new Null());
         return result.Add(expr, StackEffect.Expr)

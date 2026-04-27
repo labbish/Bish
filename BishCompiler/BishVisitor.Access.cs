@@ -31,7 +31,7 @@ public partial class BishVisitor
             {
                 BishParser.RestArgContext rest => rest.expr(),
                 BishParser.SingleArgContext single => single.expr(),
-                _ => throw new ArgumentException("impossible")
+                _ => throw Impossible
             };
             yield return expr;
         }
@@ -223,7 +223,7 @@ public partial class BishVisitor
                             result.Add(new Move($"${i}"))
                                 .Add(Def(rest.expr(), CompileResult.Expr(null).Add(new Del($"${i}"))));
                             break;
-                        default: throw new ArgumentException("impossible!");
+                        default: throw Impossible;
                     }
 
                 break;
@@ -269,7 +269,7 @@ public partial class BishVisitor
                 {
                     BishParser.SingleEntryContext single => single.value,
                     BishParser.RestEntryContext rest => rest.expr(),
-                    _ => throw new ArgumentException("Invalid entry!")
+                    _ => throw Impossible
                 }).ToList());
             case BishParser.ObjExprContext obj:
                 return Dels(obj.objEntries().objEntry().Select(entry => entry.ID().GetText()).ToList());
@@ -320,7 +320,7 @@ public partial class BishVisitor
         BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
             .Add(Visit(index.index()), StackEffect.Expr).Add(Op("get[]", 2)),
         BishParser.CallAccessContext call => Call(call.args().arg()),
-        _ => throw new ArgumentException("impossible!")
+        _ => throw Impossible
     };
 
     private CompileResult Get(BishParser.NullAccessContext access, string tag) =>
@@ -332,7 +332,7 @@ public partial class BishVisitor
             .Add(new SetMember(member.ID().GetText())),
         BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
             .Add(Visit(index.index()), StackEffect.Expr).Add(new Swap(), Op("set[]", 3)),
-        _ => throw new ArgumentException("impossible!")
+        _ => throw Impossible
     };
 
     private CompileResult Set(BishParser.NullAccessContext access, string tag) =>
@@ -344,7 +344,7 @@ public partial class BishVisitor
             .Add(new DefMember(member.ID().GetText())),
         BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
             .Add(Visit(index.index()), StackEffect.Expr).Add(new Swap(), Op("def[]", 3)),
-        _ => throw new ArgumentException("impossible!")
+        _ => throw Impossible
     };
 
     private CompileResult Def(BishParser.NullAccessContext access, string tag) =>
@@ -356,7 +356,7 @@ public partial class BishVisitor
             .Add(new DelMember(member.ID().GetText())),
         BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
             .Add(Visit(index.index()), StackEffect.Expr).Add(Op("del[]", 2)),
-        _ => throw new ArgumentException("impossible!")
+        _ => throw Impossible
     };
 
     private CompileResult Del(BishParser.NullAccessContext access, string tag) =>

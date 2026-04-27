@@ -77,5 +77,6 @@ public class ReflectTest : Test
         ExpectResult("(()async 0).isAsync", "true");
         
         ExpectResult("meta.compile('return 0;').execute()", "0");
+        ExpectError("meta.compile('???')", BishError.CompilationErrorType);
     }
 }

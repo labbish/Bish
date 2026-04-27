@@ -463,9 +463,8 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
         {
             false => BishInt.Of(i) as BishObject,
             true when i < RestPos => BishInt.Of(i),
-            true when i == RestPos => new BishRange(i, count + i - Count + 1, 1),
             true when i > RestPos => BishInt.Of(i - Count),
-            _ => throw new ArgumentException("impossible")
+            true => new BishRange(i, count + i - Count + 1, 1)
         }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToConcurrentList();
         if (Pattern)
         {

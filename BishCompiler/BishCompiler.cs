@@ -25,9 +25,8 @@ public static class BishCompiler
         var program = parser.program();
         var visitor = new BishVisitor();
         var result = visitor.VisitFull(program, optimize: options.Optimize);
-        
-        if (options.Throws && result.Errors.Count > 0)
-            throw new Exception("Crucial compile error(s) occured: " + string.Join("\n", result.Errors));
+
+        if (options.Throws) BishCompileService.CheckErrors(result.Errors);
         var errors = (ConcurrentList<CompilationError>)[..listener.Errors, ..result.Errors];
         return (errors, result.Codes);
     }

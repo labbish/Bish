@@ -56,4 +56,6 @@ public class BishError(string message) : BishObject
     public static readonly BishType NameErrorType = new("NameError", [StaticType]);
     public static readonly BishType ZeroDivisionErrorType = new("ZeroDivisionError", [StaticType]);
     public static readonly BishType ImportErrorType = new("ImportError", [StaticType]);
+    public static readonly BishType CompilationErrorType = new("CompilationError", [StaticType]);
+    public static readonly BishType BytecodeParserErrorType = new("BytecodeParserError", [StaticType]);
 }

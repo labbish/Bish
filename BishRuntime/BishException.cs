@@ -31,11 +31,8 @@ public class BishException(BishError error) : Exception
         return this;
     }
 
-    public static BishException Create(BishType errorType, string message)
-    {
-        var error = (BishError)errorType.CreateInstance([new BishString(message)]);
-        return new BishException(error);
-    }
+    public static BishException Create(BishType errorType, string message) =>
+        new((BishError)errorType.CreateInstance([new BishString(message)]));
 
     public static BishException OfNull(string op, string name) =>
         Create(BishError.NullErrorType, $"Cannot {op} member {name} on null")
@@ -140,5 +137,30 @@ public class BishException(BishError error) : Exception
         Create(BishError.ImportErrorType, $"Cannot import {file}: {message}")
             .With("file", new BishString(file)).With("message", new BishString(message));
 
+    public static BishException OfImport_Dll(string file, Type[] types) =>
+        OfImport(file, $"found types {string.Join(", ", types)}, none of which implements IPlugin")
+            .With("types", new BishList(types.Select(type => new BishString(type.Name)).ToList<BishObject>()));
+
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero");
+
+    public static BishException OfCompile(string message) => Create(BishError.CompilationErrorType, message);
+
+    public static BishException OfCompile_Errors(IList<CompilationError> errors) =>
+        OfCompile("Compile error(s) occured").CausedBy(errors.Select(e => e.ToError()).ToList());
+
+    public static BishException OfCompile_NoService() => OfCompile("Compile service is invalid!");
+
+    public static BishException OfCompile_InvalidExt(string ext) =>
+        OfCompile($"Invalid file extension: {ext}").With("extension", new BishString(ext));
+
+    public static BishException OfBytecodeParser(string message) => Create(BishError.BytecodeParserErrorType, message);
+
+    public static BishException OfBytecodeParser_Magic() => OfBytecodeParser("Bad bytecode magic number!");
+
+    public static BishException OfBytecodeParser_Version(int version, int expect) =>
+        OfBytecodeParser($"Bad bytecode version {version}; expected {expect}!")
+            .With("version", BishInt.Of(version)).With("expect", BishInt.Of(expect));
+
+    public static BishException OfBytecodeParser_Invalid(string type) =>
+        OfBytecodeParser($"Invalid bytecode: {type}").With("type", new BishString(type));
 }

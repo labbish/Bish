@@ -105,7 +105,7 @@ public class BishRunnerThread : BishObject
     public static BishInt Get_counter(BishRunnerThread self) => BishInt.Of((int)self.Counter);
 
     internal readonly int Index;
-    internal readonly Thread Thread;
+    public readonly Thread Thread;
     internal readonly TaskDeque Tasks = new();
     internal readonly Semaphore Semaphore = new(0, int.MaxValue);
     internal long Counter;

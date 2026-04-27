@@ -34,8 +34,6 @@ public record SpecialMethod(Pattern NamePattern, string[]? Args, string? Op = nu
     public int? Argc => Args?.Length;
 
     public string OpString() => $"operator {Op} ({(Args is null ? "self, ..." : string.Join(", ", Args))})";
-
-    public string ExpectArgc() => Argc?.ToString() ?? ">= 1";
 }
 
 public static partial class BishOperator

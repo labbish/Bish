@@ -69,12 +69,10 @@ public static class BishImporter
     private static BishObject ImportDll(string path)
     {
         var assembly = Assembly.LoadFrom(path);
-        var types = assembly.GetTypes().Where(type =>
-            type is { IsClass: true, IsAbstract: false, IsPublic: true } &&
-            typeof(IPlugin).IsAssignableFrom(type)).ToList();
-        if (types.Count == 0)
-            throw new ArgumentException($"Cannot find plugin initializer in {path}: " +
-                                        $"found types {string.Join(", ", assembly.GetTypes())}, none of which implements IPlugin");
+        var all = assembly.GetTypes();
+        var types = all.Where(type => type is { IsClass: true, IsAbstract: false, IsPublic: true }
+                                      && typeof(IPlugin).IsAssignableFrom(type)).ToList();
+        if (types.Count == 0) throw BishException.OfImport_Dll(path, all);
         var module = new BishObject();
         foreach (var type in types)
         {
@@ -87,4 +85,15 @@ public static class BishImporter
 
         return module;
     }
+}
+
+public class PluginExports
+{
+    // ReSharper disable once CollectionNeverUpdated.Global
+    public readonly Dictionary<string, BishObject> Exports = [];
+}
+
+public interface IPlugin
+{
+    void Initialize(PluginExports exports);
 }

@@ -128,7 +128,7 @@ public static class BishBytecodeParser
     {
         var index = Parsers.FindIndex(p => p.Type == bytecode.GetType());
         return index == -1
-            ? throw new ArgumentException($"Invalid Bytecode: {bytecode.GetType().Name}")
+            ? throw BishException.OfBytecodeParser_Invalid(bytecode.GetType().Name)
             : (Parsers[index], (byte)index);
     }
 
@@ -163,16 +163,16 @@ public static class BishBytecodeParser
         {
             var index = reader.GetByte();
             var parser = Parsers.ElementAtOrDefault(index) ??
-                         throw new ArgumentException($"Invalid Bytecode Index: {index}");
+                         throw BishException.OfBytecodeParser_Invalid($"[{index}]");
             var tag = reader.GetTag();
             return parser.Read(reader).Tagged(tag);
         }
 
         public IEnumerable<BishBytecode> Read()
         {
-            if (reader.GetInt() != Magic) throw new ArgumentException("Bad Bytecode Magic Number!");
+            if (reader.GetInt() != Magic) throw BishException.OfBytecodeParser_Magic();
             var version = reader.GetByte();
-            if (version != Version) throw new ArgumentException($"Bad Bytecode Version {version}; expected {Version}!");
+            if (version != Version) throw BishException.OfBytecodeParser_Version(version, Version);
             while (!reader.IsEmpty()) yield return reader.ReadSingle();
         }
     }
@@ -205,7 +205,7 @@ public static class BishBytecodeParser
     {
         var type = bytecode.GetString("type");
         var index = Parsers.FindIndex(parser => parser.Type.Name == type);
-        if (index == -1) throw new ArgumentException($"Invalid Bytecode: {type}");
+        if (index == -1) throw BishException.OfBytecodeParser_Invalid(type);
         var tag = bytecode.GetTag("tag");
         return Parsers[index].ReadObject(bytecode).Tagged(tag);
     }

@@ -65,7 +65,7 @@ public class BishAsyncTask(BishFrame inner) : BishTask
     public int Stage { get; private set; }
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? Poll(BishObject ctx)
     {
         BishObject? value = null;
         inner.AwaitHandler = result => value = result;
@@ -103,7 +103,7 @@ public class BishAsyncGenerator(BishFrame inner) : BishObject, IBishAsyncIterato
     [Iter]
     public BishObject Next() => new BishAsyncIteratorTask(this);
 
-    public BishObject? NextPoll(BishTaskContext ctx)
+    public BishObject? NextPoll(BishObject ctx)
     {
         BishObject? yielded = null;
         BishObject? awaited = null;

@@ -25,7 +25,12 @@ public class BishWaker(int index, BishObject task) : BishObject
 
     public new static readonly BishType StaticType = new("Waker");
 
-    public void Awake() => BishTaskRunner.ThreadTasks[Index].Push(Task);
+    public void Awake()
+    {
+        var thread = BishTaskRunner.Threads[Index];
+        thread.Tasks.Push(Task);
+        thread.Semaphore.Release();
+    }
 
     [Builtin]
     public static void Awake(BishWaker self) => self.Awake();
@@ -44,12 +49,22 @@ public static class BishTaskRunner
         return result;
     }
 
+    [Builtin("hook")]
+    public static BishInt Get_globalInterval() => BishInt.Of(GlobalInterval);
+
+    [Builtin("hook")]
+    public static BishBool Get_started() => BishBool.Of(Called != 0);
+
+    [Builtin("hook")]
+    public static BishList Get_threads() => new(Threads.ToList<BishObject>());
+
+    [Builtin("hook")]
+    public static BishList Get_tasks() => new(GlobalTasks.ToList());
+
     public static int Count => Environment.ProcessorCount * 2;
     public static int GlobalInterval => 114;
     internal static int Called;
-    internal static long Counter;
-    internal static readonly Thread[] Threads = Array(i => new Thread(() => Loop(i)) { IsBackground = true });
-    internal static readonly TaskDeque[] ThreadTasks = Array(_ => new TaskDeque());
+    internal static readonly BishRunnerThread[] Threads = Array(i => new BishRunnerThread(i));
     internal static readonly TaskDeque GlobalTasks = new();
 
     private static T[] Array<T>(Func<int, T> func) => Enumerable.Range(0, Count).Select(func).ToArray();
@@ -60,7 +75,11 @@ public static class BishTaskRunner
         foreach (var thread in Threads) thread.Start();
     }
 
-    public static void Add(BishObject task) => GlobalTasks.Push(task);
+    public static void Add(BishObject task)
+    {
+        GlobalTasks.Push(task);
+        foreach (var thread in Threads) thread.Semaphore.Release();
+    }
 
     public static void Block(BishObject task)
     {
@@ -69,20 +88,49 @@ public static class BishTaskRunner
         while (!BishBool.CallToBool(task.GetMember("completed")))
             spinner.SpinOnce();
     }
+}
 
-    public static void Loop(int index)
+public class BishRunnerThread : BishObject
+{
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("RunnerThread");
+
+    [Builtin("hook")]
+    public static BishInt Get_index(BishRunnerThread self) => BishInt.Of(self.Index);
+
+    [Builtin("hook")]
+    public static BishList Get_tasks(BishRunnerThread self) => new(self.Tasks.ToList());
+
+    [Builtin("hook")]
+    public static BishInt Get_counter(BishRunnerThread self) => BishInt.Of((int)self.Counter);
+
+    internal readonly int Index;
+    internal readonly Thread Thread;
+    internal readonly TaskDeque Tasks = new();
+    internal readonly Semaphore Semaphore = new(0, int.MaxValue);
+    internal long Counter;
+
+    public BishRunnerThread(int index)
     {
-        while (true) SingleLoop(index);
+        Index = index;
+        Thread = new Thread(_ => Loop()) { IsBackground = true };
+    }
+
+    public void Start() => Thread.Start();
+
+    public void Loop()
+    {
+        while (true) SingleLoop();
         // ReSharper disable once FunctionNeverReturns
     }
 
-    public static void SingleLoop(int index)
+    public void SingleLoop()
     {
-        if (GetTask(index) is { } task) Execute(index, task);
-        else Thread.Yield();
+        if (GetTask() is { } task) Execute(task);
+        else Semaphore.WaitOne(TimeSpan.FromSeconds(2));
     }
 
-    private static void Execute(int index, BishObject task)
+    private void Execute(BishObject task)
     {
         // This lock is necessary, because a same task might be waked more than once
         // Another solution is to check whether the task is in deque or running when waking, but this one is simpler :)
@@ -91,19 +139,20 @@ public static class BishTaskRunner
             if (BishBool.CallToBool(task.TryGetMember("cancelled")))
                 task.SetMember("completed", BishBool.True);
             else if (!BishBool.CallToBool(task.TryGetMember("completed")))
-                task.GetMember("poll").Call([new BishTaskContext(index, task)]);
+                task.GetMember("poll").Call([new BishTaskContext(Index, task)]);
         }
     }
 
-    public static BishObject? GetTask(int index)
+    public BishObject? GetTask()
     {
         Interlocked.Increment(ref Counter);
-        if (Counter % GlobalInterval == 0 && GlobalTasks.TryPop() is { } global) return global;
-        if (ThreadTasks[index].TryPop() is { } self) return self;
-        for (var i = 0; i < Count - 1; i++)
-            if (ThreadTasks[(i + index) % Count].TryPopLast() is { } other)
+        if (Counter % BishTaskRunner.GlobalInterval == 0 && BishTaskRunner.GlobalTasks.TryPop() is { } global)
+            return global;
+        if (Tasks.TryPop() is { } self) return self;
+        for (var i = 0; i < BishTaskRunner.Count - 1; i++)
+            if (BishTaskRunner.Threads[(i + Index) % BishTaskRunner.Count].Tasks.TryPopLast() is { } other)
                 return other;
-        return GlobalTasks.TryPop();
+        return BishTaskRunner.GlobalTasks.TryPop();
     }
 }
 
@@ -136,5 +185,10 @@ internal class TaskDeque
             if (task is not null) _tasks.RemoveLast();
             return task;
         }
+    }
+
+    public List<BishObject> ToList()
+    {
+        lock (_lock) return _tasks.ToList();
     }
 }

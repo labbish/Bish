@@ -50,7 +50,7 @@ public class BishCompletedTask(BishObject value) : BishTask
     public new static readonly BishType StaticType = new("Task.completed");
 
     [Async]
-    public BishObject Poll(BishTaskContext _) => value;
+    public BishObject Poll(BishObject _) => value;
 }
 
 public class BishErrorTask(BishError error) : BishTask
@@ -60,7 +60,7 @@ public class BishErrorTask(BishError error) : BishTask
     public new static readonly BishType StaticType = new("Task.error");
 
     [Async]
-    public BishObject Poll(BishTaskContext _) => new BishErrorResult(error);
+    public BishObject Poll(BishObject _) => new BishErrorResult(error);
 }
 
 public class BishRunTask(Func<BishObject> func) : BishTask
@@ -71,7 +71,7 @@ public class BishRunTask(Func<BishObject> func) : BishTask
     public new static readonly BishType StaticType = new("Task.run");
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? Poll(BishObject ctx)
     {
         if (_value is not null) return _value;
         Task.Run(() =>
@@ -85,7 +85,7 @@ public class BishRunTask(Func<BishObject> func) : BishTask
                 _value = new BishErrorResult(e.Error);
             }
 
-            ctx.Waker.Awake();
+            ctx.Awake();
         });
         return null;
     }
@@ -100,7 +100,7 @@ public class BishAllTask(IList<BishObject> tasks) : BishTask
     public new static readonly BishType StaticType = new("Task.all");
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? Poll(BishObject ctx)
     {
         foreach (var (task, i) in tasks.Enumerate())
         {
@@ -111,7 +111,7 @@ public class BishAllTask(IList<BishObject> tasks) : BishTask
         }
 
         if (_results.All(result => result is not null)) return new BishList(_results!);
-        ctx.Waker.Awake();
+        ctx.Awake();
         return null;
     }
 }
@@ -123,7 +123,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
     public new static readonly BishType StaticType = new("Task.any");
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? Poll(BishObject ctx)
     {
         foreach (var task in tasks)
         {
@@ -132,7 +132,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
                 return task.GetMember("result");
         }
 
-        ctx.Waker.Awake();
+        ctx.Awake();
         return null;
     }
 }
@@ -149,7 +149,7 @@ public class BishSleepTask(int ms) : BishTask
     public new static readonly BishType StaticType = new("Task.sleep");
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx)
+    public BishObject? Poll(BishObject ctx)
     {
         if (_done)
         {
@@ -160,7 +160,7 @@ public class BishSleepTask(int ms) : BishTask
         _timer = new Timer(_ =>
         {
             _done = true;
-            ctx.Waker.Awake();
+            ctx.Awake();
         }, null, ms, Timeout.Infinite);
         return null;
     }
@@ -175,7 +175,7 @@ public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIte
     [Iter]
     public BishObject Next() => new BishAsyncIteratorTask(this);
 
-    public BishObject? NextPoll(BishTaskContext ctx)
+    public BishObject? NextPoll(BishObject ctx)
     {
         var task = _tasks.First?.Value;
         if (task is null) return BishIterator.Stop.Instance;
@@ -184,7 +184,7 @@ public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIte
         if (BishBool.CallToBool(task.GetMember("completed")))
             return task.GetMember("result");
         _tasks.AddLast(task);
-        ctx.Waker.Awake();
+        ctx.Awake();
         return null;
     }
 }
@@ -199,7 +199,7 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
     [Iter]
     public BishObject Next() => new BishAsyncIteratorTask(this);
 
-    public BishObject? NextPoll(BishTaskContext ctx)
+    public BishObject? NextPoll(BishObject ctx)
     {
         if (_count == tasks.Count) return BishIterator.Stop.Instance;
         foreach (var (task, i) in tasks.Enumerate())
@@ -217,7 +217,7 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
             return result;
         }
 
-        ctx.Waker.Awake();
+        ctx.Awake();
         return null;
     }
 }

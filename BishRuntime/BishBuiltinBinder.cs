@@ -48,27 +48,29 @@ public static class BishBuiltinIteratorBinder
 
 public static class BishBuiltinTaskBinder
 {
-    public static void Bind(BishType type, Func<BishObject, BishTaskContext, BishObject?> poll)
+    public static void Awake(this BishObject ctx) => ctx.GetMember("waker").GetMember("awake").Call([]);
+    
+    public static void Bind(BishType type, Func<BishObject, BishObject, BishObject?> poll)
     {
         type.ParentsProxy.Add(BishTask.StaticType);
         type.DefMember("poll", new BishFunc("poll", [new BishArg("self"), new BishArg("ctx")], args =>
         {
             var self = args[0];
-            var ctx = (BishTaskContext)args[1];
+            var ctx = args[1];
             try
             {
                 if (poll(self, ctx) is { } result)
                 {
                     self.SetMember("completed", BishBool.True);
                     self.SetMember("result", result);
-                    ctx.Waker.Awake();
+                    ctx.Awake();
                 }
             }
             catch (BishException e)
             {
                 self.SetMember("completed", BishBool.True);
                 self.SetMember("result", new BishErrorResult(e.Error));
-                ctx.Waker.Awake();
+                ctx.Awake();
             }
 
             return BishNull.Instance;
@@ -78,7 +80,7 @@ public static class BishBuiltinTaskBinder
 
 public interface IBishAsyncIterator
 {
-    public BishObject? NextPoll(BishTaskContext ctx);
+    public BishObject? NextPoll(BishObject ctx);
 }
 
 public class BishAsyncIteratorTask(IBishAsyncIterator parent) : BishTask
@@ -87,5 +89,5 @@ public class BishAsyncIteratorTask(IBishAsyncIterator parent) : BishTask
     public new static readonly BishType StaticType = new("async.iter");
 
     [Async]
-    public BishObject? Poll(BishTaskContext ctx) => parent.NextPoll(ctx);
+    public BishObject? Poll(BishObject ctx) => parent.NextPoll(ctx);
 }

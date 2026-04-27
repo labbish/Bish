@@ -11,7 +11,7 @@ public partial class BishVisitor
         var result = CompileResult.Expr(null);
         if (context.expr() is null) result.Add(new Null());
         else result.Add(Visit(context.expr()), StackEffect.Expr);
-        return result.Add(new Ret());
+        return result.Add(new Ret(), new Null());
     }
 
     public override CompileResult VisitYieldExpr(BishParser.YieldExprContext context)

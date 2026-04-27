@@ -27,6 +27,7 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("x", "24");
         Execute("l:=[];for await(i:Task.concat(Task.run(()1),Task.run(()2),Task.run(()3),Task.run(()4)))l.add(i);");
         ExpectResult("l", "[1,2,3,4]");
+        ExpectResult("await Task.run(()1).map((x)x*2)", "2");
     }
 
     [Theory]

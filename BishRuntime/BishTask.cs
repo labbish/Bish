@@ -41,6 +41,9 @@ public abstract class BishTask : BishObject
 
     [Builtin]
     public static BishConcatTasks Concat([Rest] BishList tasks) => new(tasks.List);
+
+    [Builtin]
+    public static BishMapTask Map(BishObject task, BishObject func) => new(task, item => func.Call([item]));
 }
 
 public class BishCompletedTask(BishObject value) : BishTask
@@ -141,7 +144,6 @@ public class BishSleepTask(int ms) : BishTask
 {
     private volatile bool _done;
 
-    // ReSharper disable once NotAccessedField.Local
     private Timer? _timer;
 
     public override BishType DefaultType => StaticType;
@@ -218,6 +220,22 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
         }
 
         ctx.Awake();
+        return null;
+    }
+}
+
+public class BishMapTask(BishObject task, Func<BishObject, BishObject> func) : BishTask
+{
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("Task.map");
+
+    [Async]
+    public BishObject? Poll(BishObject ctx)
+    {
+        if (BishBool.CallToBool(task.GetMember("completed")))
+            return func(task.GetMember("result"));
+        task.GetMember("poll").Call([ctx]);
         return null;
     }
 }

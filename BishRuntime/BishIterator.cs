@@ -87,6 +87,8 @@ public class BishIterator(IEnumerator<BishObject> iter) : BishObject
         private Stop()
         {
         }
+
+        public override string ToString() => "IteratorStop";
     }
 }
 

@@ -1,5 +1,5 @@
 # Bish
-The Bish Language version 3.0.
+The Bish Language version 3.1.
 
 ## Code Example
 

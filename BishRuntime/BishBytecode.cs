@@ -50,6 +50,7 @@ public class BishBytecodeObject : BishObject
 {
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("bytecode");
+    public BishBytecode? Bytecode;
 
     [Builtin("hook")]
     public static BishBytecodeObject Create(BishObject _) => new();
@@ -59,6 +60,7 @@ public class BishBytecodeObject : BishObject
     {
         self.AddString("type", type.Value);
         foreach (var (name, value) in obj.Vars) self.DefMember(name, value);
+        self.Bytecode = BishBytecodeParser.FromObject(self);
     }
 
     [Builtin]
@@ -119,8 +121,6 @@ public class BishBytecodeObject : BishObject
     public string[] GetStrings(string name) => GetMember(name).As<BishList>("list").List
         .Select(item => item.As<BishString>("list item").Value).ToArray();
 
-    // Cannot override the ToString method, because it causes StackOverFlow on bytecode with errors
-    [Builtin]
-    public static BishString ToString(BishBytecodeObject self) =>
-        new($"bytecode({BishBytecodeParser.ToString(BishBytecodeParser.FromObject(self))})");
+    public override string ToString() =>
+        Bytecode is null ? "bytecode[ERROR]" : $"bytecode({BishBytecodeParser.ToString(Bytecode)})";
 }

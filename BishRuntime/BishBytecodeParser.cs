@@ -194,7 +194,7 @@ public static class BishBytecodeParser
 
     public static BishBytecodeObject ToObject(BishBytecode bytecode)
     {
-        var result = new BishBytecodeObject();
+        var result = new BishBytecodeObject { Bytecode = bytecode };
         GetParser(bytecode).Parser.WriteObject(bytecode, result);
         result.AddString("type", bytecode.GetType().Name);
         result.AddTag("tag", bytecode.Tag);
@@ -203,11 +203,12 @@ public static class BishBytecodeParser
 
     public static BishBytecode FromObject(BishBytecodeObject bytecode)
     {
+        if (bytecode.Bytecode is not null) return bytecode.Bytecode;
         var type = bytecode.GetString("type");
         var index = Parsers.FindIndex(parser => parser.Type.Name == type);
         if (index == -1) throw BishException.OfBytecodeParser_Invalid(type);
         var tag = bytecode.GetTag("tag");
-        return Parsers[index].ReadObject(bytecode).Tagged(tag);
+        return bytecode.Bytecode = Parsers[index].ReadObject(bytecode).Tagged(tag);
     }
 }
 

@@ -1,0 +1,49 @@
+extend AsyncIterator {
+    func from(iter) async* for await (item : iter) yield item;
+    get entries(self) async* {
+        i := 0;
+        for await (item : self) {
+            yield [i, item];
+            i += 1;
+        };
+    };
+    func map(self, f) async* for await (item : self) yield await f(item);
+    func filter(self, f) async* for await (item : self) if (await f(item)) yield item;
+    func take(self, count) async* {
+        if (count <= 0) return;
+        for await ([i, item] : self.entries) {
+            if (i == count) return;
+            yield item;
+        }
+    };
+    func skip(self, count) async* for await ([i, item] : self.entries) if (i >= count) yield item;
+    func flatMap(self, f) async* for await (x : self) for await (item : await f(x)) yield item;
+    func reduce(self, f, start: null) async {
+        result := start ?? await self.next();
+        for await (item : self) result = await f(result, item);
+        return result;
+    };
+    func foreach(self, f) async for await (item : self) await f(item);
+    func toList(self) async await self.reduce((l, item) [..l, item], []);
+    func all(self, f: null) async {
+        f ??= (item) item;
+        for await (item : self) if (!await f(item)) return false;
+        return true;
+    };
+    func any(self, f: null) async {
+        f ??= (item) item;
+        for await (item : self) if (await f(item)) return true;
+        return false;
+    };
+    func findIndex(self, f) async {
+        for await ([i, item] : self.entries) if (await f(item)) return i;
+        return -1;
+    };
+    func find(self, f) async {
+        for await (item : self) if (await f(item)) return item;
+        return null;
+    };
+    func contains(self, x) async (await self.findIndex((item) item == x)) != -1;
+    func join(self, sep: '') async await (await self.map((item) item.toString())).reduce((s, item) s + sep + item);
+    func concat(..iters) async* for await (iter : iters) yield await* iter;
+};

@@ -169,6 +169,12 @@ public class BishException(BishError error) : Exception
         Create(BishError.ImportErrorType, $"Cannot import {file}: {message}")
             .With("file", new BishString(file)).With("message", new BishString(message));
 
+    public static BishException OfImport_NoFile(string path) => 
+        OfImport(path, $"File doesn't exist: {path}").With("path", new BishString(path));
+
+    public static BishException OfImport_InvalidExt(string file, string ext) =>
+        OfImport(file, $"Invalid file extension: {ext}").With("extension", new BishString(ext));
+
     public static BishException OfImport_Dll(string file, Type[] types) =>
         OfImport(file, $"found types {string.Join(", ", types)}, none of which implements IPlugin")
             .With("types", new BishList(types.Select(type => new BishString(type.Name)).ToList<BishObject>()));

@@ -132,9 +132,19 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bishc').execute());", "0");
     }
 
+    [Fact]
+    public async Task TestImportExt()
+    {
+        CreateFile("./a/a6.bish", "print('bish');");
+        await ExpectOutputAsync("-c", "import('a/a6')", "bish");
+        await GetOutputAsync("-c", "print('bishc');", "-o", "./a/a6.bishc", "-s");
+        await ExpectOutputAsync("-c", "import('a/a6')", "bishc");
+    }
+
     public void Dispose()
     {
         Console.SetOut(OrigWriter);
+        Directory.Delete("./a", true);
         Writer.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -142,6 +152,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Console.SetOut(OrigWriter);
+        Directory.Delete("./a", true);
         await Writer.DisposeAsync();
         GC.SuppressFinalize(this);
     }

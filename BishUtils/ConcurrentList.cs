@@ -95,6 +95,7 @@ public static class ConcurrentListHelper
             ConcurrentList<T> concurrent => concurrent,
             // We need this to handle things like (enumerable ?? []).ToConcurrentList()
             T[] array => new ConcurrentList<T>(array.ToList()),
+            IReadOnlyList<T> readOnlyList => new ConcurrentList<T>(readOnlyList.ToList()),
             IList<T> list => new ConcurrentList<T>(list),
             _ => new ConcurrentList<T>(source.ToList())
         };

@@ -27,5 +27,5 @@ public class Example : IPlugin
                                Namespaces are one honking great idea -- let's do more of those!
                                """;
     
-    public void Initialize(PluginExports exports) => exports.Exports.Add("this", new BishString(This));
+    public void Initialize(PluginExports exports) => exports.Exports.Add("This", new BishString(This));
 }

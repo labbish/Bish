@@ -11,4 +11,9 @@
       <ProjectReference Include="..\BishRuntime\BishRuntime.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="lib\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

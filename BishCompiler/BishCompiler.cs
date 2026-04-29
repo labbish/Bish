@@ -38,6 +38,7 @@ public static class BishCompiler
         BishBuiltinBinder.Init();
         BishLib.BishLib.Initialize();
         BishCompileService.Compiler = Compile;
+        BishImporter.Import(null, "precludes");
     }
 }
 

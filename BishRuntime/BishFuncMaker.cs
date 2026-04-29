@@ -97,7 +97,7 @@ public class BishAsyncTask(BishFrame inner) : BishTask
 public class BishAsyncGenerator(BishFrame inner) : BishObject, IBishAsyncIterator
 {
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("async.gen");
+    public new static readonly BishType StaticType = new("async.gen", [BishIterator.AsyncType]);
     public int Stage { get; internal set; }
 
     [Iter]

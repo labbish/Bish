@@ -87,7 +87,8 @@ public class BishBuiltinScope : BishScope
         Init("null", BishNull.Instance);
         Init("Func", BishFunc.StaticType);
         Init("Error", BishError.StaticType);
-        Init("Iterator", BishIterator.StaticType);
+        Init("Iterator", BishIterator.Type);
+        Init("AsyncIterator", BishIterator.AsyncType);
         Init("AttributeError", BishError.AttributeErrorType);
         Init("ArgumentError", BishError.ArgumentErrorType);
         Init("TypeError", BishError.TypeErrorType);

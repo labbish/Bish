@@ -1,0 +1,50 @@
+﻿extend Iterator {
+    func iter(self) self;
+    func from(iter)* for (item : iter) yield item;
+    get entries(self)* {
+        i := 0;
+        for (item : self) {
+            yield [i, item];
+            i += 1;
+        };
+    };
+    func map(self, f)* for (item : self) yield f(item);
+    func filter(self, f)* for (item : self) if (f(item)) yield item;
+    func take(self, count)* {
+        if (count <= 0) return;
+        for ([i, item] : self.entries) {
+            if (i == count) return;
+            yield item;
+        }
+    };
+    func skip(self, count)* for ([i, item] : self.entries) if (i >= count) yield item;
+    func flatMap(self, f)* for (x : self) for (item : f(x)) yield item;
+    func reduce(self, f, start: null) {
+        result := start ?? self.next();
+        for (item : self) result = f(result, item);
+        return result;
+    };
+    func foreach(self, f) for (item : self) f(item);
+    func toList(self) self.reduce((l, item) [..l, item], []);
+    func all(self, f: null) {
+        f ??= (item) item;
+        for (item : self) if (!f(item)) return false;
+        return true;
+    };
+    func any(self, f: null) {
+        f ??= (item) item;
+        for (item : self) if (f(item)) return true;
+        return false;
+    };
+    func findIndex(self, f) {
+        for ([i, item] : self.entries) if (f(item)) return i;
+        return -1;
+    };
+    func find(self, f) {
+        for (item : self) if (f(item)) return item;
+        return null;
+    };
+    func contains(self, x) self.findIndex((item) item == x) != -1;
+    func join(self, sep: '') self.map((item) item.toString()).reduce((s, item) s + sep + item);
+    func concat(..iters)* for (iter : iters) yield* iter;
+};

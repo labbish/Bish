@@ -21,9 +21,12 @@ public partial class BishVisitor
         var await = context.await is not null;
         if (context.gen is not null)
             result.Add(ForIter(context, new CompileResult(StackEffect.Consume, null).Add(new Yield()), null, await));
-        else if (await) result.Add(new Await(), new Yield());
-        else result.Add(new Yield());
-        result.Add(new Null());
+        else
+        {
+            if (await) result.Add(new Await(), new Yield());
+            else result.Add(new Yield());
+            result.Add(new Null());
+        }
         return result;
     }
 

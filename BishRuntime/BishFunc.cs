@@ -8,7 +8,7 @@ public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T 
 // `Type` will only be used by builtin functions
 public record BishArg(string Name, BishObject? Default = null, bool Rest = false) : Arg<BishObject>(Name, Default, Rest)
 {
-    public override string ToString() => (Rest ? ".." : "") + Name + (Default is null ? "" : "=" + Default);
+    public override string ToString() => (Rest ? ".." : "") + Name + (Default is null ? "" : ":" + Default);
 
     [return: NotNullIfNotNull(nameof(arg))]
     public BishObject? Match(BishObject? arg) => arg ?? Default;
@@ -126,9 +126,13 @@ public class BishFunc(
 
     public override BishFunc Bind(BishObject self)
     {
-        if (Args.Count == 0) throw BishException.OfArgument_Bind(this, self);
-        var args1 = Args[0].Rest ? Args : Args.Skip(1).ToList();
-        return new BishFunc(Name, args1, args => Func([self, ..args]), Tag);
+        return Args.Count == 0
+            ? throw BishException.OfArgument_Bind(this, self)
+            : new BishFunc(Name, Args.Slice(Args[0].Rest ? 0 : 1), args => Func(Trans(args)), Tag);
+
+        IList<BishObject> Trans(IList<BishObject> args) => Args[0].Rest
+            ? [new BishList([self, ..args[0].As<BishList>("rest arg").List]), ..args.Slice(1)]
+            : [self, ..args];
     }
 
     [Builtin("hook", tag: "ignore")]

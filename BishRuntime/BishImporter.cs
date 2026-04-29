@@ -6,6 +6,10 @@ public class BishMeta(string? root) : BishObject
 {
     public string? Root = root;
 
+    public static string LibRoot => Path.Combine(AppContext.BaseDirectory, "lib");
+
+    public static readonly List<string> Extensions = [".dll", ".bishc", ".bish"];
+
     public static BishMeta Builtin => new(null);
 
     public override BishType DefaultType => StaticType;
@@ -18,6 +22,13 @@ public class BishMeta(string? root) : BishObject
     [Builtin("hook")]
     public static void Set_root(BishMeta self, BishObject value) =>
         self.Root = value is BishNull ? null : value.As<BishString>("meta.root").Value;
+
+    [Builtin("hook")]
+    public static BishString Get_libRoot(BishMeta _) => new(LibRoot);
+
+    [Builtin("hook")]
+    public static BishList Get_extensions(BishMeta _) =>
+        new(Extensions.Select(ext => new BishString(ext)).ToList<BishObject>());
 
     [Builtin("hook")]
     public static BishProxyMap Get_cache(BishMeta _) => new(BishImporter.Cache);
@@ -33,26 +44,30 @@ public static class BishImporter
 {
     public static readonly Dictionary<string, BishObject> Cache = [];
 
-    public static BishObject Import(BishMeta meta, string file)
+    public static BishObject Import(BishMeta? meta, string file)
     {
-        var root = meta.Root;
         if (BishScope.BuiltinModules.TryGetValue(file, out var module)) return module;
-        try
+        var path = Locate(meta?.Root ?? "", file);
+        if (Cache.TryGetValue(path, out var cached)) return cached;
+        var result = ImportFull(path);
+        Cache.Add(path, result);
+        return result;
+    }
+
+    private static string Locate(string root, string file)
+    {
+        var exts = BishMeta.Extensions;
+        var ext = Path.GetExtension(file);
+        if (ext != "" && !exts.Contains(ext)) throw BishException.OfImport_InvalidExt(file, ext);
+        foreach (var path in new[] { root, BishMeta.LibRoot })
         {
-            var path = Path.GetFullPath(root is null ? file : Path.Combine(root, file));
-            if (Cache.TryGetValue(path, out var cached)) return cached;
-            var result = ImportFull(path);
-            Cache.Add(path, result);
-            return result;
+            var full = Path.Combine(path, file);
+            if (ext != "" && File.Exists(full)) return full;
+            var found = exts.Select(e => full + e).FirstOrDefault(File.Exists);
+            if (found is not null) return found;
         }
-        catch (BishException e)
-        {
-            throw BishException.OfImport(file, e.Message).CausedBy(e.Error);
-        }
-        catch (Exception e)
-        {
-            throw BishException.OfImport(file, e.Message);
-        }
+
+        throw BishException.OfImport_NoFile(file);
     }
 
     private static BishObject ImportFull(string path)

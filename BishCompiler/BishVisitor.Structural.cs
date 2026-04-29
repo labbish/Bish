@@ -102,6 +102,10 @@ public partial class BishVisitor
         return result;
     }
 
+    private CompileResult EvalAndCopy(BishParser.ExprContext? expr) => new CompileResult(StackEffect.Trans, expr)
+        .Add(new Inner()).Add(expr is null ? CompileResult.Stat(null) : Visit(expr).Unwrap().IntoStat())
+        .Add(new CopyVars(), new Outer());
+
     public override CompileResult VisitClassExpr(BishParser.ClassExprContext context)
     {
         var result = CompileResult.Expr(context);
@@ -110,16 +114,16 @@ public partial class BishVisitor
 
         result.Add(new GetBuiltin("type"), new String(name ?? Anonymous)).Add(ToList(args)).Add(new Call(2));
 
-        result.Add(new Inner());
-        result.Add(context.expr() is null ? CompileResult.Stat(null) : Visit(context.expr()).Unwrap().IntoStat());
-        result.Add(new CopyVars());
-        result.Add(new Outer());
+        result.Add(EvalAndCopy(context.expr()));
 
         foreach (var deco in context.deco().Reverse())
             result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));
         if (name is not null) result.Add(new Def(name));
         return result;
     }
+
+    public override CompileResult VisitExtendExpr(BishParser.ExtendExprContext context) =>
+        CompileResult.Expr(context).Add(Visit(context.obj), StackEffect.Expr).Add(EvalAndCopy(context.body));
 
     public override CompileResult VisitThrowExpr(BishParser.ThrowExprContext context) =>
         CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new Throw());

@@ -85,4 +85,11 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         Execute("class C{instance:=null;create(self)instance??=self;};");
         ExpectTrue("C()===C()");
     }
+
+    [Fact]
+    public void TestExtend()
+    {
+        ExpectResult("class C{a:=0};C.a", "0");
+        ExpectResult("extend C{b:=1};C.b", "1");
+    }
 }

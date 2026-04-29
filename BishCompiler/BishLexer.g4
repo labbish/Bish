@@ -98,6 +98,7 @@ RET : 'return' ;
 YLD : 'yield' ;
 AWT : 'await' ;
 ASY : 'async' ;
+EXT : 'extend' ;
 CLS : 'class' ;
 THR : 'throw' ;
 TRY : 'try' ;

@@ -19,6 +19,38 @@ public class BishException(BishError error) : Exception
         }
     }
 
+    public static T Wrapped<T>(BishType errorType, Func<T> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (BishException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            throw Create(errorType, e.Message);
+        }
+    }
+
+    public static void Wrapped(BishType errorType, Action func)
+    {
+        try
+        {
+            func();
+        }
+        catch (BishException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            throw Create(errorType, e.Message);
+        }
+    }
+
     public BishException CausedBy(params IList<BishError> causes)
     {
         Error.Causes = causes.ToConcurrentList();
@@ -149,6 +181,9 @@ public class BishException(BishError error) : Exception
         OfCompile("Compile error(s) occured").CausedBy(errors.Select(e => e.ToError()).ToList());
 
     public static BishException OfCompile_NoService() => OfCompile("Compile service is invalid!");
+
+    public static BishException OfCompile_NoFile(string path) => 
+        OfCompile($"File doesn't exist: {path}").With("path", new BishString(path));
 
     public static BishException OfCompile_InvalidExt(string ext) =>
         OfCompile($"Invalid file extension: {ext}").With("extension", new BishString(ext));

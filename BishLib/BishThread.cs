@@ -6,8 +6,11 @@ public static class BishThreadModule
 {
     public static void Initialize() => BishLib.InitializeModule("thread",
         ("Thread", BishThread.StaticType),
-        ("Lock", BishLock.StaticType)
+        ("Lock", BishLock.StaticType),
+        ("ThreadError", Error)
     );
+
+    public static readonly BishType Error = new("ThreadError", [BishError.StaticType]);
 }
 
 public class BishThread(Thread thread) : BishObject
@@ -25,15 +28,16 @@ public class BishThread(Thread thread) : BishObject
     public static void Init(BishThread self, BishObject func) => self.Thread = new Thread(() => func.Call([]));
 
     [Builtin]
-    public static void Start(BishThread self) => self.Thread.Start();
+    public static void Start(BishThread self) => BishException.Wrapped(BishThreadModule.Error, self.Thread.Start);
 
     [Builtin]
-    public static BishBool Join(BishThread self, [DefaultNull] BishInt? ms)
-    {
-        if (ms is not null) return BishBool.Of(self.Thread.Join(ms.Value));
-        self.Thread.Join();
-        return BishBool.True;
-    }
+    public static BishBool Join(BishThread self, [DefaultNull] BishInt? ms) =>
+        BishException.Wrapped(BishThreadModule.Error, () =>
+        {
+            if (ms is not null) return BishBool.Of(self.Thread.Join(ms.Value));
+            self.Thread.Join();
+            return BishBool.True;
+        });
 
     [Builtin]
     public static void Sleep(BishInt ms) => Thread.Sleep(ms.Value);

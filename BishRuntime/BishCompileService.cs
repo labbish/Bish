@@ -23,19 +23,20 @@ public static class BishCompileService
         return Path.GetDirectoryName(path);
     }
 
-    public static BishFrame CompileFile(string path, BishScope? scope = null, CompileOptions? options = null)
+    public static BishFrame CompileFile(string file, BishScope? scope = null, CompileOptions? options = null)
     {
-        var frame = CompileFile(path, out var errors, scope, options);
+        var frame = CompileFile(file, out var errors, scope, options);
         CheckErrors(errors);
         return frame;
     }
 
-    public static BishFrame CompileFile(string path, out IList<CompilationError> errors,
+    public static BishFrame CompileFile(string file, out IList<CompilationError> errors,
         BishScope? scope = null, CompileOptions? options = null)
     {
-        path = Path.GetFullPath(path);
+        var path = Path.GetFullPath(file);
         var ext = Path.GetExtension(path);
         var root = FindRoot(Path.GetDirectoryName(path));
+        if (!File.Exists(path)) throw BishException.OfCompile_NoFile(path);
         switch (ext)
         {
             case ".bish": return Compile(File.ReadAllText(path), out errors, root, scope, options);

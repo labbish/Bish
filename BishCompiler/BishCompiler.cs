@@ -35,6 +35,7 @@ public static class BishCompiler
 
     static BishCompiler()
     {
+        BishBuiltinBinder.Init();
         BishLib.BishLib.Initialize();
         BishCompileService.Compiler = Compile;
     }

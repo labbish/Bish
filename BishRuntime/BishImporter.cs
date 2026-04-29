@@ -45,13 +45,13 @@ public static class BishImporter
             Cache.Add(path, result);
             return result;
         }
-        catch (BishException)
+        catch (BishException e)
         {
-            throw;
+            throw BishException.OfImport(file, e.Message).CausedBy(e.Error);
         }
         catch (Exception e)
         {
-            throw BishException.OfImport(file, e.ToString());
+            throw BishException.OfImport(file, e.Message);
         }
     }
 

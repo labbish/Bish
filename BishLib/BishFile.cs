@@ -7,28 +7,11 @@ public static class BishFileModule
 {
     public static void Initialize() => BishLib.InitializeModule("file",
         ("Reader", BishReader.StaticType),
-        ("Writer", BishWriter.StaticType)
+        ("Writer", BishWriter.StaticType),
+        ("FileError", Error)
     );
 
-    public static readonly BishType FileError = new("FileError", [BishError.StaticType]);
-
-    public static BishException FileException(string msg) => BishException.Create(FileError, msg);
-
-    public static T FileOperation<T>(Func<T> func)
-    {
-        try
-        {
-            return func();
-        }
-        catch (BishException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            throw FileException(e.Message);
-        }
-    }
+    public static readonly BishType Error = new("FileError", [BishError.StaticType]);
 
     public static Encoding EncodingFrom(BishString? encoding) =>
         encoding is null ? Encoding.UTF8 : Encoding.GetEncoding(encoding.Value);
@@ -47,16 +30,16 @@ public class BishReader(StreamReader reader) : BishObject
 
     [Builtin("hook")]
     public static void Init(BishReader self, BishString path, [DefaultNull] BishString? encoding) =>
-        BishFileModule.FileOperation(() =>
+        BishException.Wrapped(BishFileModule.Error, () =>
             self.Reader = new StreamReader(path.Value, BishFileModule.EncodingFrom(encoding)));
 
     [Builtin("hook")]
     public static BishReader Enter(BishReader self) => self;
 
     [Builtin("hook")]
-    public static void Exit(BishReader self, BishObject error) => self.Reader.Dispose();
+    public static void Exit(BishReader self, BishObject _) => self.Reader.Dispose();
 
-    public BishString? ReadChar() => BishFileModule.FileOperation(Reader.Read) switch
+    public BishString? ReadChar() => BishException.Wrapped(BishFileModule.Error, Reader.Read) switch
     {
         -1 => null,
         var chr => new BishString((char)chr)
@@ -65,7 +48,7 @@ public class BishReader(StreamReader reader) : BishObject
     [Builtin]
     public static BishString? ReadChar(BishReader self) => self.ReadChar();
 
-    public BishString? ReadLine() => BishFileModule.FileOperation(Reader.ReadLine) switch
+    public BishString? ReadLine() => BishException.Wrapped(BishFileModule.Error, Reader.ReadLine) switch
     {
         null => null,
         var line => new BishString(line)
@@ -81,7 +64,8 @@ public class BishReader(StreamReader reader) : BishObject
     public static BishFileLineIterator Get_lines(BishReader self) => new(self);
 
     [Builtin("hook")]
-    public static BishString Get_content(BishReader self) => new(BishFileModule.FileOperation(self.Reader.ReadToEnd));
+    public static BishString Get_content(BishReader self) =>
+        new(BishException.Wrapped(BishFileModule.Error, self.Reader.ReadToEnd));
 }
 
 public class BishFileCharIterator(BishReader reader) : BishObject
@@ -122,7 +106,7 @@ public class BishWriter(StreamWriter writer) : BishObject
     [Builtin("hook")]
     public static void Init(BishWriter self, BishString path, [DefaultNull] BishBool? append,
         [DefaultNull] BishString? encoding) =>
-        BishFileModule.FileOperation(() =>
+        BishException.Wrapped(BishFileModule.Error, () =>
             self.Writer = new StreamWriter(path.Value, append: append?.Value ?? false,
                 BishFileModule.EncodingFrom(encoding)));
 
@@ -130,7 +114,7 @@ public class BishWriter(StreamWriter writer) : BishObject
     public static BishWriter Enter(BishWriter self) => self;
 
     [Builtin("hook")]
-    public static void Exit(BishWriter self, BishObject error) => self.Writer.Dispose();
+    public static void Exit(BishWriter self, BishObject _) => self.Writer.Dispose();
 
     [Builtin]
     public static void Write(BishWriter self, BishObject content) =>

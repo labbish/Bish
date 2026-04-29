@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace BishRuntime;
 
@@ -26,9 +25,9 @@ public class AsyncAttribute : Attribute;
 
 public static class BishBuiltinBinder
 {
-    [ModuleInitializer]
-    [SuppressMessage("Usage", "CA2255")]
-    internal static void Initialize()
+    public static void Init() => RuntimeHelpers.RunClassConstructor(typeof(BishBuiltinBinder).TypeHandle);
+
+    static BishBuiltinBinder()
     {
         BuiltinsRegistry.Register();
         BytecodeParserRegistry.Register();
@@ -49,7 +48,7 @@ public static class BishBuiltinIteratorBinder
 public static class BishBuiltinTaskBinder
 {
     public static void Awake(this BishObject ctx) => ctx.GetMember("waker").GetMember("awake").Call([]);
-    
+
     public static void Bind(BishType type, Func<BishObject, BishObject, BishObject?> poll)
     {
         type.ParentsProxy.Add(BishTask.StaticType);

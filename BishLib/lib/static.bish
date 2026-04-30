@@ -1,0 +1,2 @@
+func static(cls) extend cls init(self, ..args) 
+    throw TypeError('static class {} is not constructible'.format(cls.name));

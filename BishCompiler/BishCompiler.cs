@@ -40,7 +40,7 @@ public static class BishCompiler
         BishCompileService.Compiler = Compile;
         try
         {
-            BishImporter.Import(null, "precludes");
+            BishImporter.Import(null, "preludes");
         }
         catch (BishException e)
         {

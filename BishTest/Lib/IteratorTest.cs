@@ -1,6 +1,6 @@
-﻿namespace BishTest.Core;
+﻿namespace BishTest.Lib;
 
-public class IterTest(TestInfoFixture fixture) : Test(fixture)
+public class IteratorTest(TestInfoFixture fixture) : Test(fixture)
 {
     [Fact]
     public void TestIter()

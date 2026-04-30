@@ -1,0 +1,6 @@
+import('iterator-helpers');
+import('async-iterator-helpers');
+
+extend builtins() {
+    {.static} := import('static');
+};

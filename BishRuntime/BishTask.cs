@@ -172,7 +172,7 @@ public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIte
 {
     private readonly LinkedList<BishObject> _tasks = new(tasks);
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("Task.merge");
+    public new static readonly BishType StaticType = new("Task.merge", [BishIterator.AsyncType]);
 
     [Iter]
     public BishObject Next() => new BishAsyncIteratorTask(this);
@@ -196,7 +196,7 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
     private readonly BishObject?[] _results = new BishObject?[tasks.Count];
     private int _count;
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("Task.concat");
+    public new static readonly BishType StaticType = new("Task.concat", [BishIterator.AsyncType]);
 
     [Iter]
     public BishObject Next() => new BishAsyncIteratorTask(this);

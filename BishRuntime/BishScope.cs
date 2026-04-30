@@ -65,6 +65,10 @@ public class BishScope : BishObject
     [PassCaller]
     public static BishObject Import(BishFrame frame, BishString file) =>
         BishImporter.Import(frame.Scope.GetVar("meta").As<BishMeta>("meta"), file.Value);
+    
+
+    [Builtin]
+    public static BishBuiltinScope Builtins() => BishBuiltinScope.Instance;
 }
 
 public class BishBuiltinScope : BishScope
@@ -93,7 +97,6 @@ public class BishBuiltinScope : BishScope
         Init("ArgumentError", BishError.ArgumentErrorType);
         Init("TypeError", BishError.TypeErrorType);
         Init("NullError", BishError.NullErrorType);
-        Init("NameError", BishError.NameErrorType);
         Init("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         Init("IteratorStop", BishIterator.Stop.Instance);
         Init("Error$Result", BishErrorResult.StaticType);

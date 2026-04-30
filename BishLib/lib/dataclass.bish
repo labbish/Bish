@@ -1,0 +1,14 @@
+Field := Func.Arg;
+func dataclass(..fields) {
+    for ([i, field] : fields.iter().entries)
+        if (field is of string) fields[i] = Field(field);
+    t := type('dataclass({})'.format(fields.iter().map(({.name}) name).join(', ')), []);
+    extend t {
+        hook_init := Func('hook_init', [Field('self'), ..fields], ([self, ..args])
+            for ([i, {.name}] : fields.iter().entries) self.hook_def(name, args[i]));
+        func toString(self) '{}({})'.format(self.type, fields.iter()
+            .map(({.name}) '{}={}'.format(name, self.hook_get(name))).join(', '));
+        oper==(self, other) self.type == other.type && fields.iter()
+            .all(({.name}) self.hook_get(name) == other.hook_get(name));
+    }
+};

@@ -1,0 +1,25 @@
+{.static} := import('static');
+
+@static
+class SingleThreadRunner {
+    queue := [];
+    func blocked(task) {
+        queue.add(task);
+        while (!task.completed) {
+            if (queue.length == 0) continue;
+            t := del queue[0];
+            process(t);
+        };
+        return task.result;
+    };
+    func process(task) {
+        if (task.cancelled) return task.completed = true;
+        if (task.completed) return;
+        task.poll(ctx(task));
+    };
+    func ctx(task) { .waker: Waker(task) };
+    class Waker {
+        init(self, task) self.task := task;
+        func awake(self) queue.add(self.task);
+    };
+};

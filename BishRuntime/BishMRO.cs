@@ -39,25 +39,11 @@ public partial class BishType
 
 public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
 {
-    public BishObject Inner => inner;
-    public BishType MRORoot => mroRoot;
+    protected override BishType MRORoot => mroRoot;
 
     public override BishType DefaultType => inner.Type.WithMRORoot(MRORoot);
 
-    public override BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
-        BishType? _ = null, IList<BishObject>? excludes = null, BishObject? boundSelf = null) =>
-        Inner.TryGetMember(name, mode, MRORoot, excludes, boundSelf ?? this);
-
-    public override BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None,
-        BishType? root = null, IList<BishObject>? excludes = null) =>
-        Inner.TrySetMember(name, value, mode, root ?? MRORoot, excludes);
-
-    public override BishObject DefMember(string name, BishObject value, BishType? root = null,
-        BishLookupMode mode = BishLookupMode.None) =>
-        Inner.DefMember(name, value, root ?? MRORoot, mode);
-
-    public override BishObject? TryDelMember(string name, BishType? root = null,
-        BishLookupMode mode = BishLookupMode.None) => Inner.TryDelMember(name, root, mode);
+    protected override BishObject BoundThis => inner;
 
     public override string ToString() => $"base({inner}, root={MRORoot})";
 }

@@ -74,13 +74,13 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         Execute("del c[3];");
         ExpectError("c[4];", BishError.ArgumentErrorType);
 
-        Execute("class C{init(self,x)self.base()._x:=x;get(self,_)self.base()._x;"
-                + "set(self,_,x)self.base()._x:=x;del(self,_)del self.base()._x;};c:=C(5);");
+        Execute("class C{init(self,x)self.vars['_x']:=x;get(self,_)self.vars['_x'];"
+                + "set(self,_,x)self.vars['_x']:=x;del(self,_)del self.vars['_x']};c:=C(5);");
         ExpectResult("c.x0", "5");
         ExpectResult("c.x1=3", "3");
         ExpectResult("c.x2", "3");
         Execute("del c.x3;");
-        ExpectError("c.x4;", BishError.AttributeErrorType);
+        ExpectError("c.x4;", BishError.ArgumentErrorType);
 
         Execute("class C{instance:=null;create(self)instance??=self;};");
         ExpectTrue("C()===C()");

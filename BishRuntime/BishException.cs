@@ -87,7 +87,7 @@ public class BishException(BishError error) : Exception
             .With("object", obj).With("expect", expect);
 
     public static BishException OfType_Expect(string expr, BishObject result, BishType expect) =>
-        OfType($"Expect result of {expr} to be {expect.Name}, found {result}")
+        OfType($"Expect {expr} to be {expect.Name}, found {result}")
             .With("expression", new BishString(expr)).With("result", result).With("expect", expect);
 
     public static BishException OfType_Expect(string expr, BishObject result, string expect) =>
@@ -169,7 +169,7 @@ public class BishException(BishError error) : Exception
         Create(BishError.ImportErrorType, $"Cannot import {file}: {message}")
             .With("file", new BishString(file)).With("message", new BishString(message));
 
-    public static BishException OfImport_NoFile(string path) => 
+    public static BishException OfImport_NoFile(string path) =>
         OfImport(path, $"File doesn't exist: {path}").With("path", new BishString(path));
 
     public static BishException OfImport_InvalidExt(string file, string ext) =>
@@ -188,7 +188,7 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfCompile_NoService() => OfCompile("Compile service is invalid!");
 
-    public static BishException OfCompile_NoFile(string path) => 
+    public static BishException OfCompile_NoFile(string path) =>
         OfCompile($"File doesn't exist: {path}").With("path", new BishString(path));
 
     public static BishException OfCompile_InvalidExt(string ext) =>

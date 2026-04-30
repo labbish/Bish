@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using BishUtils;
 
 namespace BishRuntime;
@@ -28,6 +27,11 @@ public class BishObject(BishType? type = null)
 
     public IDictionary<string, BishObject> Vars = new ConcurrentDictionary<string, BishObject>();
 
+    protected virtual IList<BishObject> LookupChain => (ConcurrentList<BishObject>)[this];
+
+    protected virtual BishType MRORoot => Type;
+    protected virtual BishObject BoundThis => this;
+
     public BishObject? TryCallHook(string name, IList<BishObject> args, bool ignores = false)
     {
         var hook = TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoAccessor);
@@ -35,152 +39,78 @@ public class BishObject(BishType? type = null)
         return hook?.TryCall(args);
     }
 
+    public BishVarHandle? TryGetHandle(string name, string op, BishLookupMode mode = BishLookupMode.None,
+        IList<BishObject>? excludes = null)
+    {
+        excludes ??= [];
+        if (excludes.Contains(this)) return null;
+
+        foreach (var obj in LookupChain.Where(obj => !excludes.Contains(obj)))
+        {
+            excludes.Add(obj);
+            if (obj.Vars.ContainsKey(name)) return new BishVarHandle(obj, name, BishVarHandleType.Normal);
+            if (mode.HasFlag(BishLookupMode.NoAccessor)) continue;
+            var accessor = obj.TryGetHandle($"hook_{op}_{name}", "get",
+                BishLookupMode.NoHook | BishLookupMode.NoAccessor);
+            if (accessor is not null) return new BishVarHandle(accessor.Owner, name, BishVarHandleType.Accessor);
+        }
+
+        // ReSharper disable once InvertIf
+        if (!mode.HasFlag(BishLookupMode.NotFromType))
+        {
+            var type = Type.WithMRORoot(MRORoot).TryGetHandle(name, op,
+                mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes: excludes);
+            if (type is not null) return type with { Bind = !mode.HasFlag(BishLookupMode.NoBind) };
+        }
+
+        if (mode.HasFlag(BishLookupMode.NoHook)) return null;
+        var hook = Base(this, MRORoot).TryGetHookHandle(op);
+        return hook is null ? null : hook with { Type = BishVarHandleType.Hook };
+    }
+
+    private BishVarHandle? TryGetHookHandle(string op, IList<BishObject>? excludes = null)
+    {
+        excludes ??= [];
+        if (excludes.Contains(this)) return null;
+        var result = TryGetHandle($"hook_{op}", "get", BishLookupMode.NoHook | BishLookupMode.NoAccessor);
+        if (result is not null && result.Owner != StaticType) return result;
+        excludes.Add(this);
+        return Type.TryGetHookHandle(op, excludes);
+    }
+
     public BishObject GetMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryGetMember(name, mode) ?? throw BishException.OfAttribute("get", this, name);
 
-    protected virtual IList<BishObject> LookupChain => (ConcurrentList<BishObject>)[this];
-
-    /**
-     * Below is the lookup order. (It's messy and full of corner-cases, but works the most intuitive)
-     * @GetFromType = (If not NotFromType mode) Recursively get on Type [NoHook, NotFromType, bind (if not NoBind mode)]
-     * 1. Members (including getter) of first of lookup chain
-     * 2. (If this is a type) @GetFromType [ignore exceptions]
-     * 3. (Only non-empty for types) Members (including getter) of the rest of the lookup chain
-     * 4. @GetFromType
-     * 5. (If not NoHook mode) Call hook_get
-     *
-     * ...And fun fact: Python used a simpler order, so that int.__str__(1) works but int.__str__() don't.
-     * But we prefer class methods (e.g. obj.toString()) to free functions (e.g. str(obj)), so this works better here.
-     */
-    public virtual BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None,
-        BishType? mroRoot = null, IList<BishObject>? excludes = null, BishObject? boundSelf = null)
+    public BishObject? TryGetMember(string name, BishLookupMode mode = BishLookupMode.None)
     {
-        var self = mroRoot is null ? this : Base(this, mroRoot);
-        excludes ??= [];
-        mroRoot ??= Type;
-        boundSelf ??= this;
-        if (excludes.Contains(this)) return null;
-
-        var chain = LookupChain;
-        var first = chain.ElementAtOrDefault(0);
-        chain = chain.Skip(1).ToList();
-
-        // Step 1
-        if (TryGetFromMember(first, out var result)) return result;
-
-        // Step 2
-        if (this is BishType)
+        var handle = TryGetHandle(name, "get", mode);
+        if (handle is null) return null;
+        var result = handle.Type switch
         {
-            var member = BishException.Ignored(GetFromType);
-            if (member is not null) return member;
-        }
-
-        // Step 3
-        foreach (var obj in chain.Where(obj => !excludes.Contains(obj)))
-            if (TryGetFromMember(obj, out var member))
-                return member;
-
-        // Step 4 & 5
-        return GetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : self.TryCallGetHook(name));
-
-        BishObject? GetFromType() => mode.HasFlag(BishLookupMode.NotFromType)
-            ? null
-            : TryBind(
-                Type.WithMRORoot(mroRoot).TryGetMember(name, mode | BishLookupMode.NoHook | BishLookupMode.NotFromType,
-                    excludes: excludes), mode.HasFlag(BishLookupMode.NoBind));
-
-        BishObject? TryBind(BishObject? member, bool noBind) => noBind ? member : member?.Bind(boundSelf);
-
-        bool TryGetFromMember(BishObject? obj, [NotNullWhen(true)] out BishObject? member)
-        {
-            member = null;
-            if (obj is null) return false;
-            excludes.Add(obj);
-            member = obj.Vars.GetValueOrDefault(name) ??
-                     (mode.HasFlag(BishLookupMode.NoAccessor) ? null : obj.TryCallHook($"hook_get_{name}", []));
-            return member is not null;
-        }
+            BishVarHandleType.Normal => handle.Owner.Vars[handle.Name],
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_get"].Call([this, new BishString(handle.Name)]),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_get_{handle.Name}"].Call([this]),
+            _ => throw new ArgumentException("impossible!")
+        };
+        return handle.Bind ? result.Bind(BoundThis) : result;
     }
 
     public virtual BishObject Bind(BishObject self) => TryCallHook("hook_bind", [self], ignores: true) ?? this;
 
-    private BishObject? TryCallGetHook(string name, IList<BishObject>? excludes = null)
-    {
-        excludes ??= [];
-        if (excludes.Contains(this)) return null;
-        var result = TryCallHook("hook_get", [new BishString(name)], ignores: true);
-        if (result is not null) return result;
-        excludes.Add(this);
-        return Type.TryCallGetHook(name, excludes);
-    }
-
     [Builtin("hook", tag: "ignore")]
     public static BishObject Get(BishObject self, BishString name) => self.GetMember(name.Value, BishLookupMode.NoHook);
 
-
-    /**
-     * @SetFromType = (If not NotFromType mode) Recursively set on Type [NoHook, NotFromType]
-     * 1. Members (including setter) of first of lookup chain
-     * 2. (If this is a type) @SetFromType [ignore exceptions]
-     * 3. (Only non-empty for types) Members (including setter) of the rest of the lookup chain
-     * 4. @SetFromType
-     * 5. (If not NoHook mode) Call hook_set
-     * This should always be consistent with `TryGetMember`.
-     */
-    public virtual BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None,
-        BishType? mroRoot = null, IList<BishObject>? excludes = null)
+    public BishObject? TrySetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None)
     {
-        var self = mroRoot is null ? this : Base(this, mroRoot);
-        excludes ??= [];
-        mroRoot ??= Type;
-        if (excludes.Contains(this)) return null;
-
-        var chain = LookupChain;
-        var first = chain.ElementAtOrDefault(0);
-        chain = chain.Skip(1).ToList();
-
-        // Step 1
-        if (TrySetFromMember(first, out var result)) return result;
-
-        // Step 2
-        if (this is BishType)
+        var handle = TryGetHandle(name, "set", mode);
+        if (handle is null) return null;
+        return handle.Type switch
         {
-            var member = BishException.Ignored(SetFromType);
-            if (member is not null) return member;
-        }
-
-        // Step 3
-        foreach (var obj in chain.Where(obj => !excludes.Contains(obj)))
-            if (TrySetFromMember(obj, out var member))
-                return member;
-
-        // Step 4 & 5
-        return SetFromType() ?? (mode.HasFlag(BishLookupMode.NoHook) ? null : self.TryCallSetHook(name, value));
-
-        BishObject? SetFromType() => mode.HasFlag(BishLookupMode.NotFromType)
-            ? null
-            : Type.WithMRORoot(mroRoot).TrySetMember(name, value,
-                mode | BishLookupMode.NoHook | BishLookupMode.NotFromType, excludes: excludes);
-
-        bool TrySetFromMember(BishObject? obj, [NotNullWhen(true)] out BishObject? member)
-        {
-            member = null;
-            if (obj is null) return false;
-            excludes.Add(obj);
-            if (obj.Vars.ContainsKey(name)) member = obj.Vars[name] = value;
-            else member = mode.HasFlag(BishLookupMode.NoAccessor) ? null : obj.TryCallHook($"hook_set_{name}", [value]);
-            return member is not null;
-        }
-    }
-
-    private BishObject? TryCallSetHook(string name, BishObject value, IList<BishObject>? excludes = null)
-    {
-        excludes ??= [];
-        if (excludes.Contains(this)) return null;
-        var result = TryCallHook("hook_set", [new BishString(name), value], ignores: true);
-        if (result is not null) return result;
-        excludes.Add(this);
-        return Type.TryCallSetHook(name, value, excludes);
+            BishVarHandleType.Normal => handle.Owner.Vars[handle.Name] = value,
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_set"].Call([this, new BishString(handle.Name), value]),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_set_{handle.Name}"].Call([this, value]),
+            _ => throw new ArgumentException("impossible!")
+        };
     }
 
     public BishObject SetMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None) =>
@@ -190,10 +120,9 @@ public class BishObject(BishType? type = null)
     public static BishObject Set(BishObject self, BishString name, BishObject value) =>
         self.SetMember(name.Value, value);
 
-    public virtual BishObject DefMember(string name, BishObject value, BishType? mroRoot = null,
-        BishLookupMode mode = BishLookupMode.None)
+    public BishObject DefMember(string name, BishObject value, BishLookupMode mode = BishLookupMode.None)
     {
-        var self = mroRoot is null ? this : Base(this, mroRoot);
+        var self = Base(this, MRORoot);
         var hooked = this is BishType || mode.HasFlag(BishLookupMode.NoHook)
             ? null
             : self.TryCallHook("hook_def", [new BishString(name), value], ignores: true);
@@ -209,16 +138,17 @@ public class BishObject(BishType? type = null)
     public BishObject DelMember(string name, BishLookupMode mode = BishLookupMode.None) =>
         TryDelMember(name, mode: mode) ?? throw BishException.OfAttribute("del", this, name);
 
-    public virtual BishObject? TryDelMember(string name, BishType? mroRoot = null,
-        BishLookupMode mode = BishLookupMode.None)
+    public BishObject? TryDelMember(string name, BishLookupMode mode = BishLookupMode.None)
     {
-        var self = mroRoot is null ? this : Base(this, mroRoot);
-        return (mode.HasFlag(BishLookupMode.NoAccessor) ? null : self.TryCallHook($"hook_del_{name}", [])) ??
-               (Vars.Remove(name, out var member)
-                   ? member
-                   : mode.HasFlag(BishLookupMode.NoHook)
-                       ? null
-                       : self.TryCallHook("hook_del", [new BishString(name)], ignores: true));
+        var handle = TryGetHandle(name, "del", mode);
+        if (handle is null) return null;
+        return handle.Type switch
+        {
+            BishVarHandleType.Normal => handle.Owner.Vars.Remove(handle.Name, out var value) ? value : null,
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_del"].Call([this, new BishString(handle.Name)]),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_del_{handle.Name}"].Call([this]),
+            _ => throw new ArgumentException("impossible!")
+        };
     }
 
     [Builtin("hook", tag: "ignore")]
@@ -239,7 +169,7 @@ public class BishObject(BishType? type = null)
     public T As<T>(string expr) where T : BishObject =>
         this as T ?? throw BishException.OfType_Expect(expr, this, typeof(T).Name);
 
-    public BishObject As(BishType type, string expr) => 
+    public BishObject As(BishType type, string expr) =>
         TryConvert(type) ?? throw BishException.OfType_Expect(expr, this, type);
 
     public BishObject? TryConvert(BishType type) => Type.CanAssignTo(type) ? this : null;
@@ -276,4 +206,13 @@ public class BishObject(BishType? type = null)
 
     [Builtin("hook")]
     public static BishType Set_type(BishObject self, BishType type) => self.Type = type;
+}
+
+public record BishVarHandle(BishObject Owner, string Name, BishVarHandleType Type, bool Bind = false);
+
+public enum BishVarHandleType
+{
+    Normal,
+    Hook,
+    Accessor
 }

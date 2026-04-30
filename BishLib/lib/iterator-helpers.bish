@@ -45,6 +45,6 @@
         return null;
     };
     func contains(self, x) self.findIndex((item) item == x) != -1;
-    func join(self, sep: '') self.map((item) item.toString()).reduce((s, item) s + sep + item);
+    func join(self, sep: '') self.map(string.from).reduce((s, item) s + sep + item);
     func concat(..iters)* for (iter : iters) yield* iter;
 };

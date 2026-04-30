@@ -55,17 +55,17 @@ public class MemberTest : Test
     public void TestDelMember()
     {
         ExpectResult("del T2.a", "1");
-        ExpectError("del x.b;", BishError.AttributeErrorType);
+        ExpectResult("del x.b", "0");
         ExpectResult("del x.c", "2");
 
         ExpectResult("T1.a", "0");
-        ExpectResult("T1.b", "0");
+        ExpectError("T1.b", BishError.AttributeErrorType);
         ExpectError("T1.c;", BishError.AttributeErrorType);
         ExpectResult("T2.a", "0");
-        ExpectResult("T2.b", "0");
+        ExpectError("T2.b", BishError.AttributeErrorType);
         ExpectResult("T2.c", "1");
         ExpectResult("x.a", "0");
-        ExpectResult("x.b", "0");
+        ExpectError("x.b", BishError.AttributeErrorType);
         ExpectResult("x.c", "1");
     }
 }

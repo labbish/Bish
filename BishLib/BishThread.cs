@@ -43,7 +43,7 @@ public class BishThread(Thread thread) : BishObject
     public static void Sleep(BishInt ms) => Thread.Sleep(ms.Value);
 
     [Builtin("hook")]
-    public static BishInt Get_id() => BishInt.Of(Environment.CurrentManagedThreadId);
+    public static BishInt Get_id(BishObject _) => BishInt.Of(Environment.CurrentManagedThreadId);
 
     [Builtin]
     public static BishThread OfRunner(BishRunnerThread thread) => new(thread.Thread);

@@ -38,7 +38,14 @@ public static class BishCompiler
         BishBuiltinBinder.Init();
         BishLib.BishLib.Initialize();
         BishCompileService.Compiler = Compile;
-        BishImporter.Import(null, "precludes");
+        try
+        {
+            BishImporter.Import(null, "precludes");
+        }
+        catch (BishException e)
+        {
+            Console.Error.WriteLine($"Cannot import preludes: {e}");
+        }
     }
 }
 

@@ -44,6 +44,6 @@ extend AsyncIterator {
         return null;
     };
     func contains(self, x) async (await self.findIndex((item) item == x)) != -1;
-    func join(self, sep: '') async await (await self.map((item) item.toString())).reduce((s, item) s + sep + item);
+    func join(self, sep: '') async await (await self.map(string.from)).reduce((s, item) s + sep + item);
     func concat(..iters) async* for await (iter : iters) yield await* iter;
 };

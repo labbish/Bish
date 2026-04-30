@@ -34,12 +34,13 @@ public class MethodTest : Test
         Execute("x:=1;");
         ExpectResult("x.toString()", "'1'");
         ExpectResult("null.toString()", "'null'");
-        ExpectResult("x.type.toString()", "'int'");
+        ExpectResult("x.type.toString(x)", "'1'");
+        ExpectResult("string.from(x.type)", "'int'");
+        ExpectResult("string.from(x)", "'1'");
         
         Execute("class C{func toString(self)'X'};class D:C;");
         ExpectResult("C().toString()", "'X'");
         ExpectResult("D().toString()", "'X'");
-        // Uses BishOperator.Call("toString", [c])
         ExpectResult("'{}'.format(C())", "'X'");
         ExpectResult("'{}'.format(D())", "'X'");
     }

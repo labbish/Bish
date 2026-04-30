@@ -87,10 +87,7 @@ public static partial class BishOperator
         {
             try
             {
-                var result = args.Count == 1
-                    ? arg.TryGetMember(name)?.TryCall([])
-                    : arg.Type.TryGetMember(name, BishLookupMode.NoBind)?.TryCall(args);
-                if (result is not null) return result;
+                if (arg.Type.TryGetMember(name, BishLookupMode.NoBind)?.TryCall(args) is { } result) return result;
             }
             catch (BishException e)
             {

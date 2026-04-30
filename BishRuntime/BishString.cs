@@ -60,7 +60,10 @@ public partial class BishString(string value) : BishObject
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
     public static string CallToString(BishObject obj) =>
-        BishOperator.Call("toString", [obj]).As<BishString>("toString").Value;
+        obj is BishType type ? type.Name : BishOperator.Call("toString", [obj]).As<BishString>("toString").Value;
+
+    [Builtin]
+    public static BishString From(BishObject obj) => new(CallToString(obj));
 
     [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)

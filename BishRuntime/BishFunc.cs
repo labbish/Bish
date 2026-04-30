@@ -198,7 +198,7 @@ public class BishFunc(
         args.List.Aggregate(self, (current, arg) => current.Bind(arg));
 
     [Builtin("hook")]
-    public static BishType Get_Arg() => BishArgObject.StaticType;
+    public static BishType Get_Arg(BishObject _) => BishArgObject.StaticType;
 
     [Builtin("hook")]
     public static BishBool Get_passCaller(BishFunc self) => BishBool.Of(self.PassCaller);

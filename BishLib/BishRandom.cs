@@ -18,7 +18,7 @@ public class BishRandom(Random random) : BishObject
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("Reader");
+    public new static readonly BishType StaticType = new("Random");
 
     [Builtin("hook")]
     public static BishRandom Create(BishObject _) => new(null!);

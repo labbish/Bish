@@ -1,0 +1,224 @@
+class JsonError : Error;
+
+class JsonParseError : JsonError {
+    init(self, message, location) {
+        self.base().hook_init('{} at char #{}'.format(message, location));
+        self.location := location;
+    };
+};
+
+class JsonStringifyError : JsonError;
+
+@static class JSON {
+    func parse(str) {
+        parser := JsonParser(str);
+        result := parser.parseValue();
+        parser.finish();
+        return result;
+    };
+    func stringify(obj, tabs: null) {
+        colon := if (tabs is null) ':' else ': ';
+        feed := if (tabs is null) '' else '\n';
+        func tab(s) s.split('\n').iter().map((line) if (tabs is null) line else (' ' * tabs + line)).join('\n');
+        func inner(obj) {
+            json := try obj.toJSON();
+            if (json is not err) return inner(json);
+            return obj switch {
+                null or of bool or of num => obj.toString(),
+                of string => '"' + unescapes.entries.iter().reduce((curr, [k, v]) curr.replace(k, v), obj) + '"',
+                of list => '[' + feed + tab(obj.iter().map(inner).join(',' + feed)) + feed + ']',
+                of map =>
+                    if (obj.keys.iter().any((k) k is not of string)) throw JsonStringifyError('Key must be string')
+                    else '{' + feed + tab(obj.entries.iter().map(([k, v]) inner(k) + colon + inner(v)).join(',' + feed)) + feed + '}',
+                _ => throw JsonStringifyError('Invalid data type: {}'.format(obj.type))
+            };
+        };
+        return inner(obj);
+    };
+};
+
+class JsonParser {
+    init(self, str) {
+        self.str := str;
+        self.i := 0;
+    };
+    get char(self) if (self.i >= self.str.length) null else self.str[self.i];
+    func skipSpaces(self) while (isSpace(self.char)) self.i += 1;
+    func error(self, message) throw JsonParseError(message, self.i);
+    func finish(self) {
+        self.skipSpaces();
+        if (self.char is not null) self.error('Unexpected character after JSON');
+    };
+    func parseValue(self) {
+        self.skipSpaces();
+        return self.char switch {
+            '"' => self.parseString(),
+            of _ c when isNumStart(c) => self.parseNumber(),
+            '{' => self.parseObject(),
+            '[' => self.parseArray(),
+            't' => self.parseLiteral('true', true),
+            'f' => self.parseLiteral('false', false),
+            'n' => self.parseLiteral('null', null),
+            null => self.error('Unexpected EOF'),
+            of _ c => self.error('Unexpected syntax: {}'.format(c))
+        };
+    };
+    func parseString(self) {
+        if (self.char != '"') self.error('Expected \'"\'');
+        result := '';
+        while (true) {
+            self.i += 1;
+            if (self.char is null) self.error('Unterminated string');
+            if (self.char == '"') {
+                self.i += 1;
+                return result;
+            };
+            if (self.char.toCode() < 32) self.error('Unescaped control character');
+            if (self.char != '\\') {
+                result += self.char;
+                continue;
+            };
+
+            self.i += 1;
+            char := self.char;
+            if (escapes.keys.iter().contains(char)) {
+                result += escapes[char];
+                continue;
+            };
+            if (char == 'u') {
+                hex := 0;
+                for (_ : range(4)) {
+                    self.i += 1;
+                    digit := toHexDigit(self.char);
+                    if (digit == -1) self.error('Invalid Unicode escape');
+                    hex = hex * 16 + digit;
+                };
+                result += string.fromCode(hex);
+                continue;
+            };
+            self.error('Invalid escape character: {}'.format(char));
+        };
+        return result;
+    };
+    func parseNumber(self) {
+        negative := self.char == '-';
+        result := 0;
+        if (negative) self.i += 1;
+
+        if (self.char == '0') {
+            self.i += 1;
+            if (isDigit(self.char)) self.error('Invalid leading zero');
+        } else {
+            while ((digit := toDigit(self.char)) != -1) {
+                self.i += 1;
+                result = digit + result * 10;
+            };
+        };
+
+        if (self.char == '.') {
+            self.i += 1;
+            if (!isDigit(self.char)) self.error('Expected digit after dot');
+            j := 1;
+            while ((digit := toDigit(self.char)) != -1) {
+                self.i += 1;
+                result += digit / 10 ^ j;
+                j += 1;
+            };
+        };
+
+        if (self.char == 'E' || self.char == 'e') {
+            self.i += 1;
+            sign := 1;
+            exp := 0;
+            first := self.char;
+            if (first == '+') self.i += 1
+            else if (first == '-') {
+                sign = -1;
+                self.i += 1
+            };
+            if (!isDigit(self.char)) self.error('Expected digit after in exponent');
+            while ((digit := toDigit(self.char)) != -1) {
+                self.i += 1;
+                exp = digit + exp * 10;
+            };
+            exp *= sign;
+            result *= 10 ^ exp;
+        };
+
+        if (negative) result *= -1;
+        return result;
+    };
+    func parseObject(self) {
+        if (self.char != '{') self.error('Expected \'{\'');
+        result := {};
+        self.i += 1;
+        self.skipSpaces();
+        if (self.char == '}') {
+            self.i += 1;
+            return result;
+        };
+        while (true) {
+            if (self.char != '"') self.error('Expected string for key');
+            key := self.parseString();
+            self.skipSpaces();
+            if (self.char != ':') self.error('Expected \':\'');
+            self.i += 1;
+            self.skipSpaces();
+            result[key] := self.parseValue();
+
+            self.skipSpaces();
+            char := self.char;
+            if (char == '}') {
+                self.i += 1;
+                return result;
+            };
+            if (char == ',') {
+                self.i += 1;
+                self.skipSpaces();
+                if (self.char === '}') self.error('Trailing comma in object');
+                continue;
+            };
+            self.error('Expected \',\' or \'}\'');
+        };
+    };
+    func parseArray(self) {
+        if (self.char != '[') self.error('Expected \'[\'');
+        result := [];
+        self.i += 1;
+        self.skipSpaces();
+        if (self.char == ']') {
+            self.i += 1;
+            return result;
+        };
+        while (true) {
+            result.add(self.parseValue());
+            self.skipSpaces();
+            if (self.char == ']') {
+                self.i += 1;
+                return result;
+            };
+            if (self.char == ',') {
+                self.i += 1;
+                self.skipSpaces();
+                if (self.char == ']') self.error('Trailing comma in array');
+                continue;
+            };
+            self.error('Expected \',\' or \']\' in array');
+        };
+    };
+    func parseLiteral(self, literal, value) {
+        for (c : literal) {
+            if (self.char != c) self.error('Unexpected syntax: {}'.format(c));
+            self.i += 1;
+        };
+        return value;
+    };
+};
+
+escapes := { 'b': '\b', 'f': '\f', 'n': '\n', 'r': '\r', 't': '\t', '"': '"', '/': '/', '\\': '\\' };
+unescapes := { '\\': '\\\\', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '"': '\"' };
+func toDigit(x) '0123456789'.iter().findIndex((c) c == x);
+func isDigit(x) toDigit(x) != -1;
+func toHexDigit(x) '0123456789ABCDEF'.iter().findIndex((c) c == x.upper());
+func isNumStart(x) isDigit(x) || x == '-';
+func isSpace(x) ' \t\r\n'.iter().contains(x);

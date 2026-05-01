@@ -123,6 +123,9 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
 
         ExpectResult("'{1},{},{},{0},{}'.format(0,1,2)", "'1,0,1,0,2'");
         ExpectResult("'0,1,,2'.split(',')", "['0','1','','2']");
+        
+        ExpectResult("'x'.toCode()", "120");
+        ExpectResult("string.fromCode(120)", "'x'");
     }
 
     [Fact]

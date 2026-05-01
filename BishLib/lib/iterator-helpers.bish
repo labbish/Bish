@@ -21,6 +21,7 @@
     func flatMap(self, f)* for (x : self) for (item : f(x)) yield item;
     func reduce(self, f, start: null) {
         result := start ?? self.next();
+        if (result is IteratorStop) throw ArgumentError('Cannot reduce empty iterator without start');
         for (item : self) result = f(result, item);
         return result;
     };
@@ -45,6 +46,10 @@
         return null;
     };
     func contains(self, x) self.findIndex((item) item == x) != -1;
-    func join(self, sep: '') self.map(string.from).reduce((s, item) s + sep + item);
+    func join(self, sep: '') {
+        first := self.next();
+        if (first is IteratorStop) return '';
+        return self.map(string.from).reduce((s, item) s + sep + item, string.from(first));
+    };
     func concat(..iters)* for (iter : iters) yield* iter;
 };

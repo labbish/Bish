@@ -101,8 +101,8 @@ public class BishBytecodeReader(BinaryReader reader)
 
     public Tag? GetTag() => GetByte() switch
     {
-        0xff => null,
-        0xfe => GetByte(),
+        StringTags.NullTag => null,
+        StringTags.ByteTag => GetByte(),
         var first => GetString(first)
     };
 

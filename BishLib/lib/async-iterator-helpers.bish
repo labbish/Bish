@@ -20,6 +20,7 @@ extend AsyncIterator {
     func flatMap(self, f) async* for await (x : self) for await (item : await f(x)) yield item;
     func reduce(self, f, start: null) async {
         result := start ?? await self.next();
+        if (result is IteratorStop) throw ArgumentError('Cannot reduce empty iterator without start');
         for await (item : self) result = await f(result, item);
         return result;
     };
@@ -44,6 +45,10 @@ extend AsyncIterator {
         return null;
     };
     func contains(self, x) async (await self.findIndex((item) item == x)) != -1;
-    func join(self, sep: '') async await (await self.map(string.from)).reduce((s, item) s + sep + item);
+    func join(self, sep: '') async {
+        first := await self.next();
+        if (first is IteratorStop) return '';
+        return await (await self.map(string.from)).reduce((s, item) s + sep + item, string.from(first));
+    };
     func concat(..iters) async* for await (iter : iters) yield await* iter;
 };

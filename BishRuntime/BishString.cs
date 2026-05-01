@@ -82,6 +82,22 @@ public partial class BishString(string value) : BishObject
     public static BishList Split(BishString self, BishString sep) =>
         new(self.Value.Split(sep.Value).Select(s => new BishString(s)).ToList<BishObject>());
 
+    [Builtin]
+    public static BishInt ToCode(BishString self) => BishInt.Of(self.Value[0]);
+
+    [Builtin]
+    public static BishString FromCode(BishInt code) => new((char)code.Value);
+
+    [Builtin]
+    public static BishString Upper(BishString self) => new(self.Value.ToUpperInvariant());
+
+    [Builtin]
+    public static BishString Lower(BishString self) => new(self.Value.ToLowerInvariant());
+
+    [Builtin]
+    public static BishString Replace(BishString self, BishString from, BishString to) =>
+        new(self.Value.Replace(from.Value, to.Value));
+
     [GeneratedRegex(@"\{(\d*)\}")]
     private static partial Regex MyRegex();
 }

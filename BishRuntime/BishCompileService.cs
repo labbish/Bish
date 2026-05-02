@@ -101,19 +101,18 @@ public static class BishCompileService
     static BishCompileService() => BishMeta.Builtin.Root = Environment.CurrentDirectory;
 }
 
-public record CompilationError(
-    int Line,
-    int Column,
-    string Message,
-    int StopLine,
-    int StopColumn)
+public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 {
-    public override string ToString() =>
-        $"Compilation error at line {Line}, column {Column} to line {StopLine}, column {StopColumn}: {Message}";
+    public override string ToString() => $"line {Line}, column {Column} to line {StopLine}, column {StopColumn}";
+}
+
+public record CompilationError(SourcePosition Position, string Message)
+{
+    public override string ToString() => $"Compilation error at {Position}: {Message}";
 
     public BishError ToError() => BishException.OfCompile(ToString())
-        .With("start", new BishList([BishInt.Of(Line), BishInt.Of(Column)]))
-        .With("end", new BishList([BishInt.Of(StopLine), BishInt.Of(StopColumn)]))
+        .With("start", new BishList([BishInt.Of(Position.Line), BishInt.Of(Position.Column)]))
+        .With("end", new BishList([BishInt.Of(Position.StopLine), BishInt.Of(Position.StopColumn)]))
         .With("info", new BishString(Message)).Error;
 }
 

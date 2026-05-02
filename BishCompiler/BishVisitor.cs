@@ -260,20 +260,20 @@ public static class CompileResultHelper
         internal CompileResult IntoExpr() => result.Effect switch
         {
             StackEffect.Expr => result,
-            StackEffect.Stat => CompileResult.Expr(result.Context).Add(result).Add(new Null()),
+            StackEffect.Stat => CompileResult.Expr(result.Tree).Add(result).Add(new Null()),
             _ => throw BishVisitor.Impossible
         };
 
         internal CompileResult IntoStat() => result.Effect switch
         {
-            StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Pop()),
+            StackEffect.Expr => CompileResult.Stat(result.Tree).Add(result).Add(new Pop()),
             StackEffect.Stat => result,
             _ => throw BishVisitor.Impossible
         };
 
         internal CompileResult IntoReturn() => result.Effect switch
         {
-            StackEffect.Expr => CompileResult.Stat(result.Context).Add(result).Add(new Ret()),
+            StackEffect.Expr => CompileResult.Stat(result.Tree).Add(result).Add(new Ret()),
             StackEffect.Stat => result,
             _ => throw BishVisitor.Impossible
         };

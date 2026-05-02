@@ -57,17 +57,11 @@ public class ErrorListener : BaseErrorListener, IAntlrErrorListener<int>
 {
     public IList<CompilationError> Errors { get; } = new ConcurrentList<CompilationError>();
 
-    public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol,
-        int line, int charPositionInLine, string msg, RecognitionException e)
-    {
-        var length = offendingSymbol.StopIndex - offendingSymbol.StartIndex + 1;
-        var stopColumn = charPositionInLine + length;
-        Errors.Add(new CompilationError(line, charPositionInLine, msg, line, stopColumn));
-    }
+    public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken token,
+        int line, int pos, string msg, RecognitionException e) =>
+        Errors.Add(new CompilationError(SourcePosition.From(token), msg));
 
-    public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol,
-        int line, int charPositionInLine, string msg, RecognitionException e)
-    {
-        Errors.Add(new CompilationError(line, charPositionInLine, msg, line, charPositionInLine + 1));
-    }
+    public void SyntaxError(TextWriter output, IRecognizer recognizer, int token,
+        int line, int pos, string msg, RecognitionException e) =>
+        Errors.Add(new CompilationError(new SourcePosition(line, pos, line, pos + 1), msg));
 }

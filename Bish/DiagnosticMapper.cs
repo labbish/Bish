@@ -10,8 +10,8 @@ public static class DiagnosticMapper
         new()
         {
             Range = new Range(
-                new Position(error.Line - 1, error.Column),
-                new Position(error.StopLine - 1, error.StopColumn)
+                new Position(error.Position.Line - 1, error.Position.Column),
+                new Position(error.Position.StopLine - 1, error.Position.StopColumn)
             ),
             Message = error.Message,
             Severity = DiagnosticSeverity.Error,

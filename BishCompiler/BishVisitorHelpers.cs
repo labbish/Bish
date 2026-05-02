@@ -28,25 +28,22 @@ public enum StackEffect
 
 public class CompileResult(
     StackEffect effect,
-    ParserRuleContext? context,
+    IParseTree? tree,
     Codes? codes = null,
     IList<CompilationError>? errors = null)
 {
     public StackEffect Effect => effect;
-    public ParserRuleContext? Context => context;
+    public IParseTree? Tree => tree;
     public Codes Codes { get; internal set; } = (codes ?? []).ToConcurrentList();
     public readonly IList<CompilationError> Errors = (errors ?? []).ToConcurrentList();
 
-    public CompileResult Error(ParserRuleContext? ctx, string message)
+    public CompileResult Error(IParseTree? parseTree, string message)
     {
-        var start = ctx?.Start;
-        var stop = ctx?.Stop;
-        Errors.Add(new CompilationError(start?.Line ?? 0, start?.Column ?? 0, message,
-            stop?.Line ?? 0, stop?.Column ?? 0 + (stop?.Text?.Length ?? 0)));
+        Errors.Add(new CompilationError(SourcePosition.From(parseTree), message));
         return this;
     }
 
-    public CompileResult Error(string message) => Error(Context, message);
+    public CompileResult Error(string message) => Error(Tree, message);
 
     public T? Try<T>(Func<T> action)
     {
@@ -61,16 +58,16 @@ public class CompileResult(
         }
     }
 
-    public static CompileResult Expr(ParserRuleContext? context) => new(StackEffect.Expr, context);
+    public static CompileResult Expr(IParseTree? tree) => new(StackEffect.Expr, tree);
 
-    public static CompileResult Stat(ParserRuleContext? context) => new(StackEffect.Stat, context);
+    public static CompileResult Stat(IParseTree? tree) => new(StackEffect.Stat, tree);
 
-    public static CompileResult Pattern(ParserRuleContext? context) => new(StackEffect.Pattern, context);
+    public static CompileResult Pattern(IParseTree? tree) => new(StackEffect.Pattern, tree);
 
-    public static CompileResult Same(ParserRuleContext? context, params IList<CompileResult> results)
+    public static CompileResult Same(IParseTree? tree, params IList<CompileResult> results)
     {
         var effect = results[0].Effect;
-        var result = new CompileResult(effect, context);
+        var result = new CompileResult(effect, tree);
         if (results.Any(e => e.Effect != effect))
             result.Error("Expect all branches to have a same effect: "
                          + $"found {string.Join(", ", results.Select(e => e.Effect))}");
@@ -153,4 +150,42 @@ internal abstract record Unbound(ParserRuleContext Context) : BishBytecode
 {
     public abstract string ErrorMessage();
     public override void Execute(BishFrame frame) => throw BishVisitor.Impossible;
+}
+
+public static class SourcePositionHelper
+{
+    extension(SourcePosition)
+    {
+        public static SourcePosition From(IToken token)
+        {
+            var line = token.Line;
+            var column = token.Column;
+    
+            var text = token.Text;
+            var lines = text.Split('\n');
+
+            var stopLine = line + lines.Length - 1;
+            var stopColumn = lines.Length > 1 ? lines.Last().Length : column + text.Length;
+
+            return new SourcePosition(line, column, stopLine, stopColumn);
+        }
+
+        public static SourcePosition FromNode(ITerminalNode node) => SourcePosition.From(node.Symbol);
+
+        public static SourcePosition FromCtx(ParserRuleContext ctx)
+        {
+            var start = ctx.Start;
+            var stop = ctx.Stop;
+            return new SourcePosition(start?.Line ?? 0, start?.Column ?? 0, 
+                stop?.Line ?? 0, stop?.Column ?? 0 + (stop?.Text?.Length ?? 0));
+        }
+
+        public static SourcePosition From(IParseTree? tree) => tree switch
+        {
+            null => new SourcePosition(0, 0, 0, 0),
+            ITerminalNode node => SourcePosition.FromNode(node),
+            ParserRuleContext ctx => SourcePosition.FromCtx(ctx),
+            _ => throw BishVisitor.Impossible
+        };
+    }
 }

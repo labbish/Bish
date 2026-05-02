@@ -99,6 +99,18 @@ public static class BishOptimizer
             return codes;
         }
 
+        public Codes CombineDefMemberPop()
+        {
+            for (var i = 0; i < codes.Count - 1; i++)
+                if (codes[i] is DefMember def && codes[i + 1] is Pop { Tag: null })
+                {
+                    codes.Replace(i, new Nop());
+                    codes.Replace(i + 1, new MoveMember(def.Name));
+                }
+
+            return codes;
+        }
+
         public Codes MoveNopTag()
         {
             for (var i = 0; i < codes.Count - 1; i++)
@@ -152,6 +164,7 @@ public static class BishOptimizer
         Add(RemoveDiscarded);
         Add(RemoveValuePop);
         Add(CombineDefPop);
+        Add(CombineDefMemberPop);
         Add(MoveNopTag);
         Add(CompressTags);
     }

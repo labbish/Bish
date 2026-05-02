@@ -112,7 +112,7 @@ OF  : 'of' ;
 ERR : 'err' ;
 NOT : 'not' ;
 AND : 'and' ;
-OR :  'or' ;
+OR  : 'or' ;
 
 ID  : [A-Za-z_][A-Za-z0-9_]* ;
 

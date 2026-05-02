@@ -175,7 +175,7 @@ class JsonParser {
             if (char == ',') {
                 self.i += 1;
                 self.skipSpaces();
-                if (self.char === '}') self.error('Trailing comma in object');
+                if (self.char == '}') self.error('Trailing comma in object');
                 continue;
             };
             self.error('Expected \',\' or \'}\'');
@@ -208,7 +208,7 @@ class JsonParser {
     };
     func parseLiteral(self, literal, value) {
         for (c : literal) {
-            if (self.char != c) self.error('Unexpected syntax: {}'.format(c));
+            if (self.char != c) self.error('Unexpected syntax: {}'.format(self.char));
             self.i += 1;
         };
         return value;

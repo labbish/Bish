@@ -114,6 +114,17 @@ public record DefMember(string Name) : BishBytecode
 }
 
 [Bytecode]
+public record MoveMember(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame)
+    {
+        var value = frame.Stack.Pop();
+        var obj = frame.Stack.Pop();
+        obj.DefMember(Name, value);
+    }
+}
+
+[Bytecode]
 public record DelMember(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));

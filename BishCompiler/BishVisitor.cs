@@ -203,7 +203,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
             result.Add(new Copy());
             if (entry.expr() is null) result.Add(new Get(entry.ID().GetText()));
             else result.Add(Visit(entry.expr()), StackEffect.Expr);
-            result.Add(new DefMember(entry.ID().GetText()), new Pop());
+            result.Add(new MoveMember(entry.ID().GetText()));
         }
 
         return result;

@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Antlr4.Runtime.Misc;
 using String = BishRuntime.String;
 
 namespace BishCompiler;
@@ -212,7 +213,8 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     public override CompileResult VisitMacroExpr(BishParser.MacroExprContext context)
     {
         var result = CompileResult.Expr(context).Add(new GetBuiltin("meta"), new GetMember("parse"),
-            new String(context.body.GetText()), new Call(1));
+            new String(context.Start.InputStream.GetText(new Interval(context.body.Start.StartIndex,
+                context.body.Stop.StopIndex))), new Call(1));
         if (context.macro is { } macro) result.Add(Visit(macro), StackEffect.Expr).Add(new Swap(), new Call(1));
         return result;
     }

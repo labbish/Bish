@@ -66,33 +66,42 @@ public class BishErrorTask(BishError error) : BishTask
     public BishObject Poll(BishObject _) => new BishErrorResult(error);
 }
 
-public class BishRunTask(Func<BishObject> func) : BishTask
+public class BishNativeTask(Func<Task<BishObject>> provider) : BishTask
 {
-    private volatile BishObject? _value;
+    private volatile BishObject? _result;
+
+    private Task? _task;
+
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("Task.run");
+    public new static readonly BishType StaticType = new("Task.native");
+
+    public BishNativeTask(Func<Task> provider) : this(() => provider().ContinueWith<BishObject>(_ => BishNull.Instance))
+    {
+    }
 
     [Async]
     public BishObject? Poll(BishObject ctx)
     {
-        if (_value is not null) return _value;
-        Task.Run(() =>
+        if (_result is not null) return _result;
+        if (_task is not null) return null;
+        _task = provider().ContinueWith(t =>
         {
-            try
+            if (t.IsFaulted)
             {
-                _value = func();
+                var exception = t.Exception.InnerException;
+                if (exception is BishException e) _result = new BishErrorResult(e.Error);
+                else throw exception!;
             }
-            catch (BishException e)
-            {
-                _value = new BishErrorResult(e.Error);
-            }
+            else _result = t.Result;
 
             ctx.Awake();
         });
         return null;
     }
 }
+
+public class BishRunTask(Func<BishObject> func) : BishNativeTask(() => Task.Run(func));
 
 public class BishAllTask(IList<BishObject> tasks) : BishTask
 {
@@ -140,33 +149,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
     }
 }
 
-public class BishSleepTask(int ms) : BishTask
-{
-    private volatile bool _done;
-
-    private Timer? _timer;
-
-    public override BishType DefaultType => StaticType;
-
-    public new static readonly BishType StaticType = new("Task.sleep");
-
-    [Async]
-    public BishObject? Poll(BishObject ctx)
-    {
-        if (_done)
-        {
-            _timer?.Dispose();
-            return BishNull.Instance;
-        }
-
-        _timer = new Timer(_ =>
-        {
-            _done = true;
-            ctx.Awake();
-        }, null, ms, Timeout.Infinite);
-        return null;
-    }
-}
+public class BishSleepTask(int ms) : BishNativeTask(() => Task.Delay(ms));
 
 public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIterator
 {

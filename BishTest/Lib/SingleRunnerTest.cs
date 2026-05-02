@@ -3,8 +3,9 @@
 public class SingleRunnerTest(TestInfoFixture fixture)
     : LibTest(fixture, "single-thread-runner", ["SingleThreadRunner"])
 {
-    [Fact]
-    public void TestSingleRunner()
+    [Theory]
+    [Repeat(5)]
+    public void TestSingleRunner(int _)
     {
         Execute("func f()async{await Task.sleep(50);'f'};");
         Execute("func g()async{await Task.sleep(10);'g'};");

@@ -107,5 +107,6 @@ public class ReflectTest : Test
         Execute("func count(tree)tree.children[0].children.length;");
         ExpectResult("#count[1+2]", "3");
         ExpectCompileError("#[???]");
+        ExpectResult("(#[func f()0]).children[0].type", "'FuncExpr'");
     }
 }

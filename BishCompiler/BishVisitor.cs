@@ -209,6 +209,14 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         return result;
     }
 
+    public override CompileResult VisitMacroExpr(BishParser.MacroExprContext context)
+    {
+        var result = CompileResult.Expr(context).Add(new GetBuiltin("meta"), new GetMember("parse"),
+            new String(context.body.GetText()), new Call(1));
+        if (context.macro is { } macro) result.Add(Visit(macro), StackEffect.Expr).Add(new Swap(), new Call(1));
+        return result;
+    }
+
     public CompileResult VisitMulti(IList<BishParser.ExprContext> fronts, BishParser.ExprContext? last)
     {
         var expr = last is null ? CompileResult.Stat(last) : Visit(last);

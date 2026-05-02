@@ -38,6 +38,7 @@ BAR : '|' ;
 QUES : '?' ;
 ARROW : '=>' ;
 AT : '@' ;
+SHARP : '#' ;
 
 BLOCK_COMMENT
     : '/*' .*? '*/' -> skip

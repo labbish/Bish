@@ -50,6 +50,7 @@ expr
     | <assoc=right> CTN ID?                                     # ContinueExpr
     | <assoc=right> RET expr?                                   # ReturnExpr
     | <assoc=right> YLD await=AWT? gen=MUL? expr                # YieldExpr
+    | <assoc=right> SHARP macro=expr? LBRACK body=expr RBRACK   # MacroExpr
     | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr

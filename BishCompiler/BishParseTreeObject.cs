@@ -20,7 +20,7 @@ public class BishParseTreeObject : BishObject
     {
         Tree = tree;
         DefMember("type", new BishString(TypeName(tree)));
-        DefMember("text", new BishString(tree.GetText()));
+        DefMember("text", tree is TerminalNodeImpl node ? new BishString(node.Symbol.Text) : BishNull.Instance);
     }
 
     public static string TypeName(IParseTree tree) => tree.GetType().Name.TrimEnd("Context").ToString();

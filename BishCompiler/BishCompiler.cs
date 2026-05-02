@@ -42,6 +42,7 @@ public static class BishCompiler
         BishLib.BishLib.Initialize();
         BishCompileService.Parser = Parse;
         BishCompileService.Compiler = Compile;
+        BishBuiltinScope.Instance.DefMember("ParseTree", BishParseTreeObject.StaticType);
         try
         {
             BishImporter.Import(null, "preludes");

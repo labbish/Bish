@@ -88,17 +88,24 @@ public class ReflectTest : Test
         Execute("t:=meta.parse('1+2');");
         ExpectResult("t.toString()", $"'([Program] {c} <EOF>)'");
         ExpectResult("t.type", "'Program'");
-        ExpectResult("t.text", "'1+2<EOF>'");
+        ExpectResult("t.text", "null");
         ExpectResult("t.parent", "null");
         ExpectResult("t.children.length", "2");
 
         Execute("c:=t.children[0];");
         ExpectResult("c.toString()", $"'{c}'");
         ExpectResult("c.type", "'BinOpExpr'");
-        ExpectResult("c.text", "'1+2'");
+        ExpectResult("c.text", "null");
         ExpectTrue("c.parent===t");
         ExpectResult("c.children.length", "3");
+        
+        ExpectResult("c.children[1].text", "'+'");
 
         ExpectResult("meta.compile(t).eval()", "3");
+        
+        ExpectResult("#[1+2].toString()", $"'([Program] {c} <EOF>)'");
+        Execute("func count(tree)tree.children[0].children.length;");
+        ExpectResult("#count[1+2]", "3");
+        ExpectCompileError("#[???]");
     }
 }

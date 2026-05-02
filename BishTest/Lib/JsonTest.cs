@@ -91,7 +91,7 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
         JsonParseError("[1,,2]");
         JsonParseError("[,1]");
         JsonParseError("[1 2]");
-        
+
         JsonParse("{}");
         JsonParse("""{"a": 1}""");
         JsonParse("""{"a": 1, "b": 2}""");
@@ -152,5 +152,18 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
                       """, tabs: 2);
         JsonStringifyError("{0:0}");
         JsonStringifyError("object()");
+    }
+
+    [Fact]
+    public void TestJsonExtensions()
+    {
+        JsonStringify("#[1+2]", """
+                                {"type":"Program","children":[{"type":"BinOpExpr","children":
+                                [{"type":"AtomExpr","children":[{"type":"IntAtom","children":
+                                [{"type":"TerminalNodeImpl","text":"1"}]}]},{"type":"TerminalNodeImpl","text":"+"},
+                                {"type":"AtomExpr","children":[{"type":"IntAtom","children":
+                                [{"type":"TerminalNodeImpl","text":"2"}]}]}]},
+                                {"type":"TerminalNodeImpl","text":"<EOF>"}]}
+                                """.Replace(Environment.NewLine, ""));
     }
 }

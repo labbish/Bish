@@ -83,6 +83,13 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
 
     [Builtin]
     public static BishObject Execute(BishFrame self) => self.Execute();
+
+    [Builtin]
+    public static BishObject? Eval(BishFrame self)
+    {
+        self.Execute();
+        return self.ReturnValue ?? (self.Stack.TryPeek(out var result) ? result : null);
+    }
 }
 
 public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Action<BishError> Handler);

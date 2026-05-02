@@ -91,15 +91,14 @@ public class ReflectTest : Test
         ExpectResult("t.text", "'1+2<EOF>'");
         ExpectResult("t.parent", "null");
         ExpectResult("t.children.length", "2");
-        
+
         Execute("c:=t.children[0];");
         ExpectResult("c.toString()", $"'{c}'");
         ExpectResult("c.type", "'BinOpExpr'");
         ExpectResult("c.text", "'1+2'");
         ExpectTrue("c.parent===t");
         ExpectResult("c.children.length", "3");
-        
-        Execute("f:=meta.compile(t);f.execute();");
-        ExpectResult("f.stack[0]", "3");
+
+        ExpectResult("meta.compile(t).eval()", "3");
     }
 }

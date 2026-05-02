@@ -76,8 +76,30 @@ public class ReflectTest : Test
         ExpectResult("(()*0).isGen", "true");
         ExpectResult("(()0).isAsync", "false");
         ExpectResult("(()async 0).isAsync", "true");
-        
+
         ExpectResult("meta.compile('return 0;').execute()", "0");
         ExpectError("meta.compile('???')", BishError.CompilationErrorType);
+    }
+
+    [Fact]
+    public void TestParseTree()
+    {
+        const string c = "([BinOpExpr] ([AtomExpr] ([IntAtom] 1)) + ([AtomExpr] ([IntAtom] 2)))";
+        Execute("t:=meta.parse('1+2');");
+        ExpectResult("t.toString()", $"'([Program] {c} <EOF>)'");
+        ExpectResult("t.type", "'Program'");
+        ExpectResult("t.text", "'1+2<EOF>'");
+        ExpectResult("t.parent", "null");
+        ExpectResult("t.children.length", "2");
+        
+        Execute("c:=t.children[0];");
+        ExpectResult("c.toString()", $"'{c}'");
+        ExpectResult("c.type", "'BinOpExpr'");
+        ExpectResult("c.text", "'1+2'");
+        ExpectTrue("c.parent===t");
+        ExpectResult("c.children.length", "3");
+        
+        Execute("f:=meta.compile(t);f.execute();");
+        ExpectResult("f.stack[0]", "3");
     }
 }

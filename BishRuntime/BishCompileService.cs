@@ -1,13 +1,20 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 public record CompileOptions(bool Optimize = true, bool Throws = true);
 
 public static class BishCompileService
 {
-    [SuppressMessage("Usage", "CA2211")]
-    public static Func<string, CompileOptions, (IList<CompilationError>, IList<BishBytecode>)>? Compiler;
+    public static Func<string, CompilerResult<BishObject>> Parser
+    {
+        get => field ?? throw BishException.OfCompile_NoService();
+        set;
+    }
+
+    public static Func<CompilerResult<BishObject>, CompileOptions, CompilerResult<IList<BishBytecode>>> Compiler
+    {
+        get => field ?? throw BishException.OfCompile_NoService();
+        set;
+    }
 
     private static string? FindRoot(string? path)
     {
@@ -61,10 +68,23 @@ public static class BishCompileService
     public static BishFrame Compile(string code, out IList<CompilationError> errors,
         string? root = null, BishScope? scope = null, CompileOptions? options = null)
     {
-        if (Compiler is null) throw BishException.OfCompile_NoService();
-        var (e, codes) = Compiler(code, options ?? new CompileOptions());
-        errors = e;
-        return new BishFrame(codes, scope).AddMeta(root);
+        var result = Compiler(Parser(code), options ?? new CompileOptions());
+        errors = result.Errors;
+        return new BishFrame(result.Result, scope).AddMeta(root);
+    }
+
+    public static BishFrame Compile(BishObject obj)
+    {
+        var result = Compiler(new CompilerResult<BishObject>(obj, []), new CompileOptions());
+        CheckErrors(result.Errors);
+        return new BishFrame(result.Result).AddMeta(null);
+    }
+
+    public static BishObject Parse(string code)
+    {
+        var result = Parser(code);
+        CheckErrors(result.Errors);
+        return result.Result;
     }
 
     private static BishFrame AddMeta(this BishFrame frame, string? root)
@@ -72,7 +92,7 @@ public static class BishCompileService
         frame.Scope.DefVar("meta", new BishMeta(root ?? Environment.CurrentDirectory));
         return frame;
     }
-    
+
     public static void CheckErrors(IList<CompilationError> errors)
     {
         if (errors.Count > 0) throw BishException.OfCompile_Errors(errors);
@@ -96,3 +116,5 @@ public record CompilationError(
         .With("end", new BishList([BishInt.Of(StopLine), BishInt.Of(StopColumn)]))
         .With("info", new BishString(Message)).Error;
 }
+
+public record CompilerResult<T>(T Result, IList<CompilationError> Errors);

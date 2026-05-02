@@ -9,7 +9,7 @@ namespace BishCompiler;
 
 public static class BishCompiler
 {
-    private static (IList<CompilationError>, Codes) Compile(string code, CompileOptions options)
+    private static CompilerResult<BishObject> Parse(string code)
     {
         var stream = CharStreams.fromString(code);
         var lexer = new BishLexer(stream);
@@ -22,13 +22,16 @@ public static class BishCompiler
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
 
-        var program = parser.program();
-        var visitor = new BishVisitor();
-        var result = visitor.VisitFull(program, optimize: options.Optimize);
+        return new CompilerResult<BishObject>(BishParseTreeObject.From(parser.program()), listener.Errors);
+    }
 
+    private static CompilerResult<Codes> Compile(CompilerResult<BishObject> compilerResult, CompileOptions options)
+    {
+        var (obj, errors) = compilerResult;
+        var tree = obj.As<BishParseTreeObject>("parse tree");
+        var result = new BishVisitor().VisitFull(tree.Tree, optimize: options.Optimize);
         if (options.Throws) BishCompileService.CheckErrors(result.Errors);
-        var errors = (ConcurrentList<CompilationError>)[..listener.Errors, ..result.Errors];
-        return (errors, result.Codes);
+        return new CompilerResult<Codes>(result.Codes, errors.Concat(result.Errors).ToConcurrentList());
     }
 
     public static void Init() => RuntimeHelpers.RunClassConstructor(typeof(BishCompiler).TypeHandle);
@@ -37,6 +40,7 @@ public static class BishCompiler
     {
         BishBuiltinBinder.Init();
         BishLib.BishLib.Initialize();
+        BishCompileService.Parser = Parse;
         BishCompileService.Compiler = Compile;
         try
         {

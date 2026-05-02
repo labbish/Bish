@@ -34,7 +34,12 @@ public class BishMeta(string? root) : BishObject
     public static BishProxyMap Get_cache(BishMeta _) => new(BishImporter.Cache);
 
     [Builtin]
-    public static BishFrame Compile(BishMeta _, BishString code) => BishCompileService.Compile(code.Value);
+    public static BishObject Parse(BishMeta _, BishString code) => BishCompileService.Parse(code.Value);
+
+    [Builtin]
+    public static BishFrame Compile(BishMeta _, BishObject obj) => obj is BishString code
+        ? BishCompileService.Compile(code.Value)
+        : BishCompileService.Compile(obj);
 
     [Builtin]
     public static BishFrame CompileFile(BishMeta _, BishString path) => BishCompileService.CompileFile(path.Value);

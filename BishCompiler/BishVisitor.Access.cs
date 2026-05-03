@@ -130,7 +130,7 @@ public partial class BishVisitor
                 break;
             }
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return Set(id.GetText(), op, value);
+                return Set(id.GetText(), op, value).WithTree(context);
             case BishParser.GetAccessContext access:
             {
                 var tag = Symbols.Get("set");
@@ -244,7 +244,7 @@ public partial class BishVisitor
                 break;
             }
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return Def(id.GetText(), value);
+                return Def(id.GetText(), value).WithTree(context);
             case BishParser.GetAccessContext access:
             {
                 var tag = Symbols.Get("def");
@@ -263,16 +263,17 @@ public partial class BishVisitor
         switch (context)
         {
             case BishParser.ListExprContext list:
-                return Dels(ArgsToExpr(list.args().arg()).ToList());
+                return Dels(ArgsToExpr(list.args().arg()).ToList()).WithTree(context);
             case BishParser.MapExprContext map:
                 return Dels(map.entries().entry().Select(entry => entry switch
                 {
                     BishParser.SingleEntryContext single => single.value,
                     BishParser.RestEntryContext rest => rest.expr(),
                     _ => throw Impossible
-                }).ToList());
+                }).ToList()).WithTree(context);
             case BishParser.ObjExprContext obj:
-                return Dels(obj.objEntries().objEntry().Select(entry => entry.ID().GetText()).ToList());
+                return Dels(obj.objEntries().objEntry().Select(entry => entry.ID().GetText()).ToList())
+                    .WithTree(context);
             case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
                 return CompileResult.Expr(context).Add(new Del(id.GetText()));
             case BishParser.GetAccessContext access:
@@ -292,6 +293,7 @@ public partial class BishVisitor
             result.Add(new Del(id));
             if (i != ids.Count - 1) result.Add(new Pop());
         }
+
         return result;
     }
 
@@ -303,6 +305,7 @@ public partial class BishVisitor
             result.Add(Del(expr));
             if (i != exprs.Count - 1) result.Add(new Pop());
         }
+
         return result;
     }
 
@@ -319,7 +322,7 @@ public partial class BishVisitor
             .Add(new GetMember(member.ID().GetText())),
         BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
             .Add(Visit(index.index()), StackEffect.Expr).Add(Op("get[]", 2)),
-        BishParser.CallAccessContext call => Call(call.args().arg()),
+        BishParser.CallAccessContext call => Call(call.args().arg()).WithTree(access),
         _ => throw Impossible
     };
 

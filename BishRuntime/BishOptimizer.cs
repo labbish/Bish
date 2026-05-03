@@ -67,7 +67,7 @@ public static class BishOptimizer
                 {
                     Set code when Discarded(code.Name) => new Nop(),
                     Def code when Discarded(code.Name) => new Nop(),
-                    Move code when Discarded(code.Name) => new Pop(),
+                    Move code when Discarded(code.Name) => new Pop().WithPos(code.Pos),
                     { } code => code
                 };
             }
@@ -90,10 +90,10 @@ public static class BishOptimizer
         public Codes CombineDefPop()
         {
             for (var i = 0; i < codes.Count - 1; i++)
-                if (codes[i] is Def def && codes[i + 1] is Pop { Tag: null })
+                if (codes[i] is Def def && codes[i + 1] is Pop { Tag: null } pop)
                 {
                     codes.Replace(i, new Nop());
-                    codes.Replace(i + 1, new Move(def.Name));
+                    codes.Replace(i + 1, new Move(def.Name).WithPos(SourcePosition.Combine(def.Pos, pop.Pos)));
                 }
 
             return codes;
@@ -102,10 +102,10 @@ public static class BishOptimizer
         public Codes CombineDefMemberPop()
         {
             for (var i = 0; i < codes.Count - 1; i++)
-                if (codes[i] is DefMember def && codes[i + 1] is Pop { Tag: null })
+                if (codes[i] is DefMember def && codes[i + 1] is Pop { Tag: null } pop)
                 {
                     codes.Replace(i, new Nop());
-                    codes.Replace(i + 1, new MoveMember(def.Name));
+                    codes.Replace(i + 1, new MoveMember(def.Name).WithPos(SourcePosition.Combine(def.Pos, pop.Pos)));
                 }
 
             return codes;

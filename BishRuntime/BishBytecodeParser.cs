@@ -67,6 +67,20 @@ public class BishBytecodeWriter(BinaryWriter writer)
         AddInt(value.Count);
         foreach (var str in value) AddString(str);
     }
+
+    public void AddPos(SourcePosition? position)
+    {
+        if (position is null)
+        {
+            AddByte(StringTags.NullTag);
+            return;
+        }
+
+        AddInt(position.Line);
+        AddInt(position.Column);
+        AddInt(position.StopLine);
+        AddInt(position.StopColumn);
+    }
 }
 
 public class BishBytecodeReader(BinaryReader reader)
@@ -86,12 +100,17 @@ public class BishBytecodeReader(BinaryReader reader)
     public double GetDouble() => ProcessBytes(8, BinaryPrimitives.ReadDoubleBigEndian);
     public bool GetBool() => GetByte() != 0;
 
+    public int GetInt(byte first)
+    {
+        Span<byte> rest = stackalloc byte[3];
+        reader.ReadExactly(rest);
+        return BinaryPrimitives.ReadInt32BigEndian([first, ..rest]);
+    }
+
     public string GetString(byte first)
     {
         if (first == StringTags.Repeated) return _strings[GetInt()];
-        Span<byte> rest = stackalloc byte[3];
-        reader.ReadExactly(rest);
-        var length = BinaryPrimitives.ReadInt32BigEndian([first, ..rest]);
+        var length = GetInt(first);
         var result = ProcessBytes(length, Encoding.UTF8.GetString);
         _strings.Add(result);
         return result;
@@ -114,13 +133,24 @@ public class BishBytecodeReader(BinaryReader reader)
         return list.ToArray();
     }
 
+    public SourcePosition? GetPos()
+    {
+        var first = GetByte();
+        if (first == StringTags.NullTag) return null;
+        var line = GetInt(first);
+        var column = GetInt();
+        var stopLine = GetInt();
+        var stopColumn = GetInt();
+        return new SourcePosition(line, column, stopLine, stopColumn);
+    }
+
     public bool IsEmpty() => reader.BaseStream.Position >= reader.BaseStream.Length;
 }
 
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 6;
+    public const byte Version = 7;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 
@@ -138,57 +168,43 @@ public static class BishBytecodeParser
         return (bytecode.Tag is null ? "" : bytecode.Tag + ": ") + parser.Format(bytecode);
     }
 
-    extension(BishBytecodeWriter writer)
-    {
-        public void WriteSingle(BishBytecode bytecode)
-        {
-            var (parser, index) = GetParser(bytecode);
-            writer.AddByte(index);
-            writer.AddTag(bytecode.Tag);
-            parser.Write(bytecode, writer);
-        }
-
-        public void Write(IEnumerable<BishBytecode> bytecodes)
-        {
-            writer.AddInt(Magic);
-            writer.AddByte(Version);
-            foreach (var bytecode in bytecodes)
-                writer.WriteSingle(bytecode);
-        }
-    }
-
-    extension(BishBytecodeReader reader)
-    {
-        public BishBytecode ReadSingle()
-        {
-            var index = reader.GetByte();
-            var parser = Parsers.ElementAtOrDefault(index) ??
-                         throw BishException.OfBytecodeParser_Invalid($"[{index}]");
-            var tag = reader.GetTag();
-            return parser.Read(reader).Tagged(tag);
-        }
-
-        public IEnumerable<BishBytecode> Read()
-        {
-            if (reader.GetInt() != Magic) throw BishException.OfBytecodeParser_Magic();
-            var version = reader.GetByte();
-            if (version != Version) throw BishException.OfBytecodeParser_Version(version, Version);
-            while (!reader.IsEmpty()) yield return reader.ReadSingle();
-        }
-    }
-
     extension(Stream stream)
     {
         public void WriteBytecodes(IEnumerable<BishBytecode> bytecodes)
         {
             using var bw = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-            new BishBytecodeWriter(bw).Write(bytecodes);
+            var writer = new BishBytecodeWriter(bw);
+            writer.AddInt(Magic);
+            writer.AddByte(Version);
+            foreach (var bytecode in bytecodes)
+            {
+                var (parser, index) = GetParser(bytecode);
+                writer.AddByte(index);
+                writer.AddTag(bytecode.Tag);
+                writer.AddPos(bytecode.Pos);
+                parser.Write(bytecode, writer);
+            }
         }
 
-        public BishBytecode[] ReadBytecodes()
+        public List<BishBytecode> ReadBytecodes()
         {
             using var br = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
-            return new BishBytecodeReader(br).Read().ToArray();
+            List<BishBytecode> result = [];
+            var reader = new BishBytecodeReader(br);
+            if (reader.GetInt() != Magic) throw BishException.OfBytecodeParser_Magic();
+            var version = reader.GetByte();
+            if (version != Version) throw BishException.OfBytecodeParser_Version(version, Version);
+            while (!reader.IsEmpty())
+            {
+                var index = reader.GetByte();
+                var parser = Parsers.ElementAtOrDefault(index) ??
+                             throw BishException.OfBytecodeParser_Invalid($"[{index}]");
+                var tag = reader.GetTag();
+                var pos = reader.GetPos();
+                result.Add(parser.Read(reader).Tagged(tag).WithPos(pos));
+            }
+
+            return result;
         }
     }
 
@@ -197,6 +213,7 @@ public static class BishBytecodeParser
         var result = new BishBytecodeObject { Bytecode = bytecode };
         GetParser(bytecode).Parser.WriteObject(bytecode, result);
         result.AddString("type", bytecode.GetType().Name);
+        result.AddPosition("pos", bytecode.Pos);
         result.AddTag("tag", bytecode.Tag);
         return result;
     }
@@ -208,7 +225,8 @@ public static class BishBytecodeParser
         var index = Parsers.FindIndex(parser => parser.Type.Name == type);
         if (index == -1) throw BishException.OfBytecodeParser_Invalid(type);
         var tag = bytecode.GetTag("tag");
-        return bytecode.Bytecode = Parsers[index].ReadObject(bytecode).Tagged(tag);
+        var pos = bytecode.GetPos("pos");
+        return bytecode.Bytecode = Parsers[index].ReadObject(bytecode).Tagged(tag).WithPos(pos);
     }
 }
 

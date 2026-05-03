@@ -4,7 +4,7 @@ public partial class BishVisitor
 {
     public override CompileResult VisitIfExpr(BishParser.IfExprContext context) =>
         Condition("if", Visit(context.cond), Visit(context.left).Wrap(),
-            context.right is null ? null : Visit(context.right).Wrap());
+            context.right is null ? null : Visit(context.right).Wrap()).WithTree(context);
 
     internal record LoopUnbound(ParserRuleContext Context, string Name, string? LoopTag) : Unbound(Context)
     {

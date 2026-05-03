@@ -36,6 +36,7 @@ public class Tag(string? s, byte b = 0)
 public abstract record BishBytecode
 {
     public Tag? Tag;
+    public SourcePosition? Pos;
 
     public abstract void Execute(BishFrame frame);
 
@@ -44,6 +45,14 @@ public abstract record BishBytecode
         Tag = tag;
         return this;
     }
+
+    public BishBytecode WithPos(SourcePosition? position)
+    {
+        Pos = position;
+        return this;
+    }
+
+    public BishBytecode Stripped() => this with { Pos = null };
 }
 
 public class BishBytecodeObject : BishObject
@@ -72,7 +81,7 @@ public class BishBytecodeObject : BishObject
 
     [Builtin("op")]
     public static BishBool Eq(BishBytecodeObject self, BishBytecodeObject other) =>
-        BishBool.Of(BishBytecodeParser.FromObject(self) == BishBytecodeParser.FromObject(other));
+        BishBool.Of(BishBytecodeParser.FromObject(self).Stripped() == BishBytecodeParser.FromObject(other).Stripped());
 
     public void AddInt(string name, int value) => DefMember(name, BishInt.Of(value));
 
@@ -91,6 +100,12 @@ public class BishBytecodeObject : BishObject
 
     public void AddStrings(string name, IList<string> value) => DefMember(name,
         new BishList(value.Select(item => new BishString(item)).ToList<BishObject>()));
+
+    public void AddPosition(string name, SourcePosition? position) => DefMember(name,
+        position is null
+            ? BishNull.Instance
+            : new BishList(new[] { position.Line, position.Column, position.StopLine, position.StopColumn }
+                .Select(BishInt.Of).ToList<BishObject>()));
 
     public T1 Get<T, T1>(string name, Func<T, T1> process, T1? defaultValue = default) where T : BishObject
     {
@@ -116,6 +131,15 @@ public class BishBytecodeObject : BishObject
         BishInt i => (byte)i.Value,
         BishString s => s.Value,
         var x => throw BishException.OfType_Expect(name, x, "null or int or string")
+    };
+
+    public SourcePosition? GetPos(string name) => TryGetMember(name) switch
+    {
+        null or BishNull => null,
+        BishList list => new SourcePosition(
+            list.Index(0).As<BishInt>("line").Value, list.Index(1).As<BishInt>("column").Value,
+            list.Index(2).As<BishInt>("stopLine").Value, list.Index(3).As<BishInt>("stopColumn").Value),
+        var x => throw BishException.OfType_Expect(name, x, "null or list[int]")
     };
 
     public string[] GetStrings(string name) => GetMember(name).As<BishList>("list").List

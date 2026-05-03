@@ -149,7 +149,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     public override CompileResult VisitListExpr(BishParser.ListExprContext context)
     {
         var args = context.args().arg();
-        if (HasRest(args)) return ToList(args);
+        if (HasRest(args)) return ToList(args).WithTree(context);
         var result = CompileResult.Expr(context);
         foreach (var arg in args) result.Add(Visit(arg), StackEffect.Expr);
         result.Add(new BuildList(args.Length));
@@ -258,9 +258,9 @@ public static class CompileResultHelper
             result.Codes = result.Codes.SelectMany(code => code switch
             {
                 BishVisitor.Break x when MatchLoopTag(x.LoopTag, loopTag) =>
-                    [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@break)],
+                    [..Enumerable.Repeat(new Pop().WithPos(x.Pos), x.Depth), new Jump(@break).WithPos(x.Pos)],
                 BishVisitor.Continue x when MatchLoopTag(x.LoopTag, loopTag) =>
-                    [..Enumerable.Repeat(new Pop(), x.Depth), new Jump(@continue)],
+                    [..Enumerable.Repeat(new Pop().WithPos(x.Pos), x.Depth), new Jump(@continue).WithPos(x.Pos)],
                 BishVisitor.LoopUnbound x when pops => [x.Deeper()],
                 _ => (Codes)([code])
             }).ToList();

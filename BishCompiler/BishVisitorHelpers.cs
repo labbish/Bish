@@ -33,7 +33,7 @@ public class CompileResult(
     IList<CompilationError>? errors = null)
 {
     public StackEffect Effect => effect;
-    public IParseTree? Tree => tree;
+    public IParseTree? Tree { get; private set; } = tree;
     public Codes Codes { get; internal set; } = (codes ?? []).ToConcurrentList();
     public readonly IList<CompilationError> Errors = (errors ?? []).ToConcurrentList();
 
@@ -74,9 +74,19 @@ public class CompileResult(
         return result;
     }
 
+    public CompileResult WithTree(IParseTree? tree)
+    {
+        Tree = tree;
+        if (tree is null) return this;
+        foreach (var code in Codes)
+            code.Pos ??= SourcePosition.From(tree);
+        return this;
+    }
+
     public CompileResult Wrap()
     {
-        Codes = [new Inner(), ..Codes, new Outer()];
+        var pos = SourcePosition.Combine(Codes.Select(code => code.Pos));
+        Codes = [new Inner().WithPos(pos), ..Codes, new Outer().WithPos(pos)];
         return this;
     }
 
@@ -89,6 +99,10 @@ public class CompileResult(
 
     public CompileResult Add(BishBytecode code)
     {
+        // Console.WriteLine(BishBytecodeParser.ToString(code));
+        // Console.WriteLine(Tree is not null);
+        // Console.WriteLine(Environment.StackTrace);
+        if (Tree is not null) code.Pos ??= SourcePosition.From(Tree);
         Codes.Add(code);
         return this;
     }
@@ -101,13 +115,13 @@ public class CompileResult(
 
     public CompileResult Add(params Codes code)
     {
-        Codes.AddRange(code);
+        foreach (var bytecode in code) Add(bytecode);
         return this;
     }
 
     public CompileResult Add(CompileResult result, StackEffect? expect = null)
     {
-        Codes.AddRange(result.Codes);
+        Add(result.Codes);
         Errors.AddRange(result.Errors);
         if (expect is not null && expect != result.Effect)
             result.Error($"Expect {expect}, got {result.Effect}");

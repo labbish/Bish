@@ -104,6 +104,22 @@ public static class BishCompileService
 public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 {
     public override string ToString() => $"line {Line}, column {Column} to line {StopLine}, column {StopColumn}";
+
+    public string ShortString() => (Line == StopLine, Column == StopColumn) switch
+    {
+        (true, true) => $"{Line}:{Column}",
+        (true, _) => $"{Line}:{Column}~{StopColumn}",
+        _ => $"{Line}:{Column}~{StopLine}:{StopColumn}"
+    };
+
+    public static SourcePosition? Combine(params IEnumerable<SourcePosition?> positions)
+    {
+        var pos = positions.OfType<SourcePosition>().ToArray();
+        if (pos.Length == 0) return null;
+        var min = pos.Select(p => (p.Line, p.Column)).Min();
+        var max = pos.Select(p => (p.StopLine, p.StopColumn)).Max();
+        return new SourcePosition(min.Line, min.Column, max.StopLine, max.StopColumn);
+    }
 }
 
 public record CompilationError(SourcePosition Position, string Message)

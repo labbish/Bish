@@ -18,6 +18,9 @@ public class Test(TestInfoFixture fixture)
     private BishFrame Compile(string code)
     {
         var frame = BishCompileService.Compile(code, scope: Scope);
+        foreach (var bytecode in frame.Bytecodes)
+            if (bytecode.Pos is null)
+                Fail("Found bytecode without position!");
         using var stream = new MemoryStream();
         stream.WriteBytecodes(frame.Bytecodes);
         stream.Position = 0;

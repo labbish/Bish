@@ -48,6 +48,8 @@ public class BishList(IList<BishObject> list) : BishObject
     [Builtin]
     public static BishBool Bool(BishList a) => BishBool.Of(a.List.Count != 0);
 
+    public BishObject Index(int index) => List[index.Regularize(List.Count)];
+
     [Builtin("op")]
     public static BishObject GetIndex(BishList self, BishObject x) => x switch
     {

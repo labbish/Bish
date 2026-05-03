@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using System.Text;
+
+namespace BishRuntime;
 
 public record CompileOptions(bool Optimize = true, bool Throws = true);
 
@@ -46,12 +48,14 @@ public static class BishCompileService
         if (!File.Exists(path)) throw BishException.OfCompile_NoFile(path);
         switch (ext)
         {
-            case ".bish": return Compile(File.ReadAllText(path), out errors, root, scope, options);
+            case ".bish": return Compile(File.ReadAllText(path), out errors, root, scope, options).WithSource(path);
             case ".bishc":
             {
                 using var stream = File.OpenRead(path);
                 errors = [];
-                return new BishFrame(stream.ReadBytecodes(), scope).AddMeta(root);
+                var frame = stream.ReadBytecodes();
+                if (scope is not null) frame.Scope = scope;
+                return frame.AddMeta(root);
             }
             default: throw BishException.OfCompile_InvalidExt(ext);
         }
@@ -119,6 +123,17 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
         var min = pos.Select(p => (p.Line, p.Column)).Min();
         var max = pos.Select(p => (p.StopLine, p.StopColumn)).Max();
         return new SourcePosition(min.Line, min.Column, max.StopLine, max.StopColumn);
+    }
+
+    public string Slice(string source)
+    {
+        var lines = source.Split('\n');
+        if (Line == StopLine) return lines[Line - 1][Column..(StopColumn + 1)];
+        var sb = new StringBuilder();
+        sb.AppendLine(lines[Line - 1][Column..]);
+        for (var i = Line; i < StopLine - 1; i++) sb.AppendLine(lines[i]);
+        sb.Append(lines[StopLine - 1][..(StopColumn + 1)]);
+        return sb.ToString();
     }
 }
 

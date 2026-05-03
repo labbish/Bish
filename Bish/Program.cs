@@ -31,7 +31,7 @@ public static class Program
                 if (options.Output is { } output)
                 {
                     await using var stream = File.Create(output);
-                    stream.WriteBytecodes(frame.Bytecodes);
+                    stream.WriteBytecodes(frame);
                 }
 
                 if (options.SkipExecution) return;

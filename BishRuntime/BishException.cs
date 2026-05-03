@@ -7,18 +7,6 @@ public class BishException(BishError error) : Exception
     public BishError Error => error;
     public override string Message => Error.ToString();
 
-    public static T? Ignored<T>(Func<T?> func)
-    {
-        try
-        {
-            return func();
-        }
-        catch (BishException)
-        {
-            return default;
-        }
-    }
-
     public static T Wrapped<T>(BishType errorType, Func<T> func)
     {
         try

@@ -150,7 +150,7 @@ public class BishBytecodeReader(BinaryReader reader)
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 7;
+    public const byte Version = 8;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 
@@ -170,13 +170,14 @@ public static class BishBytecodeParser
 
     extension(Stream stream)
     {
-        public void WriteBytecodes(IEnumerable<BishBytecode> bytecodes)
+        public void WriteBytecodes(BishFrame frame)
         {
             using var bw = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
             var writer = new BishBytecodeWriter(bw);
             writer.AddInt(Magic);
             writer.AddByte(Version);
-            foreach (var bytecode in bytecodes)
+            writer.AddTag(frame.Source);
+            foreach (var bytecode in frame.Bytecodes)
             {
                 var (parser, index) = GetParser(bytecode);
                 writer.AddByte(index);
@@ -186,14 +187,15 @@ public static class BishBytecodeParser
             }
         }
 
-        public List<BishBytecode> ReadBytecodes()
+        public BishFrame ReadBytecodes()
         {
             using var br = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
-            List<BishBytecode> result = [];
+            List<BishBytecode> bytecodes = [];
             var reader = new BishBytecodeReader(br);
             if (reader.GetInt() != Magic) throw BishException.OfBytecodeParser_Magic();
             var version = reader.GetByte();
             if (version != Version) throw BishException.OfBytecodeParser_Version(version, Version);
+            var source = reader.GetTag()?.S;
             while (!reader.IsEmpty())
             {
                 var index = reader.GetByte();
@@ -201,10 +203,10 @@ public static class BishBytecodeParser
                              throw BishException.OfBytecodeParser_Invalid($"[{index}]");
                 var tag = reader.GetTag();
                 var pos = reader.GetPos();
-                result.Add(parser.Read(reader).Tagged(tag).WithPos(pos));
+                bytecodes.Add(parser.Read(reader).Tagged(tag).WithPos(pos));
             }
 
-            return result;
+            return new BishFrame(bytecodes).WithSource(source);
         }
     }
 

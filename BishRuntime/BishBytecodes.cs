@@ -253,16 +253,7 @@ public static class TagSlicer
 {
     [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
     public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, IList<BishBytecode> Code)
-        where TStart : StartTag<TEnd> where TEnd : EndTag
-    {
-        public BishFrame Execute(BishFrame frame, Action<BishFrame>? before = null)
-        {
-            var inner = new BishFrame(Code, new BishScope(frame.Scope), frame);
-            before?.Invoke(inner);
-            inner.Execute();
-            return inner;
-        }
-    }
+        where TStart : StartTag<TEnd> where TEnd : EndTag;
 
     extension(BishFrame frame)
     {
@@ -310,7 +301,7 @@ public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool
         var inArgs = names
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
-        BishFrame GetInner() => new(slice.Code, scope, frame);
+        BishFrame GetInner() => new BishFrame(slice.Code, scope, frame).WithSource(frame.Source);
         frame.Stack.Push(new BishCodedFunc(Name, inArgs, GetInner, IsGen, IsAsync));
     }
 }

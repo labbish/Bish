@@ -22,9 +22,9 @@ public class Test(TestInfoFixture fixture)
             if (bytecode.Pos is null)
                 Fail("Found bytecode without position!");
         using var stream = new MemoryStream();
-        stream.WriteBytecodes(frame.Bytecodes);
+        stream.WriteBytecodes(frame);
         stream.Position = 0;
-        frame.Bytecodes = stream.ReadBytecodes().ToList();
+        frame.Bytecodes = stream.ReadBytecodes().Bytecodes;
         return frame;
     }
 

@@ -28,8 +28,8 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     protected async Task ExpectOutputAsync(params string[] argsOutput)
     {
         var args = argsOutput[..^1];
-        var expect = argsOutput[^1];
-        var output = (await GetOutputAsync(args)).Trim();
+        var expect = argsOutput[^1].Replace("\r\n", "\n");
+        var output = (await GetOutputAsync(args)).Trim().Replace("\r\n", "\n");
         if (output != expect) Fail($"Expect {expect}, got {output}");
     }
 
@@ -70,7 +70,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         const string s0 = "print(import('a/a1.bish').a+import('a/b/b1.bish').b+import('a/b/c/c1.bish').c);";
         const string s1 = "print(import('a1.bish').a+import('b/b1.bish').b+import('b/c/c1.bish').c);";
         const string s2 = "print(import('../../a1.bish').a+import('../b1.bish').b+import('c1.bish').c);";
-        
+
         CreateFile("./a/a2.bish", s1);
         CreateFile("./a/b/b2.bish", s1);
         CreateFile("./a/b/c/c2.bish", s2);
@@ -91,7 +91,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         const string s0 = "print(import('a/a3.bishc').a+import('a/b/b3.bishc').b+import('a/b/c/c3.bishc').c);";
         const string s1 = "print(import('a3.bishc').a+import('b/b3.bishc').b+import('b/c/c3.bishc').c);";
         const string s2 = "print(import('../../a3.bishc').a+import('../b3.bishc').b+import('c3.bishc').c);";
-        
+
         CreateFile("./a/a4.bish", s1);
         CreateFile("./a/b/b4.bish", s1);
         CreateFile("./a/b/c/c4.bish", s2);
@@ -112,7 +112,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     public async Task TestMeta()
     {
         const string s = "print(meta.root);";
-        
+
         CreateFile("./a/a5.bish", s);
         CreateFile("./a/b/b5.bish", s);
         CreateFile("./a/b/c/c5.bish", s);
@@ -125,7 +125,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-f", "./a/a5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/b5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/c/c5.bish", p2);
-        
+
         CreateFile("./a/ax.bish", "return 0;");
         await GetOutputAsync("-f", "./a/ax.bish", "-o", "./a/ax.bishc", "-s");
         await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bish').execute());", "0");
@@ -139,6 +139,34 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-c", "import('a/a6')", "bish");
         await GetOutputAsync("-c", "print('bishc');", "-o", "./a/a6.bishc", "-s");
         await ExpectOutputAsync("-c", "import('a/a6')", "bishc");
+    }
+
+    [Fact]
+    public async Task TestSource()
+    {
+        await ExpectOutputAsync("-c", "print(this().source)", "null");
+
+        // Int 1 -> Int 2 -> Op "op_add" 2 -> Pop -> ...
+        CreateFile("./a/s.bish", "1\n+2;\nprint(this().source);");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", Path.GetFullPath("./a/s.bish"));
+        await ExpectOutputAsync("-f", "./a/s.bishc", Path.GetFullPath("./a/s.bish"));
+
+        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[0]));");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "1");
+        await ExpectOutputAsync("-f", "./a/s.bishc", "1");
+
+        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[1]));");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "2");
+        await ExpectOutputAsync("-f", "./a/s.bishc", "2");
+
+        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[2]));");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "1\n+2");
+        await ExpectOutputAsync("-f", "./a/s.bishc", "1\n+2");
+
+        const string code = "1\n+2;\nf:=this();print(f.getCode());";
+        CreateFile("./a/s.bish", code);
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", code);
+        await ExpectOutputAsync("-f", "./a/s.bishc", code);
     }
 
     public void Dispose()

@@ -7,6 +7,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public BishFrame? Outer { get; private set; } = outer;
     public BishScope Scope = scope ?? BishScope.Globals;
     public Stack<BishObject> Stack = new();
+    public string? Source;
     public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
@@ -30,6 +31,12 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
             BishBytecodeParser.FromObject(item.As<BishBytecodeObject>("bytecode"))).ToList();
         self.Scope = scope ?? BishScope.Globals;
         self.Outer = outer;
+    }
+
+    public BishFrame WithSource(string? source)
+    {
+        Source = source;
+        return this;
     }
 
     public void AddErrorHandler(int ip, Action<BishError> handler) =>
@@ -73,6 +80,37 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
 
     [Builtin("hook")]
     public static BishList Get_stack(BishFrame self) => new(self.Stack.Reverse().ToList());
+
+    [Builtin("hook")]
+    public static BishString? Get_source(BishFrame self) => self.Source is { } source ? new BishString(source) : null;
+
+    public string? GetCode()
+    {
+        if (Source is null) return null;
+        try
+        {
+            return File.ReadAllText(Source);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public string? GetCode(IList<BishBytecode> codes)
+    {
+        if (GetCode() is not { } content) return null;
+        if (codes.Count == 0) return content;
+        var pos = SourcePosition.Combine(codes.Select(code => code.Pos));
+        return pos?.Slice(content);
+    }
+
+    [Builtin]
+    public static BishString? GetCode(BishFrame self, [Rest] BishList codes) =>
+        self.GetCode(codes.List.Select(code => BishBytecodeParser
+            .FromObject(code.As<BishBytecodeObject>("bytecode"))).ToList()) is { } result
+            ? new BishString(result)
+            : null;
 
     [Builtin("hook")]
     public static BishList Get_bytecodes(BishFrame self) =>

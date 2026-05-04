@@ -17,6 +17,8 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public Action<BishObject>? AwaitHandler;
     public readonly Stack<ErrorHandler> ErrorHandlers = [];
 
+    public BishBytecode? Current => Bytecodes.ElementAtOrDefault(Ip);
+
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("frame");
 

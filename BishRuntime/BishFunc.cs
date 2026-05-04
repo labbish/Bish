@@ -77,7 +77,7 @@ public class BishFunc(
     public IList<BishArg> Args { get; private set; } =
         (noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs)).ToConcurrentList();
 
-    public Func<IList<BishObject>, BishObject> Func { get; private set; } = func;
+    public Func<IList<BishObject>, BishObject> Func { get; internal set; } = func;
     public bool PassCaller = passCaller;
 
     public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
@@ -147,10 +147,12 @@ public class BishFunc(
         }
         catch (BishException e)
         {
-            e.Error.StackTrace.Add(new BishStackLayer(this, args));
+            e.Error.StackTrace.Add(GetStackLayer(args));
             throw;
         }
     }
+
+    public virtual BishStackLayer GetStackLayer(IList<BishObject> args) => new(this, args);
 
     public override BishType DefaultType => StaticType;
 

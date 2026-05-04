@@ -6,8 +6,18 @@ public class BishStackLayer(BishFunc func, IList<BishObject> args)
 {
     public BishFunc Func => func;
     public IList<BishObject> Args => args;
+    public ICodeSource? Source;
+    public SourcePosition? Position;
 
-    public override string ToString() => $"{Func}, calling with ({string.Join(", ", Args)})";
+    public BishStackLayer WithSource(ICodeSource? source, SourcePosition? position)
+    {
+        Source = source;
+        Position = position;
+        return this;
+    }
+
+    public override string ToString() => $"{Func}, calling with ({string.Join(", ", Args)})" +
+                                         (Source is null ? "" : $", at {Source.Filename}, {Position}");
 }
 
 public class BishError(string message) : BishObject
@@ -27,7 +37,7 @@ public class BishError(string message) : BishObject
 
     [Builtin("hook")]
     public static void Init(BishError self, [DefaultNull] BishString? message) => self.Message = message?.Value ?? "";
-    
+
     [Builtin("hook")]
     public static BishString Get_message(BishError self) => new(self.Message);
 

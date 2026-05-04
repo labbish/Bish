@@ -1,25 +1,36 @@
 ﻿namespace BishRuntime;
 
-public class BishCodedFunc(string name, IList<BishArg> inArgs, Func<BishFrame> getInner, bool isGen, bool isAsync)
-    : BishFunc(name, inArgs, args =>
-    {
-        var inner = getInner();
-        foreach (var arg in args.Reverse()) inner.Stack.Push(arg);
-        return (isGen, isAsync) switch
-        {
-            (false, false) => inner.Execute(),
-            (true, false) => new BishGenerator(inner),
-            (false, true) => new BishAsyncTask(inner),
-            (true, true) => new BishAsyncGenerator(inner)
-        };
-    })
+public class BishCodedFunc : BishFunc
 {
-    public BishFrame Inner => getInner();
-    public bool IsGen => isGen;
-    public bool IsAsync => isAsync;
+    public BishCodedFunc(string name, IList<BishArg> inArgs, Func<BishFrame> getInner, bool isGen, bool isAsync)
+        : base(name, inArgs, null!)
+    {
+        IsGen = isGen;
+        IsAsync = isAsync;
+        Inner = getInner();
+        Func = args =>
+        {
+            Inner = getInner();
+            foreach (var arg in args.Reverse()) Inner.Stack.Push(arg);
+            return (isGen, isAsync) switch
+            {
+                (false, false) => Inner.Execute(),
+                (true, false) => new BishGenerator(Inner),
+                (false, true) => new BishAsyncTask(Inner),
+                (true, true) => new BishAsyncGenerator(Inner)
+            };
+        };
+    }
+
+    public BishFrame Inner { get; private set; }
+    public readonly bool IsGen;
+    public readonly bool IsAsync;
 
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("Func", [BishFunc.StaticType]);
+
+    public override BishStackLayer GetStackLayer(IList<BishObject> args) =>
+        base.GetStackLayer(args).WithSource(Inner.Source, Inner.Current?.Pos);
 
     [Builtin("hook")]
     public static BishFrame Get_frame(BishCodedFunc self) => self.Inner;

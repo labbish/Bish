@@ -38,11 +38,12 @@ public class BishMeta(string? root) : BishObject
 
     [Builtin]
     public static BishFrame Compile(BishMeta _, BishObject obj) => obj is BishString code
-        ? BishCompileService.Compile(code.Value)
+        ? BishCompileService.Compile(new VirtualSource("<string>", code.Value))
         : BishCompileService.Compile(obj);
 
     [Builtin]
-    public static BishFrame CompileFile(BishMeta _, BishString path) => BishCompileService.CompileFile(path.Value);
+    public static BishFrame CompileFile(BishMeta _, BishString path) =>
+        BishCompileService.Compile(new FileSource(path.Value));
 }
 
 public static class BishImporter
@@ -79,7 +80,7 @@ public static class BishImporter
     {
         var ext = Path.GetExtension(path);
         if (ext == ".dll") return ImportDll(path);
-        var frame = BishCompileService.CompileFile(path);
+        var frame = BishCompileService.Compile(new FileSource(path));
         frame.Execute();
         var module = new BishObject();
         foreach (var (name, value) in frame.Scope.Vars) module.DefMember(name, value);

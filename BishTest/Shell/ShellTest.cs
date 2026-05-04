@@ -146,27 +146,28 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     {
         await ExpectOutputAsync("-c", "print(this().source)", "null");
 
-        // Int 1 -> Int 2 -> Op "op_add" 2 -> Pop -> ...
-        CreateFile("./a/s.bish", "1\n+2;\nprint(this().source);");
+        // Int 1 -> Int 23 -> Op "op_add" 2 -> Pop -> ...
+        CreateFile("./a/s.bish", "1\n+23;\nprint(this().source);");
         await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", Path.GetFullPath("./a/s.bish"));
         await ExpectOutputAsync("-f", "./a/s.bishc", Path.GetFullPath("./a/s.bish"));
 
-        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[0]));");
+        CreateFile("./a/s.bish", "1\n+23;\nprint(this().codes[0]);");
         await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "1");
         await ExpectOutputAsync("-f", "./a/s.bishc", "1");
 
-        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[1]));");
-        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "2");
-        await ExpectOutputAsync("-f", "./a/s.bishc", "2");
+        CreateFile("./a/s.bish", "1\n+23;\nprint(this().codes[1]);");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "23");
+        await ExpectOutputAsync("-f", "./a/s.bishc", "23");
 
-        CreateFile("./a/s.bish", "1\n+2;\nf:=this();print(f.getCode(f.bytecodes[2]));");
-        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "1\n+2");
-        await ExpectOutputAsync("-f", "./a/s.bishc", "1\n+2");
+        CreateFile("./a/s.bish", "1\n+23;\nprint(this().codes[2]);");
+        await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", "1\n+23");
+        await ExpectOutputAsync("-f", "./a/s.bishc", "1\n+23");
 
-        const string code = "1\n+2;\nf:=this();print(f.getCode());";
+        const string code = "1\n+23;\nprint(this().codes[:])";
         CreateFile("./a/s.bish", code);
         await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", code);
         await ExpectOutputAsync("-f", "./a/s.bishc", code);
+        await ExpectOutputAsync("-c", code, code);
     }
 
     public void Dispose()

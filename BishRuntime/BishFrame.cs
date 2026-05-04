@@ -7,7 +7,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public BishFrame? Outer { get; private set; } = outer;
     public BishScope Scope = scope ?? BishScope.Globals;
     public Stack<BishObject> Stack = new();
-    public string? Source;
+    public ICodeSource? Source;
     public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
@@ -33,7 +33,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         self.Outer = outer;
     }
 
-    public BishFrame WithSource(string? source)
+    public BishFrame WithSource(ICodeSource? source)
     {
         Source = source;
         return this;
@@ -82,35 +82,11 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public static BishList Get_stack(BishFrame self) => new(self.Stack.Reverse().ToList());
 
     [Builtin("hook")]
-    public static BishString? Get_source(BishFrame self) => self.Source is { } source ? new BishString(source) : null;
+    public static BishString? Get_source(BishFrame self) =>
+        self.Source is FileSource file ? new BishString(file.Filename) : null;
 
-    public string? GetCode()
-    {
-        if (Source is null) return null;
-        try
-        {
-            return File.ReadAllText(Source);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
-    public string? GetCode(IList<BishBytecode> codes)
-    {
-        if (GetCode() is not { } content) return null;
-        if (codes.Count == 0) return content;
-        var pos = SourcePosition.Combine(codes.Select(code => code.Pos));
-        return pos?.Slice(content);
-    }
-
-    [Builtin]
-    public static BishString? GetCode(BishFrame self, [Rest] BishList codes) =>
-        self.GetCode(codes.List.Select(code => BishBytecodeParser
-            .FromObject(code.As<BishBytecodeObject>("bytecode"))).ToList()) is { } result
-            ? new BishString(result)
-            : null;
+    [Builtin("hook")]
+    public static BishFrameCodes Get_codes(BishFrame self) => new(self);
 
     [Builtin("hook")]
     public static BishList Get_bytecodes(BishFrame self) =>
@@ -149,5 +125,33 @@ public static class Helper
         {
             while (stack.TryPeek(out var item) && predicate(item)) stack.Pop();
         }
+    }
+}
+
+public class BishFrameCodes(BishFrame frame) : BishObject
+{
+    public BishFrame Frame => frame;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("frame.codes");
+
+    [Builtin("op")]
+    public static BishString? GetIndex(BishFrameCodes self, BishObject x) =>
+        GetCodes(self, x) is { } codes ? new BishString(codes) : null;
+    
+    public static string? GetCodes(BishFrameCodes self, BishObject x) => x switch
+    {
+        BishInt index => self.GetCode(BishList.GetIndex(self.Frame.Bytecodes, index)),
+        BishRange range => self.GetCode(BishList.GetIndex(self.Frame.Bytecodes, range)),
+        _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
+    };
+    
+    public string? GetCode(params IList<BishBytecode> codes)
+    {
+        if (Frame.Source?.Code is not { } content) return null;
+        if (codes.Count == 0) return content;
+        var pos = SourcePosition.Combine(codes.Select(code => code.Pos));
+        return pos?.Slice(content);
     }
 }

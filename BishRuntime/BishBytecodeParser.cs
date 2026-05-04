@@ -176,7 +176,7 @@ public static class BishBytecodeParser
             var writer = new BishBytecodeWriter(bw);
             writer.AddInt(Magic);
             writer.AddByte(Version);
-            writer.AddTag(frame.Source);
+            writer.AddTag((frame.Source as FileSource)?.Filename);
             foreach (var bytecode in frame.Bytecodes)
             {
                 var (parser, index) = GetParser(bytecode);
@@ -206,7 +206,7 @@ public static class BishBytecodeParser
                 bytecodes.Add(parser.Read(reader).Tagged(tag).WithPos(pos));
             }
 
-            return new BishFrame(bytecodes).WithSource(source);
+            return new BishFrame(bytecodes).WithSource(source is null ? null : new FileSource(source));
         }
     }
 

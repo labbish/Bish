@@ -22,7 +22,7 @@ public class TextDocumentHandler(ILanguageServerFacade facade) : TextDocumentSyn
         IList<CompilationError> errors = new ConcurrentList<CompilationError>();
         try
         {
-            BishCompileService.Compile(text, out errors, options: Options);
+            BishCompileService.Compile(new VirtualSource("<LSP>", text), out errors, options: Options);
         }
         catch (Exception)
         {

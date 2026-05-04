@@ -18,63 +18,29 @@ public static class BishCompileService
         set;
     }
 
-    private static string? FindRoot(string? path)
+    public static BishFrame Compile(ICodeSource source, BishScope? scope = null, CompileOptions? options = null)
     {
-        if (path is null) return null;
-        var current = new DirectoryInfo(path);
-        while (current != null)
-        {
-            if (File.Exists(Path.Combine(current.FullName, "rubbish.json")))
-                return current.FullName;
-            current = current.Parent;
-        }
-
-        return Path.GetDirectoryName(path);
-    }
-
-    public static BishFrame CompileFile(string file, BishScope? scope = null, CompileOptions? options = null)
-    {
-        var frame = CompileFile(file, out var errors, scope, options);
+        var frame = Compile(source, out var errors, scope, options);
         CheckErrors(errors);
         return frame;
     }
 
-    public static BishFrame CompileFile(string file, out IList<CompilationError> errors,
+    public static BishFrame Compile(ICodeSource source, out IList<CompilationError> errors,
         BishScope? scope = null, CompileOptions? options = null)
     {
-        var path = Path.GetFullPath(file);
-        var ext = Path.GetExtension(path);
-        var root = FindRoot(Path.GetDirectoryName(path));
-        if (!File.Exists(path)) throw BishException.OfCompile_NoFile(path);
-        switch (ext)
+        var ext = source.Extension;
+        if (ext == ".bishc")
         {
-            case ".bish": return Compile(File.ReadAllText(path), out errors, root, scope, options).WithSource(path);
-            case ".bishc":
-            {
-                using var stream = File.OpenRead(path);
-                errors = [];
-                var frame = stream.ReadBytecodes();
-                if (scope is not null) frame.Scope = scope;
-                return frame.AddMeta(root);
-            }
-            default: throw BishException.OfCompile_InvalidExt(ext);
+            using var stream = File.OpenRead(source.Filename);
+            errors = [];
+            var value = stream.ReadBytecodes();
+            if (scope is not null) value.Scope = scope;
+            return value.AddMeta(source.Root);
         }
-    }
-
-    public static BishFrame Compile(string code, string? root = null,
-        BishScope? scope = null, CompileOptions? options = null)
-    {
-        var frame = Compile(code, out var errors, root, scope, options);
-        CheckErrors(errors);
-        return frame;
-    }
-
-    public static BishFrame Compile(string code, out IList<CompilationError> errors,
-        string? root = null, BishScope? scope = null, CompileOptions? options = null)
-    {
-        var result = Compiler(Parser(code), options ?? new CompileOptions());
+        var result = Compiler(Parser(source.Code), options ?? new CompileOptions());
         errors = result.Errors;
-        return new BishFrame(result.Result, scope).AddMeta(root);
+        var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
+        return ext is null or ".bish" ? frame : throw BishException.OfCompile_InvalidExt(ext);
     }
 
     public static BishFrame Compile(BishObject obj)
@@ -104,6 +70,45 @@ public static class BishCompileService
 
     static BishCompileService() => BishMeta.Builtin.Root = Environment.CurrentDirectory;
 }
+
+public interface ICodeSource
+{
+    public string Filename { get; }
+    public string Code { get; }
+    public string? Root => null;
+    public string? Extension => null;
+}
+
+public record FileSource(string Name) : ICodeSource
+{
+    public string Filename => Path.GetFullPath(Name);
+    
+    public string Code => File.Exists(Filename)
+        ? File.ReadAllText(Filename)
+        : throw BishException.OfCompile_NoFile(Filename);
+
+    public string? Root
+    {
+        get
+        {
+            var path = Path.GetDirectoryName(Filename);
+            if (path is null) return null;
+            var current = new DirectoryInfo(path);
+            while (current != null)
+            {
+                if (File.Exists(Path.Combine(current.FullName, "rubbish.json")))
+                    return current.FullName;
+                current = current.Parent;
+            }
+
+            return Path.GetDirectoryName(path);
+        }
+    }
+
+    public string Extension => Path.GetExtension(Filename);
+}
+
+public record VirtualSource(string Filename, string Code) : ICodeSource;
 
 public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 {

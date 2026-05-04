@@ -50,12 +50,16 @@ public class BishList(IList<BishObject> list) : BishObject
 
     public BishObject Index(int index) => List[index.Regularize(List.Count)];
 
+    public static T GetIndex<T>(IList<T> list, BishInt index) => list[index.Value.Regularize(list.Count)];
+
+    public static List<T> GetIndex<T>(IList<T> list, BishRange range) =>
+        range.Regularize(list.Count).ToInts().Select(i => GetIndex(list, i)).ToList();
+
     [Builtin("op")]
     public static BishObject GetIndex(BishList self, BishObject x) => x switch
     {
-        BishInt index => self.List[index.Value.Regularize(self.List.Count)],
-        BishRange range => new BishList(range.Regularize(self.List.Count).ToInts().Select(i => GetIndex(self, i))
-            .ToList()),
+        BishInt index => GetIndex(self.List, index),
+        BishRange range => new BishList(GetIndex(self.List, range)),
         _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
     };
 

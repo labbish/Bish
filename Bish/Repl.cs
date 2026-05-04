@@ -32,15 +32,15 @@ public class Repl(BishScope? scope = null)
                     Handled(() =>
                     {
                         var file = code[5..].Trim().Trim('"');
-                        var content = File.ReadAllText(file);
-                        var frame = BishCompileService.Compile(content, scope: Scope);
+                        var frame = BishCompileService.Compile(new FileSource(file), scope: Scope);
                         frame.Execute();
                     });
                     break;
                 case not null when code.StartsWith(".comp"):
                     Handled(() =>
                     {
-                        var frame = BishCompileService.Compile(code[5..], scope: Scope);
+                        var frame = BishCompileService.Compile(new VirtualSource("<input>", 
+                            code[5..].Trim()), scope: Scope);
                         foreach (var bytecode in frame.Bytecodes)
                             Console.WriteLine((bytecode.Pos?.ShortString() ?? "??")
                                               + "\t" + BishBytecodeParser.ToString(bytecode));
@@ -49,7 +49,7 @@ public class Repl(BishScope? scope = null)
                 default:
                     Handled(() =>
                     {
-                        var frame = BishCompileService.Compile(code, scope: Scope);
+                        var frame = BishCompileService.Compile(new VirtualSource("<input>", code), scope: Scope);
                         frame.Execute();
                         if (!frame.Stack.TryPeek(out var result)) return;
                         Scope.DefMember("_", result);

@@ -99,9 +99,6 @@ public class CompileResult(
 
     public CompileResult Add(BishBytecode code)
     {
-        // Console.WriteLine(BishBytecodeParser.ToString(code));
-        // Console.WriteLine(Tree is not null);
-        // Console.WriteLine(Environment.StackTrace);
         if (Tree is not null) code.Pos ??= SourcePosition.From(Tree);
         Codes.Add(code);
         return this;
@@ -174,7 +171,7 @@ public static class SourcePositionHelper
         {
             var line = token.Line;
             var column = token.Column;
-    
+
             var text = token.Text;
             var lines = text.Split('\n');
 
@@ -188,10 +185,9 @@ public static class SourcePositionHelper
 
         public static SourcePosition FromCtx(ParserRuleContext ctx)
         {
-            var start = ctx.Start;
-            var stop = ctx.Stop;
-            return new SourcePosition(start?.Line ?? 0, start?.Column ?? 0, 
-                stop?.Line ?? 0, stop?.Column ?? 0 + (stop?.Text?.Length ?? 0));
+            var start = ctx.Start!;
+            var stop = ctx.Stop!;
+            return new SourcePosition(start.Line, start.Column, stop.Line, stop.Column + stop.Text.Length - 1);
         }
 
         public static SourcePosition From(IParseTree? tree) => tree switch

@@ -26,8 +26,8 @@ public static class Program
                 break;
             default:
                 var frame = options.Command is null
-                    ? BishCompileService.CompileFile(options.File!)
-                    : BishCompileService.Compile(options.Command);
+                    ? BishCompileService.Compile(new FileSource(options.File!))
+                    : BishCompileService.Compile(new VirtualSource("<input>", options.Command));
                 if (options.Output is { } output)
                 {
                     await using var stream = File.Create(output);

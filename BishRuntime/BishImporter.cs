@@ -110,7 +110,6 @@ public static class BishImporter
 
 public class PluginExports
 {
-    // ReSharper disable once CollectionNeverUpdated.Global
     public readonly Dictionary<string, BishObject> Exports = [];
 }
 

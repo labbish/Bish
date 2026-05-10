@@ -12,7 +12,10 @@ public class BishBool : BishObject
     public readonly bool Value;
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new BishBoolType();
+    public new static readonly BishType StaticType = new("bool");
+
+    [Builtin("hook")]
+    public static BishBool New([DefaultNull] BishBool? other) => Of(other?.Value ?? false);
 
     [Builtin("op")]
     public static BishBool Invert(BishBool a) => Of(!a.Value);
@@ -27,11 +30,4 @@ public class BishBool : BishObject
 
     public static bool CallToBool(BishObject? obj) =>
         obj is not null && BishOperator.Call("bool", [obj]).As<BishBool>("bool").Value;
-}
-
-internal class BishBoolType() : BishType("bool")
-{
-    public override BishBool TryCall(IList<BishObject> args) => args.Count > 1
-        ? throw BishException.OfArgument_Count(args.Count, 0, 1)
-        : args.FirstOrDefault()?.As<BishBool>("bool() argument") ?? BishBool.False;
 }

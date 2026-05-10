@@ -4,8 +4,8 @@ namespace BishRuntime;
 
 public partial class BishType(string name, IEnumerable<BishType>? parents = null, int skips = 0) : BishObject
 {
-    public string Name { get; private set; } = name;
-    protected IList<BishType> Parents { get; private set; } = (parents ?? []).ToConcurrentList();
+    public readonly string Name = name;
+    protected readonly IList<BishType> Parents = (parents ?? []).ToConcurrentList();
     public readonly int Skips = skips;
 
     public ParentsProxyList ParentsProxy => new(this, Parents);
@@ -14,30 +14,15 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
         GetMRO().Concat([BishObject.StaticType]).Skip(Skips).ToConcurrentList<BishObject>();
 
     [Builtin("hook")]
-    public static BishType Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishType self, BishString name, [DefaultNull] BishList? parents)
-    {
-        self.Name = name.Value;
-        if (parents is null) return;
-        self.Parents = parents.List.Select(parent => parent.As<BishType>("parent type")).ToList();
-        self.ClearMROCache();
-    }
+    public static BishType New(BishString name, [DefaultNull] BishList? parents) =>
+        new(name.Value, parents?.List.Select(parent => parent.As<BishType>("parent type")).ToList());
 
     public BishObject CreateInstance(IList<BishObject> args)
     {
-        var instance = new BishObject();
-        var types = GetMRO();
-        types.Reverse();
-        foreach (var type in types)
-        {
-            var created = type.Vars.GetValueOrDefault("hook_create")?.TryCall([instance]);
-            instance = created ?? instance;
-            instance.Type = type;
-        }
-
-        instance.TryCallHook("hook_init", args);
+        var hook = TryGetMember("hook_new",
+            BishLookupMode.NoAccessor | BishLookupMode.NoHook | BishLookupMode.NotFromType);
+        var instance = hook?.Call(args) ?? new BishObject();
+        instance.Type = this;
         return instance;
     }
 
@@ -61,6 +46,9 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
 
     [Builtin("hook")]
     public static BishList Get_parents(BishType self) => new(self.ParentsProxy);
+
+    [Builtin("hook")]
+    public static BishType? Get_parent(BishType self) => self.GetMRO().Skip(1).FirstOrDefault();
 
     [Builtin("hook")]
     public static BishList Get_MRO(BishType self) => new(self.GetMRO().ToList<BishObject>());

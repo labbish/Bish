@@ -9,28 +9,18 @@ public record Entry(BishObject Key, BishObject Value)
 
 public class BishMap(IList<Entry> entries) : BishObject
 {
-    public IList<Entry> Entries { get; private set; } = entries.ToConcurrentList();
+    public readonly IList<Entry> Entries = entries.ToConcurrentList();
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("map");
 
     [Builtin("hook")]
-    public static BishMap Create(BishObject _) => new([]);
-
-    [Builtin("hook")]
-    public static void Init(BishMap self, [DefaultNull] BishObject? iterable)
+    public static BishMap New([DefaultNull] BishObject? iterable) => new(iterable switch
     {
-        switch (iterable)
-        {
-            case BishMap map:
-                self.Entries = map.Entries.ToList();
-                break;
-            case not null:
-                self.Entries = [];
-                self.AddEntries(ToEntries(iterable.ToEnumerable()));
-                break;
-        }
-    }
+        null => [],
+        BishMap map => map.Entries.ToList(),
+        _ => ToEntries(iterable.ToEnumerable())
+    });
 
     public static IList<Entry> ToEntries(IEnumerable<BishObject> entries) => entries.Select(entry =>
         entry.As<BishList>("map entry") switch

@@ -4,7 +4,7 @@ namespace BishRuntime;
 
 public partial class BishString(string value) : BishObject
 {
-    public string Value { get; private set; } = value;
+    public readonly string Value = value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("string");
@@ -13,12 +13,8 @@ public partial class BishString(string value) : BishObject
     {
     }
 
-
     [Builtin("hook")]
-    public static BishString Create(BishObject _) => new("");
-
-    [Builtin("hook")]
-    public static void Init(BishString self, [DefaultNull] BishString? other) => self.Value = other?.Value ?? "";
+    public static BishString New([DefaultNull] BishString? other) => new(other?.Value ?? "");
 
     [Builtin("op")]
     public static BishString Add(BishString a, BishString b) => new(a.Value + b.Value);

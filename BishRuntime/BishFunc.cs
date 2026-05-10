@@ -5,7 +5,6 @@ namespace BishRuntime;
 
 public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T : class;
 
-// `Type` will only be used by builtin functions
 public record BishArg(string Name, BishObject? Default = null, bool Rest = false) : Arg<BishObject>(Name, Default, Rest)
 {
     public override string ToString() => (Rest ? ".." : "") + Name + (Default is null ? "" : ":" + Default);
@@ -16,18 +15,14 @@ public record BishArg(string Name, BishObject? Default = null, bool Rest = false
 
 public class BishArgObject(BishArg arg) : BishObject
 {
-    public BishArg Arg { get; private set; } = arg;
+    public BishArg Arg = arg;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Arg");
 
     [Builtin("hook")]
-    public static BishArgObject Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishArgObject self, BishString name, [DefaultNull] BishType? type) =>
-        self.Arg = new BishArg(name.Value, type);
+    public static BishArgObject New(BishString name, [DefaultNull] BishType? type) => new(new BishArg(name.Value, type));
 
     [Builtin]
     public static BishArgObject Default(BishArgObject self, BishObject value)
@@ -68,16 +63,14 @@ public class BishFunc(
     IList<BishArg> inArgs,
     Func<IList<BishObject>, BishObject> func,
     string? tag = null,
-    bool noCheck = false,
     bool passCaller = false) : BishObject
 {
     public string? Tag => tag;
-    public string Name { get; private set; } = name;
+    public string Name = name;
 
-    public IList<BishArg> Args { get; private set; } =
-        (noCheck ? inArgs : CheckedArgs<BishArg, BishObject>(inArgs)).ToConcurrentList();
+    public IList<BishArg> Args = CheckedArgs<BishArg, BishObject>(inArgs).ToConcurrentList();
 
-    public Func<IList<BishObject>, BishObject> Func { get; internal set; } = func;
+    public Func<IList<BishObject>, BishObject> Func = func;
     public bool PassCaller = passCaller;
 
     public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
@@ -161,16 +154,9 @@ public class BishFunc(
     public override string ToString() => $"Function {Name}({string.Join(", ", Args)})";
 
     [Builtin("hook")]
-    public static BishFunc Create(BishObject _) => new("[uninitialized]", null!, null!, noCheck: true);
-
-    [Builtin("hook")]
-    public static void Init(BishFunc self, BishString name, BishList args, BishFunc func)
-    {
-        self.Name = name.Value;
-        self.Args = CheckedArgs<BishArg, BishObject>(args.List
-            .Select(arg => arg.As<BishArgObject>("arg").Arg).ToList());
-        self.Func = list => func.Call([new BishList(list)]);
-    }
+    public static BishFunc New(BishString name, BishList args, BishFunc func) =>
+        new(name.Value, args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList(),
+            list => func.Call([new BishList(list)]));
 
     [Builtin("op", tag: "ignore")]
     public static BishObject Call(BishFunc func, [Rest] BishList args) => func.Call(args.List.ToList());

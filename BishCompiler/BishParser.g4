@@ -103,7 +103,7 @@ defOp
     ;
 
 defHook
-    : INI | CRE | BND | ENT | EXI
+    : NEW | BND | ENT | EXI
     ;
 
 nullAccess

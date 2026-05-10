@@ -3,10 +3,8 @@ import('json-extensions');
 class JsonError : Error;
 
 class JsonParseError : JsonError {
-    init(self, message, location) {
-        self.base().hook_init('{} at char #{}'.format(message, location));
-        self.location := location;
-    };
+    new(message, location) extend JsonParseError.parent('{} at char #{}'
+        .format(message, location)) { location := location };
 };
 
 class JsonStringifyError : JsonError;
@@ -40,10 +38,7 @@ class JsonStringifyError : JsonError;
 };
 
 class JsonParser {
-    init(self, str) {
-        self.str := str;
-        self.i := 0;
-    };
+    new(str) { .str, .i: 0 };
     get char(self) if (self.i >= self.str.length) null else self.str[self.i];
     func skipSpaces(self) while (isSpace(self.char)) self.i += 1;
     func error(self, message) throw JsonParseError(message, self.i);

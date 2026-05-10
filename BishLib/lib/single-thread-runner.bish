@@ -19,7 +19,7 @@ class SingleThreadRunner {
     };
     func ctx(task) { .waker: Waker(task) };
     class Waker {
-        init(self, task) self.task := task;
+        new(task) {.task};
         func awake(self) queue.add(self.task);
     };
 };

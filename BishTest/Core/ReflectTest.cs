@@ -5,7 +5,7 @@ public class ReflectTest : Test
     public ReflectTest(TestInfoFixture fixture) : base(fixture)
     {
         Execute("class B{a:=3;};");
-        Execute("class C:B{a:=0;init(self)self.b:=0;func f(self)self.a;};");
+        Execute("class C:B{a:=0;new(){.b:0};func f(self)self.a;};");
         Execute("class D{func f(self)-1;o:='d';};");
         Execute("c:=C();c.a:=c.b:=1;");
     }

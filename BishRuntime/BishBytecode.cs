@@ -62,14 +62,13 @@ public class BishBytecodeObject : BishObject
     public BishBytecode? Bytecode;
 
     [Builtin("hook")]
-    public static BishBytecodeObject Create(BishObject _) => new();
-
-    [Builtin("hook")]
-    public static void Init(BishBytecodeObject self, BishString type, BishObject obj)
+    public static BishBytecodeObject New(BishString type, BishObject obj)
     {
+        var self = new BishBytecodeObject();
         self.AddString("type", type.Value);
         foreach (var (name, value) in obj.Vars) self.DefMember(name, value);
         self.Bytecode = BishBytecodeParser.FromObject(self);
+        return self;
     }
 
     [Builtin]

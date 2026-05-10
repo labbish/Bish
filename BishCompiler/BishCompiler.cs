@@ -49,7 +49,7 @@ public static class BishCompiler
         }
         catch (BishException e)
         {
-            Console.Error.WriteLine($"Cannot import preludes: {e}");
+            Console.Error.WriteLine($"Cannot import preludes: {e.Error}");
         }
     }
 }

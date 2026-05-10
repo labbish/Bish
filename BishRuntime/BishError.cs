@@ -33,10 +33,7 @@ public class BishError(string message) : BishObject
     public new static readonly BishType StaticType = new("Error");
 
     [Builtin("hook")]
-    public static BishError Create(BishObject _) => new("");
-
-    [Builtin("hook")]
-    public static void Init(BishError self, [DefaultNull] BishString? message) => self.Message = message?.Value ?? "";
+    public static BishError New([DefaultNull] BishString? message) => new(message?.Value ?? "");
 
     [Builtin("hook")]
     public static BishString Get_message(BishError self) => new(self.Message);

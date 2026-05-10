@@ -12,7 +12,7 @@ public static class BishRandomModule
 
 public class BishRandom(Random random) : BishObject
 {
-    public Random Random { get; private set; } = random;
+    public readonly Random Random = random;
 
     public static readonly BishRandom Shared = new(Random.Shared);
 
@@ -21,11 +21,8 @@ public class BishRandom(Random random) : BishObject
     public new static readonly BishType StaticType = new("Random");
 
     [Builtin("hook")]
-    public static BishRandom Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishRandom self, [DefaultNull] BishInt? seed) =>
-        self.Random = seed is null ? new Random() : new Random(seed.Value);
+    public static BishRandom New([DefaultNull] BishInt? seed) =>
+        new(seed is null ? new Random() : new Random(seed.Value));
 
     [Builtin]
     public static BishNum Rand(BishRandom self) => new(self.Random.NextDouble());

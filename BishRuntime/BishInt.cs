@@ -10,11 +10,14 @@ public class BishInt : BishNum
 
     public static BishInt Of(int value) => value is > -128 and <= 128 ? Instances[value + 127] : new BishInt(value);
 
-    public new int Value => (int) base.Value;
+    public new int Value => (int)base.Value;
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new BishIntType();
+    public new static readonly BishType StaticType = new("int", [BishNum.StaticType]);
+
+    [Builtin("hook")]
+    public static BishInt New([DefaultNull] BishInt? other) => Of(other?.Value ?? 0);
 
     [Builtin]
     public new static BishInt Parse(BishString a) => int.TryParse(a.Value, out var value)
@@ -56,11 +59,4 @@ public class BishInt : BishNum
 
     [Builtin]
     public static BishBool Bool(BishInt a) => BishBool.Of(a.Value != 0);
-}
-
-internal class BishIntType() : BishType("int", [BishNum.StaticType])
-{
-    public override BishInt TryCall(IList<BishObject> args) => args.Count > 1
-        ? throw BishException.OfArgument_Count(args.Count, 0, 1)
-        : args.FirstOrDefault()?.As<BishInt>("int() argument") ?? BishInt.Of(0);
 }

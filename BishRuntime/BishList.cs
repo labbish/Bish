@@ -5,21 +5,18 @@ namespace BishRuntime;
 
 public class BishList(IList<BishObject> list) : BishObject
 {
-    public IList<BishObject> List { get; private set; } = list.ToConcurrentList();
+    public readonly IList<BishObject> List = list.ToConcurrentList();
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("list");
 
     [Builtin("hook")]
-    public static BishList Create(BishObject _) => new([]);
-
-    [Builtin("hook")]
-    public static void Init(BishList self, [DefaultNull] BishObject? iterable) => self.List = iterable switch
+    public static BishList New([DefaultNull] BishObject? iterable) => new(iterable switch
     {
         BishList list => list.List.ToConcurrentList(),
         not null => iterable.ToEnumerable().ToConcurrentList(),
-        _ => self.List
-    };
+        _ => []
+    });
 
     [Builtin("op")]
     public static BishList Add(BishList a, BishList b) => new([..a.List, ..b.List]);

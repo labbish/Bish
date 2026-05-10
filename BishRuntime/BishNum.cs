@@ -4,17 +4,13 @@ namespace BishRuntime;
 
 public class BishNum(double value) : BishObject
 {
-    public double Value { get; private set; } = value;
+    public readonly double Value = value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("num");
 
-
     [Builtin("hook")]
-    public static BishNum Create(BishObject _) => new(0);
-
-    [Builtin("hook")]
-    public static void Init(BishNum self, [DefaultNull] BishNum? other) => self.Value = other?.Value ?? 0;
+    public static BishNum New([DefaultNull] BishNum? other) => new(other?.Value ?? 0);
 
     [Builtin]
     public static BishNum Parse(BishString a) => double.TryParse(a.Value, out var value)

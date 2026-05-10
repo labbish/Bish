@@ -19,19 +19,16 @@ public static class BishFileModule
 
 public class BishReader(StreamReader reader) : BishObject
 {
-    public StreamReader Reader { get; private set; } = reader;
+    public readonly StreamReader Reader = reader;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Reader");
 
     [Builtin("hook")]
-    public static BishReader Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishReader self, BishString path, [DefaultNull] BishString? encoding) =>
-        BishException.Wrapped(BishFileModule.Error, () =>
-            self.Reader = new StreamReader(path.Value, BishFileModule.EncodingFrom(encoding)));
+    public static BishReader New(BishString path, [DefaultNull] BishString? encoding) =>
+        new(BishException.Wrapped(BishFileModule.Error,
+            () => new StreamReader(path.Value, BishFileModule.EncodingFrom(encoding))));
 
     [Builtin("hook")]
     public static BishReader Enter(BishReader self) => self;
@@ -94,21 +91,16 @@ public class BishFileLineIterator(BishReader reader) : BishObject
 
 public class BishWriter(StreamWriter writer) : BishObject
 {
-    public StreamWriter Writer { get; private set; } = writer;
+    public readonly StreamWriter Writer = writer;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Writer");
 
     [Builtin("hook")]
-    public static BishWriter Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishWriter self, BishString path, [DefaultNull] BishBool? append,
-        [DefaultNull] BishString? encoding) =>
-        BishException.Wrapped(BishFileModule.Error, () =>
-            self.Writer = new StreamWriter(path.Value, append: append?.Value ?? false,
-                BishFileModule.EncodingFrom(encoding)));
+    public static BishWriter New(BishString path, [DefaultNull] BishBool? append, [DefaultNull] BishString? encoding) =>
+        new(BishException.Wrapped(BishFileModule.Error,
+            () => new StreamWriter(path.Value, append: append?.Value ?? false, BishFileModule.EncodingFrom(encoding))));
 
     [Builtin("hook")]
     public static BishWriter Enter(BishWriter self) => self;

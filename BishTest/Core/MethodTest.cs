@@ -4,7 +4,7 @@ public class MethodTest : Test
 {
     public MethodTest(TestInfoFixture fixture) : base(fixture)
     {
-        Execute("class T1{func f(self)0;func g(self,_)0;init(self,tag)self.tag:=tag;"
+        Execute("class T1{func f(self)0;func g(self,_)0;new(tag){.tag};"
                 + "oper()(self)0;func toString(self)'T({})'.format(self.tag)};");
         Execute("x:=T1('x');x.f:=(_:null)1;");
     }

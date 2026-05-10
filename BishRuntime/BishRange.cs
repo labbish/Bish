@@ -2,17 +2,14 @@
 
 public class BishRange(int? start, int? end, int step) : BishObject
 {
-    public int? Start = start;
-    public int? End = end;
-    public int Step = step;
+    public readonly int? Start = start;
+    public readonly int? End = end;
+    public readonly int Step = step;
     public int? Current;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("range");
-
-    [Builtin("hook")]
-    public static BishRange Create(BishObject _) => new(0, 0, 0);
 
     private static int? ToInt(BishObject? obj) => obj switch
     {
@@ -28,12 +25,11 @@ public class BishRange(int? start, int? end, int step) : BishObject
         BishBool.Of(self.Start == other.Start && self.End == other.End && self.Step == other.Step);
 
     [Builtin("hook")]
-    public static void Init(BishRange self, BishObject a, [DefaultNull] BishObject? b, [DefaultNull] BishObject? step)
+    public static BishRange New(BishObject a, [DefaultNull] BishObject? b, [DefaultNull] BishObject? step)
     {
-        if (b is null) (self.Start, self.End) = (0, ToInt(a));
-        else (self.Start, self.End) = (ToInt(a), ToInt(b));
-        self.Step = ToInt(step) ?? 1;
-        if (self.Step == 0) throw BishException.OfArgument_RangeZeroStep();
+        var (start, end) = b is null ? (0, ToInt(a)) : (ToInt(a), ToInt(b));
+        var s = ToInt(step) ?? 1;
+        return s == 0 ? throw BishException.OfArgument_RangeZeroStep() : new BishRange(start, end, s);
     }
 
     [Iter]

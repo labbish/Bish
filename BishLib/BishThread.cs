@@ -15,17 +15,14 @@ public static class BishThreadModule
 
 public class BishThread(Thread thread) : BishObject
 {
-    public Thread Thread { get; private set; } = thread;
+    public readonly Thread Thread = thread;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Thread");
 
     [Builtin("hook")]
-    public static BishThread Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishThread self, BishObject func) => self.Thread = new Thread(() => func.Call([]));
+    public static BishThread New(BishObject func) => new(new Thread(() => func.Call([])));
 
     [Builtin]
     public static void Start(BishThread self) => BishException.Wrapped(BishThreadModule.Error, self.Thread.Start);
@@ -51,17 +48,14 @@ public class BishThread(Thread thread) : BishObject
 
 public class BishLock(BishObject obj) : BishObject
 {
-    public BishObject Object { get; private set; } = obj;
+    public readonly BishObject Object = obj;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("Thread");
 
     [Builtin("hook")]
-    public static BishLock Create(BishObject _) => new(null!);
-
-    [Builtin("hook")]
-    public static void Init(BishLock self, BishObject obj) => self.Object = obj;
+    public static BishLock New(BishObject obj) => new(obj);
 
     [Builtin("hook")]
     public static void Enter(BishLock self) => Monitor.Enter(self.Object);

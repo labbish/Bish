@@ -48,7 +48,7 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
     [Repeat(5)]
     public void TestForAwait(int _)
     {
-        Execute("class I:Iterator{init(self)self.r:=range(1,5);func next(self)async self.r.next()};");
+        Execute("class I:Iterator{new(){.r:range(1,5)};func next(self)async self.r.next()};");
         Execute("x:=1;for await(i:I())x*=i;");
         ExpectResult("x", "24");
     }

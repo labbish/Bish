@@ -6,7 +6,7 @@ public class MemberHookTest : Test
     {
         Execute("class T1{get(self,name)'get';set(self,name,value)'set';"
                 + "def(self,name,value)'def';del(self,name)'del'};x:=T1();");
-        Execute("class T2{init(self)self.A:=0;get a(self)self.A;set a(self,a){self.A=a;null};"
+        Execute("class T2{new(){.A:0};get a(self)self.A;set a(self,a){self.A=a;null};"
                 + "def a(self,a){self.A=a;null};del a(self)null};y:=T2();");
         Execute("x.vars['a']:=0;");
     }

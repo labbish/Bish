@@ -46,8 +46,7 @@ public static partial class BishOperator
         new("hook_def", ["self", "member", "value"], "def()"),
         new("hook_del", ["self", "member"], "del()"),
         new("hook_bind", ["self", "object"], "bind"),
-        new("hook_create", ["self"], "create"),
-        new("hook_init", null, "init"),
+        new("hook_new", null, "new"),
         new("op_eq", ["left", "right"], "==", () => BishBool.False),
         new("op_neq", ["left", "right"], "!="),
         new("op_call", null, "()"),
@@ -108,7 +107,7 @@ public static partial class BishOperator
     {
         var founds = SpecialMethods.Where(special => special.Op == op).ToList();
         if (founds.Count == 0) throw new ArgumentException($"No such operator: {op}");
-        return founds.FirstOrDefault(special => (special.Argc is null && argc > 0) || special.Argc == argc) ??
+        return founds.FirstOrDefault(special => special.Argc is null || special.Argc == argc) ??
                throw new ArgumentException(
                    $"Operator {op} does not take {argc} arguments; " +
                    $"did you mean {string.Join(" or ", founds.Select(special => special.OpString()))}");

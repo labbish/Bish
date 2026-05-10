@@ -4,7 +4,7 @@ namespace BishRuntime;
 
 public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, BishFrame? outer = null) : BishObject
 {
-    public BishFrame? Outer { get; private set; } = outer;
+    public readonly BishFrame? Outer = outer;
     public BishScope Scope = scope ?? BishScope.Globals;
     public Stack<BishObject> Stack = new();
     public ICodeSource? Source;
@@ -23,17 +23,9 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public new static readonly BishType StaticType = new("frame");
 
     [Builtin("hook")]
-    public static BishFrame Create(BishObject _) => new([]);
-
-    [Builtin("hook")]
-    public static void Init(BishFrame self, BishList bytecodes,
-        [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? outer)
-    {
-        self.Bytecodes = bytecodes.List.Select(item =>
-            BishBytecodeParser.FromObject(item.As<BishBytecodeObject>("bytecode"))).ToList();
-        self.Scope = scope ?? BishScope.Globals;
-        self.Outer = outer;
-    }
+    public static BishFrame New(BishList bytecodes, [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? outer) =>
+        new(bytecodes.List.Select(item => BishBytecodeParser.FromObject(
+            item.As<BishBytecodeObject>("bytecode"))).ToList(), scope ?? BishScope.Globals, outer);
 
     public BishFrame WithSource(ICodeSource? source)
     {
@@ -141,14 +133,14 @@ public class BishFrameCodes(BishFrame frame) : BishObject
     [Builtin("op")]
     public static BishString? GetIndex(BishFrameCodes self, BishObject x) =>
         GetCodes(self, x) is { } codes ? new BishString(codes) : null;
-    
+
     public static string? GetCodes(BishFrameCodes self, BishObject x) => x switch
     {
         BishInt index => self.GetCode(BishList.GetIndex(self.Frame.Bytecodes, index)),
         BishRange range => self.GetCode(BishList.GetIndex(self.Frame.Bytecodes, range)),
         _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
     };
-    
+
     public string? GetCode(params IList<BishBytecode> codes)
     {
         if (Frame.Source?.Code is not { } content) return null;

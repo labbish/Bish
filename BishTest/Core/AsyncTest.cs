@@ -7,7 +7,7 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
     public void TestRunner(int _)
     {
         Execute("task:={.completed:false,.result:null,.s:0};");
-        Execute("task.poll:=(ctx){task.s+=1;if(task.s>10){task.completed=true;task.result=0}else ctx.waker.awake();};");
+        Execute("task.poll:=(ctx){task.s+=1;if(task.s>10){task.result=0;task.completed=true}else ctx.waker.awake();};");
         ExpectResult("Runner.blocked(task)", "0");
         ExpectResult("task.s", "11");
     }

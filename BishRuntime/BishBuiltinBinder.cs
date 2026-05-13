@@ -60,15 +60,15 @@ public static class BishBuiltinTaskBinder
             {
                 if (poll(self, ctx) is { } result)
                 {
-                    self.SetMember("completed", BishBool.True);
                     self.SetMember("result", result);
+                    self.SetMember("completed", BishBool.True);
                     ctx.Awake();
                 }
             }
             catch (BishException e)
             {
-                self.SetMember("completed", BishBool.True);
                 self.SetMember("result", new BishErrorResult(e.Error));
+                self.SetMember("completed", BishBool.True);
                 ctx.Awake();
             }
 

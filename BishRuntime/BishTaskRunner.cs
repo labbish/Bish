@@ -75,6 +75,7 @@ public static class BishTaskRunner
         foreach (var thread in Threads) thread.Start();
     }
 
+    [Builtin]
     public static void Add(BishObject task)
     {
         GlobalTasks.Push(task);
@@ -127,7 +128,7 @@ public class BishRunnerThread : BishObject
     public void SingleLoop()
     {
         if (GetTask() is { } task) Execute(task);
-        else Semaphore.WaitOne(TimeSpan.FromSeconds(2));
+        else Semaphore.WaitOne(500);
     }
 
     private void Execute(BishObject task)

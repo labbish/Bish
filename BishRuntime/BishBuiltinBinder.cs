@@ -39,9 +39,9 @@ public static class BishBuiltinIteratorBinder
     public static void Bind(BishType type, Func<BishObject, BishObject?> next, bool noParent = false)
     {
         if (!noParent) type.ParentsProxy.Add(BishIterator.Type);
-        type.DefMember("next", new BishFunc("next", [new BishArg("self")],
+        type.DefMember("next", new BishNativeFunc("next", [new BishArg("self")],
             args => next(args[0]) ?? BishIterator.Stop.Instance));
-        type.DefMember("iter", new BishFunc("iter", [new BishArg("self")], args => args[0]));
+        type.DefMember("iter", new BishNativeFunc("iter", [new BishArg("self")], args => args[0]));
     }
 }
 
@@ -52,7 +52,7 @@ public static class BishBuiltinTaskBinder
     public static void Bind(BishType type, Func<BishObject, BishObject, BishObject?> poll)
     {
         type.ParentsProxy.Add(BishTask.StaticType);
-        type.DefMember("poll", new BishFunc("poll", [new BishArg("self"), new BishArg("ctx")], args =>
+        type.DefMember("poll", new BishNativeFunc("poll", [new BishArg("self"), new BishArg("ctx")], args =>
         {
             var self = args[0];
             var ctx = args[1];

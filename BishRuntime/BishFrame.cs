@@ -98,6 +98,11 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         self.Execute();
         return self.ReturnValue ?? (self.Stack.TryPeek(out var result) ? result : null);
     }
+
+    public BishFrame Clone() => new BishFrame(Bytecodes, Scope, Outer).WithSource(Source);
+
+    [Builtin]
+    public static BishFrame Clone(BishFrame self) => self.Clone();
 }
 
 public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Action<BishError> Handler);

@@ -21,7 +21,7 @@ public record BuiltinFunction(
 
     public string Code =>
         $$"""
-          {{Type}}.StaticType.DefMember("{{FullName}}", new BishFunc("{{FullName}}", 
+          {{Type}}.StaticType.DefMember("{{FullName}}", new BishNativeFunc("{{FullName}}", 
               [{{string.Join(", ", Args.Select(a => a.ToString()))}}],
               raw_arg_list => {
                   {{string.Join(" ", Args.Select((arg, i) => $"var raw_{arg.Name} = raw_arg_list[{i}];"))}}

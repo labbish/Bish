@@ -22,7 +22,8 @@ public class BishArgObject(BishArg arg) : BishObject
     public new static readonly BishType StaticType = new("Arg");
 
     [Builtin("hook")]
-    public static BishArgObject New(BishString name, [DefaultNull] BishType? type) => new(new BishArg(name.Value, type));
+    public static BishArgObject New(BishString name, [DefaultNull] BishType? type) =>
+        new(new BishArg(name.Value, type));
 
     [Builtin]
     public static BishArgObject Default(BishArgObject self, BishObject value)
@@ -58,10 +59,9 @@ public class BishArgObject(BishArg arg) : BishObject
     public static BishBool Get_isRest(BishArgObject self) => BishBool.Of(self.Arg.Rest);
 }
 
-public class BishFunc(
+public abstract class BishFunc(
     string name,
     IList<BishArg> inArgs,
-    Func<IList<BishObject>, BishObject> func,
     string? tag = null,
     bool passCaller = false) : BishObject
 {
@@ -70,8 +70,9 @@ public class BishFunc(
 
     public IList<BishArg> Args = CheckedArgs<BishArg, BishObject>(inArgs).ToConcurrentList();
 
-    public Func<IList<BishObject>, BishObject> Func = func;
     public bool PassCaller = passCaller;
+
+    public abstract BishObject CallRaw(IList<BishObject> args);
 
     public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
     {
@@ -117,11 +118,11 @@ public class BishFunc(
             throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToConcurrentList();
     }
 
-    public override BishFunc Bind(BishObject self)
+    public override BishNativeFunc Bind(BishObject self)
     {
         return Args.Count == 0
             ? throw BishException.OfArgument_Bind(this, self)
-            : new BishFunc(Name, Args.Slice(Args[0].Rest ? 0 : 1), args => Func(Trans(args)), Tag);
+            : new BishNativeFunc(Name, Args.Slice(Args[0].Rest ? 0 : 1), args => CallRaw(Trans(args)), Tag);
 
         IList<BishObject> Trans(IList<BishObject> args) => Args[0].Rest
             ? [new BishList([self, ..args[0].As<BishList>("rest arg").List]), ..args.Slice(1)]
@@ -136,7 +137,7 @@ public class BishFunc(
         try
         {
             var match = Match(args);
-            return Func(match);
+            return CallRaw(match);
         }
         catch (BishException e)
         {
@@ -154,7 +155,7 @@ public class BishFunc(
     public override string ToString() => $"Function {Name}({string.Join(", ", Args)})";
 
     [Builtin("hook")]
-    public static BishFunc New(BishString name, BishList args, BishFunc func) =>
+    public static BishNativeFunc New(BishString name, BishList args, BishFunc func) =>
         new(name.Value, args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList(),
             list => func.Call([new BishList(list)]));
 
@@ -193,6 +194,18 @@ public class BishFunc(
 
     [Builtin("hook")]
     public static void Set_passCaller(BishFunc self, BishBool value) => self.PassCaller = value.Value;
+}
+
+public class BishNativeFunc(
+    string name,
+    IList<BishArg> inArgs,
+    Func<IList<BishObject>, BishObject> func,
+    string? tag = null,
+    bool passCaller = false) : BishFunc(name, inArgs, tag, passCaller)
+{
+    public Func<IList<BishObject>, BishObject> Func => func;
+
+    public override BishObject CallRaw(IList<BishObject> args) => Func(args);
 }
 
 public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)

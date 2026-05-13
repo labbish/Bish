@@ -1,33 +1,27 @@
 ﻿namespace BishRuntime;
 
-public class BishCodedFunc : BishFunc
+public class BishCodedFunc(string name, IList<BishArg> inArgs, BishFrame inner, bool isGen, bool isAsync)
+    : BishFunc(name, inArgs)
 {
-    public BishCodedFunc(string name, IList<BishArg> inArgs, Func<BishFrame> getInner, bool isGen, bool isAsync)
-        : base(name, inArgs, null!)
-    {
-        IsGen = isGen;
-        IsAsync = isAsync;
-        Inner = getInner();
-        Func = args =>
-        {
-            Inner = getInner();
-            foreach (var arg in args.Reverse()) Inner.Stack.Push(arg);
-            return (isGen, isAsync) switch
-            {
-                (false, false) => Inner.Execute(),
-                (true, false) => new BishGenerator(Inner),
-                (false, true) => new BishAsyncTask(Inner),
-                (true, true) => new BishAsyncGenerator(Inner)
-            };
-        };
-    }
-
-    public BishFrame Inner { get; private set; }
-    public readonly bool IsGen;
-    public readonly bool IsAsync;
+    public readonly BishFrame Inner = inner;
+    public readonly bool IsGen = isGen;
+    public readonly bool IsAsync = isAsync;
 
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("Func", [BishFunc.StaticType]);
+
+    public override BishObject CallRaw(IList<BishObject> args)
+    {
+        var frame = Inner.Clone();
+        foreach (var arg in args.Reverse()) frame.Stack.Push(arg);
+        return (IsGen, IsAsync) switch
+        {
+            (false, false) => frame.Execute(),
+            (true, false) => new BishGenerator(frame),
+            (false, true) => new BishAsyncTask(frame),
+            (true, true) => new BishAsyncGenerator(frame)
+        };
+    }
 
     public override BishStackLayer GetStackLayer(IList<BishObject> args) =>
         base.GetStackLayer(args).WithSource(Inner.Source, Inner.Current?.Pos);

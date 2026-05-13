@@ -92,4 +92,11 @@ public class ClassTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("class C{a:=0};C.a", "0");
         ExpectResult("extend C{b:=1};C.b", "1");
     }
+
+    [Fact]
+    public void TestMeta()
+    {
+        Execute("class M:type{get[](self,_)'m'};class[M] C;");
+        ExpectResult("C[0]", "'m'");
+    }
 }

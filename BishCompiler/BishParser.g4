@@ -12,7 +12,7 @@ expr
     | deco* OP defOp funcBody                                   # OperExpr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* defHook funcBody                                    # HookExpr
-    | deco* CLS ID? (COL args)? expr?                           # ClassExpr
+    | clsExpr                                                   # ClassExpr
     | EXT obj=expr body=expr?                                   # ExtendExpr
     | LBRACK args RBRACK                                        # ListExpr
     | LBRACE entries RBRACE                                     # MapExpr
@@ -54,6 +54,10 @@ expr
     | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr
+    ;
+
+clsExpr
+    : deco* CLS (LBRACK meta=expr RBRACK)? ID? (COL args)? body=expr?
     ;
 
 forBody

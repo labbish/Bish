@@ -109,16 +109,14 @@ public partial class BishVisitor
         .Add(new Inner()).Add(expr is null ? CompileResult.Stat(null) : Visit(expr).Unwrap().IntoStat())
         .Add(new CopyVars(), new Outer());
 
-    public override CompileResult VisitClassExpr(BishParser.ClassExprContext context)
+    public override CompileResult VisitClsExpr(BishParser.ClsExprContext context)
     {
         var result = CompileResult.Expr(context);
         var name = context.ID()?.GetText();
         var args = context.args()?.arg() ?? [];
-
-        result.Add(new GetBuiltin("type"), new String(name ?? Anonymous)).Add(ToList(args)).Add(new Call(2));
-
-        result.Add(EvalAndCopy(context.expr()));
-
+        if (context.meta is { } meta) result.Add(Visit(meta), StackEffect.Expr);
+        else result.Add(new GetBuiltin("type"));
+        result.Add(new String(name ?? Anonymous)).Add(ToList(args)).Add(new Call(2)).Add(EvalAndCopy(context.body));
         foreach (var deco in context.deco().Reverse())
             result.Add(Visit(deco), StackEffect.Expr).Add(new Swap(), new Call(1));
         if (name is not null) result.Add(new Def(name));

@@ -68,6 +68,7 @@ public class AccessTest : Test
         ExpectError("o.b;", BishError.AttributeErrorType);
         ExpectError("c;", BishError.AttributeErrorType);
         ExpectError("l;", BishError.AttributeErrorType);
+        ExpectCompileError("[..a,..b]:=0;");
 
         Execute("o:={'a':0,'b':1,'c':2};");
         Execute("{'a':a,'b':b,..c}:=o;");
@@ -83,6 +84,7 @@ public class AccessTest : Test
         ExpectError("b;", BishError.AttributeErrorType);
         ExpectError("c;", BishError.AttributeErrorType);
         ExpectResult("o['a']", "0");
+        ExpectCompileError("{..m,'a':0}:=0;");
 
         Execute("o:={.a:0,.b:1,.c:2};");
         Execute("{.a,.b}:=o;");
@@ -95,6 +97,7 @@ public class AccessTest : Test
         ExpectError("a;", BishError.AttributeErrorType);
         ExpectError("b;", BishError.AttributeErrorType);
         ExpectResult("o.a", "0");
+        ExpectCompileError("{.a:0}:=0;");
     }
 
     [Fact]

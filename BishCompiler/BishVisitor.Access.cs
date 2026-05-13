@@ -20,9 +20,6 @@ public partial class BishVisitor
             .Add(Get(last, tag)).Add(Tag(tag));
     }
 
-    private static ListDeconstruct Deconstruct(BishParser.ArgContext[] args) =>
-        new(args.Length, args.FindIndex(arg => arg is BishParser.RestArgContext), Pattern: false);
-
     private static IEnumerable<BishParser.ExprContext> ArgsToExpr(BishParser.ArgContext[] args)
     {
         foreach (var arg in args)
@@ -80,7 +77,14 @@ public partial class BishVisitor
             case BishParser.ListExprContext list:
             {
                 var args = list.args().arg();
-                result.Add(value, StackEffect.Expr).Add(Deconstruct(args));
+                var pos = -1;
+                foreach (var (item, i) in args.Enumerate())
+                {
+                    if (item is not BishParser.RestArgContext) continue;
+                    if (pos == -1) pos = i;
+                    else result.Error("Found list deconstruct pattern with multiple rest pattern");
+                }
+                result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
                     result.Add(Set(expr, op, CompileResult.Expr(null).Add(new Del($"${i}"))));
@@ -194,7 +198,14 @@ public partial class BishVisitor
             case BishParser.ListExprContext list:
             {
                 var args = list.args().arg();
-                result.Add(value, StackEffect.Expr).Add(Deconstruct(args));
+                var pos = -1;
+                foreach (var (item, i) in args.Enumerate())
+                {
+                    if (item is not BishParser.RestArgContext) continue;
+                    if (pos == -1) pos = i;
+                    else result.Error("Found list deconstruct pattern with multiple rest pattern");
+                }
+                result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
                     result.Add(Def(expr, CompileResult.Expr(null).Add(new Del($"${i}"))));

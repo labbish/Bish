@@ -14,12 +14,12 @@ public partial class BishVisitor
         var result = CompileResult.Pattern(context);
         var items = context.patItem();
         var pos = -1;
-        for (var i = 0; i < items.Length; i++)
-            if (items[i].dots is not null)
-            {
-                if (pos == -1) pos = i;
-                else result.Error("Found list deconstruct pattern with multiple rest pattern");
-            }
+        foreach (var (item, i) in items.Enumerate())
+        {
+            if (item.dots is null) continue;
+            if (pos == -1) pos = i;
+            else result.Error("Found list deconstruct pattern with multiple rest pattern");
+        }
 
         var end = Symbols.Get("list");
         var tags = Enumerable.Range(0, items.Length).Select(_ => Symbols.Get("list")).ToList();

@@ -39,7 +39,7 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("Runner.blocked(g())", "1");
         ExpectResult("x:=await f()", "0");
         ExpectResult("x", "0");
-        ExpectResult("s:={.g};await s.g()", "1");
+        ExpectResult("s:={.g:()async await f()+2};await s.g()", "2");
         ExpectResult("await 0", "0");
         ExpectError("func h()async throw Error('error');await h();", BishError.StaticType, "error");
     }

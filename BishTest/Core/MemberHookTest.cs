@@ -9,6 +9,7 @@ public class MemberHookTest : Test
         Execute("class T2{new(){.A:0};get a(self)self.A;set a(self,a){self.A=a;null};"
                 + "def a(self,a){self.A=a;null};del a(self)null};y:=T2();");
         Execute("x.vars['a']:=0;");
+        ExpectCompileError("get(.._)0;");
     }
 
     [Fact]

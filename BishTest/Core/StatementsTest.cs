@@ -16,6 +16,7 @@ public class StatementsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("x", "0");
         Execute("if(y:=true){};");
         ExpectError("y;", BishError.AttributeErrorType);
+        ExpectCompileError("if(0){0}else{1;};");
     }
 
     [Fact]

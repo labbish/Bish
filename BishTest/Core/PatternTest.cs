@@ -18,6 +18,7 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("x", "0");
         ExpectResult("y", "1");
         ExpectError("z", BishError.AttributeErrorType);
+        ExpectCompileError("0 is [..a,..b];");
     }
 
     [Theory]

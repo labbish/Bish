@@ -134,12 +134,13 @@ public class CompileResult(
         return this;
     }
 
-    public bool IsAsync()
+    public IEnumerable<(BishBytecode, bool Free)> GetFrees<T>() where T : BishBytecode
     {
         var starts = 0;
         var ends = 0;
         foreach (var code in Codes)
         {
+            var free = false;
             switch (code)
             {
                 case FuncStart:
@@ -148,13 +149,16 @@ public class CompileResult(
                 case FuncEnd:
                     ends++;
                     break;
-                case Await when starts <= ends:
-                    return true;
+                case T when starts <= ends:
+                    free = true;
+                    break;
             }
-        }
 
-        return false;
+            yield return (code, free);
+        }
     }
+
+    public bool HasFree<T>() where T : BishBytecode => GetFrees<T>().Any(pair => pair.Free);
 }
 
 internal abstract record Unbound(ParserRuleContext Context) : BishBytecode

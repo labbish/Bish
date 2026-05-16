@@ -139,19 +139,25 @@ public partial class BishVisitor
 
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)
     {
-        var await = context.withBody().AWT() is not null;
-        var obj = context.withBody().obj;
-        var cont = context.withBody().cont;
-        var main = context.main;
         var tag = Symbols.Get("with");
         var name = Symbols.Get("$with");
+
         var dispose = CompileResult.Stat(context).Add(new Get(name), new GetMember("dispose"), new Call(0));
-        if (await) dispose.Add(new Await());
+        if (context.withBody().AWT() is not null) dispose.Add(new Await());
         dispose.Add(new Pop());
+
+        var body = CompileResult.Expr(context.main);
+        foreach (var (code, free) in Visit(context.main).IntoExpr().GetFrees<Ret>())
+        {
+            if (free) body.Add(dispose);
+            body.Add(code);
+        }
+
         var result = CompileResult.Expr(context).Add(new TryStart(tag))
-            .Add(Visit(cont), StackEffect.Expr).Add(new Move(name));
-        if (obj is not null) result.Add(Def(obj, CompileResult.Expr(null).Add(new Get(name)))).Add(new Pop());
-        return result.Add(Visit(main).IntoExpr())
+            .Add(Visit(context.withBody().cont), StackEffect.Expr).Add(new Move(name));
+        if (context.withBody().obj is { } obj)
+            result.Add(Def(obj, CompileResult.Expr(null).Add(new Get(name)))).Add(new Pop());
+        return result.Add(body)
             .Add(new TryEnd(tag), new Def("$value"))
             .Add(IsErr(context, "$err"))
             .Add(new Move("$isErr"))

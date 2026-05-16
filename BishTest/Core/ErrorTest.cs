@@ -24,8 +24,9 @@ public class ErrorTest(TestInfoFixture fixture) : Test(fixture)
     public void TestWith()
     {
         Execute("a:=0;class W{func dispose(self)a+=1;};");
-        Execute("with(W()){};");
+        Execute("with(W())0;");
         Execute("try with(_:W())throw Error('error');");
-        ExpectResult("a", "2");
+        Execute("((){with(W())return})();");
+        ExpectResult("a", "3");
     }
 }

@@ -234,7 +234,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     {
         var result = VisitMulti(context._front, context.last);
         const string name = "main$async";
-        if (!result.IsAsync()) return result;
+        if (!result.HasFree<Await>()) return result;
         var expr = CompileResult.Expr(context)
             .Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
             .Add(new MakeFunc(name, IsAsync: true)).Add(new Call(0))

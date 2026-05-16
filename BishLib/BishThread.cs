@@ -46,9 +46,11 @@ public class BishThread(Thread thread) : BishObject
     public static BishThread OfRunner(BishRunnerThread thread) => new(thread.Thread);
 }
 
-public class BishLock(BishObject obj) : BishObject
+public class BishLock : BishObject
 {
-    public readonly BishObject Object = obj;
+    public readonly BishObject Object;
+
+    public BishLock(BishObject obj) => Monitor.Enter(Object = obj);
 
     public override BishType DefaultType => StaticType;
 
@@ -57,11 +59,8 @@ public class BishLock(BishObject obj) : BishObject
     [Builtin("hook")]
     public static BishLock New(BishObject obj) => new(obj);
 
-    [Builtin("hook")]
-    public static void Enter(BishLock self) => Monitor.Enter(self.Object);
-
-    [Builtin("hook")]
-    public static void Exit(BishLock self, BishObject _) => Monitor.Exit(self.Object);
+    [Builtin]
+    public static void Dispose(BishLock self) => Monitor.Exit(self.Object);
 }
 
 // TODO: semaphore (& channel?)

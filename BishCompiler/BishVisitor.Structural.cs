@@ -27,6 +27,7 @@ public partial class BishVisitor
             else result.Add(new Yield());
             result.Add(new Null());
         }
+
         return result;
     }
 
@@ -139,27 +140,26 @@ public partial class BishVisitor
     public override CompileResult VisitWithExpr(BishParser.WithExprContext context)
     {
         var await = context.withBody().AWT() is not null;
+        var obj = context.withBody().obj;
+        var cont = context.withBody().cont;
+        var main = context.main;
         var tag = Symbols.Get("with");
-        var result = CompileResult.Expr(context)
-            .Add(Visit(context.withBody().cont), StackEffect.Expr)
-            .Add(new Copy(), Op("enter", 1));
-        if (await) result.Add(new Await());
-        if (context.withBody().obj is { } obj)
-            result.Add(new Move("$with"))
-                .Add(Def(obj, CompileResult.Expr(null).Add(new Del("$with"))));
-        var exit = new CompileResult(StackEffect.Consume, null).Add(Op("exit", 2));
-        if (await) exit.Add(new Await());
-        result.Add(new Pop(), new TryStart(tag)).Add(Visit(context.main).IntoExpr()).Add(new TryEnd(tag));
-        result.Add(new Copy(), new Swap(2)).Add(IsErr(context, "$err")).Add(new Move("$isErr"));
-        result.Add(Condition("with_err", CompileResult.Expr(null).Add(new Get("$isErr")),
-            CompileResult.Stat(null)
-                .Add(new Get("$err")).Add(exit).Add(new Move("$noErr"))
-                .Add(Condition("with_no_err", CompileResult.Expr(null).Add(new Get("$noErr")),
-                    CompileResult.Stat(null),
-                    CompileResult.Stat(null).Add(new Get("$err"), new Throw())
-                )),
-            CompileResult.Stat(null).Add(new Null()).Add(exit).Add(new Pop())
-        ));
-        return result.Wrap();
+        var name = Symbols.Get("$with");
+        var dispose = CompileResult.Stat(context).Add(new Get(name), new GetMember("dispose"), new Call(0));
+        if (await) dispose.Add(new Await());
+        dispose.Add(new Pop());
+        var result = CompileResult.Expr(context).Add(new TryStart(tag))
+            .Add(Visit(cont), StackEffect.Expr).Add(new Move(name));
+        if (obj is not null) result.Add(Def(obj, CompileResult.Expr(null).Add(new Get(name)))).Add(new Pop());
+        return result.Add(Visit(main).IntoExpr())
+            .Add(new TryEnd(tag), new Def("$value"))
+            .Add(IsErr(context, "$err"))
+            .Add(new Move("$isErr"))
+            .Add(dispose)
+            .Add(Condition("try_with",
+                CompileResult.Expr(null).Add(new Del("$isErr")),
+                CompileResult.Stat(null).Add(new Get("$err"), new Throw()),
+                CompileResult.Stat(null).Add(new Del("$value"))))
+            .Wrap();
     }
 }

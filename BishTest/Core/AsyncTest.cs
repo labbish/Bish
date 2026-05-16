@@ -57,12 +57,10 @@ public class AsyncTest(TestInfoFixture fixture) : Test(fixture)
     [Repeat(5)]
     public void TestWithAwait(int _)
     {
-        Execute("a:=b:=c:=0;class W{enter(self)async a+=1;exit(self,error)async if(error is null)b+=1 else c+=1;};");
+        Execute("a:=0;class W{func dispose(self)async a+=1;};");
         Execute("with await(W()){};");
-        Execute("with await(_:W())throw Error('error');");
+        Execute("try with await(_:W())throw Error('error');");
         ExpectResult("a", "2");
-        ExpectResult("b", "1");
-        ExpectResult("c", "1");
     }
 
     [Theory]

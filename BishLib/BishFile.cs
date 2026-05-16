@@ -30,11 +30,8 @@ public class BishReader(StreamReader reader) : BishObject
         new(BishException.Wrapped(BishFileModule.Error,
             () => new StreamReader(path.Value, BishFileModule.EncodingFrom(encoding))));
 
-    [Builtin("hook")]
-    public static BishReader Enter(BishReader self) => self;
-
-    [Builtin("hook")]
-    public static void Exit(BishReader self, BishObject _) => self.Reader.Dispose();
+    [Builtin]
+    public static void Dispose(BishReader self) => self.Reader.Dispose();
 
     public BishString? ReadChar() => BishException.Wrapped(BishFileModule.Error, Reader.Read) switch
     {
@@ -102,11 +99,8 @@ public class BishWriter(StreamWriter writer) : BishObject
         new(BishException.Wrapped(BishFileModule.Error,
             () => new StreamWriter(path.Value, append: append?.Value ?? false, BishFileModule.EncodingFrom(encoding))));
 
-    [Builtin("hook")]
-    public static BishWriter Enter(BishWriter self) => self;
-
-    [Builtin("hook")]
-    public static void Exit(BishWriter self, BishObject _) => self.Writer.Dispose();
+    [Builtin]
+    public static void Dispose(BishWriter self) => self.Writer.Dispose();
 
     [Builtin]
     public static void Write(BishWriter self, BishObject content) =>

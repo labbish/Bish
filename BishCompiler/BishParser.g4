@@ -107,7 +107,7 @@ defOp
     ;
 
 defHook
-    : NEW | BND | ENT | EXI
+    : NEW | BND
     ;
 
 nullAccess

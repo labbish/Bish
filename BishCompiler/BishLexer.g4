@@ -92,8 +92,6 @@ FUN : 'func' ;
 OP  : 'oper' ;
 NEW : 'new' ;
 BND : 'bind' ;
-ENT : 'enter' ;
-EXI : 'exit' ;
 RET : 'return' ;
 YLD : 'yield' ;
 AWT : 'await' ;

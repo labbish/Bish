@@ -75,8 +75,7 @@ public static partial class BishOperator
         new("op_defIndex", ["self", "index", "value"], "def[]"),
         new("op_delIndex", ["self", "index"], "del[]"),
         new("iter", ["self"], "iter"),
-        new("hook_enter", ["self"], "enter"),
-        new("hook_exit", ["self", "error"], "exit", () => BishBool.False)
+        new("dispose", ["self"], "dispose", () => BishNull.Instance)
     ];
 
     public static BishObject Call(string name, IList<BishObject> args)

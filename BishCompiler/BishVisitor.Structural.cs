@@ -142,7 +142,7 @@ public partial class BishVisitor
         var tag = Symbols.Get("with");
         var name = Symbols.Get("$with");
 
-        var dispose = CompileResult.Stat(context).Add(new Get(name), new GetMember("dispose"), new Call(0));
+        var dispose = CompileResult.Stat(context).Add(new Get(name), Op("dispose", 1));
         if (context.withBody().AWT() is not null) dispose.Add(new Await());
         dispose.Add(new Pop());
 

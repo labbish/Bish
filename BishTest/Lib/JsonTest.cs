@@ -157,13 +157,14 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
     [Fact]
     public void TestJsonExtensions()
     {
-        JsonStringify("#[1+2]", """
-                                {"type":"Program","children":[{"type":"BinOpExpr","children":
-                                [{"type":"AtomExpr","children":[{"type":"IntAtom","children":
-                                [{"type":"TerminalNodeImpl","text":"1"}]}]},{"type":"TerminalNodeImpl","text":"+"},
-                                {"type":"AtomExpr","children":[{"type":"IntAtom","children":
-                                [{"type":"TerminalNodeImpl","text":"2"}]}]}]},
-                                {"type":"TerminalNodeImpl","text":"<EOF>"}]}
-                                """.Replace(Environment.NewLine, ""));
+        JsonStringify("meta.parse('1+2')",
+            """
+                {"type":"Program","children":[{"type":"BinOpExpr","children":
+                [{"type":"AtomExpr","children":[{"type":"IntAtom","children":
+                [{"type":"TerminalNodeImpl","text":"1"}]}]},{"type":"TerminalNodeImpl","text":"+"},
+                {"type":"AtomExpr","children":[{"type":"IntAtom","children":
+                [{"type":"TerminalNodeImpl","text":"2"}]}]}]},
+                {"type":"TerminalNodeImpl","text":"<EOF>"}]}
+                """.Replace(Environment.NewLine, ""));
     }
 }

@@ -251,36 +251,25 @@ public record EndTag(string Name) : BishBytecode
 
 public static class TagSlicer
 {
-    [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
-    public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, IList<BishBytecode> Code)
-        where TStart : StartTag<TEnd> where TEnd : EndTag;
-
     extension(BishFrame frame)
     {
-        public CodeSlice<TStart, TEnd>? TrySlice<TStart, TEnd>(string name)
+        public CodeSlice<TStart, TEnd> Slice<TStart, TEnd>(string name)
             where TStart : StartTag<TEnd> where TEnd : EndTag
         {
             var startPos = frame.Bytecodes.FindIndex(x => x is TStart start && start.Name == name);
-            if (startPos == -1) return null;
+            if (startPos == -1) throw new ArgumentException($"Start tag named {name} not found");
             var start = (TStart)frame.Bytecodes[startPos];
             var endPos = start.EndPos(frame, startPos);
             var end = (TEnd)frame.Bytecodes[endPos];
             var code = frame.Bytecodes.Slice(startPos + 1, endPos);
             return new CodeSlice<TStart, TEnd>(startPos, start, endPos, end, code);
         }
-
-        public CodeSlice<TStart, TEnd> Slice<TStart, TEnd>(string name)
-            where TStart : StartTag<TEnd> where TEnd : EndTag =>
-            frame.TrySlice<TStart, TEnd>(name) ??
-            throw new ArgumentException($"Start tag named {name} not found");
     }
 }
 
-public abstract record TagBased<TStart, TEnd>(string Name)
-    : BishBytecode where TStart : StartTag<TEnd> where TEnd : EndTag
-{
-    public TagSlicer.CodeSlice<TStart, TEnd> Slice(BishFrame frame) => frame.Slice<TStart, TEnd>(Name);
-}
+[SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
+public record CodeSlice<TStart, TEnd>(int StartPos, TStart Start, int EndPos, TEnd End, IList<BishBytecode> Code)
+    where TStart : StartTag<TEnd> where TEnd : EndTag;
 
 [Bytecode]
 public record FuncStart(string Name, IList<string> Args) : StartTag<FuncEnd>(Name);
@@ -290,18 +279,18 @@ public record FuncEnd(string Name) : EndTag(Name);
 
 [Bytecode]
 public record MakeFunc(string Name, int DefaultArgc = 0, bool Rest = false, bool IsGen = false, bool IsAsync = false)
-    : TagBased<FuncStart, FuncEnd>(Name)
+    : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
-        var slice = Slice(frame);
+        var slice = frame.Slice<FuncStart, FuncEnd>(Name);
         var names = slice.Start.Args;
         var scope = frame.Scope;
         var defaults = frame.Stack.Pop(DefaultArgc);
         var inArgs = names
             .Select((arg, i) => new BishArg(arg, Default: defaults.ElementAtOrDefault(^(names.Count - i)),
                 Rest: Rest && i == names.Count - 1)).ToList();
-        var inner = new BishFrame(slice.Code, scope, frame).WithSource(frame.Source);
+        var inner = new BishFrame(slice.Code, scope).WithSource(frame.Source);
         frame.Stack.Push(new BishCodedFunc(Name, inArgs, inner, IsGen, IsAsync));
     }
 }

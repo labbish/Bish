@@ -60,14 +60,13 @@ public static class BishOptimizer
 
         public Codes RemoveDiscarded()
         {
-            bool Discarded(string name) => name.All(c => c == '_');
             for (var i = 0; i < codes.Count; i++)
             {
                 codes[i] = codes[i] switch
                 {
-                    Set code when Discarded(code.Name) => new Nop(),
-                    Def code when Discarded(code.Name) => new Nop(),
-                    Move code when Discarded(code.Name) => new Pop().WithPos(code.Pos),
+                    Set code when BishScope.Discard(code.Name) => new Nop(),
+                    Def code when BishScope.Discard(code.Name) => new Nop(),
+                    Move code when BishScope.Discard(code.Name) => new Pop().WithPos(code.Pos),
                     { } code => code
                 };
             }

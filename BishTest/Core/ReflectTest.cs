@@ -102,11 +102,5 @@ public class ReflectTest : Test
         ExpectResult("c.children[1].text", "'+'");
 
         ExpectResult("meta.compile(t).eval()", "3");
-        
-        ExpectResult("#[1+2].toString()", $"'([Program] {c} <EOF>)'");
-        Execute("func count(tree)tree.children[0].children.length;");
-        ExpectResult("#count[1+2]", "3");
-        ExpectCompileError("#[???]");
-        ExpectResult("(#[func f()0]).children[0].type", "'FuncExpr'");
     }
 }

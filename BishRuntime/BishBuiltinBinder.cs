@@ -40,7 +40,7 @@ public static class BishBuiltinIteratorBinder
     {
         if (!noParent) type.ParentsProxy.Add(BishIterator.Type);
         type.DefMember("next", new BishNativeFunc("next", [new BishArg("self")],
-            args => next(args[0]) ?? BishIterator.Stop.Instance));
+            args => next(args[0]) ?? BishIteratorStop.Instance));
         type.DefMember("iter", new BishNativeFunc("iter", [new BishArg("self")], args => args[0]));
     }
 }

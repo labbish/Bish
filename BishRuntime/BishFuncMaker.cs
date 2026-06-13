@@ -136,7 +136,7 @@ public class BishAsyncGenerator(BishFrame inner) : BishObject, IBishAsyncIterato
             }
 
             Stage = -1;
-            return BishIterator.Stop.Instance;
+            return BishIteratorStop.Instance;
         }
         catch (BishException e)
         {

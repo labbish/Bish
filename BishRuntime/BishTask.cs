@@ -163,7 +163,7 @@ public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIte
     public BishObject? NextPoll(BishObject ctx)
     {
         var task = _tasks.First?.Value;
-        if (task is null) return BishIterator.Stop.Instance;
+        if (task is null) return BishIteratorStop.Instance;
         _tasks.RemoveFirst();
         task.GetMember("poll").Call([ctx]);
         if (BishBool.CallToBool(task.GetMember("completed")))
@@ -186,7 +186,7 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
 
     public BishObject? NextPoll(BishObject ctx)
     {
-        if (_count == tasks.Count) return BishIterator.Stop.Instance;
+        if (_count == tasks.Count) return BishIteratorStop.Instance;
         foreach (var (task, i) in tasks.Enumerate())
         {
             if (i < _count) continue;

@@ -4,18 +4,21 @@ public static class BishIterator
 {
     public static readonly BishType Type = new("Iterator");
     public static readonly BishType AsyncType = new("AsyncIterator");
+}
 
-    public class Stop : BishObject
+public class BishIteratorStop : BishObject
+{
+    public override BishType DefaultType => StaticType;
+    public new static readonly BishType StaticType = new("IteratorStop");
+    
+    public static readonly BishIteratorStop Instance = new();
+
+    private BishIteratorStop()
     {
-        public static readonly Stop Instance = new();
-
-        private Stop()
-        {
-        }
-
-        [Builtin]
-        public static BishString Repr(Stop _, BishReprContext __) => new("IteratorStop");
     }
+
+    [Builtin]
+    public static BishString Repr(BishIteratorStop _, BishReprContext __) => new("IteratorStop");
 }
 
 internal static class IndexHelper
@@ -37,7 +40,7 @@ public static class IteratorHelper
         while (true)
         {
             var result = iterator.GetMember("next").Call([]);
-            if (result is BishIterator.Stop) yield break;
+            if (result is BishIteratorStop) yield break;
             yield return result;
         }
     }

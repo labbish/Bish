@@ -170,6 +170,16 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-c", code, code);
     }
 
+    [Fact]
+    public async Task TestArgs()
+    {
+        CreateFile("./a/r.bish", "print(args)");
+        await ExpectOutputAsync("-f", "./a/r.bish", "-o", "./a/r.bishc", "[]");
+        await ExpectOutputAsync("-f", "./a/r.bish", "--", "1", "2", "3", "[1, 2, 3]");
+        await ExpectOutputAsync("-f", "./a/r.bishc", "[]");
+        await ExpectOutputAsync("-f", "./a/r.bishc", "--", "1", "2", "3", "[1, 2, 3]");
+    }
+
     public void Dispose()
     {
         Console.SetOut(OrigWriter);

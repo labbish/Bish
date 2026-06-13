@@ -23,6 +23,7 @@ internal class Options
     public bool Interactive;
     public bool Server;
     public bool Help;
+    public string[] Arguments = [];
 
     public static Options Parse(string[] arguments)
     {
@@ -49,6 +50,7 @@ internal class Options
                 case "-i" or "--interactive": options.Interactive = true; break;
                 case "-l" or "--lsp": options.Server = true; break;
                 case "-h" or "--help": options.Help = true; break;
+                case "--": options.Arguments = args.ToArray(); break;
             }
 
         return options switch

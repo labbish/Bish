@@ -20,13 +20,11 @@ public class Repl(BishScope? scope = null)
                 case ".help":
                     Console.WriteLine(".clear  Clear screen.");
                     Console.WriteLine(".comp   Compile and print bytecode.");
-                    Console.WriteLine(".exit   Exit the REPL.");
                     Console.WriteLine(".file   Load a file into the REPL session.");
                     Console.WriteLine(".opts   Output optimization info.");
                     Console.WriteLine(".help   Print this help message.");
                     break;
                 case ".clear": Console.Clear(); break;
-                case ".exit": return;
                 case ".opts": Console.WriteLine(BishOptimizer.Info()); break;
                 case not null when code.StartsWith(".file"):
                     Handled(() =>
@@ -58,6 +56,7 @@ public class Repl(BishScope? scope = null)
                     break;
             }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     public static void Handled(Action action)

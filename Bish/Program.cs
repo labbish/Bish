@@ -25,6 +25,8 @@ public static class Program
                 }
 
                 if (options.SkipExecution) return;
+                frame.Scope.DefVar("args", new BishList(options.Arguments
+                    .Select(arg => new BishString(arg)).ToList<BishObject>()));
                 Repl.Handled(() => frame.Execute());
                 if (options.Interactive) new Repl(frame.Scope).Loop();
                 break;

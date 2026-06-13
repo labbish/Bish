@@ -127,9 +127,9 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("'x'.toCode()", "120");
         ExpectResult("string.fromCode(120)", "'x'");
         
-        ExpectResult("l:=[];l.add(l);string.show(l)", "[<...>]");
-        ExpectResult("m:={};m[m]:=m;string.show(m)", "{<...>: <...>}");
-        ExpectResult("x:=[];x.add({x:x});string.show(x)", "[{<...>: <...>}]");
+        ExpectResult("l:=[];l.add(l);string.show(l)", "'[<...>]'");
+        ExpectResult("m:={};m[m]:=m;string.show(m)", "'{<...>: <...>}'");
+        ExpectResult("x:=[];x.add({x:x});string.show(x)", "'[{<...>: <...>}]'");
     }
 
     [Fact]

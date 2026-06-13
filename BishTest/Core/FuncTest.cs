@@ -114,6 +114,11 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
         // func f(..rest)rest;
         Execute("f:=Func('f',[Arg('rest').rest()],([rest])rest);");
         ExpectResult("f(1,2,3)", "[1,2,3]");
+        
+        // func f(x)x;
+        Execute("f:=Func.coded('f',[Arg('x')],frame([bytecode('Ret',{})]));");
+        ExpectResult("f(0)", "0");
+        ExpectResult("f(1)", "1");
 
         Execute("func f(a,b,c)a*b*c;");
         ExpectResult("f(2,3,4)", "24");

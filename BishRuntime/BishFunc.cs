@@ -154,10 +154,17 @@ public abstract class BishFunc(
 
     public override string ToString() => $"Function {Name}({string.Join(", ", Args)})";
 
+    private static List<BishArg> ToArgs(BishList args) =>
+        args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList();
+
     [Builtin("hook")]
     public static BishNativeFunc New(BishString name, BishList args, BishFunc func) =>
-        new(name.Value, args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList(),
-            list => func.Call([new BishList(list)]));
+        new(name.Value, ToArgs(args), list => func.Call([new BishList(list)]));
+
+    [Builtin]
+    public static BishCodedFunc Coded(BishString name, BishList args, BishFrame frame,
+        [DefaultNull] BishBool? isGen, [DefaultNull] BishBool? isAsync) => 
+        new(name.Value, ToArgs(args), frame, isGen?.Value ?? false, isAsync?.Value ?? false);
 
     [Builtin("op", tag: "ignore")]
     public static BishObject Call(BishFunc func, [Rest] BishList args) => func.Call(args.List.ToList());

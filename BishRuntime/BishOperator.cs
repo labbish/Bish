@@ -40,8 +40,7 @@ public static partial class BishOperator
 {
     internal static readonly List<SpecialMethod> SpecialMethods =
     [
-        new("show", ["self"]),
-        new("debug", ["self"]),
+        new("repr", ["self", "ctx"]),
         new("hook_get", ["self", "member"], "get()"),
         new("hook_set", ["self", "member", "value"], "set()"),
         new("hook_def", ["self", "member", "value"], "def()"),

@@ -29,23 +29,6 @@ public class MethodTest : Test
     }
 
     [Fact]
-    public void TestSpecialBindMethod()
-    {
-        Execute("x:=1;");
-        ExpectResult("x.show()", "'1'");
-        ExpectResult("null.show()", "'null'");
-        ExpectResult("x.type.show(x)", "'1'");
-        ExpectResult("string.show(x.type)", "'int'");
-        ExpectResult("string.show(x)", "'1'");
-        
-        Execute("class C{func show(self)'X'};class D:C;");
-        ExpectResult("C().show()", "'X'");
-        ExpectResult("D().show()", "'X'");
-        ExpectResult("'{}'.format(C())", "'X'");
-        ExpectResult("'{}'.format(D())", "'X'");
-    }
-
-    [Fact]
     public void TestBase()
     {
         Execute("class C1{func f(self)self.a;};");

@@ -9,7 +9,7 @@ public class BishParseTreeObject : BishObject
     public new static readonly BishType StaticType = new("ParseTree");
 
     [Builtin]
-    public static BishString Show(BishParseTreeObject self) => new(Format(self.Tree));
+    public static BishString Repr(BishParseTreeObject self, BishReprContext _) => new(Format(self.Tree));
 
     private static string Format(IParseTree tree)
     {

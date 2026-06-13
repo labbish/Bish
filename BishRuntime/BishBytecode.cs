@@ -145,6 +145,6 @@ public class BishBytecodeObject : BishObject
         .Select(item => item.As<BishString>("list item").Value).ToArray();
 
     [Builtin]
-    public static BishString Show(BishBytecodeObject self) =>
+    public static BishString Repr(BishBytecodeObject self, BishReprContext _) =>
         new(self.Bytecode is null ? "bytecode[ERROR]" : $"bytecode({BishBytecodeParser.ToString(self.Bytecode)})");
 }

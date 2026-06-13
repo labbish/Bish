@@ -47,5 +47,6 @@ public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
     protected override BishObject BoundThis => Inner;
 
     [Builtin]
-    public static BishString Show(BishBaseObject self) => new($"base({self.Inner}, root={self.MRORoot})");
+    public static BishString Repr(BishBaseObject self, BishReprContext _) =>
+        new($"base({self.Inner}, root={self.MRORoot})");
 }

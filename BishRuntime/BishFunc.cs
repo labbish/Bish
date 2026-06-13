@@ -153,7 +153,8 @@ public abstract class BishFunc(
     public new static readonly BishType StaticType = new("Func");
 
     [Builtin]
-    public static BishString Show(BishFunc self) => new($"Function {self.Name}({string.Join(", ", self.Args)})");
+    public static BishString Repr(BishFunc self, BishReprContext _) =>
+        new($"Function {self.Name}({string.Join(", ", self.Args)})");
 
     private static List<BishArg> ToArgs(BishList args) =>
         args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList();
@@ -164,7 +165,7 @@ public abstract class BishFunc(
 
     [Builtin]
     public static BishCodedFunc Coded(BishString name, BishList args, BishFrame frame,
-        [DefaultNull] BishBool? isGen, [DefaultNull] BishBool? isAsync) => 
+        [DefaultNull] BishBool? isGen, [DefaultNull] BishBool? isAsync) =>
         new(name.Value, ToArgs(args), frame, isGen?.Value ?? false, isAsync?.Value ?? false);
 
     [Builtin("op", tag: "ignore")]

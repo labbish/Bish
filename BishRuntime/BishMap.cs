@@ -2,11 +2,7 @@
 
 namespace BishRuntime;
 
-public record Entry(BishObject Key, BishObject Value)
-{
-    public string Show() => $"{BishString.CallShow(Key)}: {BishString.CallShow(Value)}";
-    public string Debug() => $"{BishString.CallDebug(Key)}: {BishString.CallDebug(Value)}";
-}
+public record Entry(BishObject Key, BishObject Value);
 
 public class BishMap(IList<Entry> entries) : BishObject
 {
@@ -52,12 +48,15 @@ public class BishMap(IList<Entry> entries) : BishObject
     }
 
     [Builtin]
-    public static BishString Show(BishMap self) =>
-        new("{" + string.Join(", ", self.Entries.Select(entry => entry.Show())) + "}");
+    public static BishString Repr(BishMap self, BishReprContext ctx)
+    {
+        if (ctx.Contains(self)) return new BishString(ctx.Circular);
+        var context = ctx.Add(self);
+        return new BishString("{" + string.Join(", ", self.Entries.Select(EntryRepr)) + "}");
 
-    [Builtin]
-    public static BishString Debug(BishMap self) =>
-        new("{" + string.Join(", ", self.Entries.Select(entry => entry.Debug())) + "}");
+        string EntryRepr(Entry entry) =>
+            $"{BishString.CallRepr(entry.Key, context)}: {BishString.CallRepr(entry.Value, context)}";
+    }
 
     [Builtin("op")]
     public static BishBool Eq(BishMap a, BishMap b) => BishBool.Of(a.Entries.All(x =>

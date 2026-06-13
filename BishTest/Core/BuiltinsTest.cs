@@ -26,7 +26,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("(3).sign()", "1");
         ExpectResult("(0).sign()", "0");
         ExpectResult("(-3).sign()", "-1");
-        ExpectResult("(3).show()", "'3'");
+        ExpectResult("string.show(3)", "'3'");
 
         ExpectTrue("3==3");
         ExpectFalse("3==2");
@@ -63,7 +63,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("(1.3).ceil()", "2");
         ExpectResult("(1.3).round()", "1");
         ExpectResult("(1.7).round()", "2");
-        ExpectResult("(3.0).show()", "'3'");
+        ExpectResult("string.show(3.0)", "'3'");
 
         ExpectTrue("3.0==3.0");
         ExpectFalse("3.0==2.0");
@@ -126,6 +126,10 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         
         ExpectResult("'x'.toCode()", "120");
         ExpectResult("string.fromCode(120)", "'x'");
+        
+        ExpectResult("l:=[];l.add(l);string.show(l)", "[<...>]");
+        ExpectResult("m:={};m[m]:=m;string.show(m)", "{<...>: <...>}");
+        ExpectResult("x:=[];x.add({x:x});string.show(x)", "[{<...>: <...>}]");
     }
 
     [Fact]

@@ -37,12 +37,13 @@ public class BishList(IList<BishObject> list) : BishObject
     }
 
     [Builtin]
-    public static BishString Show(BishList self) =>
-        new("[" + string.Join(", ", self.List.Select(BishString.CallShow)) + "]");
-
-    [Builtin]
-    public static BishString Debug(BishList self) =>
-        new("[" + string.Join(",", self.List.Select(BishString.CallDebug)) + "]");
+    public static BishString Repr(BishList self, BishReprContext ctx)
+    {
+        if (ctx.Contains(self)) return new BishString(ctx.Circular);
+        var context = ctx.Add(self);
+        return new BishString("[" + string.Join(", ",
+            self.List.Select(item => BishString.CallRepr(item, context))) + "]");
+    }
 
     [Builtin("op")]
     public static BishBool Eq(BishList a, BishList b) => BishBool.Of(a.List.Count == b.List.Count && a.List.Zip(b.List)

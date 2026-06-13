@@ -14,7 +14,7 @@ public static class BishIterator
         }
 
         [Builtin]
-        public static BishString Show(Stop _) => new("IteratorStop");
+        public static BishString Repr(Stop _, BishReprContext __) => new("IteratorStop");
     }
 }
 

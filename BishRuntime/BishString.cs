@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -53,37 +54,34 @@ public partial class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
-    public static string CallShow(BishObject obj) => obj switch
+    public static string CallRepr(BishObject obj, BishReprContext ctx) => obj switch
     {
-        BishString str => str.Value,
+        BishString str => ctx.Debug ? "'" + Regex.Escape(str.Value).Replace("'", @"\'") + "'" : str.Value,
         BishType type => type.Name,
-        _ => BishOperator.Call("show", [obj]).As<BishString>("show").Value
+        _ => BishOperator.Call("repr", [obj, ctx]).As<BishString>("repr").Value
     };
 
     [Builtin]
-    public new static BishString Show(BishObject obj) => new(CallShow(obj));
+    public new static BishString Repr(BishObject obj, BishReprContext ctx) => new(CallRepr(obj, ctx));
 
-    public static string CallDebug(BishObject obj) => obj switch
-    {
-        BishString str => "'" + Regex.Escape(str.Value).Replace("'", @"\'") + "'",
-        BishType type => type.Name,
-        _ => BishOperator.Call("debug", [obj]).As<BishString>("debug").Value
-    };
+    public static string CallShow(BishObject obj) => CallRepr(obj, new BishReprContext(false));
 
     [Builtin]
-    public new static BishString Debug(BishObject obj) => new(CallDebug(obj));
+    public static BishString Show(BishObject obj) => new(CallShow(obj));
+
+    public static string CallDebug(BishObject obj) => CallRepr(obj, new BishReprContext(true));
+
+    [Builtin]
+    public static BishString Debug(BishObject obj) => new(CallDebug(obj));
 
     [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)
     {
         var index = 0;
-        return new BishString(Formatter().Replace(self.Value, match =>
-        {
-            var debug = match.Groups[1].Value == "?";
-            var value = args.List.ElementAtOrDefault(index++);
-            if (value is null) return match.Value;
-            return debug ? CallDebug(value) : CallShow(value);
-        }));
+        return new BishString(Formatter().Replace(self.Value,
+            match => args.List.ElementAtOrDefault(index++) is { } value
+                ? CallRepr(value, new BishReprContext(match.Groups[1].Value == "?"))
+                : match.Value));
     }
 
     [Builtin]
@@ -106,6 +104,9 @@ public partial class BishString(string value) : BishObject
     public static BishString Replace(BishString self, BishString from, BishString to) =>
         new(self.Value.Replace(from.Value, to.Value));
 
+    [Builtin("hook")]
+    public static BishType Get_ReprContext(BishObject _) => BishReprContext.StaticType;
+
     [GeneratedRegex(@"\{(\??)\}")]
     private static partial Regex Formatter();
 }
@@ -121,4 +122,35 @@ public class BishStringIterator(string value) : BishObject
 
     [Iter]
     public BishString? Next() => Index < Value.Length ? new BishString(Value[Index++]) : null;
+}
+
+public class BishReprContext(bool debug, IList<BishObject>? visited = null, string? circular = null) : BishObject
+{
+    public readonly bool Debug = debug;
+    public readonly IList<BishObject> Visited = (visited ?? []).ToConcurrentList();
+    public readonly string Circular = circular ?? "<...>";
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("ReprContext");
+
+    [Builtin("hook")]
+    public static BishReprContext New([DefaultNull] BishBool? debug, [DefaultNull] BishString? circular) =>
+        new(debug?.Value ?? false, [], circular?.Value);
+
+    [Builtin("hook")]
+    public static BishBool Get_debug(BishReprContext self) => BishBool.Of(self.Debug);
+
+    [Builtin("hook")]
+    public static BishString Get_circular(BishReprContext self) => new(self.Circular);
+
+    public bool Contains(BishObject obj) => Visited.Contains(obj);
+
+    public BishReprContext Add(BishObject obj) => new(Debug, Visited.Append(obj).ToList(), Circular);
+
+    [Builtin]
+    public static BishBool Contains(BishReprContext self, BishObject obj) => BishBool.Of(self.Contains(obj));
+
+    [Builtin]
+    public static BishReprContext Add(BishReprContext self, BishObject obj) => self.Add(obj);
 }

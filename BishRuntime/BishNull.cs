@@ -13,7 +13,7 @@ public class BishNull : BishObject
     public new static readonly BishType StaticType = new("null");
 
     [Builtin]
-    public static BishString Show(BishNull _) => new("null");
+    public static BishString Repr(BishNull _, BishReprContext __) => new("null");
 
     [Builtin("hook")]
     public static BishNull Create(BishObject _) => Instance;

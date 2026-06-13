@@ -161,10 +161,7 @@ public class BishObject(BishType? type = null)
     public override string ToString() => throw new NotSupportedException("Use `show` or `debug` instead");
 
     [Builtin]
-    public static BishString Show(BishObject self) => new($"[Object {self.Type.Name}]");
-
-    [Builtin]
-    public static BishString Debug(BishObject self) => BishString.Show(self);
+    public static BishString Repr(BishObject self, BishReprContext _) => new($"[Object {self.Type.Name}]");
 
     [Builtin("op")]
     public static BishBool Eq(BishObject a, BishObject b) => BishBool.Of(a == b);

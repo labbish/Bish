@@ -9,8 +9,12 @@ func dataclass(..fields) {
             for ([i, {.name}] : fields.iter().entries) self.hook_def(name, args[i]);
             return self;
         });
-        func show(self) '{}({})'.format(self.type, fields.iter()
-            .map(({.name}) '{}={}'.format(name, self.hook_get(name))).join(', '));
+        func repr(self, ctx) {
+            if (ctx.contains(self)) return ctx.circular;
+            ctx = ctx.add(self);
+            return '{}({})'.format(self.type, fields.iter()
+                .map(({.name}) '{}={}'.format(name, string.repr(self.hook_get(name), ctx))).join(', '));
+        };
         oper==(self, other) self.type == other.type && fields.iter()
             .all(({.name}) self.hook_get(name) == other.hook_get(name));
     }

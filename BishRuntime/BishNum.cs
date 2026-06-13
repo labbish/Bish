@@ -87,7 +87,8 @@ public class BishNum(double value) : BishObject
     public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
 
     [Builtin]
-    public static BishString Show(BishNum self) => new(self.Value.ToString(CultureInfo.InvariantCulture));
+    public static BishString Repr(BishNum self, BishReprContext _) =>
+        new(self.Value.ToString(CultureInfo.InvariantCulture));
 
     [Builtin("op")]
     // ReSharper disable once CompareOfFloatsByEqualityOperator

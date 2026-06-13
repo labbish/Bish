@@ -50,7 +50,7 @@ public class BishInt : BishNum
     public static BishInt Sign(BishInt a) => Of(Math.Sign(a.Value));
 
     [Builtin]
-    public static BishString Show(BishInt self) => new(self.Value.ToString());
+    public static BishString Repr(BishInt self, BishReprContext _) => new(self.Value.ToString());
 
     [Builtin("op")]
     public static BishBool Eq(BishInt a, BishInt b) => BishBool.Of(a.Value == b.Value);

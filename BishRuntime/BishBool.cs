@@ -24,7 +24,7 @@ public class BishBool : BishObject
     public static BishBool Eq(BishBool a, BishBool b) => Of(a.Value == b.Value);
 
     [Builtin]
-    public static BishString Show(BishBool self) => new(self.Value ? "true" : "false");
+    public static BishString Repr(BishBool self, BishReprContext _) => new(self.Value ? "true" : "false");
 
     [Builtin]
     public static BishBool Bool(BishBool a) => a;

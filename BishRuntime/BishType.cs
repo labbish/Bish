@@ -31,7 +31,7 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
     public bool CanAssignTo(BishType other) => this == other || LookupChain.Contains(other);
 
     [Builtin]
-    public static BishString Show(BishType self) => new(self.Name);
+    public static BishString Repr(BishType self, BishReprContext _) => new(self.Name);
 
     [Builtin("hook")]
     public static BishString Get_name(BishType type) => new(type.Name);

@@ -16,8 +16,9 @@ public class BishStackLayer(BishFunc func, IList<BishObject> args)
         return this;
     }
 
-    public override string ToString() => $"{Func}, calling with ({string.Join(", ", Args)})" +
-                                         (Source is null ? "" : $", at {Source.Filename}, {Position}");
+    public override string ToString() =>
+        $"{BishString.CallDebug(Func)}, calling with ({string.Join(", ", Args.Select(BishString.CallDebug))})" +
+        (Source is null ? "" : $", at {Source.Filename}, {Position}");
 }
 
 public class BishError(string message) : BishObject

@@ -9,10 +9,7 @@ public class BishErrorResult(BishError error) : BishObject
     public new static readonly BishType StaticType = new("Error");
 
     [Builtin]
-    public static BishString Show(BishErrorResult self) => BishString.Show(self.Error);
-
-    [Builtin]
-    public static BishString Debug(BishErrorResult self) => BishString.Debug(self.Error);
+    public static BishString Repr(BishErrorResult self, BishReprContext ctx) => BishString.Repr(self.Error, ctx);
 
     [Builtin("hook")]
     public static void Create(BishObject _) => throw BishException.OfType_ErrorResult();

@@ -61,7 +61,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
     public static BishInt Get_step(BishRange self) => BishInt.Of(self.Step);
 
     [Builtin]
-    public static BishString Show(BishRange self) =>
+    public static BishString Repr(BishRange self, BishReprContext _) =>
         new(self.Step != 1 ? $"range({self.Start}, {self.End}, {self.Step})" :
             self.Start == 0 ? $"range({self.End})" : $"range({self.Start}, {self.End})");
 }

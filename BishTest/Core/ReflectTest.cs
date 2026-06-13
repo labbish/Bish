@@ -86,14 +86,14 @@ public class ReflectTest : Test
     {
         const string c = "([BinOpExpr] ([AtomExpr] ([IntAtom] 1)) + ([AtomExpr] ([IntAtom] 2)))";
         Execute("t:=meta.parse('1+2');");
-        ExpectResult("t.show()", $"'([Program] {c} <EOF>)'");
+        ExpectResult("string.show(t)", $"'([Program] {c} <EOF>)'");
         ExpectResult("t.type", "'Program'");
         ExpectResult("t.text", "null");
         ExpectResult("t.parent", "null");
         ExpectResult("t.children.length", "2");
 
         Execute("c:=t.children[0];");
-        ExpectResult("c.show()", $"'{c}'");
+        ExpectResult("string.show(c)", $"'{c}'");
         ExpectResult("c.type", "'BinOpExpr'");
         ExpectResult("c.text", "null");
         ExpectTrue("c.parent===t");

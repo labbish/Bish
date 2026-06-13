@@ -87,15 +87,15 @@ public class AccessTest : Test
         ExpectCompileError("{..m,'a':0}:=0;");
 
         Execute("o:={.a:0,.b:1,.c:2};");
-        Execute("{.a,.b}:=o;");
+        Execute("{.a,.b:c}:=o;");
         ExpectResult("a", "0");
-        ExpectResult("b", "1");
-        Execute("{.a,.b}={.a:-1,.b:-2,.c:-3};");
+        ExpectResult("c", "1");
+        Execute("{.a,.b:c}={.a:-1,.b:-2,.c:-3};");
         ExpectResult("a", "-1");
-        ExpectResult("b", "-2");
-        Execute("del {.a,.b};");
+        ExpectResult("c", "-2");
+        Execute("del {.a,.c};");
         ExpectError("a;", BishError.AttributeErrorType);
-        ExpectError("b;", BishError.AttributeErrorType);
+        ExpectError("c;", BishError.AttributeErrorType);
         ExpectResult("o.a", "0");
         ExpectCompileError("{.a:0}:=0;");
     }

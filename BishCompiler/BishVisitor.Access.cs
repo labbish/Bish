@@ -84,6 +84,7 @@ public partial class BishVisitor
                     if (pos == -1) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
+
                 result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
@@ -121,13 +122,14 @@ public partial class BishVisitor
             case BishParser.ObjExprContext obj:
             {
                 var entries = obj.objEntries().objEntry();
-                if (entries.Any(entry => entry.expr() is not null))
-                    result.Error("Entry cannot contain a value in object deconstruction");
                 result.Add(value, StackEffect.Expr).Add(new Move("$_"));
                 foreach (var entry in entries)
                 {
-                    result.Add(Set(entry.ID().GetText(), op, CompileResult.Expr(null)
-                        .Add(new Get("$_"), new GetMember(entry.ID().GetText())))).Add(new Pop());
+                    var id = entry.ID().GetText();
+                    var get = CompileResult.Expr(null).Add(new Get("$_"), new GetMember(id));
+                    if (entry.expr() is { } expr) result.Add(Set(expr, op, get));
+                    else result.Add(Set(id, op, get));
+                    result.Add(new Pop());
                 }
 
                 result.Add(new Del("$_"));
@@ -205,6 +207,7 @@ public partial class BishVisitor
                     if (pos == -1) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
+
                 result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
@@ -242,13 +245,14 @@ public partial class BishVisitor
             case BishParser.ObjExprContext obj:
             {
                 var entries = obj.objEntries().objEntry();
-                if (entries.Any(entry => entry.expr() is not null))
-                    result.Error("Entry cannot contain a value in object deconstruction");
                 result.Add(value, StackEffect.Expr).Add(new Move("$_"));
                 foreach (var entry in entries)
                 {
-                    result.Add(Def(entry.ID().GetText(), CompileResult.Expr(null)
-                        .Add(new Get("$_"), new GetMember(entry.ID().GetText())))).Add(new Pop());
+                    var id = entry.ID().GetText();
+                    var get = CompileResult.Expr(null).Add(new Get("$_"), new GetMember(id));
+                    if (entry.expr() is { } expr) result.Add(Def(expr, get));
+                    else result.Add(Def(id, get));
+                    result.Add(new Pop());
                 }
 
                 result.Add(new Del("$_"));

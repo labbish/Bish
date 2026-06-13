@@ -13,7 +13,8 @@ public static class BishIterator
         {
         }
 
-        public override string ToString() => "IteratorStop";
+        [Builtin]
+        public static BishString Show(Stop _) => new("IteratorStop");
     }
 }
 

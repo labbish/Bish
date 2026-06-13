@@ -40,7 +40,8 @@ public static partial class BishOperator
 {
     internal static readonly List<SpecialMethod> SpecialMethods =
     [
-        new("toString", ["self"]),
+        new("show", ["self"]),
+        new("debug", ["self"]),
         new("hook_get", ["self", "member"], "get()"),
         new("hook_set", ["self", "member", "value"], "set()"),
         new("hook_def", ["self", "member", "value"], "def()"),
@@ -97,7 +98,8 @@ public static partial class BishOperator
         return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
     }
 
-    public static bool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}").Value;
+    public static bool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b])
+        .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}").Value;
 
     public static SpecialMethod? GetSpecialMethod(string name) =>
         SpecialMethods.FirstOrDefault(s => s.NamePattern.Match(name));

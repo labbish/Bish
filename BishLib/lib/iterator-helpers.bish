@@ -49,7 +49,7 @@
     func join(self, sep: '') {
         first := self.next();
         if (first is IteratorStop) return '';
-        return self.map(string.from).reduce((s, item) s + sep + item, string.from(first));
+        return self.map(string.show).reduce((s, item) s + sep + item, string.show(first));
     };
     func concat(..iters)* for (iter : iters) yield* iter;
 };

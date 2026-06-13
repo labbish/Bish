@@ -32,8 +32,6 @@ public partial class BishString(string value) : BishObject
             ? new BishString(string.Concat(Enumerable.Repeat(s.Value, x.Value)))
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
 
-    public override string ToString() => Value;
-
     [Builtin("op")]
     public static BishBool Eq(BishString a, BishString b) => BishBool.Of(a.Value == b.Value);
 
@@ -45,7 +43,7 @@ public partial class BishString(string value) : BishObject
     {
         BishInt index => new BishString(self.Value[index.Value.Regularize(self.Value.Length)]),
         BishRange range => new BishString(string.Join("",
-            range.Regularize(self.Value.Length).ToInts().Select(i => GetIndex(self, i)))),
+            range.Regularize(self.Value.Length).ToInts().Select(i => GetIndex(self, i).Value))),
         _ => throw BishException.OfType_Argument(self, BishInt.StaticType)
     };
 
@@ -55,22 +53,36 @@ public partial class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
-    public static string CallToString(BishObject obj) =>
-        obj is BishType type ? type.Name : BishOperator.Call("toString", [obj]).As<BishString>("toString").Value;
+    public static string CallShow(BishObject obj) => obj switch
+    {
+        BishString str => str.Value,
+        BishType type => type.Name,
+        _ => BishOperator.Call("show", [obj]).As<BishString>("show").Value
+    };
 
     [Builtin]
-    public static BishString From(BishObject obj) => new(CallToString(obj));
+    public new static BishString Show(BishObject obj) => new(CallShow(obj));
+
+    public static string CallDebug(BishObject obj) => obj switch
+    {
+        BishString str => "'" + Regex.Escape(str.Value).Replace("'", @"\'") + "'",
+        BishType type => type.Name,
+        _ => BishOperator.Call("debug", [obj]).As<BishString>("debug").Value
+    };
+
+    [Builtin]
+    public new static BishString Debug(BishObject obj) => new(CallDebug(obj));
 
     [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)
     {
-        var autoIndex = 0;
-        return new BishString(MyRegex().Replace(self.Value, match =>
+        var index = 0;
+        return new BishString(Formatter().Replace(self.Value, match =>
         {
-            var indexValue = match.Groups[1].Value;
-            var index = string.IsNullOrEmpty(indexValue) ? autoIndex++ : int.Parse(indexValue);
-            if (index < 0 || index >= args.List.Count) return match.Value;
-            return CallToString(args.List[index]);
+            var debug = match.Groups[1].Value == "?";
+            var value = args.List.ElementAtOrDefault(index++);
+            if (value is null) return match.Value;
+            return debug ? CallDebug(value) : CallShow(value);
         }));
     }
 
@@ -94,8 +106,8 @@ public partial class BishString(string value) : BishObject
     public static BishString Replace(BishString self, BishString from, BishString to) =>
         new(self.Value.Replace(from.Value, to.Value));
 
-    [GeneratedRegex(@"\{(\d*)\}")]
-    private static partial Regex MyRegex();
+    [GeneratedRegex(@"\{(\??)\}")]
+    private static partial Regex Formatter();
 }
 
 public class BishStringIterator(string value) : BishObject

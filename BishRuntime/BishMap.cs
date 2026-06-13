@@ -4,7 +4,8 @@ namespace BishRuntime;
 
 public record Entry(BishObject Key, BishObject Value)
 {
-    public override string ToString() => $"{BishString.CallToString(Key)}: {BishString.CallToString(Value)}";
+    public string Show() => $"{BishString.CallShow(Key)}: {BishString.CallShow(Value)}";
+    public string Debug() => $"{BishString.CallDebug(Key)}: {BishString.CallDebug(Value)}";
 }
 
 public class BishMap(IList<Entry> entries) : BishObject
@@ -50,7 +51,13 @@ public class BishMap(IList<Entry> entries) : BishObject
         return result;
     }
 
-    public override string ToString() => "{" + string.Join(", ", Entries) + "}";
+    [Builtin]
+    public static BishString Show(BishMap self) =>
+        new("{" + string.Join(", ", self.Entries.Select(entry => entry.Show())) + "}");
+
+    [Builtin]
+    public static BishString Debug(BishMap self) =>
+        new("{" + string.Join(", ", self.Entries.Select(entry => entry.Debug())) + "}");
 
     [Builtin("op")]
     public static BishBool Eq(BishMap a, BishMap b) => BishBool.Of(a.Entries.All(x =>

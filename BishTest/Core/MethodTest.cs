@@ -5,7 +5,7 @@ public class MethodTest : Test
     public MethodTest(TestInfoFixture fixture) : base(fixture)
     {
         Execute("class T1{func f(self)0;func g(self,_)0;new(tag){.tag};"
-                + "oper()(self)0;func toString(self)'T({})'.format(self.tag)};");
+                + "oper()(self)0;func show(self)'T({})'.format(self.tag)};");
         Execute("x:=T1('x');x.f:=(_:null)1;");
     }
 
@@ -24,7 +24,7 @@ public class MethodTest : Test
         ExpectResult("x.g(null)", "0");
         ExpectError("T1.g();", BishError.ArgumentErrorType);
         ExpectResult("T1.g(null,x)", "0");
-        ExpectResult("x.toString()", "'T(x)'");
+        ExpectResult("x.show()", "'T(x)'");
         ExpectResult("T1.name", "'T1'");
     }
 
@@ -32,15 +32,15 @@ public class MethodTest : Test
     public void TestSpecialBindMethod()
     {
         Execute("x:=1;");
-        ExpectResult("x.toString()", "'1'");
-        ExpectResult("null.toString()", "'null'");
-        ExpectResult("x.type.toString(x)", "'1'");
-        ExpectResult("string.from(x.type)", "'int'");
-        ExpectResult("string.from(x)", "'1'");
+        ExpectResult("x.show()", "'1'");
+        ExpectResult("null.show()", "'null'");
+        ExpectResult("x.type.show(x)", "'1'");
+        ExpectResult("string.show(x.type)", "'int'");
+        ExpectResult("string.show(x)", "'1'");
         
-        Execute("class C{func toString(self)'X'};class D:C;");
-        ExpectResult("C().toString()", "'X'");
-        ExpectResult("D().toString()", "'X'");
+        Execute("class C{func show(self)'X'};class D:C;");
+        ExpectResult("C().show()", "'X'");
+        ExpectResult("D().show()", "'X'");
         ExpectResult("'{}'.format(C())", "'X'");
         ExpectResult("'{}'.format(D())", "'X'");
     }

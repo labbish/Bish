@@ -158,10 +158,13 @@ public class BishObject(BishType? type = null)
 
     public virtual BishObject? TryCall(IList<BishObject> args) => TryGetMember("op_call")?.TryCall(args);
 
-    public override string ToString() => $"[Object {Type.Name}]";
+    public override string ToString() => throw new NotSupportedException("Use `show` or `debug` instead");
 
     [Builtin]
-    public static BishString ToString(BishObject obj) => new(obj.ToString());
+    public static BishString Show(BishObject self) => new($"[Object {self.Type.Name}]");
+
+    [Builtin]
+    public static BishString Debug(BishObject self) => BishString.Show(self);
 
     [Builtin("op")]
     public static BishBool Eq(BishObject a, BishObject b) => BishBool.Of(a == b);
@@ -176,10 +179,11 @@ public class BishObject(BishType? type = null)
 
     [Builtin("op")]
     public static BishBool Neq(BishObject a, BishObject b) =>
-        BishBool.Invert(BishOperator.Call("op_eq", [a, b]).As<BishBool>($"{a} == {b}"));
+        BishBool.Invert(BishOperator.Call("op_eq", [a, b])
+            .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}"));
 
-    private static int Compare(BishObject a, BishObject b) =>
-        BishOperator.Call("op_cmp", [a, b]).As<BishInt>($"{a} <=> {b}").Value;
+    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_cmp", [a, b])
+        .As<BishInt>($"{BishString.CallDebug(a)} <=> {BishString.CallDebug(b)}").Value;
 
     [Builtin("op")]
     public static BishBool Lt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) < 0);

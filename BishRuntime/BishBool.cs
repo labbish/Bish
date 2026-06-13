@@ -23,7 +23,8 @@ public class BishBool : BishObject
     [Builtin("op")]
     public static BishBool Eq(BishBool a, BishBool b) => Of(a.Value == b.Value);
 
-    public override string ToString() => Value ? "true" : "false";
+    [Builtin]
+    public static BishString Show(BishBool self) => new(self.Value ? "true" : "false");
 
     [Builtin]
     public static BishBool Bool(BishBool a) => a;

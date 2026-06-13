@@ -53,7 +53,7 @@ public class Repl(BishScope? scope = null)
                         frame.Execute();
                         if (!frame.Stack.TryPeek(out var result)) return;
                         Scope.DefMember("_", result);
-                        Console.WriteLine(BishString.CallToString(result));
+                        Console.WriteLine(BishString.CallDebug(result));
                     });
                     break;
             }

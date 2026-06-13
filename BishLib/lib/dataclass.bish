@@ -9,7 +9,7 @@ func dataclass(..fields) {
             for ([i, {.name}] : fields.iter().entries) self.hook_def(name, args[i]);
             return self;
         });
-        func toString(self) '{}({})'.format(self.type, fields.iter()
+        func show(self) '{}({})'.format(self.type, fields.iter()
             .map(({.name}) '{}={}'.format(name, self.hook_get(name))).join(', '));
         oper==(self, other) self.type == other.type && fields.iter()
             .all(({.name}) self.hook_get(name) == other.hook_get(name));

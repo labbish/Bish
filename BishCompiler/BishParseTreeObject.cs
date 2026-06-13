@@ -8,12 +8,13 @@ public class BishParseTreeObject : BishObject
 
     public new static readonly BishType StaticType = new("ParseTree");
 
-    public override string ToString() => ToString(Tree);
+    [Builtin]
+    public static BishString Show(BishParseTreeObject self) => new(Format(self.Tree));
 
-    private static string ToString(IParseTree tree)
+    private static string Format(IParseTree tree)
     {
         if (tree is TerminalNodeImpl terminal) return terminal.ToString();
-        return $"([{TypeName(tree)}] {string.Join(" ", Children(tree).Select(ToString))})";
+        return $"([{TypeName(tree)}] {string.Join(" ", Children(tree).Select(Format))})";
     }
 
     private BishParseTreeObject(IParseTree tree)

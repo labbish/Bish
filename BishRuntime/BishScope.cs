@@ -49,7 +49,7 @@ public class BishScope : BishObject
     [Builtin]
     public static BishNull Print([Rest] BishList args)
     {
-        Console.Write(string.Join("", args.List.Select(BishString.CallToString)));
+        Console.Write(string.Join("", args.List.Select(BishString.CallShow)));
         Console.Out.Flush();
         return BishNull.Instance;
     }

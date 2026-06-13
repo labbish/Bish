@@ -49,7 +49,8 @@ public class BishInt : BishNum
     [Builtin]
     public static BishInt Sign(BishInt a) => Of(Math.Sign(a.Value));
 
-    public override string ToString() => Value.ToString();
+    [Builtin]
+    public static BishString Show(BishInt self) => new(self.Value.ToString());
 
     [Builtin("op")]
     public static BishBool Eq(BishInt a, BishInt b) => BishBool.Of(a.Value == b.Value);

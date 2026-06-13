@@ -152,7 +152,8 @@ public abstract class BishFunc(
 
     public new static readonly BishType StaticType = new("Func");
 
-    public override string ToString() => $"Function {Name}({string.Join(", ", Args)})";
+    [Builtin]
+    public static BishString Show(BishFunc self) => new($"Function {self.Name}({string.Join(", ", self.Args)})");
 
     private static List<BishArg> ToArgs(BishList args) =>
         args.List.Select(arg => arg.As<BishArgObject>("arg").Arg).ToList();

@@ -103,6 +103,5 @@ public class BishWriter(StreamWriter writer) : BishObject
     public static void Dispose(BishWriter self) => self.Writer.Dispose();
 
     [Builtin]
-    public static void Write(BishWriter self, BishObject content) =>
-        self.Writer.Write(BishString.CallToString(content));
+    public static void Write(BishWriter self, BishObject content) => self.Writer.Write(BishString.CallShow(content));
 }

@@ -144,6 +144,7 @@ public class BishBytecodeObject : BishObject
     public string[] GetStrings(string name) => GetMember(name).As<BishList>("list").List
         .Select(item => item.As<BishString>("list item").Value).ToArray();
 
-    public override string ToString() =>
-        Bytecode is null ? "bytecode[ERROR]" : $"bytecode({BishBytecodeParser.ToString(Bytecode)})";
+    [Builtin]
+    public static BishString Show(BishBytecodeObject self) =>
+        new(self.Bytecode is null ? "bytecode[ERROR]" : $"bytecode({BishBytecodeParser.ToString(self.Bytecode)})");
 }

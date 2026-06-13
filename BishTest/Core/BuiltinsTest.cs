@@ -26,7 +26,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("(3).sign()", "1");
         ExpectResult("(0).sign()", "0");
         ExpectResult("(-3).sign()", "-1");
-        ExpectResult("(3).toString()", "'3'");
+        ExpectResult("(3).show()", "'3'");
 
         ExpectTrue("3==3");
         ExpectFalse("3==2");
@@ -63,7 +63,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("(1.3).ceil()", "2");
         ExpectResult("(1.3).round()", "1");
         ExpectResult("(1.7).round()", "2");
-        ExpectResult("(3.0).toString()", "'3'");
+        ExpectResult("(3.0).show()", "'3'");
 
         ExpectTrue("3.0==3.0");
         ExpectFalse("3.0==2.0");
@@ -104,7 +104,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("'a'+'bc'", "'abc'");
         ExpectResult("'a'*3", "'aaa'");
         ExpectResult("3*'a'", "'aaa'");
-        ExpectResult("('abc').toString()", "'abc'");
+        ExpectResult("('abc').show()", "'abc'");
         ExpectTrue("'a'=='a'");
         ExpectFalse("'a'=='b'");
         ExpectFalse("''.bool()");
@@ -121,7 +121,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("iter.next()", "'c'");
         ExpectResult("iter.next()", "IteratorStop");
 
-        ExpectResult("'{1},{},{},{0},{}'.format(0,1,2)", "'1,0,1,0,2'");
+        ExpectResult("'{},{?},{},{?},{}'.format('a','b','c')", "r#'a,'b',c,{?},{}'#");
         ExpectResult("'0,1,,2'.split(',')", "['0','1','','2']");
         
         ExpectResult("'x'.toCode()", "120");

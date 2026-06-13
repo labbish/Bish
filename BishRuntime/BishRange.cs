@@ -60,9 +60,8 @@ public class BishRange(int? start, int? end, int step) : BishObject
     [Builtin("hook")]
     public static BishInt Get_step(BishRange self) => BishInt.Of(self.Step);
 
-    public override string ToString()
-    {
-        if (Step != 1) return $"range({Start}, {End}, {Step})";
-        return Start == 0 ? $"range({End})" : $"range({Start}, {End})";
-    }
+    [Builtin]
+    public static BishString Show(BishRange self) =>
+        new(self.Step != 1 ? $"range({self.Start}, {self.End}, {self.Step})" :
+            self.Start == 0 ? $"range({self.End})" : $"range({self.Start}, {self.End})");
 }

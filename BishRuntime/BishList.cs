@@ -36,7 +36,13 @@ public class BishList(IList<BishObject> list) : BishObject
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
     }
 
-    public override string ToString() => "[" + string.Join(", ", List.Select(BishString.CallToString)) + "]";
+    [Builtin]
+    public static BishString Show(BishList self) =>
+        new("[" + string.Join(", ", self.List.Select(BishString.CallShow)) + "]");
+
+    [Builtin]
+    public static BishString Debug(BishList self) =>
+        new("[" + string.Join(",", self.List.Select(BishString.CallDebug)) + "]");
 
     [Builtin("op")]
     public static BishBool Eq(BishList a, BishList b) => BishBool.Of(a.List.Count == b.List.Count && a.List.Zip(b.List)

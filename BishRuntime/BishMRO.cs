@@ -39,11 +39,13 @@ public partial class BishType
 
 public class BishBaseObject(BishObject inner, BishType mroRoot) : BishObject
 {
+    protected readonly BishObject Inner = inner;
     protected override BishType MRORoot => mroRoot;
 
-    public override BishType DefaultType => inner.Type.WithMRORoot(MRORoot);
+    public override BishType DefaultType => Inner.Type.WithMRORoot(MRORoot);
 
-    protected override BishObject BoundThis => inner;
+    protected override BishObject BoundThis => Inner;
 
-    public override string ToString() => $"base({inner}, root={MRORoot})";
+    [Builtin]
+    public static BishString Show(BishBaseObject self) => new($"base({self.Inner}, root={self.MRORoot})");
 }

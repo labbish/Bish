@@ -30,7 +30,8 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
 
     public bool CanAssignTo(BishType other) => this == other || LookupChain.Contains(other);
 
-    public override string ToString() => Name;
+    [Builtin]
+    public static BishString Show(BishType self) => new(self.Name);
 
     [Builtin("hook")]
     public static BishString Get_name(BishType type) => new(type.Name);

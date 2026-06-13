@@ -48,7 +48,7 @@ extend AsyncIterator {
     func join(self, sep: '') async {
         first := await self.next();
         if (first is IteratorStop) return '';
-        return await (await self.map(string.from)).reduce((s, item) s + sep + item, string.from(first));
+        return await (await self.map(string.show)).reduce((s, item) s + sep + item, string.show(first));
     };
     func concat(..iters) async* for await (iter : iters) yield await* iter;
 };

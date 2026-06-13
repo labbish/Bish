@@ -39,6 +39,7 @@ public static class BishCompiler
     static BishCompiler()
     {
         BishBuiltinBinder.Init();
+        BuiltinsRegistry.Register();
         BishLib.BishLib.Initialize();
         BishCompileService.Parser = Parse;
         BishCompileService.Compiler = Compile;

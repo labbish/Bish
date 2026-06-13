@@ -59,28 +59,28 @@ public class BishException(BishError error) : Exception
             .With("operation", new BishString(op)).With("name", new BishString(name));
 
     public static BishException OfAttribute(string op, BishObject obj, string name) =>
-        Create(BishError.AttributeErrorType, $"No such member: trying to {op} {name} on {obj}")
+        Create(BishError.AttributeErrorType, $"No such member: trying to {op} {name} on {BishString.CallDebug(obj)}")
             .With("operation", new BishString(op)).With("object", obj).With("name", new BishString(name));
 
     public static BishException OfType(string message) => Create(BishError.TypeErrorType, message);
 
     public static BishException OfType_NoBase(BishObject obj) =>
-        OfType($"Cannot call .base() because MRO chain of {obj} is empty").With("object", obj);
+        OfType($"Cannot call .base() because MRO chain of {BishString.CallDebug(obj)} is empty").With("object", obj);
 
     public static BishException OfType_NotCallable(BishObject obj) =>
-        OfType($"Cannot call {obj}").With("object", obj);
+        OfType($"Cannot call {BishString.CallDebug(obj)}").With("object", obj);
 
     public static BishException OfType_Argument(BishObject obj, BishType expect) =>
-        OfType($"Expect argument to be {expect}, found {obj}")
+        OfType($"Expect argument to be {expect.Name}, found {BishString.CallDebug(obj)}")
             .With("object", obj).With("expect", expect);
 
     public static BishException OfType_Expect(string expr, BishObject result, BishType expect) =>
-        OfType($"Expect {expr} to be {expect.Name}, found {result}")
+        OfType($"Expect {expr} to be {expect.Name}, found {BishString.CallDebug(result)}")
             .With("expression", new BishString(expr)).With("result", result).With("expect", expect);
 
     public static BishException OfType_Expect(string expr, BishObject result, string expect) =>
-        OfType($"Expect {expr} to be {expect}, found {result}").With("expression", new BishString(expr))
-            .With("result", result).With("expect", new BishString(expect));
+        OfType($"Expect {expr} to be {expect}, found {BishString.CallDebug(result)}")
+            .With("expression", new BishString(expr)).With("result", result).With("expect", new BishString(expect));
 
     public static BishException OfType_ErrorResult() => OfType("Cannot manually create ErrorResult");
 
@@ -123,7 +123,7 @@ public class BishException(BishError error) : Exception
             .With("count", BishInt.Of(count));
 
     public static BishException OfArgument_Bind(BishFunc method, BishObject obj) =>
-        OfArgument($"Cannot bind {obj} to {method} because {method} takes no argument")
+        OfArgument($"Cannot bind {obj} to {BishString.CallDebug(method)} because it takes no argument")
             .With("method", method).With("object", obj);
 
     public static BishException OfArgument_Operator(string op, IList<BishObject> args) =>
@@ -136,13 +136,13 @@ public class BishException(BishError error) : Exception
             .With("index", BishInt.Of(index)).With("length", BishInt.Of(length));
 
     public static BishException OfArgument_KeyNotFound(BishObject key) =>
-        OfArgument($"Key {key} does not exist").With("key", key);
+        OfArgument($"Key {BishString.CallDebug(key)} does not exist").With("key", key);
 
     public static BishException OfArgument_MRO(BishType type) =>
-        OfArgument($"Cannot create Consistent MRO for {type}").With("type", type);
+        OfArgument($"Cannot create Consistent MRO for {type.Name}").With("type", type);
 
     public static BishException OfArgument_Parse(BishString str, BishType type) =>
-        OfArgument($"Cannot parse {str} to {type}").With("type", type).With("string", str);
+        OfArgument($"Cannot parse {str.Value} to {type.Name}").With("type", type).With("string", str);
 
     public static BishException OfArgument_ListSetCount(int expect, int got) =>
         OfArgument($"Setting {expect} indexes with {got} elements")

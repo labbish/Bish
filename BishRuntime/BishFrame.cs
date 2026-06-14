@@ -25,6 +25,8 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("frame");
 
+    public static int RecursionLimit { get; set; } = 100;
+
     [Builtin("hook")]
     public static BishFrame New(BishList bytecodes, [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? caller) =>
         new(bytecodes.List.Select(item => BishBytecodeParser.FromObject(
@@ -41,6 +43,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
 
     public BishObject Execute()
     {
+        if (GetDepth() > RecursionLimit) throw BishException.OfRecursionLimit();
         while (Ip < Bytecodes.Count)
         {
             if (Paused) return BishNull.Instance;
@@ -104,6 +107,12 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public static BishList? Get_arguments(BishFrame self) =>
         self.Args is { Args: var args } ? new BishList(args) : null;
 
+    [Builtin("hook")]
+    public static BishInt Get_recursionLimit(BishObject _) => BishInt.Of(RecursionLimit);
+
+    [Builtin("hook")]
+    public static void Set_recursionLimit(BishObject _, BishInt num) => RecursionLimit = num.Value;
+
     [Builtin]
     public static BishObject Execute(BishFrame self) => self.Execute();
 
@@ -146,7 +155,10 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     [Builtin("hook")]
     public static BishList Get_stackTrace(BishFrame self) => new(self.GetStackTrace().ToList<BishObject>());
 
-    // TODO: recursion limit
+    public int GetDepth() => CollectOnStack(_ => 0).Count;
+    
+    [Builtin("hook")]
+    public static BishInt Get_depth(BishFrame self) => BishInt.Of(self.GetDepth());
 }
 
 public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Action<BishError> Handler);

@@ -94,6 +94,7 @@ public class BishError(string message) : BishObject
     public static readonly BishType TypeErrorType = CreateError(nameof(TypeErrorType));
     public static readonly BishType NullErrorType = CreateError(nameof(NullErrorType));
     public static readonly BishType ZeroDivisionErrorType = CreateError(nameof(ZeroDivisionErrorType));
+    public static readonly BishType RecursionLimitErrorType = CreateError(nameof(RecursionLimitErrorType));
     public static readonly BishType ImportErrorType = CreateError(nameof(ImportErrorType));
     public static readonly BishType CompilationErrorType = CreateError(nameof(CompilationErrorType));
     public static readonly BishType BytecodeParserErrorType = CreateError(nameof(BytecodeParserErrorType));

@@ -53,6 +53,8 @@ public class FuncTest(TestInfoFixture fixture) : Test(fixture)
     {
         Execute("func f(n)if(n<=0)1 else n*f(n-1);");
         ExpectResult("f(4)", "24");
+        
+        ExpectError("func f()f();f()", BishError.RecursionLimitErrorType);
     }
 
     [Fact]

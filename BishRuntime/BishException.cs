@@ -169,6 +169,9 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero");
 
+    public static BishException OfRecursionLimit() => Create(BishError.RecursionLimitErrorType,
+        $"Recursion limit {BishFrame.RecursionLimit} exceeded");
+
     public static BishException OfCompile(string message) => Create(BishError.CompilationErrorType, message);
 
     public static BishException OfCompile_Errors(IList<CompilationError> errors) =>

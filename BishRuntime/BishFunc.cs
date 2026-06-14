@@ -7,7 +7,8 @@ public record Arg<T>(string Name, T? Default = null, bool Rest = false) where T 
 
 public record BishArg(string Name, BishObject? Default = null, bool Rest = false) : Arg<BishObject>(Name, Default, Rest)
 {
-    public override string ToString() => (Rest ? ".." : "") + Name + (Default is null ? "" : ":" + Default);
+    public override string ToString() =>
+        (Rest ? ".." : "") + Name + (Default is null ? "" : ":" + BishString.CallDebug(Default));
 
     [return: NotNullIfNotNull(nameof(arg))]
     public BishObject? Match(BishObject? arg) => arg ?? Default;

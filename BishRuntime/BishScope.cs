@@ -76,7 +76,7 @@ public class BishScope : BishObject
 
 public class BishBuiltinScope : BishScope
 {
-    private void Init(string name, BishObject obj) => Vars[name] = obj;
+    public void Init(string name, BishObject obj) => Vars[name] = obj;
 
     private BishBuiltinScope()
     {
@@ -96,11 +96,6 @@ public class BishBuiltinScope : BishScope
         Init("Error", BishError.StaticType);
         Init("Iterator", BishIterator.Type);
         Init("AsyncIterator", BishIterator.AsyncType);
-        Init("AttributeError", BishError.AttributeErrorType);
-        Init("ArgumentError", BishError.ArgumentErrorType);
-        Init("TypeError", BishError.TypeErrorType);
-        Init("NullError", BishError.NullErrorType);
-        Init("ZeroDivisionError", BishError.ZeroDivisionErrorType);
         Init("IteratorStop", BishIteratorStop.Instance);
         Init("Error$Result", BishErrorResult.StaticType);
         Init("meta", BishMeta.Builtin);

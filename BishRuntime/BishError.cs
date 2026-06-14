@@ -57,12 +57,20 @@ public class BishError(string message) : BishObject
                string.Join("", StackTrace.Select(funcName => $"\n  at {funcName}")) + cause;
     }
 
-    public static readonly BishType AttributeErrorType = new("AttributeError", [StaticType]);
-    public static readonly BishType ArgumentErrorType = new("ArgumentError", [StaticType]);
-    public static readonly BishType TypeErrorType = new("TypeError", [StaticType]);
-    public static readonly BishType NullErrorType = new("NullError", [StaticType]);
-    public static readonly BishType ZeroDivisionErrorType = new("ZeroDivisionError", [StaticType]);
-    public static readonly BishType ImportErrorType = new("ImportError", [StaticType]);
-    public static readonly BishType CompilationErrorType = new("CompilationError", [StaticType]);
-    public static readonly BishType BytecodeParserErrorType = new("BytecodeParserError", [StaticType]);
+    protected static BishType CreateError(string name)
+    {
+        name = name.TrimEnd("Type").ToString();
+        var error = new BishType(name, [StaticType]);
+        BishBuiltinScope.Instance.Init(name, error);
+        return error;
+    }
+
+    public static readonly BishType AttributeErrorType = CreateError(nameof(AttributeErrorType));
+    public static readonly BishType ArgumentErrorType = CreateError(nameof(ArgumentErrorType));
+    public static readonly BishType TypeErrorType = CreateError(nameof(TypeErrorType));
+    public static readonly BishType NullErrorType = CreateError(nameof(NullErrorType));
+    public static readonly BishType ZeroDivisionErrorType = CreateError(nameof(ZeroDivisionErrorType));
+    public static readonly BishType ImportErrorType = CreateError(nameof(ImportErrorType));
+    public static readonly BishType CompilationErrorType = CreateError(nameof(CompilationErrorType));
+    public static readonly BishType BytecodeParserErrorType = CreateError(nameof(BytecodeParserErrorType));
 }

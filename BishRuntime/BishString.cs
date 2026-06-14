@@ -77,11 +77,15 @@ public partial class BishString(string value) : BishObject
     [Builtin]
     public static BishString Format(BishString self, [Rest] BishList args)
     {
-        var index = 0;
-        return new BishString(Formatter().Replace(self.Value,
-            match => args.List.ElementAtOrDefault(index++) is { } value
-                ? CallRepr(value, new BishReprContext(match.Groups[1].Value == "?"))
-                : match.Value));
+        var current = 0;
+        return new BishString(Formatter().Replace(self.Value, match =>
+        {
+            var index = match.Groups["index"] is { Success: true, Value: var str } ? int.Parse(str) : current++;
+            var debug = match.Groups["debug"].Success;
+            return args.List.ElementAtOrDefault(index) is { } value
+                ? CallRepr(value, new BishReprContext(debug))
+                : match.Value;
+        }));
     }
 
     [Builtin]
@@ -107,7 +111,7 @@ public partial class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishType Get_ReprContext(BishObject _) => BishReprContext.StaticType;
 
-    [GeneratedRegex(@"\{(\??)\}")]
+    [GeneratedRegex(@"\{(?<index>\d+)?(\:(?<debug>\?)?)?\}")]
     private static partial Regex Formatter();
 }
 

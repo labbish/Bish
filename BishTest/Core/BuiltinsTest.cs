@@ -121,7 +121,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("iter.next()", "'c'");
         ExpectResult("iter.next()", "IteratorStop");
 
-        ExpectResult("'{},{?},{},{?},{}'.format('a','b','c')", "r#'a,'b',c,{?},{}'#");
+        ExpectResult("'{},{1:?},{},{:?},{0},{:?}'.format('a','b','c')", "r#'a,'b',b,'c',a,{:?}'#");
         ExpectResult("'0,1,,2'.split(',')", "['0','1','','2']");
         
         ExpectResult("'x'.toCode()", "120");

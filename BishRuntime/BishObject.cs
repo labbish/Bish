@@ -32,7 +32,7 @@ public class BishObject(BishType? type = null)
     protected virtual BishType MRORoot => Type;
     protected virtual BishObject BoundThis => this;
 
-    public BishObject? TryCallHook(string name, IList<BishObject> args, bool ignores = false)
+    public BishObject? TryCallHook(string name, BishArgs args, bool ignores = false)
     {
         var hook = TryGetMember(name, BishLookupMode.NoHook | BishLookupMode.NoAccessor);
         if (ignores && hook is BishFunc { Tag: "ignore" }) return null;
@@ -88,14 +88,16 @@ public class BishObject(BishType? type = null)
         var result = handle.Type switch
         {
             BishVarHandleType.Normal => handle.Owner.Vars[handle.Name],
-            BishVarHandleType.Hook => handle.Owner.Vars["hook_get"].Call([this, new BishString(handle.Name)]),
-            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_get_{handle.Name}"].Call([this]),
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_get"]
+                .Call(new BishArgs([this, new BishString(handle.Name)])),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_get_{handle.Name}"].Call(new BishArgs([this])),
             _ => throw new ArgumentException("impossible!")
         };
         return handle.Bind ? result.Bind(BoundThis) : result;
     }
 
-    public virtual BishObject Bind(BishObject self) => TryCallHook("hook_bind", [self], ignores: true) ?? this;
+    public virtual BishObject Bind(BishObject self) =>
+        TryCallHook("hook_bind", new BishArgs([self]), ignores: true) ?? this;
 
     [Builtin("hook", tag: "ignore")]
     public static BishObject Get(BishObject self, BishString name) => self.GetMember(name.Value, BishLookupMode.NoHook);
@@ -107,8 +109,10 @@ public class BishObject(BishType? type = null)
         return handle.Type switch
         {
             BishVarHandleType.Normal => handle.Owner.Vars[handle.Name] = value,
-            BishVarHandleType.Hook => handle.Owner.Vars["hook_set"].Call([this, new BishString(handle.Name), value]),
-            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_set_{handle.Name}"].Call([this, value]),
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_set"]
+                .Call(new BishArgs([this, new BishString(handle.Name), value])),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_set_{handle.Name}"]
+                .Call(new BishArgs([this, value])),
             _ => throw new ArgumentException("impossible!")
         };
     }
@@ -125,9 +129,11 @@ public class BishObject(BishType? type = null)
         var self = Base(this, MRORoot);
         var hooked = this is BishType || mode.HasFlag(BishLookupMode.NoHook)
             ? null
-            : self.TryCallHook("hook_def", [new BishString(name), value], ignores: true);
+            : self.TryCallHook("hook_def", new BishArgs([new BishString(name), value]), ignores: true);
         return hooked ??
-               (mode.HasFlag(BishLookupMode.NoAccessor) ? null : self.TryCallHook($"hook_def_{name}", [value])) ??
+               (mode.HasFlag(BishLookupMode.NoAccessor)
+                   ? null
+                   : self.TryCallHook($"hook_def_{name}", new BishArgs([value]))) ??
                (Vars[name] = value);
     }
 
@@ -145,8 +151,9 @@ public class BishObject(BishType? type = null)
         return handle.Type switch
         {
             BishVarHandleType.Normal => handle.Owner.Vars.Remove(handle.Name, out var value) ? value : null,
-            BishVarHandleType.Hook => handle.Owner.Vars["hook_del"].Call([this, new BishString(handle.Name)]),
-            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_del_{handle.Name}"].Call([this]),
+            BishVarHandleType.Hook => handle.Owner.Vars["hook_del"]
+                .Call(new BishArgs([this, new BishString(handle.Name)])),
+            BishVarHandleType.Accessor => handle.Owner.Vars[$"hook_del_{handle.Name}"].Call(new BishArgs([this])),
             _ => throw new ArgumentException("impossible!")
         };
     }
@@ -154,9 +161,9 @@ public class BishObject(BishType? type = null)
     [Builtin("hook", tag: "ignore")]
     public static BishObject Del(BishObject self, BishString name) => self.DelMember(name.Value);
 
-    public BishObject Call(IList<BishObject> args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
+    public BishObject Call(BishArgs args) => TryCall(args) ?? throw BishException.OfType_NotCallable(this);
 
-    public virtual BishObject? TryCall(IList<BishObject> args) => TryGetMember("op_call")?.TryCall(args);
+    public virtual BishObject? TryCall(BishArgs args) => TryGetMember("op_call")?.TryCall(args);
 
     public override string ToString() => throw new NotSupportedException("Use `show` or `debug` instead");
 
@@ -176,10 +183,10 @@ public class BishObject(BishType? type = null)
 
     [Builtin("op")]
     public static BishBool Neq(BishObject a, BishObject b) =>
-        BishBool.Invert(BishOperator.Call("op_eq", [a, b])
+        BishBool.Invert(BishOperator.Call("op_eq", new BishArgs([a, b]))
             .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}"));
 
-    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_cmp", [a, b])
+    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_cmp", new BishArgs([a, b]))
         .As<BishInt>($"{BishString.CallDebug(a)} <=> {BishString.CallDebug(b)}").Value;
 
     [Builtin("op")]

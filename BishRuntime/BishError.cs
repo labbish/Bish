@@ -2,23 +2,45 @@
 
 namespace BishRuntime;
 
-public class BishStackLayer(BishFunc func, IList<BishObject> args)
+public class BishStackLayer(BishFunc func, BishArgs args) : BishObject
 {
     public BishFunc Func => func;
-    public IList<BishObject> Args => args;
+    public BishArgs Args => args;
     public ICodeSource? Source;
     public SourcePosition? Position;
 
-    public BishStackLayer WithSource(ICodeSource? source, SourcePosition? position)
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("StackLayer");
+
+    public void AddSource(ICodeSource? source, SourcePosition? position)
     {
         Source = source;
         Position = position;
-        return this;
     }
 
     public override string ToString() =>
-        $"{BishString.CallDebug(Func)}, calling with ({string.Join(", ", Args.Select(BishString.CallDebug))})" +
+        $"{BishString.CallDebug(Func)}, with args ({string.Join(", ", Args.Args.Select(BishString.CallDebug))})" +
         (Source is null ? "" : $", at {Source.Filename}, {Position}");
+
+    [Builtin]
+    public static BishString Repr(BishStackLayer self, BishReprContext _) => new(self.ToString());
+
+    [Builtin("hook")]
+    public static BishFunc Get_function(BishStackLayer self) => self.Func;
+
+    [Builtin("hook")]
+    public static BishList Get_arguments(BishStackLayer self) => new(self.Args.Args);
+
+    [Builtin("hook")]
+    public static BishString? Get_sourceFile(BishStackLayer self) =>
+        self.Source is { } source ? new BishString(source.Filename) : null;
+
+    [Builtin("hook")]
+    public static BishList? Get_sourcePos(BishStackLayer self) => self.Position is { } pos
+        ? new BishList(new[] { pos.Line, pos.Column, pos.StopLine, pos.StopColumn }.Select(BishInt.Of)
+            .ToList<BishObject>())
+        : null;
 }
 
 public class BishError(string message) : BishObject
@@ -26,7 +48,7 @@ public class BishError(string message) : BishObject
     public string Message = message;
 
     // From inner to outer
-    public readonly IList<BishStackLayer> StackTrace = new ConcurrentList<BishStackLayer>();
+    public IList<BishStackLayer>? StackTrace;
     public IList<BishError> Causes = new ConcurrentList<BishError>();
 
     public override BishType DefaultType => StaticType;
@@ -53,8 +75,10 @@ public class BishError(string message) : BishObject
             : "\nCaused by: " + string.Join("",
                 Causes.Select(cause =>
                     "\n" + string.Join("\n", cause.ToString().Split("\n").Select(line => "  " + line))));
-        return $"[{Type.Name}] {Message}" +
-               string.Join("", StackTrace.Select(funcName => $"\n  at {funcName}")) + cause;
+        var trace = StackTrace is null
+            ? ""
+            : string.Join("", StackTrace.Select(funcName => $"\n  at {funcName}"));
+        return $"[{Type.Name}] {Message}" + trace + cause;
     }
 
     protected static BishType CreateError(string name)

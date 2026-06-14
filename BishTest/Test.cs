@@ -77,8 +77,8 @@ public class Test(TestInfoFixture fixture)
 
     protected void ExpectResult(string expr, string expected)
     {
-        var expect = Result(expected);
         var result = Result(expr);
+        var expect = Result(expected);
         if (BishOperator.Eq(expect, result)) return;
         Fail($"Expected {BishString.CallDebug(expect)} but found {BishString.CallDebug(result)}");
     }

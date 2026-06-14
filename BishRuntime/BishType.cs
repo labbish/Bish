@@ -17,7 +17,7 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
     public static BishType New(BishString name, [DefaultNull] BishList? parents) =>
         new(name.Value, parents?.List.Select(parent => parent.As<BishType>("parent type")).ToList());
 
-    public BishObject CreateInstance(IList<BishObject> args)
+    public BishObject CreateInstance(BishArgs args)
     {
         var hook = TryGetMember("hook_new",
             BishLookupMode.NoAccessor | BishLookupMode.NoHook | BishLookupMode.NotFromType);
@@ -26,7 +26,7 @@ public partial class BishType(string name, IEnumerable<BishType>? parents = null
         return instance;
     }
 
-    public override BishObject TryCall(IList<BishObject> args) => CreateInstance(args);
+    public override BishObject TryCall(BishArgs args) => CreateInstance(args);
 
     public bool CanAssignTo(BishType other) => this == other || LookupChain.Contains(other);
 

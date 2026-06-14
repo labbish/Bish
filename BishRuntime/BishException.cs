@@ -52,7 +52,7 @@ public class BishException(BishError error) : Exception
     }
 
     public static BishException Create(BishType errorType, string message) =>
-        new((BishError)errorType.CreateInstance([new BishString(message)]));
+        new((BishError)errorType.CreateInstance(new BishArgs([new BishString(message)])));
 
     public static BishException OfNull(string op, string name) =>
         Create(BishError.NullErrorType, $"Cannot {op} member {name} on null")

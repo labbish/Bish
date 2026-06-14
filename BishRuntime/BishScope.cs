@@ -62,12 +62,12 @@ public class BishScope : BishObject
 
     [Builtin]
     [PassCaller]
-    public static BishFrame This(BishFrame frame) => frame;
+    public static BishFrame? This(BishFrame? caller) => caller;
 
     [Builtin]
     [PassCaller]
-    public static BishObject Import(BishFrame frame, BishString file) =>
-        BishImporter.Import(frame.Scope.GetVar("meta").As<BishMeta>("meta"), file.Value);
+    public static BishObject Import(BishFrame? caller, BishString file) =>
+        BishImporter.Import(caller?.Scope.GetVar("meta").As<BishMeta>("meta"), file.Value);
     
 
     [Builtin]

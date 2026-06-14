@@ -22,7 +22,7 @@ public class BishThread(Thread thread) : BishObject
     public new static readonly BishType StaticType = new("Thread");
 
     [Builtin("hook")]
-    public static BishThread New(BishObject func) => new(new Thread(() => func.Call([])));
+    public static BishThread New(BishObject func) => new(new Thread(() => func.Call(new BishArgs([]))));
 
     [Builtin]
     public static void Start(BishThread self) => BishException.Wrapped(BishThreadModule.Error, self.Thread.Start);

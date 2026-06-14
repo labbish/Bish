@@ -130,27 +130,6 @@ public record DelMember(string Name) : BishBytecode
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Stack.Pop().DelMember(Name));
 }
 
-public static class PassCallerHelper
-{
-    extension(BishObject func)
-    {
-        public bool PassCaller
-        {
-            get
-            {
-                try
-                {
-                    return BishBool.CallToBool(func.TryGetMember("passCaller"));
-                }
-                catch (BishException)
-                {
-                    return false;
-                }
-            }
-        }
-    }
-}
-
 [Bytecode]
 public record Call(int Argc) : BishBytecode
 {
@@ -158,8 +137,7 @@ public record Call(int Argc) : BishBytecode
     {
         var args = frame.Stack.Pop(Argc);
         var func = frame.Stack.Pop();
-        if (func.PassCaller) args = [frame, ..args];
-        frame.Stack.Push(func.Call(args));
+        frame.Stack.Push(func.Call(new BishArgs(args, frame)));
     }
 }
 
@@ -170,8 +148,7 @@ public record CallArgs : BishBytecode
     {
         var args = frame.Stack.Pop().As<BishList>("args").List.ToList();
         var func = frame.Stack.Pop();
-        if (func.PassCaller) args = [frame, ..args];
-        frame.Stack.Push(func.Call(args));
+        frame.Stack.Push(func.Call(new BishArgs(args, frame)));
     }
 }
 
@@ -181,7 +158,7 @@ public record Op(string Operator, int Argc) : BishBytecode
     public override void Execute(BishFrame frame)
     {
         var args = frame.Stack.Pop(Argc);
-        frame.Stack.Push(BishOperator.Call(Operator, args));
+        frame.Stack.Push(BishOperator.Call(Operator, new BishArgs(args, frame)));
     }
 }
 
@@ -220,7 +197,7 @@ public record JumpIf(Tag GoalTag, bool Reverse = false) : Jumper(GoalTag)
 {
     public override void Execute(BishFrame frame)
     {
-        var result = BishOperator.Call("bool", [frame.Stack.Pop()]);
+        var result = BishOperator.Call("bool", new BishArgs([frame.Stack.Pop()], frame));
         if (result.As<BishBool>("condition").Value != Reverse) Jump(frame);
     }
 }
@@ -456,7 +433,7 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
             true when i < RestPos => BishInt.Of(i),
             true when i > RestPos => BishInt.Of(i - Count),
             true => new BishRange(i, count + i - Count + 1, 1)
-        }).Select(index => BishOperator.Call("op_getIndex", [list, index])).ToConcurrentList();
+        }).Select(index => BishOperator.Call("op_getIndex", new BishArgs([list, index], frame))).ToConcurrentList();
         if (Pattern)
         {
             foreach (var item in items.Reverse()) frame.Stack.Push(item);
@@ -477,7 +454,7 @@ public record TryDelIndex : BishBytecode
         var obj = frame.Stack.Pop();
         try
         {
-            frame.Stack.Push(BishOperator.Call("op_delIndex", [obj, index]));
+            frame.Stack.Push(BishOperator.Call("op_delIndex", new BishArgs([obj, index], frame)));
             frame.Stack.Push(BishBool.True);
         }
         catch (BishException)

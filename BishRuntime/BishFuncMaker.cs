@@ -10,10 +10,13 @@ public class BishCodedFunc(string name, IList<BishArg> inArgs, BishFrame inner, 
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("Func", [BishFunc.StaticType]);
 
-    public override BishObject CallRaw(IList<BishObject> args)
+    public override BishObject CallRaw(BishArgs args)
     {
         var frame = Inner.Clone();
-        foreach (var arg in args.Reverse()) frame.Stack.Push(arg);
+        foreach (var arg in args.Args.Reverse()) frame.Stack.Push(arg);
+        frame.Caller = args.Caller;
+        frame.Func = this;
+        frame.Args = args;
         return (IsGen, IsAsync) switch
         {
             (false, false) => frame.Execute(),
@@ -22,9 +25,6 @@ public class BishCodedFunc(string name, IList<BishArg> inArgs, BishFrame inner, 
             (true, true) => new BishAsyncGenerator(frame)
         };
     }
-
-    public override BishStackLayer GetStackLayer(IList<BishObject> args) =>
-        base.GetStackLayer(args).WithSource(Inner.Source, Inner.Current?.Pos);
 
     [Builtin("hook")]
     public static BishFrame Get_frame(BishCodedFunc self) => self.Inner;
@@ -81,7 +81,7 @@ public class BishAsyncTask(BishFrame inner) : BishTask
             {
                 inner.Paused = false;
                 Stage++;
-                value.GetMember("poll").Call([ctx]);
+                value.GetMember("poll").Call(new BishArgs([ctx], inner));
                 return null;
             }
 
@@ -131,7 +131,7 @@ public class BishAsyncGenerator(BishFrame inner) : BishObject, IBishAsyncIterato
             {
                 inner.Paused = false;
                 Stage++;
-                awaited.GetMember("poll").Call([ctx]);
+                awaited.GetMember("poll").Call(new BishArgs([ctx], inner));
                 return null;
             }
 

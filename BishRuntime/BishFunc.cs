@@ -60,6 +60,12 @@ public class BishArgObject(BishArg arg) : BishObject
     public static BishBool Get_isRest(BishArgObject self) => BishBool.Of(self.Arg.Rest);
 }
 
+public class BishArgs(IList<BishObject> args, BishFrame? caller = null)
+{
+    public readonly IList<BishObject> Args = args;
+    public readonly BishFrame? Caller = caller;
+}
+
 public abstract class BishFunc(
     string name,
     IList<BishArg> inArgs,
@@ -71,9 +77,9 @@ public abstract class BishFunc(
 
     public IList<BishArg> Args = CheckedArgs<BishArg, BishObject>(inArgs).ToConcurrentList();
 
-    public bool PassCaller = passCaller;
+    public readonly bool PassCaller = passCaller;
 
-    public abstract BishObject CallRaw(IList<BishObject> args);
+    public abstract BishObject CallRaw(BishArgs args);
 
     public static IList<TArg> CheckedArgs<TArg, T>(IList<TArg> args) where TArg : Arg<T> where T : class
     {
@@ -101,53 +107,44 @@ public abstract class BishFunc(
         return args;
     }
 
-    private ConcurrentList<BishObject> Match(IList<BishObject> args)
+    private ConcurrentList<BishObject> Match(BishArgs args)
     {
+        var list = PassCaller ? [args.Caller ?? BishNull.Instance as BishObject, ..args.Args] : args.Args;
         if (Args.LastOrDefault()?.Rest == true)
         {
             var normal = Args.Slice(0, -1);
             var rest = Args[^1];
-            if (args.Count < normal.Count) throw BishException.OfArgument_Count(args.Count, min: normal.Count);
-            return normal.Select((arg, i) => arg.Match(args[i]))
-                .Concat([rest.Match(new BishList(args.Slice(normal.Count)))]).ToConcurrentList();
+            if (list.Count < normal.Count) throw BishException.OfArgument_Count(list.Count, min: normal.Count);
+            return normal.Select((arg, i) => arg.Match(list[i]))
+                .Concat([rest.Match(new BishList(list.Slice(normal.Count)))]).ToConcurrentList();
         }
 
         var minArgs = Args.Count(arg => arg.Default is null);
-        if (args.Count > Args.Count) throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count);
+        if (list.Count > Args.Count) throw BishException.OfArgument_Count(list.Count, minArgs, Args.Count);
         return Args.Select((arg, i) =>
-            arg.Match(args.ElementAtOrDefault(i)) ??
-            throw BishException.OfArgument_Count(args.Count, minArgs, Args.Count)).ToConcurrentList();
+            arg.Match(list.ElementAtOrDefault(i)) ??
+            throw BishException.OfArgument_Count(list.Count, minArgs, Args.Count)).ToConcurrentList();
     }
 
     public override BishNativeFunc Bind(BishObject self)
     {
         return Args.Count == 0
             ? throw BishException.OfArgument_Bind(this, self)
-            : new BishNativeFunc(Name, Args.Slice(Args[0].Rest ? 0 : 1), args => CallRaw(Trans(args)), Tag);
+            : new BishNativeFunc(Name, Args.Slice(Args[0].Rest ? 0 : 1), args => CallRaw(Trans(args)), Tag, PassCaller);
 
-        IList<BishObject> Trans(IList<BishObject> args) => Args[0].Rest
-            ? [new BishList([self, ..args[0].As<BishList>("rest arg").List]), ..args.Slice(1)]
-            : [self, ..args];
+        BishArgs Trans(BishArgs args) => new(Args[0].Rest
+            ? [new BishList([self, ..args.Args[0].As<BishList>("rest arg").List]), ..args.Args.Slice(1)]
+            : [self, ..args.Args], args.Caller);
     }
 
     [Builtin("hook", tag: "ignore")]
     public static BishFunc Bind(BishFunc func, BishObject obj) => func.Bind(obj);
 
-    public override BishObject TryCall(IList<BishObject> args)
+    public override BishObject TryCall(BishArgs args)
     {
-        try
-        {
-            var match = Match(args);
-            return CallRaw(match);
-        }
-        catch (BishException e)
-        {
-            e.Error.StackTrace.Add(GetStackLayer(args));
-            throw;
-        }
+        var match = new BishArgs(Match(args), args.Caller);
+        return CallRaw(match);
     }
-
-    public virtual BishStackLayer GetStackLayer(IList<BishObject> args) => new(this, args);
 
     public override BishType DefaultType => StaticType;
 
@@ -162,15 +159,17 @@ public abstract class BishFunc(
 
     [Builtin("hook")]
     public static BishNativeFunc New(BishString name, BishList args, BishFunc func) =>
-        new(name.Value, ToArgs(args), list => func.Call([new BishList(list)]));
+        new(name.Value, ToArgs(args), a => func.Call(new BishArgs([new BishList(a.Args)], a.Caller)));
 
     [Builtin]
     public static BishCodedFunc Coded(BishString name, BishList args, BishFrame frame,
         [DefaultNull] BishBool? isGen, [DefaultNull] BishBool? isAsync) =>
         new(name.Value, ToArgs(args), frame, isGen?.Value ?? false, isAsync?.Value ?? false);
 
+    [PassCaller]
     [Builtin("op", tag: "ignore")]
-    public static BishObject Call(BishFunc func, [Rest] BishList args) => func.Call(args.List.ToList());
+    public static BishObject Call(BishFrame? caller, BishFunc func, [Rest] BishList args) =>
+        func.Call(new BishArgs(args.List.ToList(), caller));
 
     [Builtin("hook")]
     public static BishString Get_name(BishFunc self) => new(self.Name);
@@ -198,24 +197,18 @@ public abstract class BishFunc(
 
     [Builtin("hook")]
     public static BishType Get_Arg(BishObject _) => BishArgObject.StaticType;
-
-    [Builtin("hook")]
-    public static BishBool Get_passCaller(BishFunc self) => BishBool.Of(self.PassCaller);
-
-    [Builtin("hook")]
-    public static void Set_passCaller(BishFunc self, BishBool value) => self.PassCaller = value.Value;
 }
 
 public class BishNativeFunc(
     string name,
     IList<BishArg> inArgs,
-    Func<IList<BishObject>, BishObject> func,
+    Func<BishArgs, BishObject> func,
     string? tag = null,
     bool passCaller = false) : BishFunc(name, inArgs, tag, passCaller)
 {
-    public Func<IList<BishObject>, BishObject> Func => func;
+    public Func<BishArgs, BishObject> Func => func;
 
-    public override BishObject CallRaw(IList<BishObject> args) => Func(args);
+    public override BishObject CallRaw(BishArgs args) => Func(args);
 }
 
 public class BishArgsProxyList(IList<BishArg> list) : ProxyList<BishArg>(list)

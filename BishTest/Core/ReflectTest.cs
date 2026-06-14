@@ -38,19 +38,6 @@ public class ReflectTest : Test
     }
 
     [Fact]
-    public void TestPassCaller()
-    {
-        Execute("a:=1;func f(s)s.scope.a;f.passCaller=true;");
-        ExpectResult("f()", "1");
-        ExpectResult("{a:=2;f()}", "2");
-        ExpectResult("f()", "1");
-        Execute("a:=1;class F{oper()(self,s)s.scope.a;passCaller:=true};f:=F();");
-        ExpectResult("f()", "1");
-        ExpectResult("{a:=2;f()}", "2");
-        ExpectResult("f()", "1");
-    }
-
-    [Fact]
     public void TestFrameReflect()
     {
         // Get "this" -> Call 0 -> Move "f"
@@ -61,7 +48,7 @@ public class ReflectTest : Test
         Execute("z:=bytecode('Move',{.name:'f'});");
         ExpectResult("f.bytecodes", "[x,y,z]");
         ExpectResult("f.scope.ip", "3");
-        ExpectResult("f.outer", "null");
+        ExpectResult("f.caller", "null");
         ExpectError("bytecode('???',{});", BishError.BytecodeParserErrorType);
 
         Execute("a:=bytecode('Int',{.value:0});");
@@ -79,6 +66,24 @@ public class ReflectTest : Test
 
         ExpectResult("meta.compile('return 0;').execute()", "0");
         ExpectError("meta.compile('???')", BishError.CompilationErrorType);
+        
+        Execute("func h()this().caller.scope.a;");
+        ExpectResult("a:=0;h()", "0");
+        ExpectResult("{a:=1;h()}", "1");
+        ExpectResult("((){a:=2;h()})()", "2");
+        
+        ExpectResult("func g()this().function;g()", "g");
+        ExpectResult("func g(x)this().arguments;g(1)", "[1]");
+        Execute("func g(x)this().stackLayer;l:=g(1);");
+        ExpectResult("l.function", "g");
+        ExpectResult("l.arguments", "[1]");
+        ExpectResult("l.sourceFile", "'<test>'");
+        ExpectResult("l.sourcePos", "[1,9,1,25]");
+        Execute("func g(x)this().stackTrace;func h()g(1);[a,b]:=h();");
+        ExpectResult("a.function", "g");
+        ExpectResult("a.arguments", "[1]");
+        ExpectResult("b.function", "h");
+        ExpectResult("b.arguments", "[]");
     }
 
     [Fact]

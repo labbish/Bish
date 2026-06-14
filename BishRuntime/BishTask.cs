@@ -25,7 +25,7 @@ public abstract class BishTask : BishObject
     public static BishErrorTask Error(BishError error) => new(error);
 
     [Builtin]
-    public static BishRunTask Run(BishObject func) => new(() => func.Call([]));
+    public static BishRunTask Run(BishObject func) => new(() => func.Call(new BishArgs([])));
 
     [Builtin]
     public static BishAllTask All([Rest] BishList tasks) => new(tasks.List);
@@ -43,7 +43,16 @@ public abstract class BishTask : BishObject
     public static BishConcatTasks Concat([Rest] BishList tasks) => new(tasks.List);
 
     [Builtin]
-    public static BishMapTask Map(BishObject task, BishObject func) => new(task, item => func.Call([item]));
+    public static BishMapTask Map(BishObject task, BishObject func) =>
+        new(task, item => func.Call(new BishArgs([item])));
+}
+
+public static class BishTaskHelper
+{
+    extension(BishObject task)
+    {
+        public void Poll(BishObject ctx) => task.GetMember("poll").Call(new BishArgs([ctx]));
+    }
 }
 
 public class BishCompletedTask(BishObject value) : BishTask
@@ -119,7 +128,7 @@ public class BishAllTask(IList<BishObject> tasks) : BishTask
             if (_results[i] is not null) continue;
             if (BishBool.CallToBool(task.GetMember("completed")))
                 _results[i] = task.GetMember("result");
-            task.GetMember("poll").Call([ctx]);
+            task.Poll(ctx);
         }
 
         if (_results.All(result => result is not null)) return new BishList(_results!);
@@ -139,7 +148,7 @@ public class BishAnyTask(IList<BishObject> tasks) : BishTask
     {
         foreach (var task in tasks)
         {
-            task.GetMember("poll").Call([ctx]);
+            task.Poll(ctx);
             if (BishBool.CallToBool(task.GetMember("completed")))
                 return task.GetMember("result");
         }
@@ -165,7 +174,7 @@ public class BishMergeTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIte
         var task = _tasks.First?.Value;
         if (task is null) return BishIteratorStop.Instance;
         _tasks.RemoveFirst();
-        task.GetMember("poll").Call([ctx]);
+        task.Poll(ctx);
         if (BishBool.CallToBool(task.GetMember("completed")))
             return task.GetMember("result");
         _tasks.AddLast(task);
@@ -193,7 +202,7 @@ public class BishConcatTasks(IList<BishObject> tasks) : BishObject, IBishAsyncIt
             if (_results[i] is not null) continue;
             if (BishBool.CallToBool(task.GetMember("completed")))
                 _results[i] = task.GetMember("result");
-            task.GetMember("poll").Call([ctx]);
+            task.Poll(ctx);
         }
 
         if (_results[_count] is { } result)
@@ -218,7 +227,7 @@ public class BishMapTask(BishObject task, Func<BishObject, BishObject> func) : B
     {
         if (BishBool.CallToBool(task.GetMember("completed")))
             return func(task.GetMember("result"));
-        task.GetMember("poll").Call([ctx]);
+        task.Poll(ctx);
         return null;
     }
 }

@@ -40,22 +40,22 @@ public static class BishBuiltinIteratorBinder
     {
         if (!noParent) type.ParentsProxy.Add(BishIterator.Type);
         type.DefMember("next", new BishNativeFunc("next", [new BishArg("self")],
-            args => next(args[0]) ?? BishIteratorStop.Instance));
-        type.DefMember("iter", new BishNativeFunc("iter", [new BishArg("self")], args => args[0]));
+            args => next(args.Args[0]) ?? BishIteratorStop.Instance));
+        type.DefMember("iter", new BishNativeFunc("iter", [new BishArg("self")], args => args.Args[0]));
     }
 }
 
 public static class BishBuiltinTaskBinder
 {
-    public static void Awake(this BishObject ctx) => ctx.GetMember("waker").GetMember("awake").Call([]);
+    public static void Awake(this BishObject ctx) => ctx.GetMember("waker").GetMember("awake").Call(new BishArgs([]));
 
     public static void Bind(BishType type, Func<BishObject, BishObject, BishObject?> poll)
     {
         type.ParentsProxy.Add(BishTask.StaticType);
         type.DefMember("poll", new BishNativeFunc("poll", [new BishArg("self"), new BishArg("ctx")], args =>
         {
-            var self = args[0];
-            var ctx = args[1];
+            var self = args.Args[0];
+            var ctx = args.Args[1];
             try
             {
                 if (poll(self, ctx) is { } result)

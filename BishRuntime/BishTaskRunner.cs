@@ -140,7 +140,7 @@ public class BishRunnerThread : BishObject
             if (BishBool.CallToBool(task.TryGetMember("cancelled")))
                 task.SetMember("completed", BishBool.True);
             else if (!BishBool.CallToBool(task.TryGetMember("completed")))
-                task.GetMember("poll").Call([new BishTaskContext(Index, task)]);
+                task.Poll(new BishTaskContext(Index, task));
         }
     }
 

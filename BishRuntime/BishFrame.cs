@@ -2,12 +2,15 @@
 
 namespace BishRuntime;
 
-public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, BishFrame? outer = null) : BishObject
+public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, BishFrame? caller = null) : BishObject
 {
-    public readonly BishFrame? Outer = outer;
+    public BishFrame? Caller = caller;
+    public BishFunc? Func = null;
+    public BishArgs? Args = null;
+    public ICodeSource? Source;
+
     public BishScope Scope = scope ?? BishScope.Globals;
     public Stack<BishObject> Stack = new();
-    public ICodeSource? Source;
     public IList<BishBytecode> Bytecodes = bytecodes.ToConcurrentList();
     public int Ip;
 
@@ -23,9 +26,9 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public new static readonly BishType StaticType = new("frame");
 
     [Builtin("hook")]
-    public static BishFrame New(BishList bytecodes, [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? outer) =>
+    public static BishFrame New(BishList bytecodes, [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? caller) =>
         new(bytecodes.List.Select(item => BishBytecodeParser.FromObject(
-            item.As<BishBytecodeObject>("bytecode"))).ToList(), scope ?? BishScope.Globals, outer);
+            item.As<BishBytecodeObject>("bytecode"))).ToList(), scope ?? BishScope.Globals, caller);
 
     public BishFrame WithSource(ICodeSource? source)
     {
@@ -48,7 +51,12 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
             }
             catch (BishException e)
             {
-                if (!ErrorHandlers.TryPop(out var handler)) throw;
+                if (!ErrorHandlers.TryPop(out var handler))
+                {
+                    e.Error.StackTrace ??= GetStackTrace();
+                    throw;
+                }
+
                 Scope = handler.Scope;
                 Stack = handler.Stack;
                 Ip = handler.Ip;
@@ -67,7 +75,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     }
 
     [Builtin("hook")]
-    public static BishFrame? Get_outer(BishFrame self) => self.Outer;
+    public static BishFrame? Get_caller(BishFrame self) => self.Caller;
 
     [Builtin("hook")]
     public static BishScope Get_scope(BishFrame self) => self.Scope;
@@ -89,6 +97,13 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     [Builtin("hook")]
     public static BishInt Get_ip(BishFrame self) => BishInt.Of(self.Ip);
 
+    [Builtin("hook")]
+    public static BishFunc? Get_function(BishFrame self) => self.Func;
+
+    [Builtin("hook")]
+    public static BishList? Get_arguments(BishFrame self) =>
+        self.Args is { Args: var args } ? new BishList(args) : null;
+
     [Builtin]
     public static BishObject Execute(BishFrame self) => self.Execute();
 
@@ -99,10 +114,39 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         return self.ReturnValue ?? (self.Stack.TryPeek(out var result) ? result : null);
     }
 
-    public BishFrame Clone() => new BishFrame(Bytecodes, Scope, Outer).WithSource(Source);
+    public BishFrame Clone() => new BishFrame(Bytecodes, Scope).WithSource(Source);
 
     [Builtin]
     public static BishFrame Clone(BishFrame self) => self.Clone();
+
+    public BishStackLayer? GetStackLayer()
+    {
+        if (Func is null || Args is null) return null;
+        var layer = new BishStackLayer(Func, Args);
+        if (Source is not null) layer.AddSource(Source, Current?.Pos);
+        return layer;
+    }
+
+    [Builtin("hook")]
+    public static BishStackLayer? Get_stackLayer(BishFrame self) => self.GetStackLayer();
+
+    public List<T> CollectOnStack<T>(Func<BishFrame, T> func)
+    {
+        List<T> result = [];
+        var current = this;
+        do result.Add(func(current));
+        // ReSharper disable once ConstantConditionalAccessQualifier
+        while ((current = current?.Caller) is not null);
+        return result;
+    }
+
+    public ConcurrentList<BishStackLayer> GetStackTrace() => CollectOnStack(frame => frame.GetStackLayer())
+        .OfType<BishStackLayer>().ToConcurrentList();
+
+    [Builtin("hook")]
+    public static BishList Get_stackTrace(BishFrame self) => new(self.GetStackTrace().ToList<BishObject>());
+
+    // TODO: recursion limit
 }
 
 public record ErrorHandler(BishScope Scope, Stack<BishObject> Stack, int Ip, Action<BishError> Handler);

@@ -58,7 +58,7 @@ public partial class BishString(string value) : BishObject
     {
         BishString str => ctx.Debug ? "'" + Regex.Escape(str.Value).Replace("'", @"\'") + "'" : str.Value,
         BishType type => type.Name,
-        _ => BishOperator.Call("repr", [obj, ctx]).As<BishString>("repr").Value
+        _ => BishOperator.Call("repr", new BishArgs([obj, ctx])).As<BishString>("repr").Value
     };
 
     [Builtin]

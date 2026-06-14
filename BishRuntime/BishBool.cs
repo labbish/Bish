@@ -30,5 +30,5 @@ public class BishBool : BishObject
     public static BishBool Bool(BishBool a) => a;
 
     public static bool CallToBool(BishObject? obj) =>
-        obj is not null && BishOperator.Call("bool", [obj]).As<BishBool>("bool").Value;
+        obj is not null && BishOperator.Call("bool", new BishArgs([obj])).As<BishBool>("bool").Value;
 }

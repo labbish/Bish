@@ -78,10 +78,10 @@ public static partial class BishOperator
         new("dispose", ["self"], "dispose", () => BishNull.Instance)
     ];
 
-    public static BishObject Call(string name, IList<BishObject> args)
+    public static BishObject Call(string name, BishArgs args)
     {
         List<BishError> errors = [];
-        foreach (var arg in args)
+        foreach (var arg in args.Args)
         {
             try
             {
@@ -94,10 +94,10 @@ public static partial class BishOperator
         }
 
         var special = GetSpecialMethod(name);
-        return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args).CausedBy(errors);
+        return special?.Default?.Invoke() ?? throw BishException.OfArgument_Operator(name, args.Args).CausedBy(errors);
     }
 
-    public static bool Eq(BishObject a, BishObject b) => Call("op_eq", [a, b])
+    public static bool Eq(BishObject a, BishObject b) => Call("op_eq", new BishArgs([a, b]))
         .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}").Value;
 
     public static SpecialMethod? GetSpecialMethod(string name) =>

@@ -35,26 +35,17 @@ internal static class IndexHelper
 
 public static class IteratorHelper
 {
-    public static IEnumerator<BishObject> GetEnumerator(BishObject iterator)
-    {
-        while (true)
-        {
-            var result = iterator.GetMember("next").Call([]);
-            if (result is BishIteratorStop) yield break;
-            yield return result;
-        }
-    }
-
     extension(BishObject obj)
     {
-        public BishObject Iterator() => BishOperator.Call("iter", [obj]);
-        public IEnumerator<BishObject> ToEnumerator() => GetEnumerator(obj.Iterator());
-
         public IEnumerable<BishObject> ToEnumerable()
         {
-            var enumerator = obj.ToEnumerator();
-            while (enumerator.MoveNext())
-                yield return enumerator.Current;
+            var iterator = BishOperator.Call("iter", new BishArgs([obj]));
+            while (true)
+            {
+                var result = iterator.GetMember("next").Call(new BishArgs([]));
+                if (result is BishIteratorStop) yield break;
+                yield return result;
+            }
         }
     }
 }

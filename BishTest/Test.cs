@@ -45,7 +45,7 @@ public class Test(TestInfoFixture fixture)
     private static void PostCheck(BishFrame frame)
     {
         if (frame.Stack.Count != 0)
-            Fail($"Expect stack to be empty, found {string.Join(", ", frame.Stack)}");
+            Fail($"Expect stack to be empty, found {string.Join(", ", frame.Stack.Select(BishString.CallDebug))}");
         var specials = frame.Scope.Vars.Keys.Where(key => key.StartsWith('$')).ToList();
         if (specials.Count != 0)
             Fail($"Expect special vars to be empty, found {string.Join(", ", specials)}");

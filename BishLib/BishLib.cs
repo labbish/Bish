@@ -9,6 +9,7 @@ public static class BishLib
         BishThreadModule.Initialize();
         BishFileModule.Initialize();
         BishRandomModule.Initialize();
+        BishRegexModule.Initialize();
         BuiltinsRegistry.Register();
     }
 

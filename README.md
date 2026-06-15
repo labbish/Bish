@@ -6,7 +6,6 @@ The Bish Language version 3.2.
 This repository consists of 8 parts:
 
 * **Bish** - The entry point, containing an REPL and the Language Server.
-  - [CommandLineParser](https://github.com/commandlineparser/commandline) - A clean and concise command line parser.
   - [Omnisharp LSP](https://github.com/OmniSharp/csharp-language-server-protocol) - A C# Language Server Protocal Implementation.
 * **BishExamplePlugin** - A plugin example. See its [README](BishExamplePlugin/README.md) for more information.
 * **BishCompiler** - The compiler which transforms Bish code into bytecode.

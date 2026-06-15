@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using JetBrains.Annotations;
 
 namespace BishRuntime;
 
@@ -87,33 +88,28 @@ public static class BishImporter
         return module;
     }
 
-    private static BishObject ImportDll(string path)
-    {
-        var assembly = Assembly.LoadFrom(path);
-        var all = assembly.GetTypes();
-        var types = all.Where(type => type is { IsClass: true, IsAbstract: false, IsPublic: true }
-                                      && typeof(IPlugin).IsAssignableFrom(type)).ToList();
-        if (types.Count == 0) throw BishException.OfImport_Dll(path, all);
-        var module = new BishObject();
-        foreach (var type in types)
-        {
-            var plugin = Activator.CreateInstance(type) as IPlugin;
-            var exports = new PluginExports();
-            plugin?.Initialize(exports);
-            foreach (var (name, value) in exports.Exports)
-                module.DefMember(name, value);
-        }
+    private static BishObject ImportDll(string path) =>
+        IModule.TypesFromAssembly(Assembly.LoadFrom(path)) is [var module]
+            ? IModule.ExportsFromType(module)
+            : throw BishException.OfImport_Dll(path);
+}
 
+public interface IModule
+{
+    [UsedImplicitly]
+    static abstract BishObject Exports { get; }
+
+    protected static BishObject ExportsFrom(params IEnumerable<(string, BishObject)> exports)
+    {
+        var module = new BishObject();
+        foreach (var (key, value) in exports)
+            module.DefMember(key, value);
         return module;
     }
-}
 
-public class PluginExports
-{
-    public readonly Dictionary<string, BishObject> Exports = [];
-}
+    public static Type[] TypesFromAssembly(Assembly assembly) => assembly.GetTypes().Where(type =>
+        type is { IsAbstract: false, IsPublic: true } && typeof(IModule).IsAssignableFrom(type)).ToArray();
 
-public interface IPlugin
-{
-    void Initialize(PluginExports exports);
+    public static BishObject ExportsFromType(Type type) => (BishObject)type.GetProperty("Exports",
+        BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy)!.GetValue(null)!;
 }

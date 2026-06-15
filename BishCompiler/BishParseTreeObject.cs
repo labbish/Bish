@@ -1,4 +1,6 @@
-﻿namespace BishCompiler;
+﻿using BishUtils;
+
+namespace BishCompiler;
 
 public class BishParseTreeObject : BishObject
 {
@@ -24,7 +26,7 @@ public class BishParseTreeObject : BishObject
         DefMember("text", tree is TerminalNodeImpl node ? new BishString(node.Symbol.Text) : BishNull.Instance);
     }
 
-    public static string TypeName(IParseTree tree) => tree.GetType().Name.TrimEnd("Context").ToString();
+    public static string TypeName(IParseTree tree) => tree.GetType().Name.RemoveEnd("Context");
 
     public static BishParseTreeObject From(IParseTree root)
     {

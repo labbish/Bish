@@ -2,9 +2,9 @@
 
 namespace BishLib;
 
-public static class BishRandomModule
+public struct BishRandomModule : IModule
 {
-    public static void Initialize() => BishLib.InitializeModule("random",
+    public static BishObject Exports => IModule.ExportsFrom(
         ("Random", BishRandom.StaticType),
         ("random", BishRandom.Shared)
     );

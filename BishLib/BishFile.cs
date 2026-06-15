@@ -3,9 +3,9 @@ using BishRuntime;
 
 namespace BishLib;
 
-public static class BishFileModule
+public struct BishFileModule : IModule
 {
-    public static void Initialize() => BishLib.InitializeModule("file",
+    public static BishObject Exports => IModule.ExportsFrom(
         ("Reader", BishReader.StaticType),
         ("Writer", BishWriter.StaticType),
         ("FileError", Error)

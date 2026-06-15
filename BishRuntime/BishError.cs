@@ -83,7 +83,7 @@ public class BishError(string message) : BishObject
 
     protected static BishType CreateError(string name)
     {
-        name = name.TrimEnd("Type").ToString();
+        name = name.RemoveEnd("Type");
         var error = new BishType(name, [StaticType]);
         BishBuiltinScope.Instance.Init(name, error);
         return error;

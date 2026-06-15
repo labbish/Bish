@@ -163,9 +163,8 @@ public class BishException(BishError error) : Exception
     public static BishException OfImport_InvalidExt(string file, string ext) =>
         OfImport(file, $"Invalid file extension: {ext}").With("extension", new BishString(ext));
 
-    public static BishException OfImport_Dll(string file, Type[] types) =>
-        OfImport(file, $"found types {string.Join(", ", types)}, none of which implements IPlugin")
-            .With("types", new BishList(types.Select(type => new BishString(type.Name)).ToList<BishObject>()));
+    public static BishException OfImport_Dll(string file) =>
+        OfImport(file, "dll must contain exactly one type implementing IModule");
 
     public static BishException OfZeroDivision() => Create(BishError.ZeroDivisionErrorType, "Divided by zero");
 

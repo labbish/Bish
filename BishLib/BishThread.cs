@@ -2,9 +2,9 @@
 
 namespace BishLib;
 
-public static class BishThreadModule
+public struct BishThreadModule : IModule
 {
-    public static void Initialize() => BishLib.InitializeModule("thread",
+    public static BishObject Exports => IModule.ExportsFrom(
         ("Thread", BishThread.StaticType),
         ("Lock", BishLock.StaticType),
         ("ThreadError", Error)

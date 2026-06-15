@@ -2,16 +2,16 @@
 
 This is a simple example for C# plugin development for Bish.
 
-Your plugin should contain at least one class, which implements `BishRuntime.IPlugin`, and can be constructed without arguments.
-
-Your plugin should not contain `BishRuntime.dll`, and it should not reference other projects, as it would cause cycle referencing.
-
-The `IPlugin` interface requires you to implement `Initialize` method, whose signature is above:
+Your plugin should contain exactly one struct (or class), which implements `BishRuntime.IModule`. It requires you to implement a static getter-only property `Exports`, whose signature is below:
 
 ```csharp
-public void Initialize(PluginExports exports)
+static abstract BishObject Exports { get; }
 ```
 
-Use `exports.Exports.Add("name", value)` to add an exported symbol. After that, you can build the project into a single `.dll` library, and access with `import("plugin.dll").name`.
+This will be the value returned by `import('plugin.dll')`.
 
-See [HZZcode/BishGL](https://github.com/HZZcode/BishGL) for a more complicated example.
+You can also use `IModule.ExportsFrom` to simplify your code. See `Example.cs` for its usage.
+
+After that, you can build the project into a single `.dll` library.  Your plugin should not contain `BishRuntime.dll`, and it should not reference other projects in `Bish`, as it would cause cycle referencing.
+
+See [HZZcode/BishGL](https://github.com/HZZcode/BishGL) for a more complicated example. (Note: this might not be up-to-date.)

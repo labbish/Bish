@@ -3,9 +3,9 @@ using BishRuntime;
 
 namespace BishLib;
 
-public static class BishRegexModule
+public struct BishRegexModule : IModule
 {
-    public static void Initialize() => BishLib.InitializeModule("regex",
+    public static BishObject Exports => IModule.ExportsFrom(
         ("Regex", BishRegex.StaticType),
         ("Match", BishRegexMatch.StaticType),
         ("Matches", BishRegexMatches.StaticType),

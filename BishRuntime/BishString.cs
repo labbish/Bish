@@ -54,9 +54,12 @@ public partial class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
+    public static string CallRepr(string str, BishReprContext ctx) =>
+        ctx.Debug ? "'" + Regex.Escape(str).Replace("'", @"\'") + "'" : str;
+
     public static string CallRepr(BishObject obj, BishReprContext ctx) => obj switch
     {
-        BishString str => ctx.Debug ? "'" + Regex.Escape(str.Value).Replace("'", @"\'") + "'" : str.Value,
+        BishString str => CallRepr(str.Value, ctx),
         BishType type => type.Name,
         _ => BishOperator.Call("repr", new BishArgs([obj, ctx])).As<BishString>("repr").Value
     };

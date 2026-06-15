@@ -15,10 +15,10 @@ public static class BishRegexModule
     public static readonly BishType Error = new("RegexError", [BishError.StaticType]);
 }
 
-// TODO: repr
-
-public class BishRegex(Regex regex) : BishObject
+public class BishRegex(string pattern, string? flags, Regex regex) : BishObject
 {
+    public readonly string Pattern = pattern;
+    public readonly string? Flags = TrimFlags(flags);
     public readonly Regex Regex = regex;
 
     public override BishType DefaultType => StaticType;
@@ -35,9 +35,12 @@ public class BishRegex(Regex regex) : BishObject
             _ => 0
         }) ?? RegexOptions.None;
 
+    private static string? TrimFlags(string? flags) =>
+        flags is null ? null : new string(flags.Where(c => !char.IsWhiteSpace(c)).ToArray());
+
     [Builtin("hook")]
-    public static BishRegex New(BishString pattern, [DefaultNull] BishString? flags) =>
-        new(BishException.Wrapped(BishRegexModule.Error, () => new Regex(pattern.Value, ParseFlags(flags?.Value))));
+    public static BishRegex New(BishString pattern, [DefaultNull] BishString? flags) => new(pattern.Value, flags?.Value,
+        BishException.Wrapped(BishRegexModule.Error, () => new Regex(pattern.Value, ParseFlags(flags?.Value))));
 
     [Builtin]
     public static BishRegexMatch? Match(BishRegex self, BishString str) =>
@@ -57,6 +60,15 @@ public class BishRegex(Regex regex) : BishObject
     [Builtin]
     public static BishList Split(BishRegex self, BishString str) =>
         new(self.Regex.Split(str.Value).Select(part => new BishString(part)).ToList<BishObject>());
+
+    [Builtin("hook")]
+    public static BishString Get_pattern(BishRegex self) => new(self.Pattern);
+
+    [Builtin("hook")]
+    public static BishString? Get_flags(BishRegex self) => self.Flags is { } flags ? new BishString(flags) : null;
+
+    [Builtin]
+    public static BishString Repr(BishRegex self, BishReprContext _) => new('/' + self.Pattern + '/' + self.Flags);
 }
 
 public class BishRegexMatch : BishObject
@@ -95,6 +107,10 @@ public class BishRegexMatch : BishObject
     [Builtin("hook")]
     public static BishRegexMatches? Get_captures(BishRegexMatch self) =>
         self.Capture is Group group ? new BishRegexMatches(group.Captures) : null;
+
+    [Builtin]
+    public static BishString Repr(BishRegexMatch self, BishReprContext ctx) =>
+        new($"Match({BishString.CallRepr(self.Capture.Value, ctx)})");
 }
 
 public class BishRegexMatches(IReadOnlyList<Capture> collection) : BishObject

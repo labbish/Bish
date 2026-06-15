@@ -5,9 +5,13 @@ public class RegexTest(TestInfoFixture fixture) : LibTest(fixture, "regex", ["Re
     [Fact]
     public void TestFlag()
     {
-        ExpectFalse("Regex('^abc$', 'i').match('AbC') is null");
-        ExpectFalse(@"Regex('^x$', 'm').match('a\nx\nb') is null");
-        ExpectFalse(@"Regex('^a.b$', 's').match('a\nb') is null");
+        ExpectFalse("Regex('^abc$','i').match('AbC') is null");
+        ExpectFalse(@"Regex('^x$','m').match('a\nx\nb') is null");
+        ExpectFalse(@"Regex('^a.b$','s').match('a\nb') is null");
+        
+        ExpectResult("Regex('abc').pattern", "'abc'");
+        ExpectResult("Regex('abc').flags", "null");
+        ExpectResult("Regex('abc','misc').flags", "'misc'");
     }
 
     [Fact]

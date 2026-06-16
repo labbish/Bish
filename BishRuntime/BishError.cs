@@ -78,6 +78,9 @@ public class BishError(string message) : BishObject
         return $"[{Type.Name}] {Message}" + trace + cause;
     }
 
+    [Builtin]
+    public static BishString Repr(BishError self, BishReprContext _) => new(self.ToString());
+
     protected static BishType CreateError(string name)
     {
         name = name.RemoveEnd("Type");

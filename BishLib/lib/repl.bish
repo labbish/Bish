@@ -1,0 +1,54 @@
+Scope := scope;
+
+func handler(f) (..args) {
+    result := try f(..args);
+    if (result is err e)
+        print("Uncaught error: {}\n".format(e));
+};
+
+func start(scope: null) {
+    scope ??= Scope();
+
+    func pos(bytecode) {
+        pos := bytecode.vars.at('pos');
+        if (pos is null) return '??';
+        [line, column, stopLine, stopColumn] := pos;
+        switch [line == stopLine, column == stopColumn] {
+            [true, true] => '{0}:{1}',
+            [true, false] => '{0}:{1}~{3}',
+            _ => '{0}:{1}~{2}:{3}'
+        }.format(..pos)
+    };
+
+    extend scope {
+        func help() {
+            print('help()        Print this help message.\n');
+            print('comp(code)    Compile and print bytecodes.\n');
+            print('file(name)    Load a file into the REPL session.\n');
+            print('exit()        Exit REPL.\n');
+        };
+
+        @handler
+        func comp(code)
+            for (b : meta.compile(code).bytecodes)
+                print('{}\t{}\n'.format(pos(b), b));
+
+        @handler
+        func file(name)
+            meta.compileFileOnScope(name, scope).execute();
+    };
+
+    @handler
+    func run(code) {
+        result := meta.compileOnScope(code, scope).eval();
+        if (result is not null) print('{:?}\n'.format(result));
+    };
+
+    print('Welcome to Bish REPL!\n');
+    print('Type "help()" for more information.\n');
+    while (true) {
+        print('>>> ');
+        code := input().trim();
+        if (code != '') run(code);
+    };
+};

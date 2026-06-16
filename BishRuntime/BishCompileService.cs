@@ -115,13 +115,6 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 {
     public override string ToString() => $"line {Line}, column {Column} to line {StopLine}, column {StopColumn}";
 
-    public string ShortString() => (Line == StopLine, Column == StopColumn) switch
-    {
-        (true, true) => $"{Line}:{Column}",
-        (true, _) => $"{Line}:{Column}~{StopColumn}",
-        _ => $"{Line}:{Column}~{StopLine}:{StopColumn}"
-    };
-
     public static SourcePosition? Combine(params IEnumerable<SourcePosition?> positions)
     {
         var pos = positions.OfType<SourcePosition>().ToArray();

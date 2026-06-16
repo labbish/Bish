@@ -46,6 +46,9 @@ public class BishScope : BishObject
 
     public static BishScope Globals => new(BishBuiltinScope.Instance);
 
+    [Builtin("hook")]
+    public static BishScope New() => Globals;
+
     [Builtin]
     public static BishNull Print([Rest] BishList args)
     {
@@ -99,9 +102,9 @@ public class BishBuiltinScope : BishScope
         Init("IteratorStop", BishIteratorStop.Instance);
         Init("Error$Result", BishErrorResult.StaticType);
         Init("meta", BishMeta.Builtin);
-        Init("scope", StaticType);
-        Init("frame", BishFrame.StaticType);
-        Init("bytecode", BishBytecodeObject.StaticType);
+        Init("scope", StaticType); // TODO: rename to Scope
+        Init("frame", BishFrame.StaticType); // TODO: rename to Frame
+        Init("bytecode", BishBytecodeObject.StaticType);  // TODO: rename to Bytecode
         Init("Runner", BishTaskRunner.StaticType);
         Init("Task", BishTask.StaticType);
     }

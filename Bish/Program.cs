@@ -11,10 +11,10 @@ public static class Program
         switch (options)
         {
             case { Server: true }:
-                await Server.RunAsync();
+                await LSP.Server.RunAsync();
                 break;
             case { Source: null }:
-                new Repl().Loop();
+                StartRepl();
                 break;
             default:
                 var frame = BishCompileService.Compile(options.Source);
@@ -27,9 +27,26 @@ public static class Program
                 if (options.SkipExecution) return;
                 frame.Scope.DefVar("args", new BishList(options.Arguments
                     .Select(arg => new BishString(arg)).ToList<BishObject>()));
-                Repl.Handled(() => frame.Execute());
-                if (options.Interactive) new Repl(frame.Scope).Loop();
+                try
+                {
+                    frame.Execute();
+                }
+                catch (BishException e)
+                {
+                    await Console.Error.WriteLineAsync($"Uncaught error: {e.Error}");
+                    break;
+                }
+                catch (Exception e)
+                {
+                    await Console.Error.WriteLineAsync(e.ToString());
+                    break;
+                }
+
+                if (options.Interactive) StartRepl(frame.Scope);
                 break;
         }
     }
+
+    public static void StartRepl(BishScope? scope = null) => BishImporter.Import(null, "repl").GetMember("start")
+        .Call(new BishArgs([scope ?? BishNull.Instance as BishObject]));
 }

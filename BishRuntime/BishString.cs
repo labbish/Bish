@@ -3,7 +3,7 @@ using BishUtils;
 
 namespace BishRuntime;
 
-public partial class BishString(string value) : BishObject
+public class BishString(string value) : BishObject
 {
     public readonly string Value = value;
     public override BishType DefaultType => StaticType;
@@ -100,6 +100,18 @@ public partial class BishString(string value) : BishObject
     [Builtin]
     public static BishString Replace(BishString self, BishString from, BishString to) =>
         new(self.Value.Replace(from.Value, to.Value));
+
+    [Builtin]
+    public static BishString Trim(BishString self, [DefaultNull] BishString? chars) =>
+        new(chars is null ? self.Value.Trim() : self.Value.Trim(chars.Value).ToString());
+
+    [Builtin]
+    public static BishString TrimStart(BishString self, [DefaultNull] BishString? chars) =>
+        new(chars is null ? self.Value.TrimStart() : self.Value.TrimStart(chars.Value).ToString());
+
+    [Builtin]
+    public static BishString TrimEnd(BishString self, [DefaultNull] BishString? chars) =>
+        new(chars is null ? self.Value.TrimEnd() : self.Value.TrimEnd(chars.Value).ToString());
 
     [Builtin("hook")]
     public static BishType Get_ReprContext(BishObject _) => BishReprContext.StaticType;

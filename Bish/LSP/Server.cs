@@ -1,6 +1,6 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Server;
 
-namespace Bish;
+namespace Bish.LSP;
 
 public static class Server
 {

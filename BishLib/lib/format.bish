@@ -60,7 +60,7 @@ extend string {
             index := toInt(groups['index']);
             if (index is not null) return args[index];
             expr := groups['expr']?.value;
-            if (expr is not null) return frame(meta.compile(expr).bytecodes, caller.scope, caller).eval();
+            if (expr is not null) return meta.compileOnFrame(expr, caller).eval();
             args[{ k := current; current += 1; k }]
         };
         doubleRegex.split(self).iter().map((part) switch part {

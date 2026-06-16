@@ -37,6 +37,7 @@ public static class BishCompileService
             if (scope is not null) value.Scope = scope;
             return value.AddMeta(source.Root);
         }
+
         var result = Compiler(Parser(source.Code), options ?? new CompileOptions());
         errors = result.Errors;
         var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
@@ -82,7 +83,7 @@ public interface ICodeSource
 public record FileSource(string Name) : ICodeSource
 {
     public string Filename => Path.GetFullPath(Name);
-    
+
     public string Code => File.Exists(Filename)
         ? File.ReadAllText(Filename)
         : throw BishException.OfCompile_NoFile(Filename);
@@ -140,6 +141,9 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
         sb.Append(lines[StopLine - 1][..(StopColumn + 1)]);
         return sb.ToString();
     }
+
+    public BishList ToObject() =>
+        new(new[] { Line, Column, StopLine, StopColumn }.Select(BishInt.Of).ToList<BishObject>());
 }
 
 public record CompilationError(SourcePosition Position, string Message)

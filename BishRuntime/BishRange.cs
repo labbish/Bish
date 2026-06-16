@@ -11,13 +11,6 @@ public class BishRange(int? start, int? end, int step) : BishObject
 
     public new static readonly BishType StaticType = new("range");
 
-    private static int? ToInt(BishObject? obj) => obj switch
-    {
-        BishInt i => i.Value,
-        BishNull or null => null,
-        _ => throw BishException.OfType_Argument(obj, BishInt.StaticType)
-    };
-
     private static BishObject ToObject(int? value) => value is null ? BishNull.Instance : BishInt.Of(value.Value);
 
     [Builtin("op")]
@@ -27,8 +20,8 @@ public class BishRange(int? start, int? end, int step) : BishObject
     [Builtin("hook")]
     public static BishRange New(BishObject a, [DefaultNull] BishObject? b, [DefaultNull] BishObject? step)
     {
-        var (start, end) = b is null ? (0, ToInt(a)) : (ToInt(a), ToInt(b));
-        var s = ToInt(step) ?? 1;
+        var (start, end) = b is null ? (0, a.ToInt()) : (a.ToInt(), b.ToInt());
+        var s = step.ToInt() ?? 1;
         return s == 0 ? throw BishException.OfArgument_RangeZeroStep() : new BishRange(start, end, s);
     }
 

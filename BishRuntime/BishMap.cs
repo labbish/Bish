@@ -66,11 +66,13 @@ public class BishMap(IList<Entry> entries) : BishObject
     public static BishBool Bool(BishMap self) => BishBool.Of(self.Entries.Count != 0);
 
     [Builtin("op")]
-    public static BishObject GetIndex(BishMap self, BishObject key)
-    {
-        var found = self.Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key));
-        return found is not null ? found.Value : throw BishException.OfArgument_KeyNotFound(key);
-    }
+    public static BishObject GetIndex(BishMap self, BishObject key) =>
+        self.At(key) ?? throw BishException.OfArgument_KeyNotFound(key);
+
+    public BishObject? At(BishObject key) => Entries.FirstOrDefault(e => BishOperator.Eq(e.Key, key))?.Value;
+
+    [Builtin]
+    public static BishObject? At(BishMap self, BishObject key) => self.At(key);
 
     [Builtin("op")]
     public static BishObject SetIndex(BishMap self, BishObject key, BishObject value) =>

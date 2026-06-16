@@ -100,11 +100,8 @@ public class BishBytecodeObject : BishObject
     public void AddStrings(string name, IList<string> value) => DefMember(name,
         new BishList(value.Select(item => new BishString(item)).ToList<BishObject>()));
 
-    public void AddPosition(string name, SourcePosition? position) => DefMember(name,
-        position is null
-            ? BishNull.Instance
-            : new BishList(new[] { position.Line, position.Column, position.StopLine, position.StopColumn }
-                .Select(BishInt.Of).ToList<BishObject>()));
+    public void AddPosition(string name, SourcePosition? position) =>
+        DefMember(name, position is null ? BishNull.Instance : position.ToObject());
 
     public T1 Get<T, T1>(string name, Func<T, T1> process, T1? defaultValue = default) where T : BishObject
     {

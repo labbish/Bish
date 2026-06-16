@@ -44,6 +44,7 @@ expr
     | TRY expr                                                  # TryExpr
     // obj is Setable
     | withBody main=expr                                        # WithExpr
+    // TODO: swap `expr` and `SWC`
     | expr SWC LBRACE (caseExpr (COM caseExpr)* COM?)? RBRACE   # SwitchExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> BRK ID?                                     # BreakExpr

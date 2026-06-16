@@ -54,8 +54,12 @@ public partial class BishString(string value) : BishObject
     [Builtin("hook")]
     public static BishInt Get_length(BishString self) => BishInt.Of(self.Value.Length);
 
-    public static string CallRepr(string str, BishReprContext ctx) =>
-        ctx.Debug ? "'" + Regex.Escape(str).Replace("'", @"\'") + "'" : str;
+    public static string CallRepr(string str, BishReprContext ctx)
+    {
+        var precision = ctx.Options.At(new BishString("precision")).ToInt();
+        var s = precision is { } p ? str[..Math.Min(str.Length, p)] : str;
+        return ctx.Debug ? "'" + Regex.Escape(s).Replace("'", @"\'") + "'" : s;
+    }
 
     public static string CallRepr(BishObject obj, BishReprContext ctx) => obj switch
     {
@@ -76,20 +80,6 @@ public partial class BishString(string value) : BishObject
 
     [Builtin]
     public static BishString Debug(BishObject obj) => new(CallDebug(obj));
-
-    [Builtin]
-    public static BishString Format(BishString self, [Rest] BishList args)
-    {
-        var current = 0;
-        return new BishString(Formatter().Replace(self.Value, match =>
-        {
-            var index = match.Groups["index"] is { Success: true, Value: var str } ? int.Parse(str) : current++;
-            var debug = match.Groups["debug"].Success;
-            return args.List.ElementAtOrDefault(index) is { } value
-                ? CallRepr(value, new BishReprContext(debug))
-                : match.Value;
-        }));
-    }
 
     [Builtin]
     public static BishList Split(BishString self, BishString sep) =>
@@ -113,9 +103,6 @@ public partial class BishString(string value) : BishObject
 
     [Builtin("hook")]
     public static BishType Get_ReprContext(BishObject _) => BishReprContext.StaticType;
-
-    [GeneratedRegex(@"\{(?<index>\d+)?(\:(?<debug>\?)?)?\}")]
-    private static partial Regex Formatter();
 }
 
 public class BishStringIterator(string value) : BishObject
@@ -135,6 +122,7 @@ public class BishReprContext(bool debug, IList<BishObject>? visited = null, stri
 {
     public readonly bool Debug = debug;
     public readonly IList<BishObject> Visited = (visited ?? []).ToConcurrentList();
+    public BishMap Options { get; init; } = new([]);
     public readonly string Circular = circular ?? "<...>";
 
     public override BishType DefaultType => StaticType;
@@ -151,9 +139,13 @@ public class BishReprContext(bool debug, IList<BishObject>? visited = null, stri
     [Builtin("hook")]
     public static BishString Get_circular(BishReprContext self) => new(self.Circular);
 
+    [Builtin("hook")]
+    public static BishMap Get_options(BishReprContext self) => self.Options;
+
     public bool Contains(BishObject obj) => Visited.Contains(obj);
 
-    public BishReprContext Add(BishObject obj) => new(Debug, Visited.Append(obj).ToList(), Circular);
+    public BishReprContext Add(BishObject obj) => new(Debug, Visited.Append(obj).ToList(), Circular)
+        { Options = new BishMap(Options.Entries) };
 
     [Builtin]
     public static BishBool Contains(BishReprContext self, BishObject obj) => BishBool.Of(self.Contains(obj));

@@ -37,10 +37,7 @@ public class BishStackLayer(BishFunc func, BishArgs args) : BishObject
         self.Source is { } source ? new BishString(source.Filename) : null;
 
     [Builtin("hook")]
-    public static BishList? Get_sourcePos(BishStackLayer self) => self.Position is { } pos
-        ? new BishList(new[] { pos.Line, pos.Column, pos.StopLine, pos.StopColumn }.Select(BishInt.Of)
-            .ToList<BishObject>())
-        : null;
+    public static BishList? Get_sourcePos(BishStackLayer self) => self.Position is { } pos ? pos.ToObject() : null;
 }
 
 public class BishError(string message) : BishObject

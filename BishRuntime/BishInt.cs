@@ -50,7 +50,13 @@ public class BishInt : BishNum
     public static BishInt Sign(BishInt a) => Of(Math.Sign(a.Value));
 
     [Builtin]
-    public static BishString Repr(BishInt self, BishReprContext _) => new(self.Value.ToString());
+    public static BishString Repr(BishInt self, BishReprContext ctx)
+    {
+        var sign = BishBool.CallToBool(ctx.Options.At(new BishString("sign"))) && self.Value > 0 ? "+" : "";
+        var format = (ctx.Options.At(new BishString("format")) as BishString)?.Value.FirstOrDefault();
+        var result = Convert.ToString(self.Value, format switch { 'b' => 2, 'o' => 8, 'x' or 'X' => 16, _ => 10 });
+        return new BishString(sign + (format == 'X' ? result.ToUpperInvariant() : result));
+    }
 
     [Builtin("op")]
     public static BishBool Eq(BishInt a, BishInt b) => BishBool.Of(a.Value == b.Value);
@@ -60,4 +66,17 @@ public class BishInt : BishNum
 
     [Builtin]
     public static BishBool Bool(BishInt a) => BishBool.Of(a.Value != 0);
+}
+
+public static class BishIntHelper
+{
+    extension(BishObject? obj)
+    {
+        internal int? ToInt() => obj switch
+        {
+            BishInt i => i.Value,
+            BishNull or null => null,
+            _ => throw BishException.OfType_Argument(obj, BishInt.StaticType)
+        };
+    }
 }

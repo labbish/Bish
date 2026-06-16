@@ -15,5 +15,12 @@ public class FormatTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("'{:.1e},{:.1E}'.format(1.2e10,1.2e10)", "'1.2e+010,1.2E+010'");
         ExpectResult("'{:#b},{:#o},{:#x}'.format(0b11,0o11,0x11)", "'0b11,0o11,0x11'");
         ExpectResult("'p{1:-^+#12.1X}q'.format(0, 114)", "'p---0x+72----q'");
+        ExpectResult("'{}{{}}{}'.format(1,2)", "'1{}2'");
+    }
+
+    [Fact]
+    public void TestFormatEval()
+    {
+        ExpectResult("x:=3;'{},{1},{#1},{x},{x+1}'.formatEval(0,2)", "'0,1,2,3,4'");
     }
 }

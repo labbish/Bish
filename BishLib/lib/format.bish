@@ -1,45 +1,72 @@
 {.Regex} := import('regex');
 
-formatter := Regex(r'{(?<index>\d+)?(:((?<fill>.)?(?<align>[<>^]))?(?<sign>\+)?(?<alternate>#)?(?<zero>0)?(?<width>\d+)?(?:\.(?<precision>\d+))?(?<format>[boxXeE\?]+)?)?}', 'c');
+doubleRegex := Regex(r'(\{\{|\}\})');
+formatPart := r'(:((?<fill>.)?(?<align>[<>^]))?(?<sign>\+)?(?<alternate>#)?(?<zero>0)?(?<width>\d+)?(?:\.(?<precision>\d+))?(?<format>[boxXeE\?]+)?)';
+formatRegex := Regex(r'{(?<index>\d+)?' + formatPart + r'?}', 'c');
+formatEvalRegex := Regex(r'{(#(?<index>\d+)|(?<expr>[^{}:#][^{}:]*))?' + formatPart + r'?}', 'c');
+
+func toInt(group) if (group is null) null else int.parse(group.value);
+func toPos(i) if (i < 0) 0 else i;
+
+func replacer(getArg) (match) {
+    groups := match.groups;
+    arg := getArg(groups);
+
+    fill := groups['fill']?.value ?? ' ';
+    align := groups['align']?.value;
+    alternate := groups['alternate'] is not null;
+    if (groups['zero'] is not null) {
+        fill = '0';
+        align = '>';
+    };
+    width := toInt(groups['width']);
+
+    format := groups['format']?.value;
+
+    ctx := string.ReprContext(format == '?');
+    ctx.options['sign'] := groups['sign'] is not null;
+    ctx.options['precision'] := toInt(groups['precision']);
+    ctx.options['format'] := if (format is '#') null else format;
+
+    repr := string.repr(arg, ctx);
+    if (alternate && 'xXbo'.iter().contains(format)) repr = '0' + format.lower() + repr;
+    repr = (align switch {
+        null => repr,
+        '<' => repr + fill * toPos(width - repr.length),
+        '>' => fill * toPos(width - repr.length) + repr,
+        '^' => {
+            half := toPos((width - repr.length) / 2);
+            fill * half.floor() + repr + fill * half.ceil()
+        }
+    });
+    repr
+};
 
 extend string {
     func format(self, ..args) {
-        func toInt(group) if (group is null) null else int.parse(group.value);
-        func toPos(i) if (i < 0) 0 else i;
-
         current := 0;
-        formatter.replace(self, (match) {
-            groups := match.groups;
-            index := toInt(groups['index']) ?? { k := current; current += 1; k };
+        func getArg(groups) args[toInt(groups['index']) ?? { k := current; current += 1; k }];
+        doubleRegex.split(self).iter().map((part) part switch {
+            '{{' => '{',
+            '}}' => '}',
+            _ => formatRegex.replace(part, replacer(getArg))
+        }).join('')
+    };
 
-            fill := groups['fill']?.value ?? ' ';
-            align := groups['align']?.value;
-            alternate := groups['alternate'] is not null;
-            if (groups['zero'] is not null) {
-                fill = '0';
-                align = '>';
-            };
-            width := toInt(groups['width']);
-
-            format := groups['format']?.value;
-
-            ctx := string.ReprContext(format == '?');
-            ctx.options['sign'] := groups['sign'] is not null;
-            ctx.options['precision'] := toInt(groups['precision']);
-            ctx.options['format'] := if (format is '#') null else format;
-
-            repr := string.repr(args[index], ctx);
-            if (alternate && 'xXbo'.iter().contains(format)) repr = '0' + format.lower() + repr;
-            repr = (align switch {
-                null => repr,
-                '<' => repr + fill * toPos(width - repr.length),
-                '>' => fill * toPos(width - repr.length) + repr,
-                '^' => {
-                    half := toPos((width - repr.length) / 2);
-                    fill * half.floor() + repr + fill * half.ceil()
-                }
-            });
-            repr
-        })
+    func formatEval(self, ..args) {
+        current := 0;
+        caller := this().caller;
+        func getArg(groups) {
+            index := toInt(groups['index']);
+            if (index is not null) return args[index];
+            expr := groups['expr']?.value;
+            if (expr is not null) return frame(meta.compile(expr).bytecodes, caller.scope, caller).eval();
+            args[{ k := current; current += 1; k }]
+        };
+        doubleRegex.split(self).iter().map((part) part switch {
+            '{{' => '{',
+            '}}' => '}',
+            _ => formatEvalRegex.replace(part, replacer(getArg))
+        }).join('')
     };
 };

@@ -20,6 +20,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\BishCompiler\BishCompiler.csproj"/>
+        <ProjectReference Include="..\BishExamplePlugin\BishExamplePlugin.csproj" />
         <ProjectReference Include="..\BishRuntime\BishRuntime.csproj"/>
         <ProjectReference Include="..\Bish\Bish.csproj"/>
     </ItemGroup>

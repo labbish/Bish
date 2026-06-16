@@ -35,6 +35,14 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
 
     public ShellTest(TestInfoFixture fixture) : base(fixture)
     {
+        try
+        {
+            Directory.Delete("./a", true);
+        }
+        catch (DirectoryNotFoundException)
+        {
+        }
+
         CreateDirectory("./a/b/c");
         CreateFile("./a/rubbish.json");
         CreateFile("./a/b/c/rubbish.json");
@@ -180,10 +188,17 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-f", "./a/r.bishc", "--", "1", "2", "3", "[1, 2, 3]");
     }
 
+    [Fact]
+    public async Task TestPlugin()
+    {
+        File.Move("BishExamplePlugin.dll", "./a/p.dll");
+        CreateFile("./a/p.bish", "print(import('p.dll').This)");
+        await ExpectOutputAsync("-f", "./a/p.bish", BishExamplePlugin.Example.This);
+    }
+
     public void Dispose()
     {
         Console.SetOut(OrigWriter);
-        Directory.Delete("./a", true);
         Writer.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -191,7 +206,6 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Console.SetOut(OrigWriter);
-        Directory.Delete("./a", true);
         await Writer.DisposeAsync();
         GC.SuppressFinalize(this);
     }

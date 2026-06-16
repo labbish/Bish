@@ -43,17 +43,17 @@ public class ReflectTest : Test
         // Get "this" -> Call 0 -> Move "f"
         Execute("f:=this();");
         ExpectResult("ip:=f.ip", "3");
-        Execute("x:=bytecode('Get',{.name:'this'});");
-        Execute("y:=bytecode('Call',{.argc:0});");
-        Execute("z:=bytecode('Move',{.name:'f'});");
+        Execute("x:=Bytecode('Get',{.name:'this'});");
+        Execute("y:=Bytecode('Call',{.argc:0});");
+        Execute("z:=Bytecode('Move',{.name:'f'});");
         ExpectResult("f.bytecodes", "[x,y,z]");
         ExpectResult("f.scope.ip", "3");
         ExpectResult("f.caller", "null");
-        ExpectError("bytecode('???',{});", BishError.BytecodeParserErrorType);
+        ExpectError("Bytecode('???',{});", BishError.BytecodeParserErrorType);
 
-        Execute("a:=bytecode('Int',{.value:0});");
-        Execute("b:=bytecode('Def',{.name:'k'});");
-        Execute("f:=frame([a,b]);");
+        Execute("a:=Bytecode('Int',{.value:0});");
+        Execute("b:=Bytecode('Def',{.name:'k'});");
+        Execute("f:=Frame([a,b]);");
         ExpectResult("f.execute()", "null");
         ExpectResult("f.stack", "[0]");
         ExpectResult("f.scope.k", "0");

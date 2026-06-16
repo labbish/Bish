@@ -23,7 +23,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public BishBytecode? Current => Bytecodes.ElementAtOrDefault(Ip);
 
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("frame");
+    public new static readonly BishType StaticType = new("Frame");
 
     public static int RecursionLimit { get; set; } = 100;
 

@@ -10,7 +10,7 @@ public class BishScope : BishObject
     protected override IList<BishObject> LookupChain => GetLookupChain().ToConcurrentList<BishObject>();
 
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("scope");
+    public new static readonly BishType StaticType = new("Scope");
 
     internal BishScope(BishScope? outer = null) => Outer = outer;
 
@@ -102,9 +102,9 @@ public class BishBuiltinScope : BishScope
         Init("IteratorStop", BishIteratorStop.Instance);
         Init("Error$Result", BishErrorResult.StaticType);
         Init("meta", BishMeta.Builtin);
-        Init("scope", StaticType); // TODO: rename to Scope
-        Init("frame", BishFrame.StaticType); // TODO: rename to Frame
-        Init("bytecode", BishBytecodeObject.StaticType);  // TODO: rename to Bytecode
+        Init("Scope", StaticType);
+        Init("Frame", BishFrame.StaticType);
+        Init("Bytecode", BishBytecodeObject.StaticType);
         Init("Runner", BishTaskRunner.StaticType);
         Init("Task", BishTask.StaticType);
     }

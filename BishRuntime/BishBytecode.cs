@@ -58,7 +58,7 @@ public abstract record BishBytecode
 public class BishBytecodeObject : BishObject
 {
     public override BishType DefaultType => StaticType;
-    public new static readonly BishType StaticType = new("bytecode");
+    public new static readonly BishType StaticType = new("Bytecode");
     public BishBytecode? Bytecode;
 
     [Builtin("hook")]

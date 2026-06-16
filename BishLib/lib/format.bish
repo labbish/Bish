@@ -30,7 +30,7 @@ func replacer(getArg) (match) {
 
     repr := if (format == 'j') import('json').JSON.stringify(arg, precision) else string.repr(arg, ctx);
     if (alternate && 'xXbo'.iter().contains(format)) repr = '0' + format.lower() + repr;
-    repr = (align switch {
+    repr = (switch align {
         null => repr,
         '<' => repr + fill * toPos(width - repr.length),
         '>' => fill * toPos(width - repr.length) + repr,
@@ -46,7 +46,7 @@ extend string {
     func format(self, ..args) {
         current := 0;
         func getArg(groups) args[toInt(groups['index']) ?? { k := current; current += 1; k }];
-        doubleRegex.split(self).iter().map((part) part switch {
+        doubleRegex.split(self).iter().map((part) switch part {
             '{{' => '{',
             '}}' => '}',
             _ => formatRegex.replace(part, replacer(getArg))
@@ -63,7 +63,7 @@ extend string {
             if (expr is not null) return frame(meta.compile(expr).bytecodes, caller.scope, caller).eval();
             args[{ k := current; current += 1; k }]
         };
-        doubleRegex.split(self).iter().map((part) part switch {
+        doubleRegex.split(self).iter().map((part) switch part {
             '{{' => '{',
             '}}' => '}',
             _ => formatEvalRegex.replace(part, replacer(getArg))

@@ -23,7 +23,7 @@ class JsonStringifyError : JsonError;
         func inner(obj) {
             json := try obj.toJSON();
             if (json is not err) return inner(json);
-            return obj switch {
+            return switch obj {
                 null or of bool or of num => string.show(obj),
                 of string => '"' + unescapes.entries.iter().reduce((curr, [k, v]) curr.replace(k, v), obj) + '"',
                 of list => '[' + feed + tab(obj.iter().map(inner).join(',' + feed)) + feed + ']',
@@ -48,7 +48,7 @@ class JsonParser {
     };
     func parseValue(self) {
         self.skipSpaces();
-        return self.char switch {
+        return switch self.char {
             '"' => self.parseString(),
             of _ c when isNumStart(c) => self.parseNumber(),
             '{' => self.parseObject(),

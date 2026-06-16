@@ -53,9 +53,9 @@ public class PatternTest(TestInfoFixture fixture) : Test(fixture)
             ("{.a:of int a}", "a^2"),
             ("of _ x", "x&&-1")
         ];
-        var expr = $"({value}) switch" + "{" +
+        var expr = $"switch {value}" + "{" +
                    string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{branch.Expr}")) + "}";
-        var stat = $"s:=null;({value}) switch" + "{" +
+        var stat = $"s:=null;switch {value}" + "{" +
                    string.Join(",", cases.Select(branch => $"{branch.Pattern}=>{{s={branch.Expr};}}")) + "};s";
         ExpectResult(expr, expect);
         ExpectResult(stat, expect);

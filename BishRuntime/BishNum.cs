@@ -92,7 +92,7 @@ public class BishNum(double value) : BishObject
         var sign = BishBool.CallToBool(ctx.Options.At(new BishString("sign"))) && self.Value > 0 ? "+" : "";
         var format = (ctx.Options.At(new BishString("format")) as BishString)?.Value;
         var precision = ctx.Options.At(new BishString("precision")).ToInt();
-        var fmt = format switch { "e" => 'e', "E" => 'E', _ => 'F' } + precision?.ToString();
+        var fmt = format switch { "e" => 'e', "E" => 'E', _ => precision is null ? 'G' : 'F' } + precision?.ToString();
         var result = self.Value.ToString(fmt, CultureInfo.InvariantCulture);
         return new BishString(sign + result);
     }

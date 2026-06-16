@@ -119,11 +119,13 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
     {
         Scope.DefVar("result", new BishString((result ?? expr).Replace("\r\n", "\n")));
         ExpectResult($"JSON.stringify({expr}{(tabs is null ? "" : $",{tabs}")})", "result");
+        ExpectResult($"'{{:{(tabs is null ? "" : $".{tabs}")}j}}'.format({expr})", "result");
     }
 
     private void JsonStringifyError(string expr)
     {
         ExpectErrorResult($"try JSON.stringify({expr})");
+        ExpectErrorResult($"try '{{:j}}'.format({expr})");
     }
 
     [Fact]

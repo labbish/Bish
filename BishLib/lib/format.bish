@@ -1,7 +1,7 @@
 {.Regex} := import('regex');
 
 doubleRegex := Regex(r'(\{\{|\}\})');
-formatPart := r'(:((?<fill>.)?(?<align>[<>^]))?(?<sign>\+)?(?<alternate>#)?(?<zero>0)?(?<width>\d+)?(?:\.(?<precision>\d+))?(?<format>[boxXeE\?]+)?)';
+formatPart := r'(:((?<fill>.)?(?<align>[<>^]))?(?<sign>\+)?(?<alternate>#)?(?<zero>0)?(?<width>\d+)?(?:\.(?<precision>\d+))?(?<format>[boxXeEj\?]+)?)';
 formatRegex := Regex(r'{(?<index>\d+)?' + formatPart + r'?}', 'c');
 formatEvalRegex := Regex(r'{(#(?<index>\d+)|(?<expr>[^{}:#][^{}:]*))?' + formatPart + r'?}', 'c');
 
@@ -25,10 +25,10 @@ func replacer(getArg) (match) {
 
     ctx := string.ReprContext(format == '?');
     ctx.options['sign'] := groups['sign'] is not null;
-    ctx.options['precision'] := toInt(groups['precision']);
-    ctx.options['format'] := if (format is '#') null else format;
+    ctx.options['precision'] := precision := toInt(groups['precision']);
+    ctx.options['format'] := if (format == '#') null else format;
 
-    repr := string.repr(arg, ctx);
+    repr := if (format == 'j') import('json').JSON.stringify(arg, precision) else string.repr(arg, ctx);
     if (alternate && 'xXbo'.iter().contains(format)) repr = '0' + format.lower() + repr;
     repr = (align switch {
         null => repr,

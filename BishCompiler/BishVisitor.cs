@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Antlr4.Runtime.Misc;
 using String = BishRuntime.String;
 
 namespace BishCompiler;
@@ -228,9 +227,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         if (!result.HasFree<Await>()) return result;
         var expr = CompileResult.Expr(context)
             .Add(new FuncStart(name, [])).Add(result.IntoReturn()).Add(new FuncEnd(name))
-            .Add(new MakeFunc(name, IsAsync: true)).Add(new Call(0))
-            .Add(new GetBuiltin("Runner")).Add(new GetMember("blocked"))
-            .Add(new Swap(), new Call(1));
+            .Add(new MakeFunc(name, IsAsync: true), new Call(0), new GetMember("block"));
         return result.Effect == StackEffect.Stat ? expr.IntoStat() : expr;
     }
 

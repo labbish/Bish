@@ -16,7 +16,10 @@ public abstract class BishTask : BishObject
     public new static readonly BishType StaticType = new("Task");
 
     [Builtin]
-    public static void Cancel(BishTask self) => self.SetMember("cancelled", BishBool.True);
+    public static void Cancel(BishObject task) => task.SetMember("cancelled", BishBool.True);
+
+    [Builtin("hook")]
+    public static BishObject Get_block(BishObject task) => BishTaskRunner.Blocked(task);
 
     [Builtin]
     public static BishCompletedTask Completed(BishObject value) => new(value);

@@ -33,12 +33,12 @@ func start(scope: null) {
 
         @handler
         func file(name)
-            meta.compileFileOnScope(name, scope).execute();
+            meta.compileFile(name, scope).execute();
     };
 
     @handler
     func run(code) {
-        result := meta.compileOnScope(code, scope).eval();
+        result := meta.compile(code, scope).eval();
         if (result is not null) print('{:?}\n'.format(result));
     };
 

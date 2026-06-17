@@ -56,11 +56,12 @@ extend string {
     func formatEval(self, ..args) {
         current := 0;
         caller := this().caller;
+        print(caller.scope.vars, '\n');
         func getArg(groups) {
             index := toInt(groups['index']);
             if (index is not null) return args[index];
             expr := groups['expr']?.value;
-            if (expr is not null) return meta.compileOnFrame(expr, caller).eval();
+            if (expr is not null) return meta.compile(expr, caller.scope).eval();
             args[{ k := current; current += 1; k }]
         };
         doubleRegex.split(self).iter().map((part) switch part {

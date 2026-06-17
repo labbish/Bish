@@ -196,7 +196,7 @@ public abstract class BishFunc(
         args.List.Aggregate(self, (current, arg) => current.Bind(arg));
 
     [Builtin("hook")]
-    public static BishType Get_Arg(BishObject _) => BishArgObject.StaticType;
+    public static BishType Get_Arg(BishType _) => BishArgObject.StaticType;
 }
 
 public class BishNativeFunc(

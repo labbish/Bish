@@ -108,10 +108,13 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         self.Args is { Args: var args } ? new BishList(args) : null;
 
     [Builtin("hook")]
-    public static BishInt Get_recursionLimit(BishObject _) => BishInt.Of(RecursionLimit);
+    public static BishInt Get_recursionLimit(BishType _) => BishInt.Of(RecursionLimit);
 
     [Builtin("hook")]
-    public static void Set_recursionLimit(BishObject _, BishInt num) => RecursionLimit = num.Value;
+    public static void Set_recursionLimit(BishType _, BishInt num) => RecursionLimit = num.Value;
+
+    [Builtin("hook")]
+    public static BishType Get_CodeSource(BishType _) => BishCodeSource.StaticType;
 
     [Builtin]
     public static BishObject Execute(BishFrame self) => self.Execute();

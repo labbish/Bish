@@ -138,6 +138,8 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await GetOutputAsync("-f", "./a/ax.bish", "-o", "./a/ax.bishc", "-s");
         await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bish').execute());", "0");
         await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bishc').execute());", "0");
+        await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bish')).execute());", "0");
+        await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bishc')).execute());", "0");
     }
 
     [Fact]

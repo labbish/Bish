@@ -1,6 +1,0 @@
-extend meta.type {
-    func compileOnFrame(self, code, frame) Frame(self.compile(code).bytecodes, frame.scope, frame);
-    func compileOnScope(self, code, scope) Frame(self.compile(code).bytecodes, scope);
-    func compileFileOnFrame(self, file, frame) Frame(self.compileFile(file).bytecodes, frame.scope, frame);
-    func compileFileOnScope(self, file, scope) Frame(self.compileFile(file).bytecodes, scope);
-}

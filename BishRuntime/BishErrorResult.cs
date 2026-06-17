@@ -12,7 +12,7 @@ public class BishErrorResult(BishError error) : BishObject
     public static BishString Repr(BishErrorResult self, BishReprContext ctx) => BishString.Repr(self.Error, ctx);
 
     [Builtin("hook")]
-    public static void Create(BishObject _) => throw BishException.OfType_ErrorResult();
+    public static void New() => throw BishException.OfType_ErrorResult();
     
     [Builtin("hook")]
     public static BishError Get_error(BishErrorResult self) => self.Error;

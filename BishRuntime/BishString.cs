@@ -114,7 +114,7 @@ public class BishString(string value) : BishObject
         new(chars is null ? self.Value.TrimEnd() : self.Value.TrimEnd(chars.Value).ToString());
 
     [Builtin("hook")]
-    public static BishType Get_ReprContext(BishObject _) => BishReprContext.StaticType;
+    public static BishType Get_ReprContext(BishType _) => BishReprContext.StaticType;
 }
 
 public class BishStringIterator(string value) : BishObject

@@ -16,7 +16,7 @@ public class BishNull : BishObject
     public static BishString Repr(BishNull _, BishReprContext __) => new("null");
 
     [Builtin("hook")]
-    public static BishNull Create(BishObject _) => Instance;
+    public static BishNull New() => Instance;
 
     [Builtin("hook")]
     public static BishObject Get(BishNull self, BishString name) =>

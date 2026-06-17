@@ -29,19 +29,25 @@ public static class BishCompileService
         BishScope? scope = null, CompileOptions? options = null)
     {
         var ext = source.Extension;
-        if (ext == ".bishc")
+        switch (ext)
         {
-            using var stream = File.OpenRead(source.Filename);
-            errors = [];
-            var value = stream.ReadBytecodes();
-            if (scope is not null) value.Scope = scope;
-            return value.AddMeta(source.Root);
+            case ".bishc":
+            {
+                using var stream = File.OpenRead(source.Filename);
+                errors = [];
+                var value = stream.ReadBytecodes();
+                if (scope is not null) value.Scope = scope;
+                return value.AddMeta(source.Root);
+            }
+            case ".bish" or null:
+            {
+                var result = Compiler(Parser(source.Code), options ?? new CompileOptions());
+                errors = result.Errors;
+                var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
+                return frame;
+            }
+            default: throw BishException.OfCompile_InvalidExt(ext);
         }
-
-        var result = Compiler(Parser(source.Code), options ?? new CompileOptions());
-        errors = result.Errors;
-        var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
-        return ext is null or ".bish" ? frame : throw BishException.OfCompile_InvalidExt(ext);
     }
 
     public static BishFrame Compile(BishObject obj)
@@ -110,6 +116,25 @@ public record FileSource(string Name) : ICodeSource
 }
 
 public record VirtualSource(string Filename, string Code) : ICodeSource;
+
+public class BishCodeSource(ICodeSource source) : BishObject
+{
+    public readonly ICodeSource Source = source;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("CodeSource");
+
+    [Builtin]
+    public static BishCodeSource File(BishString name) => new(new FileSource(name.Value));
+
+    [Builtin]
+    public static BishCodeSource Virtual(BishString name, BishString code) =>
+        new(new VirtualSource(name.Value, code.Value));
+
+    [Builtin]
+    public static BishCodeSource Code(BishString code) => new(new VirtualSource("<code>", code.Value));
+}
 
 public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 {

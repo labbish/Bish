@@ -78,7 +78,7 @@ public class BishErrorTask(BishError error) : BishTask
     public BishObject Poll(BishObject _) => new BishErrorResult(error);
 }
 
-public class BishNativeTask(Func<Task<BishObject>> provider) : BishTask
+public class BishNativeTask(Func<Task<BishObject?>> provider) : BishTask
 {
     private volatile BishObject? _result;
 
@@ -88,7 +88,7 @@ public class BishNativeTask(Func<Task<BishObject>> provider) : BishTask
 
     public new static readonly BishType StaticType = new("Task.native");
 
-    public BishNativeTask(Func<Task> provider) : this(() => provider().ContinueWith<BishObject>(_ => BishNull.Instance))
+    public BishNativeTask(Func<Task> provider) : this(() => provider().ContinueWith<BishObject?>(_ => null))
     {
     }
 
@@ -105,7 +105,7 @@ public class BishNativeTask(Func<Task<BishObject>> provider) : BishTask
                 if (exception is BishException e) _result = new BishErrorResult(e.Error);
                 else throw exception!;
             }
-            else _result = t.Result;
+            else _result = t.Result ?? BishNull.Instance;
 
             ctx.Awake();
         });
@@ -113,7 +113,7 @@ public class BishNativeTask(Func<Task<BishObject>> provider) : BishTask
     }
 }
 
-public class BishRunTask(Func<BishObject> func) : BishNativeTask(() => Task.Run(func));
+public class BishRunTask(Func<BishObject?> func) : BishNativeTask(() => Task.Run(func));
 
 public class BishAllTask(IList<BishObject> tasks) : BishTask
 {

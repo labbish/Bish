@@ -39,6 +39,38 @@ public class BishException(BishError error) : Exception
         }
     }
 
+    public static async Task<T> Wrapped<T>(BishType errorType, Task<T> task)
+    {
+        try
+        {
+            return await task;
+        }
+        catch (BishException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            throw Create(errorType, e.Message);
+        }
+    }
+
+    public static async Task Wrapped(BishType errorType, Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (BishException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            throw Create(errorType, e.Message);
+        }
+    }
+
     public BishException CausedBy(params IList<BishError> causes)
     {
         Error.Causes = causes.ToConcurrentList();

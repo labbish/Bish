@@ -153,8 +153,8 @@ public partial class BishVisitor
             body.Add(code);
         }
 
-        var result = CompileResult.Expr(context).Add(new TryStart(tag))
-            .Add(Visit(context.withBody().cont), StackEffect.Expr).Add(new Move(name));
+        var result = CompileResult.Expr(context).Add(Visit(context.withBody().cont), StackEffect.Expr)
+            .Add(new Move(name), new TryStart(tag));
         if (context.withBody().obj is { } obj)
             result.Add(Def(obj, CompileResult.Expr(null).Add(new Get(name)))).Add(new Pop());
         return result.Add(body)

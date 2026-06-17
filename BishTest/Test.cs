@@ -11,7 +11,7 @@ public class Test(TestInfoFixture fixture)
     // ReSharper disable once UnusedMember.Global
     protected TestInfoFixture Fixture => fixture;
     protected readonly BishScope Scope = BishScope.Globals;
-    
+
     [DoesNotReturn]
     protected static void Fail(string message) => throw new AssertionFailedException(message);
 
@@ -50,7 +50,7 @@ public class Test(TestInfoFixture fixture)
         if (specials.Count != 0)
             Fail($"Expect special vars to be empty, found {string.Join(", ", specials)}");
     }
-    
+
     [SuppressMessage("Usage", "VSTHRD002")]
     public static BishFrame ExecuteWithTimeout(BishFrame frame)
     {
@@ -113,6 +113,21 @@ public class Test(TestInfoFixture fixture)
         if (result is BishErrorResult) return;
         Fail($"Expected ErrorResult but found {result}");
     }
+
+    protected static void TryRemove(string path)
+    {
+        try
+        {
+            Directory.Delete(path, true);
+        }
+        catch (DirectoryNotFoundException)
+        {
+        }
+    }
+
+    protected static void CreateDirectory(string path) => Directory.CreateDirectory(path);
+
+    protected static void CreateFile(string path, string content = "") => File.WriteAllText(path, content);
 
     static Test() => BishCompiler.BishCompiler.Init();
 }

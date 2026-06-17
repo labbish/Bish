@@ -6,9 +6,6 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     protected readonly StringWriter Writer = new();
     protected readonly SemaphoreSlim Semaphore = new(1, 1);
 
-    protected static void CreateDirectory(string path) => Directory.CreateDirectory(path);
-    protected static void CreateFile(string path, string content = "") => File.WriteAllText(path, content);
-
     protected async Task<string> GetOutputAsync(params string[] args)
     {
         await Semaphore.WaitAsync();
@@ -35,14 +32,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
 
     public ShellTest(TestInfoFixture fixture) : base(fixture)
     {
-        try
-        {
-            Directory.Delete("./a", true);
-        }
-        catch (DirectoryNotFoundException)
-        {
-        }
-
+        TryRemove("./a");
         CreateDirectory("./a/b/c");
         CreateFile("./a/rubbish.json");
         CreateFile("./a/b/c/rubbish.json");

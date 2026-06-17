@@ -33,57 +33,66 @@ public class BishReader(StreamReader reader) : BishObject
     [Builtin]
     public static void Dispose(BishReader self) => self.Reader.Dispose();
 
-    public BishString? ReadChar() => BishException.Wrapped(BishFileModule.Error, Reader.Read) switch
+    private async Task<char?> ReadCharAsync()
     {
-        -1 => null,
-        var chr => new BishString((char)chr)
-    };
+        var buffer = new char[1];
+        if (await Reader.ReadAsync(buffer, 0, 1) == 0) return null;
+        return buffer[0];
+    }
+
+    internal BishNativeTask ReadCharIter() => new(async () =>
+        await BishException.Wrapped(BishFileModule.Error, ReadCharAsync()) is { } c
+            ? new BishString(c)
+            : BishIteratorStop.Instance);
 
     [Builtin]
-    public static BishString? ReadChar(BishReader self) => self.ReadChar();
+    public static BishNativeTask ReadChar(BishReader self) => new(async () =>
+        await BishException.Wrapped(BishFileModule.Error, self.ReadCharAsync()) is { } c ? new BishString(c) : null);
 
-    public BishString? ReadLine() => BishException.Wrapped(BishFileModule.Error, Reader.ReadLine) switch
-    {
-        null => null,
-        var line => new BishString(line)
-    };
+    [Builtin("hook")]
+    public static BishFileChars Get_chars(BishReader self) => new(self);
+
+    private Task<string?> ReadLineAsync() => Reader.ReadLineAsync();
+
+    internal BishNativeTask ReadLineIter() => new(async () =>
+        await BishException.Wrapped(BishFileModule.Error, ReadLineAsync()) is { } c
+            ? new BishString(c)
+            : BishIteratorStop.Instance);
 
     [Builtin]
-    public static BishString? ReadLine(BishReader self) => self.ReadLine();
+    public static BishNativeTask ReadLine(BishReader self) => new(async () =>
+        await BishException.Wrapped(BishFileModule.Error, self.ReadLineAsync) is { } l ? new BishString(l) : null);
 
     [Builtin("hook")]
-    public static BishFileCharIterator Get_chars(BishReader self) => new(self);
+    public static BishFileLines Get_lines(BishReader self) => new(self);
 
-    [Builtin("hook")]
-    public static BishFileLineIterator Get_lines(BishReader self) => new(self);
-
-    [Builtin("hook")]
-    public static BishString Get_content(BishReader self) =>
-        new(BishException.Wrapped(BishFileModule.Error, self.Reader.ReadToEnd));
+    [Builtin]
+    public static BishNativeTask ReadAll(BishReader self) => new(async () =>
+        new BishString(await BishException.Wrapped(BishFileModule.Error, self.Reader.ReadToEndAsync())));
 }
 
-public class BishFileCharIterator(BishReader reader) : BishObject
+public class BishFileChars(BishReader reader) : BishObject
 {
     public BishReader Reader => reader;
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("file.char.iter");
+    public new static readonly BishType StaticType = new("file.char.iter", [BishIterator.AsyncType]);
 
     [Iter]
-    public BishString? Next() => Reader.ReadChar();
+    public BishNativeTask Next() => Reader.ReadCharIter();
 }
 
-public class BishFileLineIterator(BishReader reader) : BishObject
+public class BishFileLines(BishReader reader) : BishObject
 {
     public BishReader Reader => reader;
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("file.line.iter");
+    public new static readonly BishType StaticType = new("file.line.iter", [BishIterator.AsyncType]);
 
     [Iter]
-    public BishString? Next() => Reader.ReadLine();
+    public BishNativeTask Next() => Reader.ReadLineIter();
 }
 
 public class BishWriter(StreamWriter writer) : BishObject
@@ -103,5 +112,6 @@ public class BishWriter(StreamWriter writer) : BishObject
     public static void Dispose(BishWriter self) => self.Writer.Dispose();
 
     [Builtin]
-    public static void Write(BishWriter self, BishObject content) => self.Writer.Write(BishString.CallShow(content));
+    public static BishNativeTask Write(BishWriter self, BishObject content) =>
+        new(() => self.Writer.WriteAsync(BishString.CallShow(content)));
 }

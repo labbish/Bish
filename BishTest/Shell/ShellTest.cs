@@ -14,7 +14,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await Semaphore.WaitAsync();
         try
         {
-            await Bish.Program.Main(args);
+            Bish.Program.Main(args);
             var output = Writer.ToString();
             Writer.GetStringBuilder().Clear();
             return output;

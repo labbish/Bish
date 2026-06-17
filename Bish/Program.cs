@@ -1,53 +1,32 @@
-﻿using BishRuntime;
+﻿using System.Diagnostics.CodeAnalysis;
+using BishRuntime;
 
 namespace Bish;
 
-// TODO: Rewrite this in Bish!
-public static class Program
+public static class Server
 {
-    public static async Task Main(string[] args)
+    [Builtin]
+    [SuppressMessage("Usage", "VSTHRD002")]
+    public static void Run() => LSP.Server.RunAsync().GetAwaiter().GetResult();
+
+    [Builtin]
+    public static void WriteBytecodes(BishString file, BishFrame frame)
     {
-        BishCompiler.BishCompiler.Init();
-        var options = Options.Parse(args);
-        switch (options)
-        {
-            case { Server: true }:
-                await LSP.Server.RunAsync();
-                break;
-            case { Source: null }:
-                StartRepl();
-                break;
-            default:
-                var frame = BishCompileService.Compile(options.Source);
-                if (options.Output is { } output)
-                {
-                    await using var stream = File.Create(output);
-                    stream.WriteBytecodes(frame);
-                }
-
-                if (options.SkipExecution) return;
-                frame.Scope.DefVar("args", new BishList(options.Arguments
-                    .Select(arg => new BishString(arg)).ToList<BishObject>()));
-                try
-                {
-                    frame.Execute();
-                }
-                catch (BishException e)
-                {
-                    await Console.Error.WriteLineAsync($"Uncaught error: {e.Error}");
-                    break;
-                }
-                catch (Exception e)
-                {
-                    await Console.Error.WriteLineAsync(e.ToString());
-                    break;
-                }
-
-                if (options.Interactive) StartRepl(frame.Scope);
-                break;
-        }
+        // TODO: rewrite this in Bish after we have a complete file module
+        using var stream = File.Create(file.Value);
+        stream.WriteBytecodes(frame);
     }
 
-    public static void StartRepl(BishScope? scope = null) => BishImporter.Import(null, "repl").GetMember("start")
-        .Call(new BishArgs([scope ?? BishNull.Instance as BishObject]));
+    public static readonly BishType StaticType = new("Server");
+}
+
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        BishCompiler.BishCompiler.Init();
+        BuiltinsRegistry.Register();
+        var argv = args.Select(arg => new BishString(arg)).ToArray();
+        BishImporter.Import(null, "$self/main").GetMember("main").Call(new BishArgs([Server.StaticType, ..argv]));
+    }
 }

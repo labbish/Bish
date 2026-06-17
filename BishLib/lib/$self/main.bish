@@ -1,0 +1,86 @@
+﻿repl := import('repl');
+
+help := r'
+* Bish Command Line Help *
+-c, --command       Runs the command string.
+-f, --file          Reads from the file.
+-o, --output        Compile and output to file.
+-s, --skip          Compile without executing.
+-i, --interactive   Enter REPL after executing.
+-l, --lsp           Run LSP only.
+-h, --help          Show this help message.
+';
+
+func parse(args) {
+    options := {
+        .source: null,
+        .output: null,
+        .skip: false,
+        .inter: false,
+        .lsp: false,
+        .help: false,
+        .args: []
+    };
+    while (args.length > 0) {
+        arg := del args[0];
+        switch arg {
+            '-c' or '--command' => {
+                if (args.length == 0) error('{} expect a command'.format(arg));
+                if (options.source is not null) error('found multiple input sources');
+                options.source = Frame.CodeSource.virtual('<input>', del args[0])
+            },
+            '-f' or '--file' => {
+                if (args.length == 0) error('{} expect a file'.format(arg));
+                if (options.source is not null) error('found multiple input sources');
+                options.source = Frame.CodeSource.file(del args[0])
+            },
+            '-o' or '--output' => {
+                if (args.length == 0) error('{} expect a output'.format(arg));
+                if (options.output is not null) error('found multiple outputs');
+                options.output = del args[0]
+            },
+            '-s' or '--skip' => options.skip = true,
+            '-i' or '--interactive' => options.inter = true,
+            '-l' or '--lsp' => options.lsp = true,
+            '-h' or '--help' => options.help = true,
+            '--' => {
+                options.args = args;
+                args = []
+            },
+            _ => error('unknown flag: {}'.format(arg))
+        };
+    };
+    switch options {
+        { .skip: true, .output: null } => error('skip execution is invalid without output file'),
+        { .source: null, .output: not null } => error('output is invalid without input'),
+        { .help: true } => showHelp(),
+        _ => options
+    }
+};
+
+func error(msg) {
+    print(msg);
+    showHelp();
+};
+
+func showHelp() {
+    print(help);
+    exit(1);
+};
+
+func main(Server, ..args) {
+    options := parse(args);
+    switch options {
+        { .lsp: true } => Server.run(),
+        { .source: null } => repl.start(),
+        _ => {
+            frame := meta.compile(options.source);
+            if (options.output is not null)
+                Server.writeBytecodes(options.output, frame);
+            if (options.skip) return;
+            frame.scope.args := options.args;
+            frame.handledExecute();
+            if (options.inter) repl.start(frame.scope)
+        }
+    };
+};

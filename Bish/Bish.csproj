@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\BishRuntimeGenerators\BishRuntimeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\BishCompiler\BishCompiler.csproj"/>
         <ProjectReference Include="..\BishRuntime\BishRuntime.csproj"/>
     </ItemGroup>

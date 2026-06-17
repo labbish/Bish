@@ -50,3 +50,8 @@ func start(scope: null) {
         if (code != '') run(code);
     };
 };
+
+extend Frame {
+    @handler
+    func handledExecute(self) self.execute();
+};

@@ -1,8 +1,0 @@
-extend ParseTree {
-    func toJSON(self) {
-        result := { 'type': self.type };
-        if (self.text is null) result['children'] := self.children
-        else result['text'] := self.text;
-        return result;
-    };
-};

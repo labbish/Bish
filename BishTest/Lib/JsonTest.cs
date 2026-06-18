@@ -138,7 +138,7 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
         JsonStringify("""{"a":1,"b":"2"}""");
         JsonStringify("""[1,"test",[3,4]]""");
         JsonStringify("""{"users":[{"id":1},{"id":2}],"active":true}""");
-        JsonStringify("{.toJSON:func(){'a':0}}", """{"a":0}""");
+        JsonStringify("{.toJson:func(_){'a':0}}", """{"a":0}""");
         JsonStringify("""
                       {
                         "users": [
@@ -154,6 +154,11 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
                       """, tabs: 2);
         JsonStringifyError("{0:0}");
         JsonStringifyError("object()");
+        
+        JsonStringifyError("{l:=[];l.add(l);l}");
+        JsonStringifyError("{m:={};m['m']:=m;m}");
+        JsonStringifyError("{x:=[];x.add({'x':x});x}");
+        JsonStringifyError("{o:={.toJson:func(_)o};o}");
     }
 
     [Fact]

@@ -122,10 +122,10 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("iter.next()", "IteratorStop");
 
         ExpectResult("'0,1,,2'.split(',')", "['0','1','','2']");
-        
+
         ExpectResult("'x'.toCode()", "120");
         ExpectResult("string.fromCode(120)", "'x'");
-        
+
         ExpectResult("l:=[];l.add(l);string.show(l)", "'[<...>]'");
         ExpectResult("m:={};m[m]:=m;string.show(m)", "'{<...>: <...>}'");
         ExpectResult("x:=[];x.add({x:x});string.show(x)", "'[{<...>: <...>}]'");
@@ -261,13 +261,13 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         Execute("D.a:=1;");
         ExpectResult("D().a", "1");
         ExpectResult("D().b", "0");
-        
+
         ExpectResult("C.name", "'C'");
         ExpectResult("D.name", "'X'");
-        
+
         ExpectResult("C.MRO", "[C]");
         ExpectResult("D.MRO", "[D,C]");
-        
+
         ExpectResult("C.parents", "[]");
         ExpectResult("D.parents", "[C]");
         Execute("del D.parents[0];");

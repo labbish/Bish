@@ -1,5 +1,3 @@
-import('json-extensions');
-
 class JsonError : Error;
 
 class JsonParseError : JsonError {
@@ -7,7 +5,9 @@ class JsonParseError : JsonError {
         .format(message, location)) { location := location };
 };
 
-class JsonStringifyError : JsonError;
+class JsonStringifyError : JsonError {
+    func circular() throw JsonStringifyError('Circular reference detected');
+};
 
 @static class JSON {
     func parse(str) {
@@ -20,20 +20,23 @@ class JsonStringifyError : JsonError;
         colon := if (tabs is null) ':' else ': ';
         feed := if (tabs is null) '' else '\n';
         func tab(s) s.split('\n').iter().map((line) if (tabs is null) line else (' ' * tabs + line)).join('\n');
-        func inner(obj) {
-            json := try obj.toJSON();
-            if (json is not err) return inner(json);
+        func inner(ctx)(obj) {
+            if (ctx.contains(obj)) JsonStringifyError.circular();
+            json := try obj.toJson(ctx);
+            ctx = ctx.add(obj);
+            if (json is not err) return inner(ctx)(json);
             return switch obj {
                 null or of bool or of num => string.show(obj),
                 of string => '"' + unescapes.entries.iter().reduce((curr, [k, v]) curr.replace(k, v), obj) + '"',
-                of list => '[' + feed + tab(obj.iter().map(inner).join(',' + feed)) + feed + ']',
+                of list => '[' + feed + tab(obj.iter().map(inner(ctx)).join(',' + feed)) + feed + ']',
                 of map =>
                     if (obj.keys.iter().any((k) k is not of string)) throw JsonStringifyError('Key must be string')
-                    else '{' + feed + tab(obj.entries.iter().map(([k, v]) inner(k) + colon + inner(v)).join(',' + feed)) + feed + '}',
+                    else '{' + feed + tab(obj.entries.iter().map(([k, v])
+                        inner(ctx)(k) + colon + inner(ctx)(v)).join(',' + feed)) + feed + '}',
                 _ => throw JsonStringifyError('Invalid data type: {}'.format(obj.type))
             };
         };
-        return inner(obj);
+        return inner(string.ReprContext())(obj);
     };
 };
 
@@ -219,3 +222,16 @@ func isDigit(x) toDigit(x) != -1;
 func toHexDigit(x) '0123456789ABCDEF'.iter().findIndex((c) c == x.upper());
 func isNumStart(x) isDigit(x) || x == '-';
 func isSpace(x) ' \t\r\n'.iter().contains(x);
+
+// Extensions
+
+extend ParseTree {
+    func toJson(self, ctx) {
+        if (ctx.contains(self)) JsonStringifyError.circular();
+        ctx = ctx.add(self);
+        result := { 'type': self.type };
+        if (self.text is null) result['children'] := self.children
+        else result['text'] := self.text;
+        return result;
+    };
+};

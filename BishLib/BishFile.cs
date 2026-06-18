@@ -101,7 +101,7 @@ public class BishPath(string value) : BishObject
 
     [Builtin]
     public static void Create(BishPath self) =>
-        BishException.Wrapped(BishFileModule.Error, () => File.Create(self.Value));
+        BishException.Wrapped(BishFileModule.Error, () => File.Create(self.Value).Dispose());
 
     [Builtin]
     public static BishReader Read(BishPath self, [DefaultNull] BishString? encoding) =>

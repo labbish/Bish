@@ -113,6 +113,12 @@ public class BishString(string value) : BishObject
     public static BishString TrimEnd(BishString self, [DefaultNull] BishString? chars) =>
         new(chars is null ? self.Value.TrimEnd() : self.Value.TrimEnd(chars.Value).ToString());
 
+    [Builtin]
+    public static BishBool StartsWith(BishString self, BishString sub) => BishBool.Of(self.Value.StartsWith(sub.Value));
+
+    [Builtin]
+    public static BishBool EndsWith(BishString self, BishString sub) => BishBool.Of(self.Value.EndsWith(sub.Value));
+
     [Builtin("hook")]
     public static BishType Get_ReprContext(BishType _) => BishReprContext.StaticType;
 }

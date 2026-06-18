@@ -6,6 +6,7 @@ namespace BishLib;
 public struct BishFileModule : IModule
 {
     public static BishObject Exports => IModule.ExportsFrom(
+        ("Path", BishPath.StaticType),
         ("Reader", BishReader.StaticType),
         ("Writer", BishWriter.StaticType),
         ("FileError", Error)
@@ -15,6 +16,71 @@ public struct BishFileModule : IModule
 
     public static Encoding EncodingFrom(BishString? encoding) =>
         encoding is null ? Encoding.UTF8 : Encoding.GetEncoding(encoding.Value);
+}
+
+public class BishPath(string value) : BishObject
+{
+    public readonly string Value = value;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("Path");
+
+    [Builtin("hook")]
+    public static BishPath New(BishString value) => new(value.Value);
+
+    [Builtin]
+    public static BishString Repr(BishPath self, BishReprContext ctx) =>
+        new($"Path({BishString.CallRepr(self.Value, ctx)})");
+    
+    [Builtin("hook")]
+    public static BishString Get_value(BishPath self) => new(self.Value);
+
+    [Builtin("hook")]
+    public static BishString Get_name(BishPath self) => new(Path.GetFileName(self.Value));
+
+    [Builtin("hook")]
+    public static BishString Get_stem(BishPath self) => new(Path.GetFileNameWithoutExtension(self.Value));
+
+    [Builtin("hook")]
+    public static BishString Get_ext(BishPath self) => new(Path.GetExtension(self.Value));
+
+    [Builtin("hook")]
+    public static BishPath? Get_dir(BishPath self) =>
+        Path.GetDirectoryName(self.Value) is { } result ? new BishPath(result) : null;
+
+    [Builtin("hook")]
+    public static BishPath? Get_root(BishPath self) =>
+        Path.GetPathRoot(self.Value) is { } result ? new BishPath(result) : null;
+
+    [Builtin]
+    public static BishPath WithExt(BishPath self, [DefaultNull] BishString? ext) =>
+        new(Path.ChangeExtension(self.Value, ext?.Value));
+
+    [Builtin("op")]
+    public static BishPath Div(BishPath self, BishString other) => new(Path.Join(self.Value, other.Value));
+
+    [Builtin("hook")]
+    public static BishPath Get_full(BishPath self) => new(Path.GetFullPath(self.Value));
+
+    [Builtin]
+    public static BishPath Relative(BishPath self, BishPath from) => new(Path.GetRelativePath(from.Value, self.Value));
+
+    [Builtin("hook")]
+    public static BishBool Get_isRelative(BishPath self) => BishBool.Of(!Path.IsPathRooted(self.Value));
+
+    [Builtin("hook")]
+    public static BishString Get_sep(BishType _) => new(Path.DirectorySeparatorChar);
+
+    [Builtin("hook")]
+    public static BishPath Get_cwd(BishType _) => new(Environment.CurrentDirectory);
+
+    [Builtin("hook")]
+    public static BishPath Get_home(BishType _) =>
+        new(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
+    [Builtin("hook")]
+    public static BishPath Get_temp(BishType _) => new(Path.GetTempPath());
 }
 
 public class BishReader(StreamReader reader) : BishObject
@@ -112,6 +178,6 @@ public class BishWriter(StreamWriter writer) : BishObject
     public static void Dispose(BishWriter self) => self.Writer.Dispose();
 
     [Builtin]
-    public static BishNativeTask Write(BishWriter self, BishObject content) =>
-        new(() => self.Writer.WriteAsync(BishString.CallShow(content)));
+    public static BishNativeTask Write(BishWriter self, BishString content) =>
+        new(() => self.Writer.WriteAsync(content.Value));
 }

@@ -2,7 +2,7 @@
 
 public class FileTest : LibTest
 {
-    public FileTest(TestInfoFixture fixture) : base(fixture, "file", ["Path", "Reader", "Writer"])
+    public FileTest(TestInfoFixture fixture) : base(fixture, "file", ["Path"])
     {
         TryRemove("./f");
         CreateDirectory("./f");
@@ -32,14 +32,22 @@ public class FileTest : LibTest
     }
 
     [Fact]
-    public void TestWriterReader()
+    public void TestFile()
     {
-        Execute("with(writer:Writer('./f/a.txt')) await writer.write('abc\\n');");
-        Execute("with(writer:Writer('./f/a.txt',true)) await writer.write('def');");
-        ExpectResult("with(reader:Reader('./f/a.txt','utf-8')) await reader.readChar()", "'a'");
-        ExpectResult("with(reader:Reader('./f/a.txt','utf-8')) await reader.readLine()", "'abc'");
-        ExpectResult("with(reader:Reader('./f/a.txt','utf-8')) await reader.readAll()", "'abc\ndef'");
-        ExpectResult("with(reader:Reader('./f/a.txt','utf-8')) await reader.chars.join()", "'abc\ndef'");
-        ExpectResult("with(reader:Reader('./f/a.txt','utf-8')) await reader.lines.join('\\n')", "'abc\ndef'");
+        Execute("p:=Path('./f/a.txt');");
+        ExpectFalse("p.exists");
+        ExpectTrue("p.create();p.exists");
+        Execute("with(writer:p.write()) await writer.write('abc\\n');");
+        Execute("with(writer:p.write(true)) await writer.write('def');");
+        ExpectResult("with(reader:p.read()) await reader.readChar()", "'a'");
+        ExpectResult("with(reader:p.read()) await reader.readLine()", "'abc'");
+        ExpectResult("with(reader:p.read()) await reader.readAll()", "'abc\ndef'");
+        ExpectResult("with(reader:p.read()) await reader.chars.join()", "'abc\ndef'");
+        ExpectResult("with(reader:p.read()) await reader.lines.join('\\n')", "'abc\ndef'");
+        ExpectTrue("p.exists");
+        Execute("q:=Path('./f/b.txt');");
+        ExpectTrue("p.copyTo(q);p.exists&&q.exists");
+        ExpectFalse("p.delete();p.exists");
+        ExpectTrue("q.moveTo(p);p.exists&&!q.exists");
     }
 }

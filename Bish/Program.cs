@@ -9,14 +9,6 @@ public static class Server
     [SuppressMessage("Usage", "VSTHRD002")]
     public static void Run() => LSP.Server.RunAsync().GetAwaiter().GetResult();
 
-    [Builtin]
-    public static void WriteBytecodes(BishString file, BishFrame frame)
-    {
-        // TODO: rewrite this in Bish after we have a complete file module
-        using var stream = File.Create(file.Value);
-        stream.WriteBytecodes(frame);
-    }
-
     public static readonly BishType StaticType = new("Server");
 }
 

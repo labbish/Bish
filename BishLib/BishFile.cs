@@ -111,6 +111,22 @@ public class BishPath(string value) : BishObject
     public static BishWriter Write(BishPath self, [DefaultNull] BishBool? append, [DefaultNull] BishString? encoding) =>
         BishWriter.Open(self.Value, append?.Value, encoding?.Value);
 
+    [Builtin]
+    public static BishFrame ReadBytecodes(BishPath self) =>
+        BishException.Wrapped(BishFileModule.Error, () =>
+        {
+            using var stream = File.OpenRead(self.Value);
+            return stream.ReadBytecodes();
+        });
+
+    [Builtin]
+    public static void WriteBytecodes(BishPath self, BishFrame frame) =>
+        BishException.Wrapped(BishFileModule.Error, () =>
+        {
+            using var stream = File.Create(self.Value);
+            stream.WriteBytecodes(frame);
+        });
+
     // Directory operations
     // TODO
 }

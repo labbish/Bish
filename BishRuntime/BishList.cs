@@ -143,6 +143,22 @@ public class BishList(IList<BishObject> list) : BishObject
                 list.Add(item);
         return new BishList(list);
     }
+
+    [Builtin]
+    public static BishList Sorted(BishList self, [DefaultNull] BishObject? key) =>
+        new(self.List.Order(new BishObjectComparer(key)).ToList());
+    
+    private class BishObjectComparer(BishObject? key) : IComparer<BishObject>
+    {
+        public int Compare(BishObject? x, BishObject? y) => (x, y) switch
+        {
+            (null, null) => 0,
+            (null, _) => -1,
+            (_, null) => 1,
+            _ => BishOperator.Cmp(key is null ? x : key.Call(new BishArgs([x])),
+                key is null ? y : key.Call(new BishArgs([y])))
+        };
+    }
 }
 
 public class BishListIterator(IList<BishObject> list) : BishObject

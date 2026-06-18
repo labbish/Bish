@@ -36,6 +36,9 @@ public class BishString(string value) : BishObject
     [Builtin("op")]
     public static BishBool Eq(BishString a, BishString b) => BishBool.Of(a.Value == b.Value);
 
+    [Builtin("op")]
+    public static BishInt Cmp(BishString a, BishString b) => BishInt.Of(string.CompareOrdinal(a.Value, b.Value));
+
     [Builtin]
     public static BishBool Bool(BishString a) => BishBool.Of(a.Value != "");
 

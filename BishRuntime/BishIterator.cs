@@ -49,3 +49,15 @@ public static class IteratorHelper
         }
     }
 }
+
+public class BishNativeIterator(IEnumerable<BishObject> enumerable) : BishObject
+{
+    public readonly IEnumerator<BishObject> Enumerator = enumerable.GetEnumerator();
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("Iterator.native");
+
+    [Iter]
+    public BishObject? Next() => Enumerator.MoveNext() ? Enumerator.Current : null;
+}

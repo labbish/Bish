@@ -14,8 +14,7 @@ public class RandomTest(TestInfoFixture fixture) : LibTest(fixture, "random", ["
                    "&&l.iter().all((item)item is of int and >=1 and <5)");
         ExpectTrue("l:=random.sample(range(1,5),3);l.unique().length==3" +
                    "&&l.iter().all((item)item is of int and >=1 and <5)");
-        ExpectTrue("l:=random.shuffle(range(1,5));l.unique().length==4" +
-                   "&&l.iter().all((item)item is of int and >=1 and <5)");
+        ExpectResult("l:=random.shuffle(range(1,5));l.sorted()", "[1,2,3,4]");
     }
 
     [Theory]

@@ -186,20 +186,17 @@ public class BishObject(BishType? type = null)
         BishBool.Invert(BishOperator.Call("op_eq", new BishArgs([a, b]))
             .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}"));
 
-    private static int Compare(BishObject a, BishObject b) => BishOperator.Call("op_cmp", new BishArgs([a, b]))
-        .As<BishInt>($"{BishString.CallDebug(a)} <=> {BishString.CallDebug(b)}").Value;
+    [Builtin("op")]
+    public static BishBool Lt(BishObject a, BishObject b) => BishBool.Of(BishOperator.Cmp(a, b) < 0);
 
     [Builtin("op")]
-    public static BishBool Lt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) < 0);
+    public static BishBool Le(BishObject a, BishObject b) => BishBool.Of(BishOperator.Cmp(a, b) <= 0);
 
     [Builtin("op")]
-    public static BishBool Le(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) <= 0);
+    public static BishBool Gt(BishObject a, BishObject b) => BishBool.Of(BishOperator.Cmp(a, b) > 0);
 
     [Builtin("op")]
-    public static BishBool Gt(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) > 0);
-
-    [Builtin("op")]
-    public static BishBool Ge(BishObject a, BishObject b) => BishBool.Of(Compare(a, b) >= 0);
+    public static BishBool Ge(BishObject a, BishObject b) => BishBool.Of(BishOperator.Cmp(a, b) >= 0);
 
     [Builtin]
     public static BishBaseObject Base(BishObject self, [DefaultNull] BishType? root) => new(self,

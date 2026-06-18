@@ -88,6 +88,10 @@ public class BishPath(string value) : BishObject
     public static BishBool Get_exists(BishPath self) => BishBool.Of(File.Exists(self.Value));
 
     [Builtin]
+    public static void Create(BishPath self) =>
+        BishException.Wrapped(BishFileModule.Error, () => File.Create(self.Value).Dispose());
+
+    [Builtin]
     public static void Delete(BishPath self) =>
         BishException.Wrapped(BishFileModule.Error, () => File.Delete(self.Value));
 
@@ -98,10 +102,6 @@ public class BishPath(string value) : BishObject
     [Builtin]
     public static void MoveTo(BishPath self, BishPath dest, [DefaultNull] BishBool? overwrite) =>
         BishException.Wrapped(BishFileModule.Error, () => File.Move(self.Value, dest.Value, overwrite?.Value ?? false));
-
-    [Builtin]
-    public static void Create(BishPath self) =>
-        BishException.Wrapped(BishFileModule.Error, () => File.Create(self.Value).Dispose());
 
     [Builtin]
     public static BishReader Read(BishPath self, [DefaultNull] BishString? encoding) =>
@@ -128,7 +128,61 @@ public class BishPath(string value) : BishObject
         });
 
     // Directory operations
-    // TODO
+    [Builtin("hook")]
+    public static BishBool Get_existsDir(BishPath self) => BishBool.Of(Directory.Exists(self.Value));
+
+    [Builtin]
+    public static void CreateDir(BishPath self) =>
+        BishException.Wrapped(BishFileModule.Error, () => Directory.CreateDirectory(self.Value));
+
+    [Builtin]
+    public static void DeleteDir(BishPath self, [DefaultNull] BishBool? recursive) =>
+        BishException.Wrapped(BishFileModule.Error, () => Directory.Delete(self.Value, recursive?.Value ?? false));
+
+    [Builtin]
+    public static void CopyDirTo(BishPath self, BishPath dest, [DefaultNull] BishBool? overwrite) =>
+        BishException.Wrapped(BishFileModule.Error,
+            () => Directory.Copy(self.Value, dest.Value, overwrite?.Value ?? false));
+
+    [Builtin]
+    public static void MoveDirTo(BishPath self, BishPath dest, [DefaultNull] BishBool? overwrite) =>
+        BishException.Wrapped(BishFileModule.Error,
+            () => Directory.Move(self.Value, dest.Value, overwrite?.Value ?? false));
+
+    [Builtin("hook")]
+    public static BishNativeIterator Get_children(BishPath self) =>
+        new(BishException.Wrapped(BishFileModule.Error, () => Directory.EnumerateFileSystemEntries(self.Value))
+            .Select(entry => BishException.Wrapped(BishFileModule.Error, () => new BishPath(entry))));
+}
+
+public static class DirectoryHelper
+{
+    extension(Directory)
+    {
+        public static void Copy(string source, string dest, bool overwrite = false)
+        {
+            var dir = new DirectoryInfo(source);
+            if (!dir.Exists) throw new DirectoryNotFoundException($"Source directory does not exist: {source}");
+            if (!Directory.Exists(dest)) Directory.CreateDirectory(dest);
+            foreach (var sub in dir.GetFiles())
+                sub.CopyTo(Path.Combine(dest, sub.Name), overwrite);
+            foreach (var sub in dir.GetDirectories())
+                Directory.Copy(sub.FullName, Path.Combine(dest, sub.Name), overwrite);
+        }
+
+        public static void Move(string source, string dest, bool overwrite = false)
+        {
+            var sourceRoot = Path.GetPathRoot(Path.GetFullPath(source))?.ToLowerInvariant();
+            var destRoot = Path.GetPathRoot(Path.GetFullPath(dest))?.ToLowerInvariant();
+            if (sourceRoot == destRoot && !Directory.Exists(dest))
+                Directory.Move(sourceDirName: source, destDirName: dest);
+            else
+            {
+                Directory.Copy(source, dest, overwrite);
+                Directory.Delete(source, true);
+            }
+        }
+    }
 }
 
 public class BishReader(StreamReader reader) : BishObject

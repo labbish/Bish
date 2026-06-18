@@ -24,11 +24,10 @@ public class FileTest : LibTest
         ExpectResult("p.relative(Path('/a/c')).reg", "'../b/c.d'");
         ExpectFalse("p.isRelative");
         ExpectTrue("Path('../a/b').isRelative");
-        ExpectTrue("Path.sep is of string");
-        // TODO: check if these exists
-        ExpectTrue("Path.cwd is of Path");
-        ExpectTrue("Path.home is of Path");
-        ExpectTrue("Path.temp is of Path");
+        ExpectTrue(@"Path.sep is '/' or '\\'");
+        ExpectTrue("Path.cwd.existsDir");
+        ExpectTrue("Path.home.existsDir");
+        ExpectTrue("Path.temp.existsDir");
     }
 
     [Fact]
@@ -37,6 +36,11 @@ public class FileTest : LibTest
         Execute("p:=Path('./f/a.txt');");
         ExpectFalse("p.exists");
         ExpectTrue("p.create();p.exists");
+        Execute("q:=Path('./f/b.txt');");
+        ExpectTrue("p.copyTo(q);p.exists&&q.exists");
+        ExpectFalse("p.delete();p.exists");
+        ExpectTrue("q.moveTo(p);p.exists&&!q.exists");
+
         Execute("with(writer:p.write()) await writer.write('abc\\n');");
         Execute("with(writer:p.write(true)) await writer.write('def');");
         ExpectResult("with(reader:p.read()) await reader.readChar()", "'a'");
@@ -44,10 +48,23 @@ public class FileTest : LibTest
         ExpectResult("with(reader:p.read()) await reader.readAll()", "'abc\ndef'");
         ExpectResult("with(reader:p.read()) await reader.chars.join()", "'abc\ndef'");
         ExpectResult("with(reader:p.read()) await reader.lines.join('\\n')", "'abc\ndef'");
-        ExpectTrue("p.exists");
-        Execute("q:=Path('./f/b.txt');");
-        ExpectTrue("p.copyTo(q);p.exists&&q.exists");
-        ExpectFalse("p.delete();p.exists");
-        ExpectTrue("q.moveTo(p);p.exists&&!q.exists");
+    }
+
+    [Fact]
+    public void TestDirectory()
+    {
+        Execute("p:=Path('./f/x');");
+        ExpectFalse("p.existsDir");
+        ExpectTrue("p.createDir();p.existsDir");
+        Execute("q:=Path('./f/y');");
+        ExpectTrue("p.copyDirTo(q);p.existsDir&&q.existsDir");
+        ExpectFalse("p.deleteDir();p.existsDir");
+        ExpectTrue("q.moveDirTo(p);p.existsDir&&!q.existsDir");
+
+        ExpectResult("p.children.toList()", "[]");
+        Execute("(p/'a.txt').create();");
+        Execute("(p/'b.txt').create();");
+        Execute("(p/'c').createDir();");
+        ExpectResult("p.children.map((p)p.stem).toList().sorted()", "['a','b','c']");
     }
 }

@@ -6,12 +6,6 @@ jobs:
   publish:
     name: Publish for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    
-    services:
-      httpbin-service:
-        image: kennethreitz/httpbin
-        ports:
-          - 8080:80
 
     strategy:
       matrix:
@@ -50,6 +44,12 @@ jobs:
         run: |
           mkdir ./BishCompiler/tools
           curl -L https://www.antlr.org/download/antlr-4.13.2-complete.jar -o ./BishCompiler/tools/antlr.jar
+
+      - name: Start httpbin service (Linux)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        shell: bash
+        run: |
+          docker run -d -p 8080:80 --name httpbin-service kennethreitz/httpbin
           
       - name: Run tests
         shell: bash

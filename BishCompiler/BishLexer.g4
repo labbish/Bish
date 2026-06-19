@@ -112,6 +112,6 @@ NOT : 'not' ;
 AND : 'and' ;
 OR  : 'or' ;
 
-ID  : [A-Za-z_][A-Za-z0-9_]* ;
+ID  : [\p{ID_Start}_][\p{ID_Continue}]* ;
 
-WS  : [ \t\r\n]+ -> skip ;
+WS  : [\p{White_Space}]+ -> skip ;

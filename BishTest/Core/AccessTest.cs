@@ -16,6 +16,9 @@ public class AccessTest : Test
         ExpectError("x.z;", BishError.AttributeErrorType);
         ExpectError("n;", BishError.AttributeErrorType);
         ExpectResult("m", "null");
+
+        Execute("綾地寧々　:=　0x721;");
+        ExpectResult("綾地寧々", "0x721");
     }
 
     [Fact]

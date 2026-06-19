@@ -55,7 +55,6 @@ public class BishObject(BishType? type = null)
             if (accessor is not null) return new BishVarHandle(accessor.Owner, name, BishVarHandleType.Accessor);
         }
 
-        // ReSharper disable once InvertIf
         if (!mode.HasFlag(BishLookupMode.NotFromType))
         {
             var type = Type.WithMRORoot(MRORoot).TryGetHandle(name, op,

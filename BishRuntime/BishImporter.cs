@@ -50,6 +50,7 @@ public static class BishImporter
             : throw BishException.OfImport_Dll(path);
 }
 
+[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
 public interface IModule
 {
     [UsedImplicitly]

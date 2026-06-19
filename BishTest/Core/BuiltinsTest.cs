@@ -251,6 +251,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("l.keys", "[0,true]");
         ExpectResult("l.values", "['x',null]");
         ExpectResult("l.entries", "[[0,'x'],[true,null]]");
+        ExpectResult("map.fromEntries([[0,'x'],[true,null]])", "l");
     }
 
     [Fact]

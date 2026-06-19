@@ -112,6 +112,12 @@ public class BishMap(IList<Entry> entries) : BishObject
     [Builtin("hook")]
     public static BishList Get_entries(BishMap self) =>
         new(self.Entries.Select(entry => new BishList([entry.Key, entry.Value])).ToList<BishObject>());
+
+    [Builtin]
+    public static BishMap FromEntries(BishList list) => new(list.List.Select(entry =>
+        entry is BishList { List: [var key, var value] }
+            ? new Entry(key, value)
+            : throw BishException.OfType_Expect("entry", entry, "list with 2 items")).ToList());
 }
 
 public class BishMapIterator(IList<Entry> entries) : BishObject

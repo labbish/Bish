@@ -5,10 +5,10 @@ program
     : (front+=expr END)* last=expr? EOF
     ;
 
-// define Setable : AtomExpr(IdAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
+// define Setable : AtomExpr(idAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
 expr
     : LPAREN expr RPAREN                                        # ParenExpr
-    | deco* (FUN ID?)? funcBody                                 # FuncExpr
+    | deco* (FUN id?)? funcBody                                 # FuncExpr
     | deco* OP defOp funcBody                                   # OperExpr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* defHook funcBody                                    # HookExpr
@@ -46,8 +46,8 @@ expr
     | withBody main=expr                                        # WithExpr
     | SWC expr LBRACE (caseExpr (COM caseExpr)* COM?)? RBRACE   # SwitchExpr
     | <assoc=right> THR expr                                    # ThrowExpr
-    | <assoc=right> BRK ID?                                     # BreakExpr
-    | <assoc=right> CTN ID?                                     # ContinueExpr
+    | <assoc=right> BRK id?                                     # BreakExpr
+    | <assoc=right> CTN id?                                     # ContinueExpr
     | <assoc=right> RET expr?                                   # ReturnExpr
     | <assoc=right> YLD await=AWT? gen=MUL? expr                # YieldExpr
     | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
@@ -56,7 +56,7 @@ expr
     ;
 
 clsExpr
-    : deco* CLS (LBRACK meta=expr RBRACK)? ID? (COL args)? body=expr?
+    : deco* CLS (LBRACK meta=expr RBRACK)? id? (COL args)? body=expr?
     ;
 
 forBody
@@ -72,7 +72,7 @@ objEntries
     ;
 
 objEntry
-    : DOT ID (COL expr)?
+    : DOT id (COL expr)?
     ;
 
 entries
@@ -97,7 +97,7 @@ accessOp
     ;
 
 accessItem 
-    : ID | LBRACK RBRACK
+    : id | LBRACK RBRACK
     ;
 
 defOp
@@ -116,10 +116,10 @@ nullAccess
 access
     : LPAREN args RPAREN                                        # CallAccess
     | index                                                     # IndexAccess
-    | DOT ID                                                    # MemberAccess
+    | DOT id                                                    # MemberAccess
     ;
 
-tag : ID COL ;
+tag : id COL ;
 
 index
     : LBRACK expr RBRACK                                        # SingleIndex
@@ -130,7 +130,7 @@ caseExpr
     : pattern ARROW expr
     ;
 
-// We handle _ in ExprPattern to allow it to be used as an ID in other places
+// We handle _ in ExprPattern to allow it to be used as an id in other places
 pattern
     : NUL                                                       # NullPattern
     | LPAREN pattern RPAREN                                     # ParenPattern
@@ -157,7 +157,7 @@ patEntry
     ;
 
 patObjEntry
-    : DOT ID COL pattern
+    : DOT id COL pattern
     ;
 
 matchOp
@@ -193,5 +193,10 @@ atom
     | STR                                                       # StrAtom
     | NUL                                                       # NullAtom
     | BOL                                                       # BoolAtom
-    | ID                                                        # IdAtom
+    | id                                                        # IdAtom
+    ;
+
+id
+    : ID                                                        # SimpleId
+    | SHARP LPAREN STR RPAREN                                   # StrId
     ;

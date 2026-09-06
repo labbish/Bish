@@ -35,7 +35,7 @@ public partial class BishVisitor
         CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr).Add(new Await());
 
     public override CompileResult VisitFuncExpr(BishParser.FuncExprContext context) =>
-        MakeFunc(CompileResult.Expr(context), context.ID()?.GetText(), context.funcBody(), context.deco());
+        MakeFunc(CompileResult.Expr(context), context.id()?.Name, context.funcBody(), context.deco());
 
     public override CompileResult VisitOperExpr(BishParser.OperExprContext context)
     {
@@ -51,7 +51,7 @@ public partial class BishVisitor
         var result = CompileResult.Expr(context);
         var op = context.accessOp().GetText();
         var item = context.accessItem();
-        var opName = op + (item, item?.ID()) switch
+        var opName = op + (item, item?.id()) switch
         {
             (null, _) => "()",
             (_, null) => "[]",
@@ -59,11 +59,11 @@ public partial class BishVisitor
         };
         var special = result.Try(() => BishOperator.GetOperator(opName, context.funcBody().defArgs().defArg().Length));
         var access = op + op[^1] + "er";
-        var (name, funcName) = (item, item?.ID()) switch
+        var (name, funcName) = (item, item?.id()) switch
         {
             (null, _) => (special?.NamePattern.Name, access),
             (_, null) => (special?.NamePattern.Name, $"index {access}"),
-            (_, { } id) => ($"hook_{op}_{id.GetText()}", $"{access} {id.GetText()}")
+            (_, { } id) => ($"hook_{op}_{id.Name}", $"{access} {id.Name}")
         };
         return MakeFunc(result, name, context.funcBody(), context.deco(), true, funcName);
     }
@@ -113,7 +113,7 @@ public partial class BishVisitor
     public override CompileResult VisitClsExpr(BishParser.ClsExprContext context)
     {
         var result = CompileResult.Expr(context);
-        var name = context.ID()?.GetText();
+        var name = context.id()?.Name;
         var args = context.args()?.arg() ?? [];
         if (context.meta is { } meta) result.Add(Visit(meta), StackEffect.Expr);
         else result.Add(new GetBuiltin("type"));

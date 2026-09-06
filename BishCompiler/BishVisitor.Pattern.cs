@@ -93,7 +93,7 @@ public partial class BishVisitor
         {
             var (tryTag, tryEnd) = Symbols.GetPair("try");
             result.Add(new Copy())
-                .Add(new TryStart(tryTag), new GetMember(entry.ID().GetText()), new TryEnd(tryTag))
+                .Add(new TryStart(tryTag), new GetMember(entry.id().Name), new TryEnd(tryTag))
                 .Add(new Copy()).Add(IsErr(context, null)).Add(new Not(), new Copy())
                 .Add(new JumpIf(tryEnd), new Swap(), new Pop(), new Swap(), new Pop(), Tag(tryEnd))
                 .Add(new JumpIfNot(tag))

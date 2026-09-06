@@ -20,12 +20,12 @@ public partial class BishVisitor
     }
 
     public override CompileResult VisitBreakExpr(BishParser.BreakExprContext context) =>
-        CompileResult.Expr(context).Add(new Break(context, context.ID()?.GetText()));
+        CompileResult.Expr(context).Add(new Break(context, context.id()?.Name));
 
     internal record Break(ParserRuleContext Context, string? LoopTag) : LoopUnbound(Context, "break", LoopTag);
 
     public override CompileResult VisitContinueExpr(BishParser.ContinueExprContext context) =>
-        CompileResult.Expr(context).Add(new Continue(context, context.ID()?.GetText()));
+        CompileResult.Expr(context).Add(new Continue(context, context.id()?.Name));
 
     internal record Continue(ParserRuleContext Context, string? LoopTag) : LoopUnbound(Context, "continue", LoopTag);
 
@@ -39,7 +39,7 @@ public partial class BishVisitor
             .Add(Visit(context.loop).IntoStat().Wrap())
             .Add(new Jump(tag))
             .Add(Tag(end))
-            .WrapLoop(end, tag, context.tag()?.ID().GetText())
+            .WrapLoop(end, tag, context.tag()?.id().Name)
             .Add(new Null());
     }
 
@@ -53,7 +53,7 @@ public partial class BishVisitor
             .Add(Tag(@continue))
             .Add(Visit(context.cond), StackEffect.Expr)
             .Add(new JumpIf(tag), Tag(end))
-            .WrapLoop(end, @continue, context.tag()?.ID().GetText())
+            .WrapLoop(end, @continue, context.tag()?.id().Name)
             .Add(new Null());
     }
 
@@ -63,7 +63,7 @@ public partial class BishVisitor
             .Add(ForIter(context, new CompileResult(StackEffect.Trans, context).Add(new Move("$for"))
                     .Add(Def(context.forBody().obj, CompileResult.Expr(null).Add(new Del("$for"))))
                     .Add(new Pop())
-                    .Add(Visit(context.loop).IntoStat()), context.tag()?.ID().GetText(),
+                    .Add(Visit(context.loop).IntoStat()), context.tag()?.id().Name,
                 context.forBody().AWT() is not null));
 
     private CompileResult ForIter(ParserRuleContext context, CompileResult body, string? loopTag, bool await = false)

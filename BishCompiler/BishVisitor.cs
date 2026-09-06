@@ -25,7 +25,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         return double.Parse(text[..pos]) * Math.Pow(10, exp);
     }
 
-    private static string ToStr(string text)
+    internal static string ToStr(string text)
     {
         var raw = text.StartsWith('r');
         var str = text.TrimStart('r').Trim('#')[1..^1];
@@ -48,7 +48,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         CompileResult.Expr(context).Add(new Bool(context.BOL().GetText() == "true"));
 
     public override CompileResult VisitIdAtom(BishParser.IdAtomContext context) =>
-        CompileResult.Expr(context).Add(new Get(context.GetText()));
+        CompileResult.Expr(context).Add(new Get(context.id().Name));
 
     public override CompileResult VisitParenExpr(BishParser.ParenExprContext context) => Visit(context.expr());
 
@@ -201,9 +201,9 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
         foreach (var entry in context.objEntries().objEntry())
         {
             result.Add(new Copy());
-            if (entry.expr() is null) result.Add(new Get(entry.ID().GetText()));
+            if (entry.expr() is null) result.Add(new Get(entry.id().Name));
             else result.Add(Visit(entry.expr()), StackEffect.Expr);
-            result.Add(new MoveMember(entry.ID().GetText()));
+            result.Add(new MoveMember(entry.id().Name));
         }
 
         return result;
@@ -236,7 +236,7 @@ public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
     internal static ArgumentException Impossible => new("impossible!");
 }
 
-public static class CompileResultHelper
+public static class CompileHelper
 {
     extension(CompileResult result)
     {
@@ -278,4 +278,20 @@ public static class CompileResultHelper
     }
 
     private static bool MatchLoopTag(string? unbound, string? loop) => unbound is null || unbound == loop;
+
+    extension(BishParser.IdContext id)
+    {
+        internal string Name
+        {
+            get
+            {
+                return id switch
+                {
+                    BishParser.SimpleIdContext simple => simple.GetText(),
+                    BishParser.StrIdContext str => BishVisitor.ToStr(str.STR().GetText()),
+                    _ => throw BishVisitor.Impossible
+                };
+            }
+        }
+    }
 }

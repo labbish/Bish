@@ -19,6 +19,11 @@ public class AccessTest : Test
 
         Execute("綾地寧々　:=　0x721;");
         ExpectResult("綾地寧々", "0x721");
+        
+        Execute("#('123'):=123;");
+        ExpectResult("#('123')", "123");
+        Execute("x.#('123'):=123;");
+        ExpectResult("x.#('123')", "123");
     }
 
     [Fact]

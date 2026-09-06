@@ -137,12 +137,12 @@ public class BishMapIterator(IList<Entry> entries) : BishObject
     }
 }
 
-public class BishProxyMap(IDictionary<string, BishObject> dictionary)
-    : BishMap(dictionary.Select(pair => new Entry(new BishString(pair.Key), pair.Value)).ToList())
+public class BishProxyMap<T>(IDictionary<string, T> dictionary)
+    : BishMap(dictionary.Select(pair => new Entry(new BishString(pair.Key), pair.Value)).ToList()) where T : BishObject
 {
     public override BishObject Add(Entry entry)
     {
-        if (entry.Key is BishString key) dictionary[key.Value] = entry.Value;
+        if (entry is { Key: BishString { Value: var key }, Value: T value }) dictionary[key] = value;
         return base.Add(entry);
     }
 
@@ -152,3 +152,5 @@ public class BishProxyMap(IDictionary<string, BishObject> dictionary)
         return base.Remove(entry);
     }
 }
+
+public class BishProxyMap(IDictionary<string, BishObject> dictionary) : BishProxyMap<BishObject>(dictionary);

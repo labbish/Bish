@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace BishRuntime;
 
+// meta.languages['txt']:=meta.Language((c)c,(value,_)[Bytecode('String',{.value}),Bytecode('Def',{.name:'text'})]);import('test')
 public static class BishImporter
 {
     public static readonly Dictionary<string, BishObject> Cache = [];
@@ -21,12 +22,12 @@ public static class BishImporter
     {
         var exts = BishMeta.Extensions;
         var ext = Path.GetExtension(file);
-        if (ext != "" && !exts.Contains(ext)) throw BishException.OfImport_InvalidExt(file, ext);
+        if (ext != "" && !exts.Contains(ext[1..])) throw BishException.OfImport_InvalidExt(file, ext[1..]);
         foreach (var path in new[] { root, BishMeta.LibRoot })
         {
             var full = Path.Combine(path, file);
             if (ext != "" && File.Exists(full)) return full;
-            var found = exts.Select(e => full + e).FirstOrDefault(File.Exists);
+            var found = exts.Select(e => $"{full}.{e}").FirstOrDefault(File.Exists);
             if (found is not null) return found;
         }
 
@@ -53,8 +54,7 @@ public static class BishImporter
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
 public interface IModule
 {
-    [UsedImplicitly]
-    static abstract BishObject Exports { get; }
+    [UsedImplicitly] static abstract BishObject Exports { get; }
 
     protected static BishObject ExportsFrom(params IEnumerable<(string, BishObject)> exports)
     {

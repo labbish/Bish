@@ -61,7 +61,7 @@ extend string {
             index := toInt(groups['index']);
             if (index is not null) return args[index];
             expr := groups['expr']?.value;
-            if (expr is not null) return meta.compile(expr, caller.scope).eval();
+            if (expr is not null) return meta.compile(Frame.CodeSource.code('bish', expr), caller.scope).eval();
             args[{ k := current; current += 1; k }]
         };
         doubleRegex.split(self).iter().map((part) switch part {

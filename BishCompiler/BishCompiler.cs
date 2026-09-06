@@ -41,8 +41,7 @@ public static class BishCompiler
         BishBuiltinBinder.Init();
         BuiltinsRegistry.Register();
         BishLib.BishLib.Initialize();
-        BishCompileService.Parser = Parse;
-        BishCompileService.Compiler = Compile;
+        BishCompileService.Languages["bish"] = new BishLanguage(Parse, Compile);
         BishBuiltinScope.Instance.DefMember("ParseTree", BishParseTreeObject.StaticType);
         try
         {

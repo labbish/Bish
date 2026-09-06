@@ -17,7 +17,7 @@ public class Test(TestInfoFixture fixture)
 
     private BishFrame Compile(string code)
     {
-        var frame = BishCompileService.Compile(new VirtualSource("<test>", code), scope: Scope);
+        var frame = BishCompileService.Compile(new VirtualSource("<test>", "bish", code), scope: Scope);
         foreach (var bytecode in frame.Bytecodes)
             if (bytecode.Pos is null)
                 Fail("Found bytecode without position!");
@@ -101,17 +101,17 @@ public class Test(TestInfoFixture fixture)
                 Fail($"Expected message to be {message} but found {e.Error.Message}");
             }
 
-            Fail($"Expected error to be {type} but found {e.Error.Type}");
+            Fail($"Expected error to be {BishString.CallDebug(type)} but found {BishString.CallDebug(e.Error.Type)}");
         }
 
-        Fail($"Expected {type} thrown but caught none");
+        Fail($"Expected {BishString.CallDebug(type)} thrown but caught none");
     }
 
     protected void ExpectErrorResult(string expr)
     {
         var result = Result(expr);
         if (result is BishErrorResult) return;
-        Fail($"Expected ErrorResult but found {result}");
+        Fail($"Expected ErrorResult but found {BishString.CallDebug(result)}");
     }
 
     protected static void TryRemove(string path)

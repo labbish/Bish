@@ -1,22 +1,43 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 
 namespace BishRuntime;
 
-public record CompileOptions(bool Optimize = true, bool Throws = true);
+public record CompileOptions(bool Optimize = true, bool Throws = true)
+{
+    public BishMap Map => new([
+        new Entry(new BishString("optimize"), BishBool.Of(Optimize)),
+        new Entry(new BishString("throws"), BishBool.Of(Throws))
+    ]);
+}
+
+public class BishLanguage(
+    Func<string, CompilerResult<BishObject>> parser,
+    Func<CompilerResult<BishObject>, CompileOptions, CompilerResult<IList<BishBytecode>>> compiler) : BishObject
+{
+    public Func<string, CompilerResult<BishObject>> Parser => parser;
+    public Func<CompilerResult<BishObject>, CompileOptions, CompilerResult<IList<BishBytecode>>> Compiler => compiler;
+
+    public override BishType DefaultType => StaticType;
+
+    public new static readonly BishType StaticType = new("Language");
+
+    [Builtin("hook")]
+    public static BishLanguage New(BishObject parser, BishObject compiler) => new(
+        code => new CompilerResult<BishObject>(parser.Call(new BishArgs([new BishString(code)])), []),
+        (result, options) => new CompilerResult<IList<BishBytecode>>(
+            compiler.Call(new BishArgs([result.Result, options.Map])).As<BishList>("bytecodes").List.Select(item =>
+                BishBytecodeParser.FromObject(item.As<BishBytecodeObject>("bytecode"))).ToList(), []));
+}
 
 public static class BishCompileService
 {
-    public static Func<string, CompilerResult<BishObject>> Parser
-    {
-        get => field ?? throw BishException.OfCompile_NoService();
-        set;
-    }
+    public static readonly IDictionary<string, BishLanguage> Languages =
+        new ConcurrentDictionary<string, BishLanguage>();
 
-    public static Func<CompilerResult<BishObject>, CompileOptions, CompilerResult<IList<BishBytecode>>> Compiler
-    {
-        get => field ?? throw BishException.OfCompile_NoService();
-        set;
-    }
+    private static BishLanguage Language(string lang) => Languages.TryGetValue(lang, out var language)
+        ? language
+        : throw BishException.OfCompile_InvalidLang(lang);
 
     public static BishFrame Compile(ICodeSource source, BishScope? scope = null, CompileOptions? options = null)
     {
@@ -29,37 +50,32 @@ public static class BishCompileService
         BishScope? scope = null, CompileOptions? options = null)
     {
         var ext = source.Extension;
-        switch (ext)
+        if (ext == "bishc")
         {
-            case ".bishc":
-            {
-                using var stream = File.OpenRead(source.Filename);
-                errors = [];
-                var value = stream.ReadBytecodes();
-                if (scope is not null) value.Scope = scope;
-                return value.AddMeta(source.Root);
-            }
-            case ".bish" or null:
-            {
-                var result = Compiler(Parser(source.Code), options ?? new CompileOptions());
-                errors = result.Errors;
-                var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
-                return frame;
-            }
-            default: throw BishException.OfCompile_InvalidExt(ext);
+            using var stream = File.OpenRead(source.Filename);
+            errors = [];
+            var value = stream.ReadBytecodes();
+            if (scope is not null) value.Scope = scope;
+            return value.AddMeta(source.Root);
         }
+
+        var language = Language(ext);
+        var result = language.Compiler(language.Parser(source.Code), options ?? new CompileOptions());
+        errors = result.Errors;
+        var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
+        return frame;
     }
 
-    public static BishFrame Compile(BishObject obj)
+    public static BishFrame Compile(string lang, BishObject obj)
     {
-        var result = Compiler(new CompilerResult<BishObject>(obj, []), new CompileOptions());
+        var result = Language(lang).Compiler(new CompilerResult<BishObject>(obj, []), new CompileOptions());
         CheckErrors(result.Errors);
         return new BishFrame(result.Result).AddMeta(null);
     }
 
-    public static BishObject Parse(string code)
+    public static BishObject Parse(string lang, string code)
     {
-        var result = Parser(code);
+        var result = Language(lang).Parser(code);
         CheckErrors(result.Errors);
         return result.Result;
     }
@@ -83,7 +99,7 @@ public interface ICodeSource
     public string Filename { get; }
     public string Code { get; }
     public string? Root => null;
-    public string? Extension => null;
+    public string Extension { get; }
 }
 
 public record FileSource(string Name) : ICodeSource
@@ -112,10 +128,10 @@ public record FileSource(string Name) : ICodeSource
         }
     }
 
-    public string Extension => Path.GetExtension(Filename);
+    public string Extension => Path.GetExtension(Filename)[1..];
 }
 
-public record VirtualSource(string Filename, string Code) : ICodeSource;
+public record VirtualSource(string Filename, string Extension, string Code) : ICodeSource;
 
 public class BishCodeSource(ICodeSource source) : BishObject
 {
@@ -129,11 +145,11 @@ public class BishCodeSource(ICodeSource source) : BishObject
     public static BishCodeSource File(BishString name) => new(new FileSource(name.Value));
 
     [Builtin]
-    public static BishCodeSource Virtual(BishString name, BishString code) =>
-        new(new VirtualSource(name.Value, code.Value));
+    public static BishCodeSource Virtual(BishString name, BishString ext, BishString code) =>
+        new(new VirtualSource(name.Value, ext.Value, code.Value));
 
     [Builtin]
-    public static BishCodeSource Code(BishString code) => new(new VirtualSource("<code>", code.Value));
+    public static BishCodeSource Code(BishString ext, BishString code) => Virtual(new BishString("<code>"), ext, code);
 }
 
 public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)

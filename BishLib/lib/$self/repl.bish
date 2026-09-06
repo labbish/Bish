@@ -28,17 +28,16 @@ func start(scope: null) {
 
         @handler
         func comp(code)
-            for (b : meta.compile(code).bytecodes)
+            for (b : meta.compile(Frame.CodeSource.code('bish', code)).bytecodes)
                 print('{}\t{}\n'.format(pos(b), b));
 
         @handler
-        func file(name)
-            meta.compileFile(name, scope).execute();
+        func file(name) meta.compile(Frame.CodeSource.file(name), scope).execute();
     };
 
     @handler
     func run(code) {
-        result := meta.compile(code, scope).eval();
+        result := meta.compile(Frame.CodeSource.code('bish', code), scope).eval();
         if (result is not null) print('{:?}\n'.format(result));
     };
 

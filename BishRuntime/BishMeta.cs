@@ -6,7 +6,7 @@ public class BishMeta(string? root) : BishObject
 
     public static string LibRoot => Path.Combine(AppContext.BaseDirectory, "lib");
 
-    public static readonly List<string> Extensions = [".dll", ".bishc", ".bish"];
+    public static List<string> Extensions => ["dll", "bishc", ..BishCompileService.Languages.Keys];
 
     public static BishMeta Builtin => new(null);
 
@@ -31,18 +31,21 @@ public class BishMeta(string? root) : BishObject
     [Builtin("hook")]
     public static BishProxyMap Get_cache(BishMeta _) => new(BishImporter.Cache);
 
-    [Builtin]
-    public static BishObject Parse(BishMeta _, BishString code) => BishCompileService.Parse(code.Value);
+    [Builtin("hook")]
+    public static BishProxyMap<BishLanguage> Get_languages(BishMeta _) => new(BishCompileService.Languages);
+
+    [Builtin("hook")]
+    public static BishType Get_Language(BishObject _) => BishLanguage.StaticType;
 
     [Builtin]
-    public static BishFrame Compile(BishMeta _, BishObject obj, [DefaultNull] BishScope? scope) => obj switch
-    {
-        BishString code => BishCompileService.Compile(new VirtualSource("<string>", code.Value), scope),
-        BishCodeSource source => BishCompileService.Compile(source.Source, scope),
-        _ => BishCompileService.Compile(obj)
-    };
+    public static BishObject Parse(BishMeta _, BishString lang, BishString code) =>
+        BishCompileService.Parse(lang.Value, code.Value);
 
     [Builtin]
-    public static BishFrame CompileFile(BishMeta _, BishString path, [DefaultNull] BishScope? scope) =>
-        BishCompileService.Compile(new FileSource(path.Value), scope);
+    public static BishFrame Compile(BishMeta _, BishCodeSource source, [DefaultNull] BishScope? scope) =>
+        BishCompileService.Compile(source.Source, scope);
+
+    [Builtin]
+    public static BishFrame CompileParsed(BishMeta _, BishString lang, BishObject tree) =>
+        BishCompileService.Compile(lang.Value, tree);
 }

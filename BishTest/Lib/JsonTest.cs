@@ -164,7 +164,7 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
     [Fact]
     public void TestJsonExtensions()
     {
-        JsonStringify("meta.parse('1+2')",
+        JsonStringify("meta.parse('bish', '1+2')",
             """
                 {"type":"Program","children":[{"type":"BinOpExpr","children":
                 [{"type":"AtomExpr","children":[{"type":"IntAtom","children":

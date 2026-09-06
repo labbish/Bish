@@ -64,15 +64,14 @@ public class ReflectTest : Test
         ExpectResult("(()0).isAsync", "false");
         ExpectResult("(()async 0).isAsync", "true");
 
-        ExpectResult("meta.compile('return 0;').execute()", "0");
-        ExpectResult("meta.compile(Frame.CodeSource.code('return 0;')).execute()", "0");
-        ExpectError("meta.compile('???')", BishError.CompilationErrorType);
-        
+        ExpectResult("meta.compile(Frame.CodeSource.code('bish','return 0;')).execute()", "0");
+        ExpectError("meta.compile(Frame.CodeSource.code('bish','???'))", BishError.CompilationErrorType);
+
         Execute("func h()this().caller.scope.a;");
         ExpectResult("a:=0;h()", "0");
         ExpectResult("{a:=1;h()}", "1");
         ExpectResult("((){a:=2;h()})()", "2");
-        
+
         ExpectResult("func g()this().function;g()", "g");
         ExpectResult("func g(x)this().arguments;g(1)", "[1]");
         Execute("func g(x)this().stackLayer;l:=g(1);");
@@ -91,7 +90,7 @@ public class ReflectTest : Test
     public void TestParseTree()
     {
         const string c = "([BinOpExpr] ([AtomExpr] ([IntAtom] 1)) + ([AtomExpr] ([IntAtom] 2)))";
-        Execute("t:=meta.parse('1+2');");
+        Execute("t:=meta.parse('bish','1+2');");
         ExpectResult("string.show(t)", $"'([Program] {c} <EOF>)'");
         ExpectResult("t.type", "'Program'");
         ExpectResult("t.text", "null");
@@ -104,9 +103,9 @@ public class ReflectTest : Test
         ExpectResult("c.text", "null");
         ExpectTrue("c.parent===t");
         ExpectResult("c.children.length", "3");
-        
+
         ExpectResult("c.children[1].text", "'+'");
 
-        ExpectResult("meta.compile(t).eval()", "3");
+        ExpectResult("meta.compileParsed('bish',t).eval()", "3");
     }
 }

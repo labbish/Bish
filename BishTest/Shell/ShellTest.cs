@@ -126,8 +126,6 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
 
         CreateFile("./a/ax.bish", "return 0;");
         await GetOutputAsync("-f", "./a/ax.bish", "-o", "./a/ax.bishc", "-s");
-        await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bish').execute());", "0");
-        await ExpectOutputAsync("-c", "print(meta.compileFile('./a/ax.bishc').execute());", "0");
         await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bish')).execute());", "0");
         await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bishc')).execute());", "0");
     }
@@ -139,6 +137,11 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         await ExpectOutputAsync("-c", "import('a/a6')", "bish");
         await GetOutputAsync("-c", "print('bishc');", "-o", "./a/a6.bishc", "-s");
         await ExpectOutputAsync("-c", "import('a/a6')", "bishc");
+
+        CreateFile("./a/t.txt", "test");
+        await ExpectOutputAsync("-c",
+            "meta.languages['txt']:=meta.Language((c)c,(value,_)[Bytecode('String',{.value})," +
+            "Bytecode('Def',{.name:'text'})]);print(import('a/t').text)", "test");
     }
 
     [Fact]

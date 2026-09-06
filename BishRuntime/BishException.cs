@@ -208,13 +208,14 @@ public class BishException(BishError error) : Exception
     public static BishException OfCompile_Errors(IList<CompilationError> errors) =>
         OfCompile("Compile error(s) occured").CausedBy(errors.Select(e => e.ToError()).ToList());
 
-    public static BishException OfCompile_NoService() => OfCompile("Compile service is invalid!");
-
     public static BishException OfCompile_NoFile(string path) =>
         OfCompile($"File doesn't exist: {path}").With("path", new BishString(path));
 
-    public static BishException OfCompile_InvalidExt(string ext) =>
-        OfCompile($"Invalid file extension: {ext}").With("extension", new BishString(ext));
+    public static BishException OfCompile_InvalidLang(string lang) =>
+        OfCompile($"Invalid language: {lang}").With("language", new BishString(lang));
+
+    public static BishException OfCompile_ExistingLang(string lang) =>
+        OfCompile($"Language already exists: {lang}").With("language", new BishString(lang));
 
     public static BishException OfBytecodeParser(string message) => Create(BishError.BytecodeParserErrorType, message);
 

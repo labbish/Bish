@@ -28,7 +28,7 @@ func parse(args) {
             '-c' or '--command' => {
                 if (args.length == 0) error('{} expect a command'.format(arg));
                 if (options.source is not null) error('found multiple input sources');
-                options.source = Frame.CodeSource.virtual('<input>', del args[0])
+                options.source = Frame.CodeSource.virtual('<input>', 'bish', del args[0])
             },
             '-f' or '--file' => {
                 if (args.length == 0) error('{} expect a file'.format(arg));

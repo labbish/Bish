@@ -13,17 +13,37 @@ public partial class BishVisitor
     {
         var result = CompileResult.Pattern(context);
         var items = context.patItem();
-        var pos = -1;
+        int? rest = null;
         foreach (var (item, i) in items.Enumerate())
         {
             if (item.dots is null) continue;
-            if (pos == -1) pos = i;
+            if (rest is null) rest = i;
             else result.Error("Found list deconstruct pattern with multiple rest pattern");
         }
 
         var end = Symbols.Get("list");
         var tags = Enumerable.Range(0, items.Length).Select(_ => Symbols.Get("list")).ToList();
-        result.Add(new ListDeconstruct(items.Length, pos, Pattern: true), new JumpIfNot(tags[^1]));
+        result.Add(new Move("$_"), new Get("$_"), new GetBuiltin("list"), new TestType(), new Pop())
+            .Add(new JumpIfNot(tags[^1]), new Get("$_"), new GetMember("length"));
+        if (rest is null) result.Add(new Int(items.Length), Op("==", 2));
+        else result.Add(new Int(items.Length - 1), Op(">=", 2));
+        result.Add(new JumpIfNot(tags[^1]));
+        for (var i = items.Length - 1; i >= 0; i--)
+        {
+            result.Add(new Get("$_"));
+            switch (rest is null ? -1 : i.CompareTo(rest))
+            {
+                case < 0: result.Add(new Int(i)); break;
+                case 0:
+                    result.Add(new GetBuiltin("range"), new Int(rest!.Value), new Get("$_"), new GetMember("length"))
+                        .Add(new Int(items.Length - rest.Value - 1), Op("-", 2), new Int(1), new Call(3)); break;
+                case > 0: result.Add(new Int(i - items.Length)); break;
+            }
+
+            result.Add(Op("get[]", 2));
+        }
+
+        result.Add(new Del("$_"), new Pop(), new Bool(true), new JumpIfNot(tags[^1]));
         foreach (var (item, i) in items.Enumerate())
             result.Add(Visit(item.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tags[i]));
         result.Add(new Bool(true), new Jump(end));

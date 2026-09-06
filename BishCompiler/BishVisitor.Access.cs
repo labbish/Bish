@@ -4,6 +4,27 @@ namespace BishCompiler;
 
 public partial class BishVisitor
 {
+    private static void ListDeconstruct(CompileResult result, int count, int? rest)
+    {
+        result.Add(new Move("$_"));
+        for (var i = 0; i < count; i++)
+        {
+            result.Add(new Get("$_"));
+            switch (rest is null ? -1 : i.CompareTo(rest))
+            {
+                case < 0: result.Add(new Int(i)); break;
+                case 0:
+                    result.Add(new GetBuiltin("range"), new Int(rest!.Value), new Get("$_"), new GetMember("length"))
+                        .Add(new Int(count - rest.Value - 1), Op("-", 2), new Int(1), new Call(3)); break;
+                case > 0: result.Add(new Int(i - count)); break;
+            }
+
+            result.Add(Op("get[]", 2), new Move($"${i}"));
+        }
+
+        result.Add(new Del("$_"), new Pop());
+    }
+
     private CompileResult GetExceptLast(BishParser.GetAccessContext context, string tag)
     {
         var result = CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr);
@@ -77,15 +98,16 @@ public partial class BishVisitor
             case BishParser.ListExprContext list:
             {
                 var args = list.args().arg();
-                var pos = -1;
+                int? pos = null;
                 foreach (var (item, i) in args.Enumerate())
                 {
                     if (item is not BishParser.RestArgContext) continue;
-                    if (pos == -1) pos = i;
+                    if (pos is null) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
 
-                result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
+                result.Add(value, StackEffect.Expr);
+                ListDeconstruct(result, args.Length, pos);
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
                     result.Add(Set(expr, op, CompileResult.Expr(null).Add(new Del($"${i}"))));
@@ -200,15 +222,16 @@ public partial class BishVisitor
             case BishParser.ListExprContext list:
             {
                 var args = list.args().arg();
-                var pos = -1;
+                int? pos = null;
                 foreach (var (item, i) in args.Enumerate())
                 {
                     if (item is not BishParser.RestArgContext) continue;
-                    if (pos == -1) pos = i;
+                    if (pos is null) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
 
-                result.Add(value, StackEffect.Expr).Add(new ListDeconstruct(args.Length, pos));
+                result.Add(value, StackEffect.Expr);
+                ListDeconstruct(result, args.Length, pos);
                 foreach (var (expr, i) in ArgsToExpr(args).Enumerate())
                 {
                     result.Add(Def(expr, CompileResult.Expr(null).Add(new Del($"${i}"))));

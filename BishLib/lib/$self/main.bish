@@ -69,10 +69,10 @@ func showHelp() {
     exit(1);
 };
 
-func main(Server, ..args) {
+func main(lsp, ..args) async {
     options := parse(args);
     switch options {
-        { .lsp: true } => Server.run(),
+        { .lsp: true } => await lsp,
         { .source: null } => repl.start(),
         _ => {
             frame := meta.compile(options.source);

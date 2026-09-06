@@ -45,9 +45,13 @@ public partial class BishVisitor
             switch (entry)
             {
                 case BishParser.SinglePatternEntryContext single:
+                    var (tryTag, tryEnd) = Symbols.GetPair("try");
                     result.Add(new Copy())
                         .Add(Visit(single.expr()), StackEffect.Expr)
-                        .Add(new TryDelIndex(), new JumpIfNot(tag))
+                        .Add(new TryStart(tryTag), Op("del[]", 2), new TryEnd(tryTag))
+                        .Add(new Copy()).Add(IsErr(context, null)).Add(new Not(), new Copy())
+                        .Add(new JumpIf(tryEnd), new Swap(), new Pop(), new Swap(), new Pop(), new Swap(), new Pop())
+                        .Add(Tag(tryEnd), new JumpIfNot(tag))
                         .Add(Visit(single.pattern()), StackEffect.Pattern)
                         .Add(new JumpIfNot(tag));
                     break;
@@ -66,8 +70,16 @@ public partial class BishVisitor
         var result = CompileResult.Pattern(context);
         var (tag, end) = Symbols.GetPair("map");
         foreach (var entry in context.patObjEntry())
-            result.Add(new Copy(), new TryGetMember(entry.ID().GetText()), new JumpIfNot(tag))
+        {
+            var (tryTag, tryEnd) = Symbols.GetPair("try");
+            result.Add(new Copy())
+                .Add(new TryStart(tryTag), new GetMember(entry.ID().GetText()), new TryEnd(tryTag))
+                .Add(new Copy()).Add(IsErr(context, null)).Add(new Not(), new Copy())
+                .Add(new JumpIf(tryEnd), new Swap(), new Pop(), new Swap(), new Pop(), Tag(tryEnd))
+                .Add(new JumpIfNot(tag))
                 .Add(Visit(entry.pattern()), StackEffect.Pattern).Add(new JumpIfNot(tag));
+        }
+
         return result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());
     }
 

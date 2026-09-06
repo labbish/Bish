@@ -62,6 +62,12 @@ public record GetBuiltin(string Name) : BishBytecode
 }
 
 [Bytecode]
+public record Set(string Name) : BishBytecode
+{
+    public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.SetVar(Name, frame.Stack.Pop()));
+}
+
+[Bytecode]
 public record Def(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.DefVar(Name, frame.Stack.Pop()));
@@ -71,12 +77,6 @@ public record Def(string Name) : BishBytecode
 public record Move(string Name) : BishBytecode
 {
     public override void Execute(BishFrame frame) => frame.Scope.DefVar(Name, frame.Stack.Pop());
-}
-
-[Bytecode]
-public record Set(string Name) : BishBytecode
-{
-    public override void Execute(BishFrame frame) => frame.Stack.Push(frame.Scope.SetVar(Name, frame.Stack.Pop()));
 }
 
 [Bytecode]
@@ -404,7 +404,7 @@ public record RefEq : BishBytecode
 }
 
 [Bytecode]
-public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false) : BishBytecode
+public record ListDeconstruct(int Count, int RestPos, bool Pattern = false) : BishBytecode
 {
     public override void Execute(BishFrame frame)
     {
@@ -446,46 +446,10 @@ public record ListDeconstruct(int Count, int RestPos = -1, bool Pattern = false)
 }
 
 [Bytecode]
-public record TryDelIndex : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        var index = frame.Stack.Pop();
-        var obj = frame.Stack.Pop();
-        try
-        {
-            frame.Stack.Push(BishOperator.Call("op_delIndex", new BishArgs([obj, index], frame)));
-            frame.Stack.Push(BishBool.True);
-        }
-        catch (BishException)
-        {
-            frame.Stack.Push(BishBool.False);
-        }
-    }
-}
-
-[Bytecode]
-public record TryGetMember(string Name) : BishBytecode
-{
-    public override void Execute(BishFrame frame)
-    {
-        try
-        {
-            frame.Stack.Push(frame.Stack.Pop().GetMember(Name));
-            frame.Stack.Push(BishBool.True);
-        }
-        catch (BishException)
-        {
-            frame.Stack.Push(BishBool.False);
-        }
-    }
-}
-
-[Bytecode]
 public record DebugStack : BishBytecode
 {
     public override void Execute(BishFrame frame) =>
-        Console.WriteLine(string.Join(", ", frame.Stack.ToArray()));
+        Console.WriteLine(string.Join(", ", frame.Stack.Select(BishString.CallDebug)));
 }
 
 [Bytecode]

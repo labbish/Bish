@@ -150,7 +150,7 @@ public class BishBytecodeReader(BinaryReader reader)
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 8;
+    public const byte Version = 9;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 

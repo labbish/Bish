@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishRuntime", "BishRuntime\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishTest", "BishTest\BishTest.csproj", "{0092EA54-3145-4497-8EFA-34E626737597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishCompiler", "BishCompiler\BishCompiler.csproj", "{9982FB55-8744-4AD6-911D-E19029B3BEFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BishLanguage", "BishLanguage\BishLanguage.csproj", "{9982FB55-8744-4AD6-911D-E19029B3BEFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bish", "Bish\Bish.csproj", "{AA31937E-28EC-4BC4-9DB5-77923B849123}"
 EndProject

@@ -2,13 +2,15 @@
 global using Antlr4.Runtime.Tree;
 global using Antlr4.Runtime;
 global using BishRuntime;
-using System.Runtime.CompilerServices;
 using BishUtils;
 
-namespace BishCompiler;
+namespace BishLanguage;
 
-public static class BishCompiler
+public struct BishCompiler : ILanguage
 {
+    public static string Name => "bish";
+    public static BishRuntime.BishLanguage Language => new(Parse, Compile);
+
     private static CompilerResult<BishObject> Parse(string code)
     {
         var stream = CharStreams.fromString(code);
@@ -34,23 +36,10 @@ public static class BishCompiler
         return new CompilerResult<Codes>(result.Codes, errors.Concat(result.Errors).ToConcurrentList());
     }
 
-    public static void Init() => RuntimeHelpers.RunClassConstructor(typeof(BishCompiler).TypeHandle);
-
     static BishCompiler()
     {
-        BishBuiltinBinder.Init();
         BuiltinsRegistry.Register();
-        BishLib.BishLib.Initialize();
-        BishCompileService.Languages["bish"] = new BishLanguage(Parse, Compile);
         BishBuiltinScope.Instance.DefMember("ParseTree", BishParseTreeObject.StaticType);
-        try
-        {
-            BishImporter.Import(null, "preludes");
-        }
-        catch (BishException e)
-        {
-            Console.Error.WriteLine($"Cannot import preludes: {e.Error}");
-        }
     }
 }
 

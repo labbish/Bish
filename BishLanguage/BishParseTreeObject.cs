@@ -1,6 +1,6 @@
 ﻿using BishUtils;
 
-namespace BishCompiler;
+namespace BishLanguage;
 
 public class BishParseTreeObject : BishObject
 {

@@ -1,6 +1,6 @@
 ﻿using String = BishRuntime.String;
 
-namespace BishCompiler;
+namespace BishLanguage;
 
 public partial class BishVisitor
 {

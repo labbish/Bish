@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 
 namespace BishRuntime;
 
-// meta.languages['txt']:=meta.Language((c)c,(value,_)[Bytecode('String',{.value}),Bytecode('Def',{.name:'text'})]);import('test')
 public static class BishImporter
 {
     public static readonly Dictionary<string, BishObject> Cache = [];
@@ -46,7 +45,7 @@ public static class BishImporter
     }
 
     private static BishObject ImportDll(string path) =>
-        IModule.TypesFromAssembly(Assembly.LoadFrom(path)) is [var module]
+        Assembly.LoadFrom(path).TypesOf(typeof(IModule)) is [var module]
             ? IModule.ExportsFromType(module)
             : throw BishException.OfImport_Dll(path);
 }
@@ -64,9 +63,15 @@ public interface IModule
         return module;
     }
 
-    public static Type[] TypesFromAssembly(Assembly assembly) => assembly.GetTypes().Where(type =>
-        type is { IsAbstract: false, IsPublic: true } && typeof(IModule).IsAssignableFrom(type)).ToArray();
-
     public static BishObject ExportsFromType(Type type) => (BishObject)type.GetProperty("Exports",
         BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy)!.GetValue(null)!;
+}
+
+public static class AssemblyHelper
+{
+    extension(Assembly assembly)
+    {
+        public Type[] TypesOf(Type iType) => assembly.GetTypes().Where(type =>
+            type is { IsAbstract: false, IsPublic: true } && iType.IsAssignableFrom(type)).ToArray();
+    }
 }

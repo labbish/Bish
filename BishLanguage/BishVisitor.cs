@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using String = BishRuntime.String;
 
-namespace BishCompiler;
+namespace BishLanguage;
 
 public partial class BishVisitor : BishParserBaseVisitor<CompileResult>
 {

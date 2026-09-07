@@ -13,16 +13,4 @@
             <ExcludeAssets>runtime</ExcludeAssets>
         </ProjectReference>
     </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <ItemGroup>
-            <PluginFiles Include="$(OutputPath)$(AssemblyName).dll" />
-        </ItemGroup>
-
-        <PropertyGroup>
-            <PluginsDir>$(SolutionDir)BishExamplePlugin/</PluginsDir>
-        </PropertyGroup>
-
-        <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(PluginsDir)" SkipUnchangedFiles="true" />
-    </Target>
 </Project>

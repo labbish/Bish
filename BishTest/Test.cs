@@ -1,6 +1,7 @@
 ﻿global using BishRuntime;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Xunit.Sdk;
 
 namespace BishTest;
@@ -129,7 +130,7 @@ public class Test(TestInfoFixture fixture)
 
     protected static void CreateFile(string path, string content = "") => File.WriteAllText(path, content);
 
-    static Test() => BishCompiler.BishCompiler.Init();
+    static Test() => RuntimeHelpers.RunClassConstructor(typeof(Bish.Program).TypeHandle);
 }
 
 public class AssertionFailedException(string message) : Exception(message);

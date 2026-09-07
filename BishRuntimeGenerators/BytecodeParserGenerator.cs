@@ -37,7 +37,7 @@ public class BytecodeParserGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine("#nullable enable");
             sb.AppendLine();
-            sb.AppendLine("public static class BytecodeParserRegistry");
+            sb.AppendLine("internal static class BytecodeParserRegistry");
             sb.AppendLine("{");
             sb.AppendLine("    public static void Register()");
             sb.AppendLine("    {");

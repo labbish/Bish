@@ -1,0 +1,7 @@
+<Project>
+    <PropertyGroup>
+        <ArtifactsDir>$(MSBuildThisFileDirectory)artifacts\</ArtifactsDir>
+        <OutputPath>$(ArtifactsDir)bin\$(Configuration)\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+</Project>

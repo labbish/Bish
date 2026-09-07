@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BishCompiler\BishCompiler.csproj"/>
+        <ProjectReference Include="..\BishLib\BishLib.csproj" />
         <ProjectReference Include="..\BishRuntime\BishRuntime.csproj"/>
     </ItemGroup>
 

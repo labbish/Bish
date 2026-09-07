@@ -25,9 +25,7 @@ public class AsyncAttribute : Attribute;
 
 public static class BishBuiltinBinder
 {
-    public static void Init() => RuntimeHelpers.RunClassConstructor(typeof(BishBuiltinBinder).TypeHandle);
-
-    static BishBuiltinBinder()
+    public static void Init()
     {
         BuiltinsRegistry.Register();
         BytecodeParserRegistry.Register();

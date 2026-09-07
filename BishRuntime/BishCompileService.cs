@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Reflection;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace BishRuntime;
 
@@ -91,7 +93,13 @@ public static class BishCompileService
         if (errors.Count > 0) throw BishException.OfCompile_Errors(errors);
     }
 
-    static BishCompileService() => BishMeta.Builtin.Root = Environment.CurrentDirectory;
+    static BishCompileService()
+    {
+        var root = BishMeta.Builtin.Root = Environment.CurrentDirectory;
+        foreach (var file in Directory.GetFiles(root, "*Language.dll"))
+        foreach (var lang in Assembly.LoadFrom(file).TypesOf(typeof(ILanguage)))
+            ILanguage.Register(lang);
+    }
 }
 
 public interface ICodeSource
@@ -191,3 +199,18 @@ public record CompilationError(SourcePosition Position, string Message)
 }
 
 public record CompilerResult<T>(T Result, IList<CompilationError> Errors);
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
+public interface ILanguage
+{
+    [UsedImplicitly] static abstract string Name { get; }
+    [UsedImplicitly] static abstract BishLanguage Language { get; }
+
+    internal static void Register(Type type)
+    {
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy;
+        var name = (string)type.GetProperty("Name", flags)!.GetValue(null)!;
+        var lang = (BishLanguage)type.GetProperty("Language", flags)!.GetValue(null)!;
+        BishCompileService.Languages[name] = lang;
+    }
+}

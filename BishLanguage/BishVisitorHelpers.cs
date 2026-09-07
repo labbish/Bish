@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using BishUtils;
 
-namespace BishCompiler;
+namespace BishLanguage;
 
 public class SymbolAllocator
 {

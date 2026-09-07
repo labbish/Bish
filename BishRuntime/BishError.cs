@@ -50,7 +50,7 @@ public class BishError(string message) : BishObject
 
     public override BishType DefaultType => StaticType;
 
-    public new static readonly BishType StaticType = new("Error");
+    public new static readonly BishType StaticType = CreateError("Error");
 
     [Builtin("hook")]
     public static BishError New([DefaultNull] BishString? message) => new(message?.Value ?? "");
@@ -84,7 +84,7 @@ public class BishError(string message) : BishObject
     protected static BishType CreateError(string name)
     {
         name = name.RemoveEnd("Type");
-        var error = new BishType(name, [StaticType]);
+        var error = new BishType(name, name == "Error" ? [] : [StaticType]);
         BishBuiltinScope.Instance.Init(name, error);
         return error;
     }

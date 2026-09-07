@@ -42,8 +42,8 @@ jobs:
       - name: Download ANTLR
         shell: bash
         run: |
-          mkdir ./BishCompiler/tools
-          curl -L https://www.antlr.org/download/antlr-4.13.2-complete.jar -o ./BishCompiler/tools/antlr.jar
+          mkdir ./BishLanguage/tools
+          curl -L https://www.antlr.org/download/antlr-4.13.2-complete.jar -o ./BishLanguage/tools/antlr.jar
 
       - name: Start httpbin service (Linux)
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -55,15 +55,27 @@ jobs:
         shell: bash
         run: dotnet test
 
-      - name: Publish main project
+      - name: Publish common runtime project
         shell: bash
         run: |
           dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
 
-      - name: Upload main artifact for ${{ matrix.os }}
+      - name: Upload runtime artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v7
         with:
           name: Bish-${{ matrix.os }}
           path: |
             publish/Bish${{ matrix.asset_suffix }}
             publish/lib/
+      
+      - name: Build Bish language project
+        shell: bash
+        run: dotnet build -c Release
+
+      - name: Upload Bish language artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: BishLanguage-${{ matrix.os }}
+          path: |
+            publish/BishLanguage.dll
+            publish/Antlr4.Runtime.Standard.dll

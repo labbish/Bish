@@ -44,7 +44,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     [Fact]
     public async Task TestCommand()
     {
-        await ExpectOutputAsync("-c", "print('Hello!');", "Hello!");
+        await ExpectOutputAsync("-c", "bish", "print('Hello!');", "Hello!");
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         CreateFile("./a/b/b2.bish", s1);
         CreateFile("./a/b/c/c2.bish", s2);
 
-        await ExpectOutputAsync("-c", s0, "abc");
+        await ExpectOutputAsync("-c", "bish", s0, "abc");
         await ExpectOutputAsync("-f", "./a/a2.bish", "abc");
         await ExpectOutputAsync("-f", "./a/b/b2.bish", "abc");
         await ExpectOutputAsync("-f", "./a/b/c/c2.bish", "abc");
@@ -100,7 +100,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
             await GetOutputAsync("-f", $"{file}4.bish", "-o", $"{file}4.bishc", "-s");
         }
 
-        await ExpectOutputAsync("-c", s0, "abc");
+        await ExpectOutputAsync("-c", "bish", s0, "abc");
         await ExpectOutputAsync("-f", "./a/a4.bishc", "abc");
         await ExpectOutputAsync("-f", "./a/b/b4.bishc", "abc");
         await ExpectOutputAsync("-f", "./a/b/c/c4.bishc", "abc");
@@ -119,27 +119,29 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         var p1 = Path.GetFullPath("a");
         var p2 = Path.GetFullPath("a/b/c");
 
-        await ExpectOutputAsync("-c", s, p0);
+        await ExpectOutputAsync("-c", "bish", s, p0);
         await ExpectOutputAsync("-f", "./a/a5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/b5.bish", p1);
         await ExpectOutputAsync("-f", "./a/b/c/c5.bish", p2);
 
         CreateFile("./a/ax.bish", "return 0;");
         await GetOutputAsync("-f", "./a/ax.bish", "-o", "./a/ax.bishc", "-s");
-        await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bish')).execute());", "0");
-        await ExpectOutputAsync("-c", "print(meta.compile(Frame.CodeSource.file('./a/ax.bishc')).execute());", "0");
+        await ExpectOutputAsync("-c", "bish",
+            "print(meta.compile(Frame.CodeSource.file('./a/ax.bish')).execute());", "0");
+        await ExpectOutputAsync("-c", "bish",
+            "print(meta.compile(Frame.CodeSource.file('./a/ax.bishc')).execute());", "0");
     }
 
     [Fact]
     public async Task TestImportExt()
     {
         CreateFile("./a/a6.bish", "print('bish');");
-        await ExpectOutputAsync("-c", "import('a/a6')", "bish");
-        await GetOutputAsync("-c", "print('bishc');", "-o", "./a/a6.bishc", "-s");
-        await ExpectOutputAsync("-c", "import('a/a6')", "bishc");
+        await ExpectOutputAsync("-c", "bish", "import('a/a6')", "bish");
+        await GetOutputAsync("-c", "bish", "print('bishc');", "-o", "./a/a6.bishc", "-s");
+        await ExpectOutputAsync("-c", "bish", "import('a/a6')", "bishc");
 
         CreateFile("./a/t.txt", "test");
-        await ExpectOutputAsync("-c",
+        await ExpectOutputAsync("-c", "bish",
             "meta.languages['txt']:=meta.Language((c)c,(value,_)[Bytecode('String',{.value})," +
             "Bytecode('Def',{.name:'text'})]);print(import('a/t').text)", "test");
     }
@@ -147,7 +149,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
     [Fact]
     public async Task TestSource()
     {
-        await ExpectOutputAsync("-c", "print(this().source)", "null");
+        await ExpectOutputAsync("-c", "bish", "print(this().source)", "null");
 
         // Int 1 -> Int 23 -> Op "op_add" 2 -> Pop -> ...
         CreateFile("./a/s.bish", "1\n+23;\nprint(this().source);");
@@ -170,7 +172,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         CreateFile("./a/s.bish", code);
         await ExpectOutputAsync("-f", "./a/s.bish", "-o", "./a/s.bishc", code);
         await ExpectOutputAsync("-f", "./a/s.bishc", code);
-        await ExpectOutputAsync("-c", code, code);
+        await ExpectOutputAsync("-c", "bish", code, code);
     }
 
     [Fact]

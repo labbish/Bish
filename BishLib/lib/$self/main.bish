@@ -26,19 +26,20 @@ func parse(args) {
         arg := del args[0];
         switch arg {
             '-c' or '--command' => {
-                if (args.length == 0) error('{} expect a command'.format(arg));
+                lang := (try del args[0]) ?? error('{} expect a language'.format(arg));
+                cmd := (try del args[0]) ?? error('{} expect a command'.format(arg));
                 if (options.source is not null) error('found multiple input sources');
-                options.source = Frame.CodeSource.virtual('<input>', 'bish', del args[0])
+                options.source = Frame.CodeSource.virtual('<input>', lang, cmd)
             },
             '-f' or '--file' => {
-                if (args.length == 0) error('{} expect a file'.format(arg));
+                file := (try del args[0]) ?? error('{} expect a file'.format(arg));
                 if (options.source is not null) error('found multiple input sources');
-                options.source = Frame.CodeSource.file(del args[0])
+                options.source = Frame.CodeSource.file(file)
             },
             '-o' or '--output' => {
-                if (args.length == 0) error('{} expect a output'.format(arg));
+                output := (try del args[0]) ?? error('{} expect a output'.format(arg));
                 if (options.output is not null) error('found multiple outputs');
-                options.output = del args[0]
+                options.output = output
             },
             '-s' or '--skip' => options.skip = true,
             '-i' or '--interactive' => options.inter = true,

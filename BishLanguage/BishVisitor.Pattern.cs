@@ -13,6 +13,9 @@ public partial class BishVisitor
     {
         var result = CompileResult.Pattern(context);
         var items = context.patItem();
+
+        if (items.Length == 0) return result.Add(new BuildList(0), Op("==", 2));
+        
         int? rest = null;
         foreach (var (item, i) in items.Enumerate())
         {

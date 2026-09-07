@@ -5,6 +5,26 @@ func handler(f) (..args) {
 };
 
 func start(scope: null) {
+    lang := switch meta.languages.keys {
+        [] => {
+            print('No valid language, REPL is unavailable!\n');
+            exit(1)
+        },
+        [of _ lang] => {
+            print('Using language: {}.\n'.format(lang));
+            lang
+        },
+        of _ keys => {
+            print('Found multiple valid languages: {}. Select one: '.format(keys));
+            lang := input().trim();
+            if (keys.iter().contains(lang)) lang
+            else {
+                print('No such language: {}!\n'.format(lang));
+                exit(1)
+            }
+        }
+    };
+
     scope ??= Scope();
 
     func pos(bytecode) {

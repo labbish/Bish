@@ -38,7 +38,7 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
         shell: pwsh
-        
+
       - name: Download ANTLR
         shell: bash
         run: |
@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: |
           docker run -d -p 8080:80 --name httpbin-service kennethreitz/httpbin
-          
+
       - name: Run tests
         shell: bash
         run: dotnet test
@@ -60,6 +60,19 @@ jobs:
         run: |
           dotnet publish ./Bish/Bish.csproj -c Release -r ${{ matrix.runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
 
+      - name: Build Bish language project
+        shell: bash
+        run: dotnet build -c Release
+
+      - name: Compile lib
+        shell: bash
+        run: |
+          find ./lib -type f -name "*.bish" -print0 | while IFS= read -r -d '' file; do
+            echo "Compiling $file"
+            ./Bish -f "$file" -o "${file}c" -s
+          done
+        working-directory: ./publish
+
       - name: Upload runtime artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v7
         with:
@@ -67,10 +80,6 @@ jobs:
           path: |
             publish/Bish${{ matrix.asset_suffix }}
             publish/lib/
-      
-      - name: Build Bish language project
-        shell: bash
-        run: dotnet build -c Release
 
       - name: Upload Bish language artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v7

@@ -95,8 +95,8 @@ public static class BishCompileService
 
     static BishCompileService()
     {
-        var root = BishMeta.Builtin.Root = Environment.CurrentDirectory;
-        foreach (var file in Directory.GetFiles(root, "*Language.dll"))
+        BishMeta.Builtin.Root = Environment.CurrentDirectory;
+        foreach (var file in Directory.GetFiles(AppContext.BaseDirectory, "*Language.dll"))
         foreach (var lang in Assembly.LoadFrom(file).TypesOf(typeof(ILanguage)))
             ILanguage.Register(lang);
     }

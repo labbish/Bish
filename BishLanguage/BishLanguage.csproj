@@ -38,19 +38,7 @@
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <ItemGroup>
-            <PluginFiles Include="$(OutputPath)$(AssemblyName).dll" />
-        </ItemGroup>
-
-        <PropertyGroup>
-            <PluginsDir>$(SolutionDir)publish/</PluginsDir>
-        </PropertyGroup>
-
-        <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(PluginsDir)" SkipUnchangedFiles="true" />
-    </Target>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <ItemGroup>
-            <PluginFiles Include="$(OutputPath)Antlr4.Runtime.Standard.dll" />
+            <PluginFiles Include="$(OutputPath)$(AssemblyName).dll;$(OutputPath)Antlr4.Runtime.Standard.dll" />
         </ItemGroup>
 
         <PropertyGroup>

@@ -18,3 +18,11 @@ This is a set of projects related to labbish languages.
 - Tests
   * **BishTest** - Unit tests.
     - [xUnit](https://xunit.net) - A free, open source, community-focused unit testing tool for .NET.
+
+## Install
+
+For each architect, there are 2 compressed files in actions output:
+- `Bish-[arch].zip`: The common runtime, allowing you to run `.bishc` files and import `.dll` plugins.
+- `BishLanguage-[arch].zip`: The Bish language (as a dll plugin), allowing you to run `.bish` files.
+
+You'll need to decompress all parts you need and put them into one directory (that is, the main `.exe` and plugin `.dll` should be in a same directory).

@@ -28,16 +28,16 @@ public enum StackEffect
 
 public class CompileResult(
     StackEffect effect,
-    IParseTree? tree,
+    BishParseTree? tree,
     Codes? codes = null,
     IList<CompilationError>? errors = null)
 {
     public StackEffect Effect => effect;
-    public IParseTree? Tree { get; private set; } = tree;
+    public BishParseTree? Tree { get; private set; } = tree;
     public Codes Codes { get; internal set; } = (codes ?? []).ToConcurrentList();
     public readonly IList<CompilationError> Errors = (errors ?? []).ToConcurrentList();
 
-    public CompileResult Error(IParseTree? parseTree, string message)
+    public CompileResult Error(BishParseTree? parseTree, string message)
     {
         Errors.Add(new CompilationError(SourcePosition.From(parseTree), message));
         return this;
@@ -58,13 +58,13 @@ public class CompileResult(
         }
     }
 
-    public static CompileResult Expr(IParseTree? tree) => new(StackEffect.Expr, tree);
+    public static CompileResult Expr(BishParseTree? tree) => new(StackEffect.Expr, tree);
 
-    public static CompileResult Stat(IParseTree? tree) => new(StackEffect.Stat, tree);
+    public static CompileResult Stat(BishParseTree? tree) => new(StackEffect.Stat, tree);
 
-    public static CompileResult Pattern(IParseTree? tree) => new(StackEffect.Pattern, tree);
+    public static CompileResult Pattern(BishParseTree? tree) => new(StackEffect.Pattern, tree);
 
-    public static CompileResult Same(IParseTree? tree, params IList<CompileResult> results)
+    public static CompileResult Same(BishParseTree? tree, params IList<CompileResult> results)
     {
         var effect = results[0].Effect;
         var result = new CompileResult(effect, tree);
@@ -74,7 +74,7 @@ public class CompileResult(
         return result;
     }
 
-    public CompileResult WithTree(IParseTree? tree)
+    public CompileResult WithTree(BishParseTree? tree)
     {
         Tree = tree;
         if (tree is null) return this;
@@ -161,7 +161,7 @@ public class CompileResult(
     public bool HasFree<T>() where T : BishBytecode => GetFrees<T>().Any(pair => pair.Free);
 }
 
-internal abstract record Unbound(ParserRuleContext Context) : BishBytecode
+public abstract record Unbound(BishParseTree Context) : BishBytecode
 {
     public abstract string ErrorMessage();
     public override void Execute(BishFrame frame) => throw BishVisitor.Impossible;
@@ -201,5 +201,22 @@ public static class SourcePositionHelper
             ParserRuleContext ctx => SourcePosition.FromCtx(ctx),
             _ => throw BishVisitor.Impossible
         };
+
+        public static SourcePosition From(BishParseTree? tree) => tree?.Source ?? new SourcePosition(0, 0, 0, 0);
     }
+}
+
+public static class ParseTreeHelper
+{
+    extension(BishParseTree)
+    {
+        public static BishParseTree From(IParseTree tree) =>
+            new(Type(tree), Children(tree).Select(From).ToList(), SourcePosition.From(tree));
+    }
+
+    private static Node Type(IParseTree tree) =>
+        new(tree.GetType().Name.RemoveEnd("Context"), tree is ITerminalNode ? tree.GetText() : null);
+
+    private static List<IParseTree> Children(IParseTree tree) =>
+        Enumerable.Range(0, tree.ChildCount).Select(tree.GetChild).ToList();
 }

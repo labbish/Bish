@@ -4,7 +4,7 @@ namespace BishLanguage;
 
 public partial class BishVisitor
 {
-    private static void ListDeconstruct(CompileResult result, int count, int? rest)
+    public static void ListDeconstruct(CompileResult result, int count, int? rest)
     {
         result.Add(new Move("$_"));
         for (var i = 0; i < count; i++)
@@ -25,37 +25,30 @@ public partial class BishVisitor
         result.Add(new Del("$_"), new Pop());
     }
 
-    private CompileResult GetExceptLast(BishParser.GetAccessContext context, string tag)
+    public CompileResult GetExceptLast(BishParseTree tree, string tag)
     {
-        var result = CompileResult.Expr(context).Add(Visit(context.expr()), StackEffect.Expr);
-        foreach (var access in context.nullAccess()[..^1])
+        if (tree is not ("GetAccess", [var expr, .. var nullAccess])) throw Impossible;
+        var result = CompileResult.Expr(tree).Add(Visit(expr), StackEffect.Expr);
+        foreach (var access in nullAccess[..^1])
             result.Add(Get(access, tag));
         return result;
     }
 
-    public override CompileResult VisitGetAccess(BishParser.GetAccessContext context)
-    {
-        var tag = Symbols.Get("get");
-        var last = context.nullAccess()[^1];
-        return CompileResult.Expr(context).Add(GetExceptLast(context, tag))
-            .Add(Get(last, tag)).Add(Tag(tag));
-    }
-
-    private static IEnumerable<BishParser.ExprContext> ArgsToExpr(BishParser.ArgContext[] args)
+    public static IEnumerable<BishParseTree> ArgsToExpr(BishParseTree[] args)
     {
         foreach (var arg in args)
         {
             var expr = arg switch
             {
-                BishParser.RestArgContext rest => rest.expr(),
-                BishParser.SingleArgContext single => single.expr(),
+                ("RestArg", [_, var rest]) => rest,
+                ("SingleArg", [var single]) => single,
                 _ => throw Impossible
             };
             yield return expr;
         }
     }
 
-    private CompileResult Set(string id, string? op, CompileResult value)
+    public CompileResult Set(string id, string? op, CompileResult value)
     {
         var tag = Symbols.Get("set");
         var result = CompileResult.Expr(null);
@@ -90,18 +83,18 @@ public partial class BishVisitor
     }
 
     // Note: in `Set` and `Def`, `value` does not always evaluate at the first, so it should not rely on the stack.
-    private CompileResult Set(BishParser.ExprContext context, string? op, CompileResult value)
+    public CompileResult Set(BishParseTree tree, string? op, CompileResult value)
     {
-        var result = CompileResult.Expr(context);
-        switch (context)
+        var result = CompileResult.Expr(tree);
+        switch (tree)
         {
-            case BishParser.ListExprContext list:
+            case ("ListExpr", [_, ("Args", var children), _]):
             {
-                var args = list.args().arg();
+                var args = children.Where(t => t is not { Text: "," }).ToArray();
                 int? pos = null;
                 foreach (var (item, i) in args.Enumerate())
                 {
-                    if (item is not BishParser.RestArgContext) continue;
+                    if (item is not ("RestArg", _)) continue;
                     if (pos is null) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
@@ -116,54 +109,54 @@ public partial class BishVisitor
 
                 break;
             }
-            case BishParser.MapExprContext map:
+            case ("MapExpr", [_, ("Entries", var children), _]):
             {
-                var entries = map.entries().entry();
-                if (entries.SkipLast(1).Any(entry => entry is BishParser.RestEntryContext))
+                var entries = children.Where(t => t is not { Text: "," }).ToArray();
+                if (entries.SkipLast(1).Any(entry => entry is ("RestEntry", _)))
                     result.Error("Rest entry must be the last one in map deconstruction");
                 result.Add(new GetBuiltin("map")).Add(value, StackEffect.Expr).Add(new Call(1));
                 foreach (var (entry, i) in entries.Enumerate())
                     switch (entry)
                     {
-                        case BishParser.SingleEntryContext single:
+                        case ("SingleEntry", [var k, _, var v]):
                             result.Add(new Copy())
-                                .Add(Visit(single.key), StackEffect.Expr)
+                                .Add(Visit(k), StackEffect.Expr)
                                 .Add(Op("del[]", 2), new Move($"${i}"))
-                                .Add(Set(single.value, op, CompileResult.Expr(null).Add(new Del($"${i}"))))
+                                .Add(Set(v, op, CompileResult.Expr(null).Add(new Del($"${i}"))))
                                 .Add(new Pop());
                             break;
-                        case BishParser.RestEntryContext rest:
+                        case ("RestEntry", [_, var rest]):
                             result.Add(new Move($"${i}"))
-                                .Add(Set(rest.expr(), op, CompileResult.Expr(null).Add(new Del($"${i}"))));
+                                .Add(Set(rest, op, CompileResult.Expr(null).Add(new Del($"${i}"))));
                             break;
                         default: return result.Error("Invalid set expression!");
                     }
 
                 break;
             }
-            case BishParser.ObjExprContext obj:
+            case ("ObjExpr", [_, ("ObjEntries", var children), _]):
             {
-                var entries = obj.objEntries().objEntry();
+                var entries = children.Where(t => t is not { Text: "," }).ToArray();
                 result.Add(value, StackEffect.Expr).Add(new Move("$_"));
                 foreach (var entry in entries)
                 {
-                    var id = entry.id().Name;
+                    var id = IdName(entry.Children[1]);
+                    var expr = entry.Children.ElementAtOrDefault(3);
                     var get = CompileResult.Expr(null).Add(new Get("$_"), new GetMember(id));
-                    if (entry.expr() is { } expr) result.Add(Set(expr, op, get));
-                    else result.Add(Set(id, op, get));
+                    result.Add(expr is not null ? Set(expr, op, get) : Set(id, op, get));
                     result.Add(new Pop());
                 }
 
                 result.Add(new Del("$_"));
                 break;
             }
-            case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return Set(id.id().Name, op, value).WithTree(context);
-            case BishParser.GetAccessContext access:
+            case ("AtomExpr", [("IdAtom", [var id])]):
+                return Set(IdName(id), op, value).WithTree(tree);
+            case ("GetAccess", [_, .. var nullAccess]):
             {
                 var tag = Symbols.Get("set");
-                var last = access.nullAccess()[^1];
-                result.Add(GetExceptLast(access, tag));
+                var last = nullAccess[^1];
+                result.Add(GetExceptLast(tree, tag));
                 switch (op)
                 {
                     case null:
@@ -211,21 +204,21 @@ public partial class BishVisitor
         return result;
     }
 
-    private static CompileResult Def(string id, CompileResult value) =>
+    public static CompileResult Def(string id, CompileResult value) =>
         CompileResult.Expr(null).Add(value, StackEffect.Expr).Add(new Def(id));
 
-    private CompileResult Def(BishParser.ExprContext context, CompileResult value)
+    public CompileResult Def(BishParseTree tree, CompileResult value)
     {
-        var result = CompileResult.Expr(context);
-        switch (context)
+        var result = CompileResult.Expr(tree);
+        switch (tree)
         {
-            case BishParser.ListExprContext list:
+            case ("ListExpr", [_, ("Args", var children), _]):
             {
-                var args = list.args().arg();
+                var args = children.Where(t => t is not { Text: "," }).ToArray();
                 int? pos = null;
                 foreach (var (item, i) in args.Enumerate())
                 {
-                    if (item is not BishParser.RestArgContext) continue;
+                    if (item is not ("RestArg", _)) continue;
                     if (pos is null) pos = i;
                     else result.Error("Found list deconstruct pattern with multiple rest pattern");
                 }
@@ -240,54 +233,54 @@ public partial class BishVisitor
 
                 break;
             }
-            case BishParser.MapExprContext map:
+            case ("MapExpr", [_, ("Entries", var children), _]):
             {
-                var entries = map.entries().entry();
-                if (entries.SkipLast(1).Any(entry => entry is BishParser.RestEntryContext))
+                var entries = children.Where(t => t is not { Text: "," }).ToArray();
+                if (entries.SkipLast(1).Any(entry => entry is ("RestEntry", _)))
                     result.Error("Rest entry must be the last one in map deconstruction");
                 result.Add(new GetBuiltin("map")).Add(value, StackEffect.Expr).Add(new Call(1));
                 foreach (var (entry, i) in entries.Enumerate())
                     switch (entry)
                     {
-                        case BishParser.SingleEntryContext single:
+                        case ("SingleEntry", [var k, _, var v]):
                             result.Add(new Copy())
-                                .Add(Visit(single.key), StackEffect.Expr)
+                                .Add(Visit(k), StackEffect.Expr)
                                 .Add(Op("del[]", 2), new Move($"${i}"))
-                                .Add(Def(single.value, CompileResult.Expr(null).Add(new Del($"${i}"))))
+                                .Add(Def(v, CompileResult.Expr(null).Add(new Del($"${i}"))))
                                 .Add(new Pop());
                             break;
-                        case BishParser.RestEntryContext rest:
+                        case ("RestEntry", [_, var rest]):
                             result.Add(new Move($"${i}"))
-                                .Add(Def(rest.expr(), CompileResult.Expr(null).Add(new Del($"${i}"))));
+                                .Add(Def(rest, CompileResult.Expr(null).Add(new Del($"${i}"))));
                             break;
                         default: throw Impossible;
                     }
 
                 break;
             }
-            case BishParser.ObjExprContext obj:
+            case ("ObjExpr", [_, ("ObjEntries", var children), _]):
             {
-                var entries = obj.objEntries().objEntry();
+                var entries = children.Where(t => t is not { Text: "," }).ToArray();
                 result.Add(value, StackEffect.Expr).Add(new Move("$_"));
                 foreach (var entry in entries)
                 {
-                    var id = entry.id().Name;
+                    var id = IdName(entry.Children[1]);
+                    var expr = entry.Children.ElementAtOrDefault(3);
                     var get = CompileResult.Expr(null).Add(new Get("$_"), new GetMember(id));
-                    if (entry.expr() is { } expr) result.Add(Def(expr, get));
-                    else result.Add(Def(id, get));
+                    result.Add(expr is not null ? Def(expr, get) : Def(id, get));
                     result.Add(new Pop());
                 }
 
                 result.Add(new Del("$_"));
                 break;
             }
-            case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return Def(id.id().Name, value).WithTree(context);
-            case BishParser.GetAccessContext access:
+            case ("AtomExpr", [("IdAtom", [var id])]):
+                return Def(IdName(id), value).WithTree(tree);
+            case ("GetAccess", [_, .. var nullAccess]):
             {
                 var tag = Symbols.Get("def");
-                var last = access.nullAccess()[^1];
-                result.Add(GetExceptLast(access, tag)).Add(value, StackEffect.Expr).Add(Def(last, tag)).Add(Tag(tag));
+                var last = nullAccess[^1];
+                result.Add(GetExceptLast(tree, tag)).Add(value, StackEffect.Expr).Add(Def(last, tag)).Add(Tag(tag));
                 break;
             }
             default: return result.Error("Invalid def expression!");
@@ -296,34 +289,34 @@ public partial class BishVisitor
         return result;
     }
 
-    private CompileResult Del(BishParser.ExprContext context)
+    public CompileResult Del(BishParseTree tree)
     {
-        switch (context)
+        switch (tree)
         {
-            case BishParser.ListExprContext list:
-                return Dels(ArgsToExpr(list.args().arg()).ToList()).WithTree(context);
-            case BishParser.MapExprContext map:
-                return Dels(map.entries().entry().Select(entry => entry switch
+            case ("ListExpr", [_, ("Args", var children), _]):
+                return Dels(ArgsToExpr(children.Where(t => t is not { Text: "," }).ToArray()).ToList()).WithTree(tree);
+            case ("MapExpr", [_, ("Entries", var children), _]):
+                return Dels(children.Where(t => t is not { Text: "," }).Select(entry => entry switch
                 {
-                    BishParser.SingleEntryContext single => single.value,
-                    BishParser.RestEntryContext rest => rest.expr(),
+                    ("SingleEntry", [var _, _, var value]) => value,
+                    ("RestEntry", [_, var rest]) => rest,
                     _ => throw Impossible
-                }).ToList()).WithTree(context);
-            case BishParser.ObjExprContext obj:
-                return Dels(obj.objEntries().objEntry().Select(entry => entry.id().Name).ToList())
-                    .WithTree(context);
-            case BishParser.AtomExprContext atom when atom.atom() is BishParser.IdAtomContext id:
-                return CompileResult.Expr(context).Add(new Del(id.id().Name));
-            case BishParser.GetAccessContext access:
+                }).ToList()).WithTree(tree);
+            case ("ObjExpr", [_, ("ObjEntries", var children), _]):
+                return Dels(children.Where(t => t is not { Text: "," })
+                    .Select(entry => IdName(entry.Children[1])).ToList()).WithTree(tree);
+            case ("AtomExpr", [("IdAtom", [var id])]):
+                return CompileResult.Expr(tree).Add(new Del(IdName(id)));
+            case ("GetAccess", [_, .. var nullAccess]):
                 var tag = Symbols.Get("del");
-                var last = access.nullAccess()[^1];
-                return CompileResult.Expr(context).Add(GetExceptLast(access, tag))
+                var last = nullAccess[^1];
+                return CompileResult.Expr(tree).Add(GetExceptLast(tree, tag))
                     .Add(Del(last, tag)).Add(Tag(tag));
-            default: return CompileResult.Expr(context).Error("Invalid del expression!");
+            default: return CompileResult.Expr(tree).Error("Invalid del expression!");
         }
     }
 
-    private static CompileResult Dels(List<string> ids)
+    public static CompileResult Dels(List<string> ids)
     {
         var result = CompileResult.Expr(null);
         foreach (var (id, i) in ids.Enumerate())
@@ -335,7 +328,7 @@ public partial class BishVisitor
         return result;
     }
 
-    private CompileResult Dels(List<BishParser.ExprContext> exprs)
+    public CompileResult Dels(List<BishParseTree> exprs)
     {
         var result = CompileResult.Expr(null);
         foreach (var (expr, i) in exprs.Enumerate())
@@ -347,66 +340,60 @@ public partial class BishVisitor
         return result;
     }
 
-    public override CompileResult VisitSet(BishParser.SetContext context) =>
-        Set(context.obj, context.setOp()?.GetText(), Visit(context.value));
-
-    public override CompileResult VisitDef(BishParser.DefContext context) => Def(context.obj, Visit(context.value));
-
-    public override CompileResult VisitDel(BishParser.DelContext context) => Del(context.obj);
-
-    private CompileResult JustGet(BishParser.AccessContext access) => access switch
+    public CompileResult JustGet(BishParseTree access) => access switch
     {
-        BishParser.MemberAccessContext member => new CompileResult(StackEffect.Trans, access)
-            .Add(new GetMember(member.id().Name)),
-        BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
-            .Add(Visit(index.index()), StackEffect.Expr).Add(Op("get[]", 2)),
-        BishParser.CallAccessContext call => Call(call.args().arg()).WithTree(access),
+        ("MemberAccess", [_, var member]) => new CompileResult(StackEffect.Trans, access)
+            .Add(new GetMember(IdName(member))),
+        ("IndexAccess", [var index]) => new CompileResult(StackEffect.Trans, access)
+            .Add(Visit(index), StackEffect.Expr).Add(Op("get[]", 2)),
+        ("CallAccess", [_, ("Args", var children), _]) =>
+            Call(children.Where(t => t is not { Text: "," }).ToArray()).WithTree(access),
         _ => throw Impossible
     };
 
-    private CompileResult Get(BishParser.NullAccessContext access, string tag) =>
-        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustGet(access.access()));
+    public CompileResult Get(BishParseTree access, string tag) =>
+        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustGet(access.Children[^1]));
 
-    private CompileResult JustSet(BishParser.AccessContext access) => access switch
+    public CompileResult JustSet(BishParseTree access) => access switch
     {
-        BishParser.MemberAccessContext member => new CompileResult(StackEffect.Trans, access)
-            .Add(new SetMember(member.id().Name)),
-        BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
-            .Add(Visit(index.index()), StackEffect.Expr).Add(new Swap(), Op("set[]", 3)),
+        ("MemberAccess", [_, var member]) => new CompileResult(StackEffect.Trans, access)
+            .Add(new SetMember(IdName(member))),
+        ("IndexAccess", [var index]) => new CompileResult(StackEffect.Trans, access)
+            .Add(Visit(index), StackEffect.Expr).Add(new Swap(), Op("set[]", 3)),
         _ => throw Impossible
     };
 
-    private CompileResult Set(BishParser.NullAccessContext access, string tag) =>
-        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustSet(access.access()));
+    public CompileResult Set(BishParseTree access, string tag) =>
+        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustSet(access.Children[^1]));
 
-    private CompileResult JustDef(BishParser.AccessContext access) => access switch
+    public CompileResult JustDef(BishParseTree access) => access switch
     {
-        BishParser.MemberAccessContext member => new CompileResult(StackEffect.Trans, access)
-            .Add(new DefMember(member.id().Name)),
-        BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
-            .Add(Visit(index.index()), StackEffect.Expr).Add(new Swap(), Op("def[]", 3)),
+        ("MemberAccess", [_, var member]) => new CompileResult(StackEffect.Trans, access)
+            .Add(new DefMember(IdName(member))),
+        ("IndexAccess", [var index]) => new CompileResult(StackEffect.Trans, access)
+            .Add(Visit(index), StackEffect.Expr).Add(new Swap(), Op("def[]", 3)),
         _ => throw Impossible
     };
 
-    private CompileResult Def(BishParser.NullAccessContext access, string tag) =>
-        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustDef(access.access()));
+    public CompileResult Def(BishParseTree access, string tag) =>
+        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustDef(access.Children[^1]));
 
-    private CompileResult JustDel(BishParser.AccessContext access) => access switch
+    public CompileResult JustDel(BishParseTree access) => access switch
     {
-        BishParser.MemberAccessContext member => new CompileResult(StackEffect.Trans, access)
-            .Add(new DelMember(member.id().Name)),
-        BishParser.IndexAccessContext index => new CompileResult(StackEffect.Trans, access)
-            .Add(Visit(index.index()), StackEffect.Expr).Add(Op("del[]", 2)),
+        ("MemberAccess", [_, var member]) => new CompileResult(StackEffect.Trans, access)
+            .Add(new DelMember(IdName(member))),
+        ("IndexAccess", [var index]) => new CompileResult(StackEffect.Trans, access)
+            .Add(Visit(index), StackEffect.Expr).Add(Op("del[]", 2)),
         _ => throw Impossible
     };
 
-    private CompileResult Del(BishParser.NullAccessContext access, string tag) =>
-        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustDel(access.access()));
+    public CompileResult Del(BishParseTree access, string tag) =>
+        new CompileResult(StackEffect.Trans, access).Add(JumpIfNull(access, tag)).Add(JustDel(access.Children[^1]));
 
-    private static CompileResult JumpIfNull(BishParser.NullAccessContext access, string tag)
+    public static CompileResult JumpIfNull(BishParseTree access, string tag)
     {
         var result = new CompileResult(StackEffect.Trans, access);
-        if (access.op is not null) result.Add(new Copy(), Op("nullish", 1), new JumpIf(tag));
+        if (access.Children.Count == 2) result.Add(new Copy(), Op("nullish", 1), new JumpIf(tag));
         return result;
     }
 }

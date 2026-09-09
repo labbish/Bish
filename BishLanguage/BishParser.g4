@@ -13,7 +13,7 @@ expr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* defHook funcBody                                    # HookExpr
     | clsExpr                                                   # ClassExpr
-    | EXT obj=expr body=expr?                                   # ExtendExpr
+    | EXT obj=expr body=expr                                    # ExtendExpr
     | LBRACK args RBRACK                                        # ListExpr
     | LBRACE entries RBRACE                                     # MapExpr
     | LBRACE objEntries RBRACE                                  # ObjExpr

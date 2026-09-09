@@ -106,6 +106,7 @@ public class BishBuiltinScope : BishScope
         Init("Bytecode", BishBytecodeObject.StaticType);
         Init("Runner", BishTaskRunner.StaticType);
         Init("Task", BishTask.StaticType);
+        Init("ParseTree", BishParseTree.StaticType);
     }
 
     public static readonly BishBuiltinScope Instance = new();

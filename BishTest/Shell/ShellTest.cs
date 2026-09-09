@@ -142,7 +142,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
 
         CreateFile("./a/t.txt", "test");
         await ExpectOutputAsync("-c", "bish",
-            "meta.languages['txt']:=meta.Language((c)c,(value,_)[Bytecode('String',{.value})," +
+            "meta.languages['txt']:=meta.Language(ParseTree,(t,_)[Bytecode('String',{.value:t.text})," +
             "Bytecode('Def',{.name:'text'})]);print(import('a/t').text)", "test");
     }
 

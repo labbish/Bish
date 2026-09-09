@@ -46,6 +46,6 @@ public class BishMeta(string? root) : BishObject
         BishCompileService.Compile(source.Source, scope);
 
     [Builtin]
-    public static BishFrame CompileParsed(BishMeta _, BishString lang, BishObject tree) =>
+    public static BishFrame CompileParsed(BishMeta _, BishString lang, BishParseTree tree) =>
         BishCompileService.Compile(lang.Value, tree);
 }

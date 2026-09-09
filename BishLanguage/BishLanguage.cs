@@ -6,12 +6,12 @@ using BishUtils;
 
 namespace BishLanguage;
 
-public struct BishCompiler : ILanguage
+public struct BishLanguage : ILanguage
 {
     public static string Name => "bish";
     public static BishRuntime.BishLanguage Language => new(Parse, Compile);
 
-    private static CompilerResult<BishObject> Parse(string code)
+    private static CompilerResult<BishParseTree> Parse(string code)
     {
         var stream = CharStreams.fromString(code);
         var lexer = new BishLexer(stream);
@@ -24,22 +24,15 @@ public struct BishCompiler : ILanguage
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
 
-        return new CompilerResult<BishObject>(BishParseTreeObject.From(parser.program()), listener.Errors);
+        return new CompilerResult<BishParseTree>(BishParseTree.From(parser.program()), listener.Errors);
     }
 
-    private static CompilerResult<Codes> Compile(CompilerResult<BishObject> compilerResult, CompileOptions options)
+    private static CompilerResult<Codes> Compile(CompilerResult<BishParseTree> compilerResult, CompileOptions options)
     {
-        var (obj, errors) = compilerResult;
-        var tree = obj.As<BishParseTreeObject>("parse tree");
-        var result = new BishVisitor().VisitFull(tree.Tree, optimize: options.Optimize);
+        var (tree, errors) = compilerResult;
+        var result = new BishVisitor().VisitFull(tree, optimize: options.Optimize);
         if (options.Throws) BishCompileService.CheckErrors(result.Errors);
         return new CompilerResult<Codes>(result.Codes, errors.Concat(result.Errors).ToConcurrentList());
-    }
-
-    static BishCompiler()
-    {
-        BuiltinsRegistry.Register();
-        BishBuiltinScope.Instance.DefMember("ParseTree", BishParseTreeObject.StaticType);
     }
 }
 

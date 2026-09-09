@@ -89,23 +89,25 @@ public class ReflectTest : Test
     [Fact]
     public void TestParseTree()
     {
-        const string c = "([BinOpExpr] ([AtomExpr] ([IntAtom] 1)) + ([AtomExpr] ([IntAtom] 2)))";
+        const string c = "(BinOpExpr (AtomExpr (IntAtom [1])) [+] (AtomExpr (IntAtom [2])))";
         Execute("t:=meta.parse('bish','1+2');");
-        ExpectResult("string.show(t)", $"'([Program] {c} <EOF>)'");
+        ExpectResult("string.show(t)", $"'(Program {c} [<EOF>])'");
         ExpectResult("t.type", "'Program'");
         ExpectResult("t.text", "null");
-        ExpectResult("t.parent", "null");
         ExpectResult("t.children.length", "2");
 
         Execute("c:=t.children[0];");
         ExpectResult("string.show(c)", $"'{c}'");
         ExpectResult("c.type", "'BinOpExpr'");
         ExpectResult("c.text", "null");
-        ExpectTrue("c.parent===t");
         ExpectResult("c.children.length", "3");
 
         ExpectResult("c.children[1].text", "'+'");
 
         ExpectResult("meta.compileParsed('bish',t).eval()", "3");
+        
+        Execute("T:=ParseTree;");
+        Execute("c:=T('BinOpExpr',[T('IntAtom',[T('1')]),T('+'),T('IntAtom',[T('2')])]);");
+        ExpectResult("meta.compileParsed('bish',c).eval()", "3");
     }
 }

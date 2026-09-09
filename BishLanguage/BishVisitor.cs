@@ -486,7 +486,7 @@ public partial class BishVisitor
                 var name = special?.NamePattern.Name;
                 return MakeFunc(result, name, body, deco, false, $"hook {hook}");
             }
-            case ("ClsExpr", var children):
+            case ("ClassExpr", var children):
             {
                 var decos = children.Where(t => t is ("Deco", _)).ToArray();
                 var rest = children.Where(t => t is not ("Deco", _)).ToList();
@@ -523,7 +523,6 @@ public partial class BishVisitor
                 if (name is not null) result.Add(new Def(name));
                 return result;
             }
-            case ("ClassExpr", [var cls]): return Visit(cls);
             case ("ExtendExpr", [_, var obj, var body]):
                 return CompileResult.Expr(tree).Add(Visit(obj), StackEffect.Expr).Add(EvalAndCopy(body));
             case ("ThrowExpr", [_, var expr]):
@@ -758,6 +757,7 @@ public partial class BishVisitor
     internal static ArgumentException Impossible => new("impossible!");
 }
 
+[SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
 public record LoopUnbound(BishParseTree Tree, string Name, string? LoopTag) : Unbound(Tree)
 {
     public int Depth;

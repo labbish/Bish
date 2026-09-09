@@ -2,69 +2,61 @@ parser grammar BishParser;
 options { tokenVocab=BishLexer; }
 
 program
-    : (front+=expr END)* last=expr? EOF
+    : (expr END)* expr? EOF
     ;
 
-// define Setable : AtomExpr(idAtom) | GetAccess not ending with call | (List|Map)Expr of Setables
 expr
     : LPAREN expr RPAREN                                        # ParenExpr
     | deco* (FUN id?)? funcBody                                 # FuncExpr
     | deco* OP defOp funcBody                                   # OperExpr
     | deco* accessOp accessItem? funcBody                       # AccessExpr
     | deco* defHook funcBody                                    # HookExpr
-    | clsExpr                                                   # ClassExpr
-    | EXT obj=expr body=expr                                    # ExtendExpr
+    | deco* CLS (LBRACK expr RBRACK)? id? (COL args)? expr?     # ClassExpr
+    | EXT expr expr                                             # ExtendExpr
     | LBRACK args RBRACK                                        # ListExpr
     | LBRACE entries RBRACE                                     # MapExpr
     | LBRACE objEntries RBRACE                                  # ObjExpr
     | expr nullAccess+                                          # GetAccess
     | <assoc=right> AWT expr                                    # AwaitExpr
-    | <assoc=right> op=(ADD|SUB|BANG|INVERT) expr               # UnOpExpr
-    | <assoc=right> left=expr op=POW right=expr                 # BinOpExpr
-    | left=expr op=(MUL|DIV|MOD) right=expr                     # BinOpExpr
-    | left=expr op=(ADD|SUB) right=expr                         # BinOpExpr
-    | left=expr op=TRI right=expr                               # BinOpExpr
-    | left=expr op=(LT|LE|GT|GE) right=expr                     # BinOpExpr
+    | <assoc=right> (ADD|SUB|BANG|INVERT) expr                  # UnOpExpr
+    | <assoc=right> expr POW expr                               # BinOpExpr
+    | expr (MUL|DIV|MOD) expr                                   # BinOpExpr
+    | expr (ADD|SUB) expr                                       # BinOpExpr
+    | expr TRI expr                                             # BinOpExpr
+    | expr (LT|LE|GT|GE) expr                                   # BinOpExpr
     | expr IS pattern                                           # MatchExpr
-    | obj=expr AS type=expr                                     # AsExpr
-    | left=expr op=(EQ|NEQ|REQ|NREQ) right=expr                 # BinOpExpr
-    | left=expr BAND right=expr                                 # LogicAndExpr
-    | left=expr BOR right=expr                                  # LogicOrExpr
-    | left=expr NCOMB right=expr                                # NullCombExpr
+    | expr AS expr                                              # AsExpr
+    | expr (EQ|NEQ|REQ|NREQ) expr                               # BinOpExpr
+    | expr BAND expr                                            # LogicAndExpr
+    | expr BOR expr                                             # LogicOrExpr
+    | expr NCOMB expr                                           # NullCombExpr
     | expr pipe+                                                # PipeExpr
-    // In the following 3 cases, obj is Setable
-    | <assoc=right> obj=expr setOp? SETS value=expr             # Set
-    | <assoc=right> obj=expr DEFS value=expr                    # Def
-    | <assoc=right> DEL obj=expr                                # Del
-    | IF LPAREN cond=expr RPAREN left=expr (ELS right=expr)?    # IfExpr
-    | tag? WHL LPAREN cond=expr RPAREN loop=expr                # WhileExpr
-    | tag? DO loop=expr WHL LPAREN cond=expr RPAREN             # DoWhileExpr
-    // obj is Setable
-    | tag? forBody loop=expr                                    # ForExpr
+    | <assoc=right> expr setOp? SETS expr                       # Set
+    | <assoc=right> expr DEFS expr                              # Def
+    | <assoc=right> DEL expr                                    # Del
+    | IF LPAREN expr RPAREN expr (ELS expr)?                    # IfExpr
+    | tag? WHL LPAREN expr RPAREN expr                          # WhileExpr
+    | tag? DO expr WHL LPAREN expr RPAREN                       # DoWhileExpr
+    | tag? forBody expr                                         # ForExpr
     | TRY expr                                                  # TryExpr
-    // obj is Setable
-    | withBody main=expr                                        # WithExpr
+    | withBody expr                                             # WithExpr
     | SWC expr LBRACE (caseExpr (COM caseExpr)* COM?)? RBRACE   # SwitchExpr
     | <assoc=right> THR expr                                    # ThrowExpr
     | <assoc=right> BRK id?                                     # BreakExpr
     | <assoc=right> CTN id?                                     # ContinueExpr
     | <assoc=right> RET expr?                                   # ReturnExpr
-    | <assoc=right> YLD await=AWT? gen=MUL? expr                # YieldExpr
-    | LBRACE (front+=expr END)* last=expr? RBRACE               # BlockExpr
+    | <assoc=right> YLD AWT? MUL? expr                          # YieldExpr
+    | LBRACE (expr END)* expr? RBRACE                           # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr
     ;
 
-clsExpr
-    : deco* CLS (LBRACK meta=expr RBRACK)? id? (COL args)? body=expr?
-    ;
-
 forBody
-    : FOR AWT? LPAREN obj=expr COL iter=expr RPAREN
+    : FOR AWT? LPAREN expr COL expr RPAREN
     ;
 
 withBody
-    : WTH AWT? LPAREN (obj=expr COL)? cont=expr RPAREN
+    : WTH AWT? LPAREN (expr COL)? expr RPAREN
     ;
 
 objEntries
@@ -80,16 +72,16 @@ entries
     ;
 
 entry
-    : key=expr COL value=expr                                   # SingleEntry
+    : expr COL expr                                             # SingleEntry
     | REST expr                                                 # RestEntry
     ;
 
 pipe
-    : BAR op=QUES? GT expr
+    : BAR QUES? GT expr
     ;
 
 funcBody
-    : LPAREN defArgs RPAREN async=ASY? gen=MUL? expr
+    : LPAREN defArgs RPAREN ASY? MUL? expr
     ;
 
 accessOp
@@ -110,7 +102,7 @@ defHook
     ;
 
 nullAccess
-    : op=QUES? access
+    : QUES? access
     ;
 
 access
@@ -123,7 +115,7 @@ tag : id COL ;
 
 index
     : LBRACK expr RBRACK                                        # SingleIndex
-    | LBRACK start=expr? COL end=expr? (COL step=expr)? RBRACK  # RangeIndex
+    | LBRACK expr? COL expr? (COL expr)? RBRACK  # RangeIndex
     ;
 
 caseExpr
@@ -138,17 +130,17 @@ pattern
     | LBRACE (patEntry (COM patEntry)* COM?)? RBRACE            # MapPattern
     | LBRACE (patObjEntry (COM patObjEntry)* COM?)? RBRACE      # ObjPattern
     | expr                                                      # ExprPattern
-    | op=matchOp expr                                           # OpPattern
-    | OF type=expr var=expr?                                    # TypePattern
+    | matchOp expr                                              # OpPattern
+    | OF expr expr?                                             # TypePattern
     | ERR expr?                                                 # ErrPattern
     | NOT pattern                                               # NotPattern
-    | left=pattern AND right=pattern                            # AndPattern
-    | left=pattern OR right=pattern                             # OrPattern
+    | pattern AND pattern                                       # AndPattern
+    | pattern OR pattern                                        # OrPattern
     | pattern WHN expr                                          # WhenPattern
     ;
 
 patItem
-    : dots=REST? pattern
+    : REST? pattern
     ;
 
 patEntry
@@ -180,7 +172,7 @@ defArgs
     : (defArg (COM defArg)* COM?)?
     ;
 defArg
-    : dots=REST? obj=expr (COL def=expr)?
+    : REST? expr (COL expr)?
     ;
 
 deco

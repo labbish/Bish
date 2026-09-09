@@ -121,7 +121,7 @@ public class CompileResult(
         Add(result.Codes);
         Errors.AddRange(result.Errors);
         if (expect is not null && expect != result.Effect)
-            result.Error($"Expect {expect}, got {result.Effect}");
+            Error($"Expect {expect}, got {result.Effect}");
         return this;
     }
 

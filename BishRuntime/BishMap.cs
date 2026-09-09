@@ -52,7 +52,9 @@ public class BishMap(IList<Entry> entries) : BishObject
     {
         if (ctx.Contains(self)) return new BishString(ctx.Circular);
         var context = ctx.Add(self);
-        return new BishString("{" + string.Join(", ", self.Entries.Select(EntryRepr)) + "}");
+        return new BishString(self.Entries.Count == 0
+            ? "{:}"
+            : "{" + string.Join(", ", self.Entries.Select(EntryRepr)) + "}");
 
         string EntryRepr(Entry entry) =>
             $"{BishString.CallRepr(entry.Key, context)}: {BishString.CallRepr(entry.Value, context)}";

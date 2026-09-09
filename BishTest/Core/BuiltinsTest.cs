@@ -127,7 +127,7 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
         ExpectResult("string.fromCode(120)", "'x'");
 
         ExpectResult("l:=[];l.add(l);string.show(l)", "'[<...>]'");
-        ExpectResult("m:={};m[m]:=m;string.show(m)", "'{<...>: <...>}'");
+        ExpectResult("m:={:};m[m]:=m;string.show(m)", "'{<...>: <...>}'");
         ExpectResult("x:=[];x.add({x:x});string.show(x)", "'[{<...>: <...>}]'");
     }
 
@@ -221,13 +221,13 @@ public class BuiltinsTest(TestInfoFixture fixture) : Test(fixture)
     [Fact]
     public void TestMap()
     {
-        ExpectResult("map()", "{}");
+        ExpectResult("map()", "{:}");
 
         Execute("a:=0;b:='x';c:=true;d:=null;");
         ExpectResult("{a:b,c:d}+{c:a}", "{0:'x',true:0}");
         ExpectFalse("{a:b,c:d}=={c:d,a:c}");
         ExpectTrue("{a:b,c:d}=={c:d,a:b}");
-        ExpectFalse("({}).bool()");
+        ExpectFalse("({:}).bool()");
         ExpectTrue("({a:b}).bool()");
 
         Execute("l:={a:b,c:d};");

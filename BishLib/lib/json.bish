@@ -1,5 +1,5 @@
 class JsonError : Error;
-
+ 
 class JsonParseError : JsonError {
     new(message, location) extend JsonParseError.parent('{} at char #{}'
         .format(message, location)) { location := location };
@@ -150,7 +150,7 @@ class JsonParser {
     };
     func parseObject(self) {
         if (self.char != '{') self.error('Expected \'{\'');
-        result := {};
+        result := {:};
         self.i += 1;
         self.skipSpaces();
         if (self.char == '}') {

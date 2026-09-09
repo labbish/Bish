@@ -92,13 +92,13 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
         JsonParseError("[,1]");
         JsonParseError("[1 2]");
 
-        JsonParse("{}");
+        JsonParse("{}", "{:}");
         JsonParse("""{"a": 1}""");
         JsonParse("""{"a": 1, "b": 2}""");
         JsonParse("""{"": 0}""");
         JsonParse("""{"outer": {"inner": true}}""");
         JsonParse("""{"list": [1, 2, {"x": 0}]}""");
-        JsonParse("""{"a": {"b": {"c": {}}}}""");
+        JsonParse("""{"a": {"b": {"c": {}}}}""", """{"a": {"b": {"c": {:}}}}""");
         JsonParse("""{ "key" : "value" }""");
         JsonParse("""
                   {

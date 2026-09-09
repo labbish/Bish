@@ -14,8 +14,8 @@ expr
     | deco* CLS (LBRACK expr RBRACK)? id? (COL args)? expr?     # ClassExpr
     | EXT expr expr                                             # ExtendExpr
     | LBRACK args RBRACK                                        # ListExpr
-    | LBRACE entries RBRACE                                     # MapExpr
-    | LBRACE objEntries RBRACE                                  # ObjExpr
+    | LBRACE (entries | COL) RBRACE                             # MapExpr
+    | LBRACE (objEntries | DOT) RBRACE                          # ObjExpr
     | expr nullAccess+                                          # GetAccess
     | <assoc=right> AWT expr                                    # AwaitExpr
     | <assoc=right> (ADD|SUB|BANG|INVERT) expr                  # UnOpExpr
@@ -60,7 +60,7 @@ withBody
     ;
 
 objEntries
-    : (objEntry (COM objEntry)* COM?)?
+    : objEntry (COM objEntry)* COM?
     ;
 
 objEntry
@@ -68,7 +68,7 @@ objEntry
     ;
 
 entries
-    : (entry (COM entry)* COM?)?
+    : entry (COM entry)* COM?
     ;
 
 entry
@@ -127,8 +127,8 @@ pattern
     : NUL                                                       # NullPattern
     | LPAREN pattern RPAREN                                     # ParenPattern
     | LBRACK (patItem (COM patItem)* COM?)? RBRACK              # ListPattern
-    | LBRACE (patEntry (COM patEntry)* COM?)? RBRACE            # MapPattern
-    | LBRACE (patObjEntry (COM patObjEntry)* COM?)? RBRACE      # ObjPattern
+    | LBRACE (patEntries | COL) RBRACE                          # MapPattern
+    | LBRACE (patObjEntries | DOT) RBRACE                       # ObjPattern
     | expr                                                      # ExprPattern
     | matchOp expr                                              # OpPattern
     | OF expr expr?                                             # TypePattern
@@ -143,9 +143,17 @@ patItem
     : REST? pattern
     ;
 
+patEntries
+    : patEntry (COM patEntry)* COM?
+    ;
+
 patEntry
     : expr COL pattern                                          # SinglePatternEntry
     | REST pattern                                              # RestPatternEntry
+    ;
+
+patObjEntries
+    : patObjEntry (COM patObjEntry)* COM?
     ;
 
 patObjEntry

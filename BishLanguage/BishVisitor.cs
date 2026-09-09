@@ -208,6 +208,7 @@ public partial class BishVisitor
 
     public CompileResult Multi(List<BishParseTree> trees)
     {
+        if (trees.Count == 0) return CompileResult.Stat(null);
         BishParseTree? last = null;
         if (trees[^1] is not { Text: ";" })
         {
@@ -307,10 +308,11 @@ public partial class BishVisitor
                 result.Add(new BuildList(args.Length));
                 return result;
             }
-            case ("MapExpr", [_, ("Entries", var children), _]):
+            case ("MapExpr", [_, var node, _]):
             {
                 var result = CompileResult.Expr(tree).Add(new GetBuiltin("map"), new Call(0));
-                foreach (var entry in children.Where(t => t is not { Text: "," }))
+                var entries = node is { Text: ":" } ? [] : node.Children.Where(t => t is not { Text: "," }).ToArray();
+                foreach (var entry in entries)
                     switch (entry)
                     {
                         case ("RestEntry", [_, var expr]):
@@ -328,10 +330,11 @@ public partial class BishVisitor
 
                 return result;
             }
-            case ("ObjExpr", [_, ("ObjEntries", var children), _]):
+            case ("ObjExpr", [_, var node, _]):
             {
                 var result = CompileResult.Expr(tree).Add(new GetBuiltin("object"), new Call(0));
-                foreach (var entry in children.Where(t => t is not { Text: "," }))
+                var entries = node is { Text: "." } ? [] : node.Children.Where(t => t is not { Text: "," }).ToArray();
+                foreach (var entry in entries.Where(t => t is not { Text: "," }))
                 {
                     var id = IdName(entry.Children[1]);
                     var expr = entry.Children.ElementAtOrDefault(3);
@@ -404,8 +407,8 @@ public partial class BishVisitor
             {
                 var name = rest is [("Tag", [var id, _])] ? IdName(id) : null;
                 return CompileResult.Expr(tree)
-                    .Add(Visit(iter), StackEffect.Consume)
-                    .Add(ForIter(tree, new CompileResult(StackEffect.Trans, tree).Add(new Move("$for"))
+                    .Add(Visit(iter), StackEffect.Expr)
+                    .Add(ForIter(tree, new CompileResult(StackEffect.Consume, tree).Add(new Move("$for"))
                         .Add(Def(obj, CompileResult.Expr(null).Add(new Del("$for"))))
                         .Add(new Pop())
                         .Add(Visit(loop).IntoStat()), name, await.Count == 1));
@@ -506,7 +509,6 @@ public partial class BishVisitor
                 }
 
                 BishParseTree[] args = [];
-                Console.WriteLine(string.Join(' ', rest.Select(t => t.Repr())));
                 if (rest.FirstOrDefault() is { Text: ":" } && rest[1] is ("Args", var c))
                 {
                     args = c.Where(t => t is not { Text: "," }).ToArray();
@@ -614,10 +616,12 @@ public partial class BishVisitor
                 result.Add(Tag(tags[^1]), new Bool(false), Tag(end));
                 return result;
             }
-            case ("MapPattern", [_, .. var children, _]):
+            case ("MapPattern", [_, var node, _]):
             {
                 var result = CompileResult.Pattern(tree);
-                var entries = children.Where(t => t is not { Text: "," }).ToArray();
+                var entries = node is { Text: ":" }
+                    ? []
+                    : node.Children.Where(t => t is not { Text: "," }).ToArray();
                 if (entries.SkipLast(1).Any(entry => entry is ("RestPatternEntry", _)))
                     result.Error(tree, "Rest entry must be the last one in map deconstruction");
                 var (tag, end) = Symbols.GetPair("map");
@@ -646,11 +650,14 @@ public partial class BishVisitor
                 result.Add(new Bool(true), new Jump(end), Tag(tag), new Bool(false), Tag(end), new Swap(), new Pop());
                 return result;
             }
-            case ("ObjPattern", [_, .. var children, _]):
+            case ("ObjPattern", [_, var node, _]):
             {
                 var result = CompileResult.Pattern(tree);
+                var entries = node is { Text: "." }
+                    ? []
+                    : node.Children.Where(t => t is not { Text: "," }).ToArray();
                 var (tag, end) = Symbols.GetPair("map");
-                foreach (var entry in children.Where(t => t is not { Text: "," }))
+                foreach (var entry in entries)
                 {
                     var (tryTag, tryEnd) = Symbols.GetPair("try");
                     result.Add(new Copy())

@@ -11,9 +11,9 @@ public struct BishLanguage : ILanguage
     public static string Name => "bish";
     public static BishRuntime.BishLanguage Language => new(Parse, Compile);
 
-    private static CompilerResult<BishParseTree> Parse(string code)
+    private static CompilerResult<BishParseTree> Parse(ICodeSource source)
     {
-        var stream = CharStreams.fromString(code);
+        var stream = CharStreams.fromString(source.Code);
         var lexer = new BishLexer(stream);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BishParser(tokens);
@@ -24,15 +24,23 @@ public struct BishLanguage : ILanguage
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
 
-        return new CompilerResult<BishParseTree>(BishParseTree.From(parser.program()), listener.Errors);
+        var file = source.Filename;
+        SetFile(listener.Errors, file);
+        return new CompilerResult<BishParseTree>(BishParseTree.From(parser.program()).WithFile(file), listener.Errors);
     }
 
     private static CompilerResult<Codes> Compile(CompilerResult<BishParseTree> compilerResult, CompileOptions options)
     {
         var (tree, errors) = compilerResult;
         var result = new BishVisitor().VisitFull(tree, optimize: options.Optimize);
+        SetFile(result.Errors, tree.File);
         if (options.Throws) BishCompileService.CheckErrors(result.Errors);
         return new CompilerResult<Codes>(result.Codes, errors.Concat(result.Errors).ToConcurrentList());
+    }
+
+    private static void SetFile(IList<CompilationError> errors, string? file)
+    {
+        foreach (var error in errors) error.File ??= file;
     }
 }
 

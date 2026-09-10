@@ -132,9 +132,7 @@ public class BishBytecodeObject : BishObject
     public SourcePosition? GetPos(string name) => TryGetMember(name) switch
     {
         null or BishNull => null,
-        BishList list => new SourcePosition(
-            list.Index(0).As<BishInt>("line").Value, list.Index(1).As<BishInt>("column").Value,
-            list.Index(2).As<BishInt>("stopLine").Value, list.Index(3).As<BishInt>("stopColumn").Value),
+        BishList list => SourcePosition.FromObject(list),
         var x => throw BishException.OfType_Expect(name, x, "null or list[int]")
     };
 

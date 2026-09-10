@@ -13,6 +13,7 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
     public readonly Node Node = node;
     public readonly IList<BishParseTree> Children = children.ToConcurrentList();
     public readonly SourcePosition? Source = source;
+    public string? File = null;
 
     public string? Text => Node.Text;
 
@@ -22,12 +23,18 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
         children = Children.ToList();
     }
 
-    // TODO: source position
+    public BishParseTree WithFile(string file)
+    {
+        File = file;
+        return this;
+    }
+
     [Builtin("hook")]
-    public static BishParseTree New(BishString type, [DefaultNull] BishList? children) => children is null
-        ? new BishParseTree(new Node("Terminal", type.Value), [])
-        : new BishParseTree(new Node(type.Value, null),
-            children.List.Select(item => item.As<BishParseTree>("child")).ToList());
+    public static BishParseTree New(BishString type, [DefaultNull] BishList? children,
+        [DefaultNull] BishList? source) =>
+        new(children is null ? new Node("Terminal", type.Value) : new Node(type.Value, null),
+            children?.List.Select(item => item.As<BishParseTree>("child")).ToList() ?? [],
+            source is null ? null : SourcePosition.FromObject(source));
 
     [Builtin("hook")]
     public static BishString Get_type(BishParseTree self) => new(self.Node.Type);
@@ -37,6 +44,9 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
 
     [Builtin("hook")]
     public static BishList Get_children(BishParseTree self) => new(self.Children.ToList<BishObject>());
+
+    [Builtin("hook")]
+    public static BishList? Get_source(BishParseTree self) => self.Source?.ToObject();
 
     [Builtin]
     public static BishString Repr(BishParseTree self, BishReprContext _) => new(self.Repr());

@@ -214,9 +214,6 @@ public class BishException(BishError error) : Exception
     public static BishException OfCompile_InvalidLang(string lang) =>
         OfCompile($"Invalid language: {lang}").With("language", new BishString(lang));
 
-    public static BishException OfCompile_ExistingLang(string lang) =>
-        OfCompile($"Language already exists: {lang}").With("language", new BishString(lang));
-
     public static BishException OfBytecodeParser(string message) => Create(BishError.BytecodeParserErrorType, message);
 
     public static BishException OfBytecodeParser_Magic() => OfBytecodeParser("Bad bytecode magic number!");

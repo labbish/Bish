@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace BishRuntime;
 
-using Parser = Func<string, CompilerResult<BishParseTree>>;
+using Parser = Func<ICodeSource, CompilerResult<BishParseTree>>;
 using Compiler = Func<CompilerResult<BishParseTree>, CompileOptions, CompilerResult<IList<BishBytecode>>>;
 
 public record CompileOptions(bool Optimize = true, bool Throws = true)
@@ -29,7 +29,7 @@ public class BishLanguage(Parser parser, Compiler compiler) : BishObject
     [Builtin("hook")]
     public static BishLanguage New(BishObject parser, BishObject compiler) => new(
         code => new CompilerResult<BishParseTree>(
-            parser.Call(new BishArgs([new BishString(code)])).As<BishParseTree>("result"), []),
+            parser.Call(new BishArgs([new BishCodeSource(code)])).As<BishParseTree>("result"), []),
         (result, options) => new CompilerResult<IList<BishBytecode>>(
             compiler.Call(new BishArgs([result.Result, options.Map])).As<BishList>("bytecodes").List.Select(item =>
                 BishBytecodeParser.FromObject(item.As<BishBytecodeObject>("bytecode"))).ToList(), []));
@@ -65,7 +65,7 @@ public static class BishCompileService
         }
 
         var language = Language(ext);
-        var result = language.Compiler(language.Parser(source.Code), options ?? new CompileOptions());
+        var result = language.Compiler(language.Parser(source), options ?? new CompileOptions());
         errors = result.Errors;
         var frame = new BishFrame(result.Result, scope).AddMeta(source.Root).WithSource(source);
         return frame;
@@ -80,7 +80,7 @@ public static class BishCompileService
 
     public static BishParseTree Parse(string lang, string code)
     {
-        var result = Language(lang).Parser(code);
+        var result = Language(lang).Parser(new VirtualSource("<code>", lang, code));
         CheckErrors(result.Errors);
         return result.Result;
     }
@@ -189,15 +189,21 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 
     public BishList ToObject() =>
         new(new[] { Line, Column, StopLine, StopColumn }.Select(BishInt.Of).ToList<BishObject>());
+
+    public static SourcePosition FromObject(BishList list) => new(
+        list.Index(0).As<BishInt>("line").Value, list.Index(1).As<BishInt>("column").Value,
+        list.Index(2).As<BishInt>("stopLine").Value, list.Index(3).As<BishInt>("stopColumn").Value);
 }
 
 public record CompilationError(SourcePosition Position, string Message)
 {
-    public override string ToString() => $"Compilation error at {Position}: {Message}";
+    public string? File = null;
+    
+    public override string ToString() => $"Compilation error: {Message}, at {File}, {Position}";
 
     public BishError ToError() => BishException.OfCompile(ToString())
-        .With("start", new BishList([BishInt.Of(Position.Line), BishInt.Of(Position.Column)]))
-        .With("end", new BishList([BishInt.Of(Position.StopLine), BishInt.Of(Position.StopColumn)]))
+        .With("pos", Position.ToObject())
+        .With("file", File is null ? BishNull.Instance : new BishString(File))
         .With("info", new BishString(Message)).Error;
 }
 

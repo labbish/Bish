@@ -27,7 +27,7 @@ public record BuiltinFunction(
                   {{string.Join(" ", Args.Select((arg, i) => $"var raw_{arg.Name} = raw_arg_list.Args[{i}];"))}}
                   {{string.Join(" ", Args.Select(arg =>
                       $"var {arg.Name} = {(arg.IsDefault ? $"raw_{arg.Name} is DefaultNull ? null : " : "")}" +
-                      $"({arg.Type})raw_{arg.Name}.As({arg.Type}.StaticType, \"{arg.Name}\");"))}}
+                      $"({arg.Type})raw_{arg.Name}.As({arg.Type}.StaticType, \"{arg.Name}\").As<{arg.Type}>(\"{arg.Name}\");"))}}
                   {{(IsVoid ? "" : "return ")}}{{Type}}.{{Name}}({{string.Join(", ", Args.Select(arg => arg.Name))}}){{(IsNullable ? " ?? (BishObject)BishNull.Instance" : "")}};
                   {{(IsVoid ? "return BishNull.Instance;" : "")}}
               },

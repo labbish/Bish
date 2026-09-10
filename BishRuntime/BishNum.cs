@@ -87,13 +87,14 @@ public class BishNum(double value) : BishObject
     public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
 
     [Builtin]
-    public static BishString Repr(BishNum self, BishReprContext ctx)
+    public new static BishString Repr(BishObject self, BishReprContext ctx)
     {
-        var sign = BishBool.CallToBool(ctx.Options.At(new BishString("sign"))) && self.Value > 0 ? "+" : "";
+        if (self is not BishNum { Value: var value }) throw BishException.OfArgument("Not a num!"); // Fix for int.base
+        var sign = BishBool.CallToBool(ctx.Options.At(new BishString("sign"))) && value > 0 ? "+" : "";
         var format = (ctx.Options.At(new BishString("format")) as BishString)?.Value;
         var precision = ctx.Options.At(new BishString("precision")).ToInt();
         var fmt = format switch { "e" => 'e', "E" => 'E', _ => precision is null ? 'G' : 'F' } + precision?.ToString();
-        var result = self.Value.ToString(fmt, CultureInfo.InvariantCulture);
+        var result = value.ToString(fmt, CultureInfo.InvariantCulture);
         return new BishString(sign + result);
     }
 

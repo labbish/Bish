@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace BishRuntime;
+﻿namespace BishRuntime;
 
 [AttributeUsage(AttributeTargets.Method)]
 #pragma warning disable CS9113

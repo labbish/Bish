@@ -37,13 +37,17 @@ public class CompileResult(
     public Codes Codes { get; internal set; } = (codes ?? []).ToConcurrentList();
     public readonly IList<CompilationError> Errors = (errors ?? []).ToConcurrentList();
 
-    public CompileResult Error(BishParseTree? parseTree, string message)
+    public CompileResult Error(string message, BishParseTree? parseTree = null)
     {
-        Errors.Add(new CompilationError(SourcePosition.From(parseTree), message));
+        Errors.Add(new CompilationError(SourcePosition.From(parseTree ?? Tree), message));
         return this;
     }
 
-    public CompileResult Error(string message) => Error(Tree, message);
+    public CompileResult Error(IList<CompilationError> errors)
+    {
+        Errors.AddRange(errors);
+        return this;
+    }
 
     public T? Try<T>(Func<T> action)
     {
@@ -104,11 +108,7 @@ public class CompileResult(
         return this;
     }
 
-    public CompileResult TryAdd(Func<BishBytecode> func)
-    {
-        var code = Try(func);
-        return code is null ? this : Add(code);
-    }
+    public CompileResult TryAdd(Func<BishBytecode> func) => Try(func) is { } code ? Add(code) : this;
 
     public CompileResult Add(params Codes code)
     {
@@ -129,7 +129,7 @@ public class CompileResult(
     {
         foreach (var code in Codes)
             if (code is Unbound unbound)
-                Error(unbound.Context, unbound.ErrorMessage());
+                Error(unbound.ErrorMessage(), unbound.Context);
         if (optimize) Codes = BishOptimizer.Optimize(Codes);
         return this;
     }

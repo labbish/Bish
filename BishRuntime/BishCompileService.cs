@@ -85,10 +85,16 @@ public static class BishCompileService
         return result.Result;
     }
 
-    private static BishFrame AddMeta(this BishFrame frame, string? root)
+    public static BishFrame AddMeta(this BishFrame frame, string? root)
     {
-        frame.Scope.DefVar("meta", new BishMeta(root ?? Environment.CurrentDirectory));
+        frame.Scope.AddMeta(root);
         return frame;
+    }
+
+    public static BishScope AddMeta(this BishScope scope, string? root)
+    {
+        scope.DefVar("meta", new BishMeta(root ?? Environment.CurrentDirectory));
+        return scope;
     }
 
     public static void CheckErrors(IList<CompilationError> errors)
@@ -161,6 +167,19 @@ public class BishCodeSource(ICodeSource source) : BishObject
 
     [Builtin]
     public static BishCodeSource Code(BishString ext, BishString code) => Virtual(new BishString("<code>"), ext, code);
+
+    [Builtin("hook")]
+    public static BishString Get_file(BishCodeSource self) => new(self.Source.Filename);
+
+    [Builtin("hook")]
+    public static BishString Get_text(BishCodeSource self) => new(self.Source.Code);
+
+    [Builtin("hook")]
+    public static BishString? Get_root(BishCodeSource self) =>
+        self.Source.Root is { } root ? new BishString(root) : null;
+
+    [Builtin("hook")]
+    public static BishString Get_ext(BishCodeSource self) => new(self.Source.Extension);
 }
 
 public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
@@ -197,13 +216,13 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
 
 public record CompilationError(SourcePosition Position, string Message)
 {
-    public string? File = null;
-    
-    public override string ToString() => $"Compilation error: {Message}, at {File}, {Position}";
+    public ICodeSource? Source = null;
+
+    public override string ToString() => $"Compilation error: {Message}, at {Source?.Filename}, {Position}";
 
     public BishError ToError() => BishException.OfCompile(ToString())
         .With("pos", Position.ToObject())
-        .With("file", File is null ? BishNull.Instance : new BishString(File))
+        .With("source", Source is null ? BishNull.Instance : new BishCodeSource(Source))
         .With("info", new BishString(Message)).Error;
 }
 

@@ -5,9 +5,11 @@ using String = BishRuntime.String;
 
 namespace BishLanguage;
 
-public partial class BishVisitor
+public partial class BishVisitor(ICodeSource? source)
 {
+    protected readonly BishScope Scope = BishScope.Globals.AddMeta(source?.Root);
     protected readonly SymbolAllocator Symbols = new();
+
     public const string Anonymous = "anonymous";
 
     public static BishBytecode Tag(string tag) => new Nop().Tagged(tag);
@@ -133,7 +135,7 @@ public partial class BishVisitor
             .ToList()));
         if (args is null) return result;
         if (fixedArgc && args.Any(arg => arg.Default is not null || arg.Rest))
-            return result.Error(body, $"Definition of {funcName} should contain no optional or rest argument");
+            return result.Error($"Definition of {funcName} should contain no optional or rest argument", body);
         var defaults = args.Select(arg => arg.Default).OfType<BishParseTree>().ToList();
         result.Add(new FuncStart(symbol, args.Select(arg => arg.Name).ToList()), new Inner())
             .Add(args.Select(arg => new Move(arg.Name)).ToList<BishBytecode>());
@@ -223,6 +225,41 @@ public partial class BishVisitor
         return result.Add(expr);
     }
 
+    public CompilerResult<BishParseTree?> ExpandMacros(BishParseTree tree)
+    {
+        var expands = false;
+        List<CompilationError> errors = [];
+        if (tree is ("MacroExpr", [_, var macro, _, .. var rest]))
+        {
+            try
+            {
+                var expr = rest.ElementAtOrDefault(^2) ?? (BishObject)BishNull.Instance;
+                var frame = BishCompileService.Compile("bish", macro);
+                frame.Scope = Scope;
+                var func = frame.Eval() ?? BishNull.Instance;
+                tree = func.Call(new BishArgs([expr], frame)) switch
+                {
+                    BishNull => BishParseTree.Empty,
+                    { } result => result.As<BishParseTree>("macro result")
+                };
+                expands = true;
+            }
+            catch (Exception e)
+            {
+                errors.Add(new CompilationError(SourcePosition.From(tree), e.Message));
+            }
+        }
+        
+        foreach (var (child, i) in tree.Children.Enumerate())
+        {
+            var (expanded, sub) = ExpandMacros(child);
+            if (expanded is not null) tree.Children[i] = expanded;
+            errors.AddRange(sub);
+        }
+
+        return new CompilerResult<BishParseTree?>(expands ? tree : null, errors);
+    }
+
     [SuppressMessage("ReSharper", "TailRecursiveCall")]
     public CompileResult Visit(BishParseTree tree)
     {
@@ -234,7 +271,7 @@ public partial class BishVisitor
                 return CompileResult.Expr(tree).TryAdd(() => new Num(ToNum(text)));
             case ("StrAtom", [{ Text: { } text }]):
                 return CompileResult.Expr(tree).TryAdd(() => new String(ToStr(text)));
-            case ("NullAtom", _): return CompileResult.Expr(tree).Add(new Null());
+            case ("NullAtom" or "Empty", _): return CompileResult.Expr(tree).Add(new Null());
             case ("BoolAtom", [{ Text: { } text }]):
                 return CompileResult.Expr(tree).TryAdd(() => new Bool(text == "true"));
             case ("IdAtom", [var id]): return CompileResult.Expr(tree).Add(new Get(IdName(id)));
@@ -623,7 +660,7 @@ public partial class BishVisitor
                     ? []
                     : node.Children.Where(t => t is not { Text: "," }).ToArray();
                 if (entries.SkipLast(1).Any(entry => entry is ("RestPatternEntry", _)))
-                    result.Error(tree, "Rest entry must be the last one in map deconstruction");
+                    result.Error("Rest entry must be the last one in map deconstruction");
                 var (tag, end) = Symbols.GetPair("map");
                 result.Add(new Copy(), new GetBuiltin("map"), new TestType(), new Pop(),
                     new JumpIfNot(tag), new GetBuiltin("map"), new Swap(), new Call(1));
@@ -759,7 +796,11 @@ public partial class BishVisitor
         }
     }
 
-    public CompileResult VisitFull(BishParseTree tree, bool optimize) => Visit(tree).Full(optimize);
+    public CompileResult VisitFull(BishParseTree tree, bool optimize)
+    {
+        var (expanded, errors) = ExpandMacros(tree);
+        return Visit(expanded ?? tree).Error(errors).Full(optimize);
+    }
 
     internal static ArgumentException Impossible => new("impossible!");
 }

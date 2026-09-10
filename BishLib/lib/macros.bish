@@ -1,0 +1,28 @@
+﻿func exec(tree) {
+    if (tree is null) return;
+    frame := meta.compileParsed('bish', tree);
+    frame.scope = this().caller.scope;
+    frame.execute();
+};
+
+func eval(tree) {
+    if (tree is null) return;
+    frame := meta.compileParsed('bish', tree);
+    frame.scope = this().caller.scope;
+    result := frame.eval();
+    if (result is null) return;
+    T := ParseTree;
+    // TODO: maybe avoid using JSON
+    // import('json').JSON.parse(...)
+    T('GetAccess', [
+        T('AtomExpr', [T('IdAtom', [T('SimpleId', [T('import')])])]),
+        T('NullAccess', [T('CallAccess', [T('('), T('Args', [T('SingleArg', [
+            T('AtomExpr', [T('StrAtom', [T('"json"')])])
+        ])]), T(')')])]),
+        T('NullAccess', [T('MemberAccess', [T('.'), T('SimpleId', [T('JSON')])])]),
+        T('NullAccess', [T('MemberAccess', [T('.'), T('SimpleId', [T('parse')])])]),
+        T('NullAccess', [T('CallAccess', [T('('), T('Args', [T('SingleArg', [
+            T('AtomExpr', [T('StrAtom', [T('r"{:j}"'.format(result))])])
+        ])]), T(')')])]),
+    ])
+};

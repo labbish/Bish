@@ -37,19 +37,23 @@ func start(scope: null) {
             _ => '{0}:{1}~{2}:{3}'
         }.format(..pos)
     };
+    
+    extend builtins() {
+        func comp(tree) {
+            if (tree is null) return;
+            for (b : meta.compileParsed('bish', tree).bytecodes)
+                print('{}\t{}\n'.format(pos(b), b));
+        };
+    };
 
     extend scope {
         func help() {
             print('help()        Print this help message.\n');
-            print('comp(code)    Compile and print bytecodes.\n');
+            print('#print[code]  Parse and print tree.\n');
+            print('#comp[code]   Compile and print bytecodes.\n');
             print('file(name)    Load a file into the REPL session.\n');
             print('exit()        Exit REPL.\n');
         };
-
-        @handler
-        func comp(code)
-            for (b : meta.compile(Frame.CodeSource.code('bish', code)).bytecodes)
-                print('{}\t{}\n'.format(pos(b), b));
 
         @handler
         func file(name) meta.compile(Frame.CodeSource.file(name), scope).execute();
@@ -58,7 +62,8 @@ func start(scope: null) {
     @handler
     func run(code) {
         result := meta.compile(Frame.CodeSource.code('bish', code), scope).eval();
-        if (result is not null) print('{:?}\n'.format(result));
+        if (result is not null) print(string.debug(result));
+        print('\n');
     };
 
     print('Welcome to Bish REPL!\n');

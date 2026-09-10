@@ -156,7 +156,7 @@ public class JsonTest(TestInfoFixture fixture) : LibTest(fixture, "json", ["JSON
         JsonStringifyError("object()");
         
         JsonStringifyError("{l:=[];l.add(l);l}");
-        JsonStringifyError("{m:={};m['m']:=m;m}");
+        JsonStringifyError("{m:={:};m['m']:=m;m}");
         JsonStringifyError("{x:=[];x.add({'x':x});x}");
         JsonStringifyError("{o:={.toJson:func(_)o};o}");
     }

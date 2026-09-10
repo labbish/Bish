@@ -71,7 +71,6 @@ public class BishScope : BishObject
     [PassCaller]
     public static BishObject Import(BishFrame? caller, BishString file) =>
         BishImporter.Import(caller?.Scope.GetVar("meta").As<BishMeta>("meta"), file.Value);
-    
 
     [Builtin]
     public static BishBuiltinScope Builtins() => BishBuiltinScope.Instance;
@@ -79,7 +78,7 @@ public class BishScope : BishObject
 
 public class BishBuiltinScope : BishScope
 {
-    public void Init(string name, BishObject obj) => Vars[name] = obj;
+    internal void Init(string name, BishObject obj) => Vars[name] = obj;
 
     private BishBuiltinScope()
     {

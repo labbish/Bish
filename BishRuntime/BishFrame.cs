@@ -77,11 +77,20 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
         return BishNull.Instance;
     }
 
+    public BishObject? Eval()
+    {
+        Execute();
+        return ReturnValue ?? (Stack.TryPeek(out var result) ? result : null);
+    }
+
     [Builtin("hook")]
     public static BishFrame? Get_caller(BishFrame self) => self.Caller;
 
     [Builtin("hook")]
     public static BishScope Get_scope(BishFrame self) => self.Scope;
+
+    [Builtin("hook")]
+    public static void Set_scope(BishFrame self, BishScope scope) => self.Scope = scope;
 
     [Builtin("hook")]
     public static BishList Get_stack(BishFrame self) => new(self.Stack.Reverse().ToList());
@@ -120,11 +129,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public static BishObject Execute(BishFrame self) => self.Execute();
 
     [Builtin]
-    public static BishObject? Eval(BishFrame self)
-    {
-        self.Execute();
-        return self.ReturnValue ?? (self.Stack.TryPeek(out var result) ? result : null);
-    }
+    public static BishObject? Eval(BishFrame self) => self.Eval();
 
     public BishFrame Clone() => new BishFrame(Bytecodes, Scope).WithSource(Source);
 
@@ -159,7 +164,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public static BishList Get_stackTrace(BishFrame self) => new(self.GetStackTrace().ToList<BishObject>());
 
     public int GetDepth() => CollectOnStack(_ => 0).Count;
-    
+
     [Builtin("hook")]
     public static BishInt Get_depth(BishFrame self) => BishInt.Of(self.GetDepth());
 }

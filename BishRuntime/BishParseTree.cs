@@ -13,9 +13,11 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
     public readonly Node Node = node;
     public readonly IList<BishParseTree> Children = children.ToConcurrentList();
     public readonly SourcePosition? Source = source;
-    public string? File = null;
+    public ICodeSource? CodeSource;
 
     public string? Text => Node.Text;
+
+    public static BishParseTree Empty => new(new Node("Empty", null), []);
 
     public void Deconstruct(out string type, out List<BishParseTree> children)
     {
@@ -23,9 +25,9 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
         children = Children.ToList();
     }
 
-    public BishParseTree WithFile(string file)
+    public BishParseTree WithSource(ICodeSource source)
     {
-        File = file;
+        CodeSource = source;
         return this;
     }
 

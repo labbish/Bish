@@ -24,23 +24,23 @@ public struct BishLanguage : ILanguage
         parser.RemoveErrorListeners();
         parser.AddErrorListener(listener);
 
-        var file = source.Filename;
-        SetFile(listener.Errors, file);
-        return new CompilerResult<BishParseTree>(BishParseTree.From(parser.program()).WithFile(file), listener.Errors);
+        SetFile(listener.Errors, source);
+        return new CompilerResult<BishParseTree>(BishParseTree.From(parser.program())
+            .WithSource(source), listener.Errors);
     }
 
     private static CompilerResult<Codes> Compile(CompilerResult<BishParseTree> compilerResult, CompileOptions options)
     {
         var (tree, errors) = compilerResult;
-        var result = new BishVisitor().VisitFull(tree, optimize: options.Optimize);
-        SetFile(result.Errors, tree.File);
+        var result = new BishVisitor(tree.CodeSource).VisitFull(tree, optimize: options.Optimize);
+        SetFile(result.Errors, tree.CodeSource);
         if (options.Throws) BishCompileService.CheckErrors(result.Errors);
         return new CompilerResult<Codes>(result.Codes, errors.Concat(result.Errors).ToConcurrentList());
     }
 
-    private static void SetFile(IList<CompilationError> errors, string? file)
+    private static void SetFile(IList<CompilationError> errors, ICodeSource? source)
     {
-        foreach (var error in errors) error.File ??= file;
+        foreach (var error in errors) error.Source ??= source;
     }
 }
 

@@ -49,6 +49,7 @@ expr
     | LBRACE (expr END)* expr? RBRACE                           # BlockExpr
     | atom                                                      # AtomExpr
     | PIPE                                                      # PipeVarExpr
+    | SHARP expr LBRACK expr? RBRACK                            # MacroExpr
     ;
 
 forBody

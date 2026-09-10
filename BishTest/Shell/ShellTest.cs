@@ -142,7 +142,7 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
 
         CreateFile("./a/t.txt", "test");
         await ExpectOutputAsync("-c", "bish",
-            "meta.languages['txt']:=meta.Language(ParseTree,(t,_)[Bytecode('String',{.value:t.text})," +
+            "meta.languages['txt']:=meta.Language((s)ParseTree(s.text),(t,_)[Bytecode('String',{.value:t.text})," +
             "Bytecode('Def',{.name:'text'})]);print(import('a/t').text)", "test");
     }
 
@@ -191,6 +191,14 @@ public class ShellTest : Test, IDisposable, IAsyncDisposable
         File.Move("BishExamplePlugin.dll", "./a/p.dll");
         CreateFile("./a/p.bish", "print(import('p.dll').This)");
         await ExpectOutputAsync("-f", "./a/p.bish", BishExamplePlugin.Example.This);
+    }
+
+    [Fact]
+    public async Task TestMacro()
+    {
+        CreateFile("./a/m.bish", "func m(_)print('macro!');");
+        CreateFile("./a/n.bish", "#macro.exec[{.m}:=import('m')];#m[];");
+        await ExpectOutputAsync("-f", "./a/n.bish", "macro!");
     }
 
     public void Dispose()

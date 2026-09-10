@@ -49,7 +49,7 @@ public class ReflectTest : Test
         ExpectResult("f.bytecodes", "[x,y,z]");
         ExpectResult("f.scope.ip", "3");
         ExpectResult("f.caller", "null");
-        ExpectError("Bytecode('???',{});", BishError.BytecodeParserErrorType);
+        ExpectError("Bytecode('???',{.});", BishError.BytecodeParserErrorType);
 
         Execute("a:=Bytecode('Int',{.value:0});");
         Execute("b:=Bytecode('Def',{.name:'k'});");

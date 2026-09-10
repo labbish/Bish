@@ -28,6 +28,7 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
     public BishParseTree WithSource(ICodeSource source)
     {
         CodeSource = source;
+        foreach (var child in Children) child.WithSource(source);
         return this;
     }
 
@@ -49,6 +50,10 @@ public class BishParseTree(Node node, IList<BishParseTree> children, SourcePosit
 
     [Builtin("hook")]
     public static BishList? Get_source(BishParseTree self) => self.Source?.ToObject();
+
+    [Builtin("hook")]
+    public static BishString? Get_code(BishParseTree self) =>
+        self.CodeSource is { Code: var code } && self.Source?.Slice(code) is { } result ? new BishString(result) : null;
 
     [Builtin]
     public static BishString Repr(BishParseTree self, BishReprContext _) => new(self.Repr());

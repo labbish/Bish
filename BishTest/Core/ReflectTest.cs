@@ -95,6 +95,7 @@ public class ReflectTest : Test
         ExpectResult("t.type", "'Program'");
         ExpectResult("t.text", "null");
         ExpectResult("t.children.length", "2");
+        ExpectResult("t.code", "'1+2'");
 
         Execute("c:=t.children[0];");
         ExpectResult("string.show(c)", $"'{c}'");

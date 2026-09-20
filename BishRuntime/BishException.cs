@@ -187,6 +187,8 @@ public class BishException(BishError error) : Exception
 
     public static BishException OfArgument_InvalidPow() => OfArgument("Invalid power expression");
 
+    public static BishException OfArgument_NegLog() => OfArgument("Log is invalid on non-positive num");
+
     public static BishException OfArgument_ListSetCount(int expect, int got) =>
         OfArgument($"Setting {expect} indexes with {got} elements")
             .With("expect", BishInt.Of(expect)).With("got", BishInt.Of(got));

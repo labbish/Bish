@@ -255,8 +255,10 @@ public readonly struct BigNum : INumber<BigNum>
     public static int Radix => BigInt.Radix;
     public static BigNum Zero => new(BigInt.Zero, 0);
 
-    public static readonly BigNum Pi = new(BigInt.Parse("31415926535897932384626433832"), MaxExp);
-    public static readonly BigNum E = new(BigInt.Parse("27182818284590452353602874713"), MaxExp);
+    public static readonly BigNum Pi = Parse("3.1415926535897932384626433832");
+    public static readonly BigNum E = Parse("2.7182818284590452353602874713");
+
+    public static readonly BigNum Ln10 = Parse("2.3025850929940456840179914546");
 
     public BigInt Truncate() => Data / BigInt.TenPow(Exp);
 
@@ -314,7 +316,7 @@ public readonly struct BigNum : INumber<BigNum>
             return -(-this).Root(n);
         }
 
-        var result = One; // TODO: use a better one
+        var result = One;
         for (var i = 0; i < 10; i++)
         {
             var r = ((n - 1) * result + this / result.Pow(n - 1)) / n;
@@ -325,5 +327,82 @@ public readonly struct BigNum : INumber<BigNum>
         return result;
     }
 
+    public BigNum Sqrt() => Root(2);
+
     public int AbsLgFloor() => Data.AbsLgFloor() - Exp;
+
+    public BigNum Ln()
+    {
+        if (this <= 0) throw BishException.OfArgument_NegLog();
+        if (this < 1) return -(1 / this).Ln();
+        var exp = AbsLgFloor();
+        if (exp > 0) return (this / BigInt.TenPow(exp)).Ln() + exp * Ln10;
+        if (this > Parse("1.01")) return 2 * Sqrt().Ln();
+        var result = Zero;
+        var pow = One;
+        for (var i = 1; i < 30; i++)
+        {
+            pow *= this - 1;
+            var x = pow / i;
+            if (x == 0) break;
+            if (i % 2 == 1) result += x;
+            else result -= x;
+        }
+
+        return result;
+    }
+
+    public BigNum Lg() => Ln() / Ln10;
+
+    public BigNum Log(BigNum other) => Ln() / other.Ln();
+
+    public BigNum Sin() => (this - Pi / 2).Cos();
+
+    public BigNum Cos()
+    {
+        if (this < 0) return (-this).Cos();
+        if (this > 2 * Pi) return (this % (2 * Pi)).Cos();
+        if (this > Pi) return (2 * Pi - this).Cos();
+        if (this > Pi / 2) return -(Pi - this).Cos();
+        if (this > Pi / 4) return ((Pi / 2 - this).Cos() + (Pi / 2 - this).Sin()) / ((BigNum)2).Sqrt();
+        var result = One;
+        var pow = One;
+        var fact = One;
+        for (var i = 1; i < 30; i++)
+        {
+            fact *= 2 * i * (2 * i - 1);
+            pow *= Pow(2);
+            var x = pow / fact;
+            if (x == 0) break;
+            if (i % 2 == 1) result -= x;
+            else result += x;
+        }
+
+        return result;
+    }
+
+    public BigNum Tan() => Sin() / Cos();
+
+    public BigNum Asin() => (this / (1 - Pow(2)).Sqrt()).Atan();
+
+    public BigNum Acos() => Pi / 2 - Asin();
+
+    public BigNum Atan()
+    {
+        if (this < 0) return -(-this).Atan();
+        if (this > 1) return Pi / 2 - (1 / this).Atan();
+        if (this > Parse("0.1")) return 2 * (this / (1 + (1 + Pow(2)).Sqrt())).Atan();
+        var result = this;
+        var pow = this;
+        for (var i = 1; i < 30; i++)
+        {
+            pow *= Pow(2);
+            var x = pow / (2 * i + 1);
+            if (x == 0) break;
+            if (i % 2 == 1) result -= x;
+            else result += x;
+        }
+
+        return result;
+    }
 }

@@ -41,7 +41,7 @@ public class BishNum(BigNum value) : BishObject
     public static BishNum Pow(BishNum a, BishNum b) => new(a.Value.Pow(b.Value));
 
     [Builtin]
-    public static BishNum Sqrt(BishNum a) => new(a.Value.Root(2));
+    public static BishNum Sqrt(BishNum a) => new(a.Value.Sqrt());
 
     [Builtin]
     public static BishNum Abs(BishNum a) => new(BigNum.Abs(a.Value));
@@ -59,31 +59,31 @@ public class BishNum(BigNum value) : BishObject
     public static BishInt Round(BishNum a) => BishInt.Of(a.Value.Round());
 
     [Builtin]
-    public static BishNum Sin(BishNum a) => throw new NotImplementedException();
+    public static BishNum Sin(BishNum a) => new(a.Value.Sin());
 
     [Builtin]
-    public static BishNum Cos(BishNum a) => throw new NotImplementedException();
+    public static BishNum Cos(BishNum a) => new(a.Value.Cos());
 
     [Builtin]
-    public static BishNum Tan(BishNum a) => throw new NotImplementedException();
+    public static BishNum Tan(BishNum a) => new(a.Value.Tan());
 
     [Builtin]
-    public static BishNum Asin(BishNum a) => throw new NotImplementedException();
+    public static BishNum Asin(BishNum a) => new(a.Value.Asin());
 
     [Builtin]
-    public static BishNum Acos(BishNum a) => throw new NotImplementedException();
+    public static BishNum Acos(BishNum a) => new(a.Value.Acos());
 
     [Builtin]
-    public static BishNum Atan(BishNum a) => throw new NotImplementedException();
+    public static BishNum Atan(BishNum a) => new(a.Value.Atan());
 
     [Builtin]
-    public static BishNum Ln(BishNum a) => throw new NotImplementedException();
+    public static BishNum Ln(BishNum a) => new(a.Value.Ln());
 
     [Builtin]
-    public static BishNum Lg(BishNum a) => throw new NotImplementedException();
+    public static BishNum Lg(BishNum a) => new(a.Value.Lg());
 
     [Builtin]
-    public static BishNum Log(BishNum a, BishNum b) => throw new NotImplementedException();
+    public static BishNum Log(BishNum a, BishNum b) => new(a.Value.Log(b.Value));
 
     [Builtin]
     public new static BishString Repr(BishObject self, BishReprContext ctx)

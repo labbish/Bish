@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using BishRuntime.Numerals;
 using BishUtils;
 
 namespace BishRuntime;
@@ -20,13 +21,13 @@ public record Pop(int Count = 1) : BishBytecode
 public abstract record Value : BishBytecode;
 
 [Bytecode]
-public record Int(int Value) : Value
+public record Int(BigInt Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(BishInt.Of(Value));
 }
 
 [Bytecode]
-public record Num(double Value) : Value
+public record Num(BigNum Value) : Value
 {
     public override void Execute(BishFrame frame) => frame.Stack.Push(new BishNum(Value));
 }

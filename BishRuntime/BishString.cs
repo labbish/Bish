@@ -30,7 +30,7 @@ public class BishString(string value) : BishObject
 
     private static BishString MulHelper(BishString s, BishObject b) =>
         b is BishInt x
-            ? new BishString(string.Concat(Enumerable.Repeat(s.Value, x.Value)))
+            ? new BishString(string.Concat(Enumerable.Repeat(s.Value, (int)x.Value)))
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
 
     [Builtin("op")]
@@ -60,7 +60,7 @@ public class BishString(string value) : BishObject
     public static string CallRepr(string str, BishReprContext ctx)
     {
         var precision = ctx.Options.At(new BishString("precision")).ToInt();
-        var s = precision is { } p ? str[..Math.Min(str.Length, p)] : str;
+        var s = precision is { } p ? str[..Math.Min(str.Length, (int)p)] : str;
         return ctx.Debug ? "'" + Regex.Escape(s).Replace("'", @"\'") + "'" : s;
     }
 

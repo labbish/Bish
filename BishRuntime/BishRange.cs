@@ -1,17 +1,19 @@
-﻿namespace BishRuntime;
+﻿using BishRuntime.Numerals;
 
-public class BishRange(int? start, int? end, int step) : BishObject
+namespace BishRuntime;
+
+public class BishRange(BigInt? start, BigInt? end, BigInt step) : BishObject
 {
-    public readonly int? Start = start;
-    public readonly int? End = end;
-    public readonly int Step = step;
-    public int? Current;
+    public readonly BigInt? Start = start;
+    public readonly BigInt? End = end;
+    public readonly BigInt Step = step;
+    public BigInt? Current;
 
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("range");
 
-    private static BishObject ToObject(int? value) => value is null ? BishNull.Instance : BishInt.Of(value.Value);
+    private static BishObject ToObject(BigInt? value) => value is null ? BishNull.Instance : BishInt.Of(value.Value);
 
     [Builtin("op")]
     public static BishBool Eq(BishRange self, BishRange other) =>
@@ -40,7 +42,7 @@ public class BishRange(int? start, int? end, int step) : BishObject
         new(Start?.Regularize(length) ?? 0, End?.Regularize(length, check: false) ?? length, Step);
 
     [Builtin]
-    public static BishRange Regularize(BishRange self, BishInt length) => self.Regularize(length.Value);
+    public static BishRange Regularize(BishRange self, BishInt length) => self.Regularize((int)length.Value);
 
     public IEnumerable<BishInt> ToInts() => this.ToEnumerable().Select(value => value.As<BishInt>(""));
 

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using BishRuntime.Numerals;
 using BishUtils;
 using String = BishRuntime.String;
 
@@ -14,20 +15,20 @@ public partial class BishVisitor(ICodeSource? source)
 
     public static BishBytecode Tag(string tag) => new Nop().Tagged(tag);
 
-    public static int ToInt(string text)
+    public static BigInt ToInt(string text)
     {
-        if (text[0] != '0' || text.Length < 2) return int.Parse(text);
+        if (text[0] != '0' || text.Length < 2) return BigInt.Parse(text);
         var radix = text[1] switch { 'x' => 16, 'o' => 8, 'b' => 2, _ => 10 };
-        return Convert.ToInt32(text[2..], radix);
+        return Convert.ToBigInt(text[2..], radix);
     }
 
-    public static double ToNum(string text)
+    public static BigNum ToNum(string text)
     {
         var pos = text.IndexOf('e');
-        if (pos == -1) return double.Parse(text);
+        if (pos == -1) return BigNum.Parse(text);
         var part = text[(pos + 1)..];
         var exp = "+-".Contains(part[0]) ? ToInt(part[1..]) * (part[0] == '-' ? -1 : 1) : ToInt(part);
-        return double.Parse(text[..pos]) * Math.Pow(10, exp);
+        return BigNum.Parse(text[..pos]) * ((BigNum)10).Pow(exp);
     }
 
     public static string ToStr(string text)
@@ -249,7 +250,7 @@ public partial class BishVisitor(ICodeSource? source)
                 errors.Add(new CompilationError(SourcePosition.From(tree), e.Message));
             }
         }
-        
+
         foreach (var (child, i) in tree.Children.Enumerate())
         {
             var (expanded, sub) = ExpandMacros(child);

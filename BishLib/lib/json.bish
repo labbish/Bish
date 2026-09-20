@@ -1,7 +1,7 @@
 class JsonError : Error;
  
 class JsonParseError : JsonError {
-    new(message, location) extend JsonParseError.parent('{} at char #{}'
+    new(message, location) extend JsonError('{} at char #{}'
         .format(message, location)) { location := location };
 };
 

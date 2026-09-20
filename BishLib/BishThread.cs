@@ -31,13 +31,13 @@ public class BishThread(Thread thread) : BishObject
     public static BishBool Join(BishThread self, [DefaultNull] BishInt? ms) =>
         BishException.Wrapped(BishThreadModule.Error, () =>
         {
-            if (ms is not null) return BishBool.Of(self.Thread.Join(ms.Value));
+            if (ms is not null) return BishBool.Of(self.Thread.Join((int)ms.Value));
             self.Thread.Join();
             return BishBool.True;
         });
 
     [Builtin]
-    public static void Sleep(BishInt ms) => Thread.Sleep(ms.Value);
+    public static void Sleep(BishInt ms) => Thread.Sleep((int)ms.Value);
 
     [Builtin("hook")]
     public static BishInt Get_id(BishType _) => BishInt.Of(Environment.CurrentManagedThreadId);

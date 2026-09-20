@@ -94,7 +94,7 @@ public record RecordArg(string Type, string Name, string? Default)
 
     public string Format => Type switch
     {
-        "int" or "double" => $"bytecode.{Name}.ToString()",
+        "int" or "BigInt" or "BigNum" or "double" => $"bytecode.{Name}.ToString()",
         "bool" => $"bytecode.{Name}.ToString().ToLower()",
         "string" => Escape($"bytecode.{Name}"),
         "Tag" or "Tag?" => $"bytecode.{Name} is null ? \"null\" : {EscapeTag($"bytecode.{Name}")}",
@@ -104,7 +104,7 @@ public record RecordArg(string Type, string Name, string? Default)
 
     public string AsType => Type switch
     {
-        "int" or "double" or "bool" or "string" or "Tag" => Type.Upper(),
+        "int" or "BigInt" or "BigNum" or "bool" or "string" or "Tag" => Type.Upper(),
         "Tag?" => "Tag",
         "IList<string>" => "Strings",
         _ => throw new ArgumentException($"Invalid bytecode argument type: {Type}")

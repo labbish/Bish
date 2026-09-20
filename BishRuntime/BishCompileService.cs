@@ -207,11 +207,11 @@ public record SourcePosition(int Line, int Column, int StopLine, int StopColumn)
     }
 
     public BishList ToObject() =>
-        new(new[] { Line, Column, StopLine, StopColumn }.Select(BishInt.Of).ToList<BishObject>());
+        new(new[] { Line, Column, StopLine, StopColumn }.Select(n => BishInt.Of(n)).ToList<BishObject>());
 
     public static SourcePosition FromObject(BishList list) => new(
-        list.Index(0).As<BishInt>("line").Value, list.Index(1).As<BishInt>("column").Value,
-        list.Index(2).As<BishInt>("stopLine").Value, list.Index(3).As<BishInt>("stopColumn").Value);
+        (int)list.Index(0).As<BishInt>("line").Value, (int)list.Index(1).As<BishInt>("column").Value,
+        (int)list.Index(2).As<BishInt>("stopLine").Value, (int)list.Index(3).As<BishInt>("stopColumn").Value);
 }
 
 public record CompilationError(SourcePosition Position, string Message)

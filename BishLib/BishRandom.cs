@@ -1,4 +1,5 @@
 ﻿using BishRuntime;
+using BishRuntime.Numerals;
 
 namespace BishLib;
 
@@ -22,15 +23,33 @@ public class BishRandom(Random random) : BishObject
 
     [Builtin("hook")]
     public static BishRandom New([DefaultNull] BishInt? seed) =>
-        new(seed is null ? new Random() : new Random(seed.Value));
+        new(seed is null ? new Random() : new Random(int.CreateTruncating(seed.Value)));
+
+    private BigInt Rand(BigInt max)
+    {
+        if (max <= int.MaxValue) return Random.Next((int)max);
+        var segments = max.AbsLgFloor() / BigInt.LgRadix;
+        var rest = (int)((BigNum)max / BigInt.TenPow(segments * BigInt.LgRadix)).Ceil();
+        while (true)
+        {
+            var result = new BigInt([
+                ..Enumerable.Range(0, segments).Select(_ => Random.Next(BigInt.Radix)), Random.Next(rest)
+            ]);
+            if (result < max) return result;
+        }
+    }
+
+    public BigInt Rand(BigInt min, BigInt max) => min < max
+        ? min + Rand(max - min)
+        : throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}");
 
     [Builtin]
-    public static BishNum Rand(BishRandom self) => new(self.Random.NextDouble());
+    public static BishNum Rand(BishRandom self) =>
+        new(new BigNum(self.Rand(BigInt.Zero, BigInt.TenPow(BigNum.MaxExp)), BigNum.MaxExp));
 
     [Builtin]
-    public static BishInt RandInt(BishRandom self, BishInt min, BishInt max) => min.Value > max.Value
-        ? throw BishException.OfArgument($"{nameof(min)} must be less than {nameof(max)}")
-        : BishInt.Of(self.Random.Next(min.Value, max.Value));
+    public static BishInt RandInt(BishRandom self, BishInt min, BishInt max) =>
+        BishInt.Of(self.Rand(min.Value, max.Value));
 
     public BishObject Choice(BishObject[] array) => array[Random.Next(array.Length)];
 
@@ -41,7 +60,7 @@ public class BishRandom(Random random) : BishObject
     public static BishList Choices(BishRandom self, BishObject iter, BishInt count)
     {
         var array = iter.ToEnumerable().ToArray();
-        return new BishList(Enumerable.Range(0, count.Value).Select(_ => self.Choice(array)).ToList());
+        return new BishList(Enumerable.Range(0, (int)count.Value).Select(_ => self.Choice(array)).ToList());
     }
 
     [Builtin]
@@ -49,7 +68,7 @@ public class BishRandom(Random random) : BishObject
     {
         var shuffled = self.Shuffled(iter);
         return shuffled.Length >= count.Value
-            ? new BishList(shuffled[..count.Value])
+            ? new BishList(shuffled[..(int)count.Value])
             : throw BishException.OfArgument($"Cannot select {count.Value} samples from {shuffled.Length} items");
     }
 

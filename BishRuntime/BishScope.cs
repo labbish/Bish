@@ -61,7 +61,7 @@ public class BishScope : BishObject
     public static BishString Input() => new(Console.ReadLine() ?? "");
 
     [Builtin]
-    public static void Exit([DefaultNull] BishInt? code) => Environment.Exit(code?.Value ?? 0);
+    public static void Exit([DefaultNull] BishInt? code) => Environment.Exit(code?.Value is { } value ? (int)value : 0);
 
     [Builtin]
     [PassCaller]

@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Binary;
 using System.Text;
+using BishRuntime.Numerals;
 using BishUtils;
 
 namespace BishRuntime;
@@ -19,6 +20,13 @@ public class BishBytecodeWriter(BinaryWriter writer)
     public void AddByte(byte value) => writer.Write(value);
     public void AddBytes(Span<byte> value) => writer.Write(value);
 
+    public void AddShort(short value)
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        BinaryPrimitives.WriteInt16BigEndian(bytes, value);
+        AddBytes(bytes);
+    }
+
     public void AddInt(int value)
     {
         Span<byte> bytes = stackalloc byte[4];
@@ -26,11 +34,16 @@ public class BishBytecodeWriter(BinaryWriter writer)
         AddBytes(bytes);
     }
 
-    public void AddDouble(double value)
+    public void AddBigInt(BigInt value)
     {
-        Span<byte> bytes = stackalloc byte[8];
-        BinaryPrimitives.WriteDoubleBigEndian(bytes, value);
-        AddBytes(bytes);
+        AddInt(value.Negative ? -value.Digits.Length : value.Digits.Length);
+        foreach (var digit in value.Digits) AddInt(digit);
+    }
+
+    public void AddBigNum(BigNum value)
+    {
+        AddShort(value.Exp);
+        AddBigInt(value.Data);
     }
 
     public void AddBool(bool value) => AddByte(value ? (byte)1 : (byte)0);
@@ -96,15 +109,33 @@ public class BishBytecodeReader(BinaryReader reader)
         return processor(buffer);
     }
 
-    public int GetInt() => ProcessBytes(4, BinaryPrimitives.ReadInt32BigEndian);
-    public double GetDouble() => ProcessBytes(8, BinaryPrimitives.ReadDoubleBigEndian);
     public bool GetBool() => GetByte() != 0;
+
+    public short GetShort() => ProcessBytes(2, BinaryPrimitives.ReadInt16BigEndian);
+
+    public int GetInt() => ProcessBytes(4, BinaryPrimitives.ReadInt32BigEndian);
 
     public int GetInt(byte first)
     {
         Span<byte> rest = stackalloc byte[3];
         reader.ReadExactly(rest);
         return BinaryPrimitives.ReadInt32BigEndian([first, ..rest]);
+    }
+
+    public BigInt GetBigInt()
+    {
+        var value = GetInt();
+        var length = Math.Abs(value);
+        List<int> digits = [];
+        for (var i = 0; i < length; i++) digits.Add(GetInt());
+        return new BigInt(digits.ToArray(), value < 0);
+    }
+
+    public BigNum GetBigNum()
+    {
+        var exp = GetShort();
+        var data = GetBigInt();
+        return new BigNum(data, exp);
     }
 
     public string GetString(byte first)
@@ -127,8 +158,8 @@ public class BishBytecodeReader(BinaryReader reader)
 
     public string[] GetStrings()
     {
-        List<string> list = [];
         var length = GetInt();
+        List<string> list = [];
         for (var i = 0; i < length; i++) list.Add(GetString());
         return list.ToArray();
     }
@@ -150,7 +181,7 @@ public class BishBytecodeReader(BinaryReader reader)
 public static class BishBytecodeParser
 {
     public const int Magic = 0x0d000721;
-    public const byte Version = 10;
+    public const byte Version = 11;
 
     public static readonly IList<BytecodeParser> Parsers = new ConcurrentList<BytecodeParser>();
 

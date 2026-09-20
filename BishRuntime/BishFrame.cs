@@ -1,4 +1,5 @@
-﻿using BishUtils;
+﻿using BishRuntime.Numerals;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -25,7 +26,7 @@ public class BishFrame(IList<BishBytecode> bytecodes, BishScope? scope = null, B
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("Frame");
 
-    public static int RecursionLimit { get; set; } = 100;
+    public static BigInt RecursionLimit { get; set; } = 100;
 
     [Builtin("hook")]
     public static BishFrame New(BishList bytecodes, [DefaultNull] BishScope? scope, [DefaultNull] BishFrame? caller) =>

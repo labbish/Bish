@@ -37,7 +37,7 @@ public abstract class BishTask : BishObject
     public static BishAnyTask Any([Rest] BishList tasks) => new(tasks.List);
 
     [Builtin]
-    public static BishSleepTask Sleep(BishInt ms) => new(ms.Value);
+    public static BishSleepTask Sleep(BishInt ms) => new((int)ms.Value);
 
     [Builtin]
     public static BishMergeTasks Merge([Rest] BishList tasks) => new(tasks.List);

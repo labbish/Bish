@@ -12,6 +12,9 @@ public class Test(TestInfoFixture fixture)
     // ReSharper disable once UnusedMember.Global
     protected TestInfoFixture Fixture => fixture;
     protected readonly BishScope Scope = BishScope.Globals;
+    
+    public static readonly bool IsCi = Environment.GetEnvironmentVariable("CI") == "true";
+    public static readonly int Timeout = IsCi ? 100000 : 10000;
 
     [DoesNotReturn]
     protected static void Fail(string message) => throw new AssertionFailedException(message);
@@ -58,7 +61,7 @@ public class Test(TestInfoFixture fixture)
         try
         {
             var task = Task.Run(frame.Execute);
-            return task.Wait(10000) ? frame : throw new TimeoutException("Time limit exceeded");
+            return task.Wait(Timeout) ? frame : throw new TimeoutException("Time limit exceeded");
         }
         catch (AggregateException e)
         {

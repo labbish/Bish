@@ -125,7 +125,7 @@ public class BishRegexMatches(IReadOnlyList<Capture> collection) : BishObject
     [Builtin("op")]
     public static BishRegexMatch? GetIndex(BishRegexMatches self, BishObject x) => BishRegexMatch.Of(x switch
     {
-        BishInt index => self.Collection[index.Value],
+        BishInt index => self.Collection[(int)index.Value],
         BishString name => self.Collection is GroupCollection groups
             ? groups[name.Value]
             : throw BishException.OfType_Expect("index", name, "int"),

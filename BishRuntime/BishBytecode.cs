@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using BishRuntime.Numerals;
 
 namespace BishRuntime;
 
@@ -84,7 +85,9 @@ public class BishBytecodeObject : BishObject
 
     public void AddInt(string name, int value) => DefMember(name, BishInt.Of(value));
 
-    public void AddDouble(string name, double value) => DefMember(name, new BishNum(value));
+    public void AddBigInt(string name, BigInt value) => DefMember(name, BishInt.Of(value));
+
+    public void AddBigNum(string name, BigNum value) => DefMember(name, new BishNum(value));
 
     public void AddBool(string name, bool value) => DefMember(name, BishBool.Of(value));
 
@@ -109,10 +112,12 @@ public class BishBytecodeObject : BishObject
         return value is not null ? process(value) : defaultValue ?? throw BishException.OfAttribute("get", this, name);
     }
 
-    public int GetInt(string name, int? defaultValue = null) =>
+    public int GetInt(string name, int? defaultValue = null) => (int)GetBigInt(name, defaultValue);
+
+    public BigInt GetBigInt(string name, BigInt? defaultValue = null) =>
         Get(name, (BishInt value) => value.Value, defaultValue)!.Value;
 
-    public double GetDouble(string name, double? defaultValue = null) =>
+    public BigNum GetBigNum(string name, BigNum? defaultValue = null) =>
         Get(name, (BishNum value) => value.Value, defaultValue)!.Value;
 
     public bool GetBool(string name, bool? defaultValue = null) =>

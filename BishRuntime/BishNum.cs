@@ -1,10 +1,11 @@
 ﻿using System.Globalization;
+using BishRuntime.Numerals;
 
 namespace BishRuntime;
 
-public class BishNum(double value) : BishObject
+public class BishNum(BigNum value) : BishObject
 {
-    public readonly double Value = value;
+    public readonly BigNum Value = value;
     public override BishType DefaultType => StaticType;
 
     public new static readonly BishType StaticType = new("num");
@@ -13,9 +14,7 @@ public class BishNum(double value) : BishObject
     public static BishNum New([DefaultNull] BishNum? other) => new(other?.Value ?? 0);
 
     [Builtin]
-    public static BishNum Parse(BishString a) => double.TryParse(a.Value, out var value)
-        ? new BishNum(value)
-        : throw BishException.OfArgument_Parse(a, StaticType);
+    public static BishNum Parse(BishString a) => new(BigNum.Parse(a.Value));
 
     [Builtin("op")]
     public static BishNum Pos(BishNum a) => new(+a.Value);
@@ -39,52 +38,52 @@ public class BishNum(double value) : BishObject
     public static BishNum Mod(BishNum a, BishNum b) => new(a.Value % b.Value);
 
     [Builtin("op")]
-    public static BishNum Pow(BishNum a, BishNum b) => new(Math.Pow(a.Value, b.Value));
+    public static BishNum Pow(BishNum a, BishNum b) => new(a.Value.Pow(b.Value));
 
     [Builtin]
-    public static BishNum Sqrt(BishNum a) => new(Math.Sqrt(a.Value));
+    public static BishNum Sqrt(BishNum a) => new(a.Value.Root(2));
 
     [Builtin]
-    public static BishNum Abs(BishNum a) => new(Math.Abs(a.Value));
+    public static BishNum Abs(BishNum a) => new(BigNum.Abs(a.Value));
 
     [Builtin]
-    public static BishInt Sign(BishNum a) => BishInt.Of(Math.Sign(a.Value));
+    public static BishInt Sign(BishNum a) => BishInt.Of(a.Value.CompareTo(0));
 
     [Builtin]
-    public static BishInt Floor(BishNum a) => BishInt.Of((int)Math.Floor(a.Value));
+    public static BishInt Floor(BishNum a) => BishInt.Of(a.Value.Floor());
 
     [Builtin]
-    public static BishInt Ceil(BishNum a) => BishInt.Of((int)Math.Ceiling(a.Value));
+    public static BishInt Ceil(BishNum a) => BishInt.Of(a.Value.Ceil());
 
     [Builtin]
-    public static BishInt Round(BishNum a) => BishInt.Of((int)Math.Round(a.Value));
+    public static BishInt Round(BishNum a) => BishInt.Of(a.Value.Round());
 
     [Builtin]
-    public static BishNum Sin(BishNum a) => new(Math.Sin(a.Value));
+    public static BishNum Sin(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Cos(BishNum a) => new(Math.Cos(a.Value));
+    public static BishNum Cos(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Tan(BishNum a) => new(Math.Tan(a.Value));
+    public static BishNum Tan(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Asin(BishNum a) => new(Math.Asin(a.Value));
+    public static BishNum Asin(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Acos(BishNum a) => new(Math.Acos(a.Value));
+    public static BishNum Acos(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Atan(BishNum a) => new(Math.Atan(a.Value));
+    public static BishNum Atan(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Ln(BishNum a) => new(Math.Log(a.Value));
+    public static BishNum Ln(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Lg(BishNum a) => new(Math.Log10(a.Value));
+    public static BishNum Lg(BishNum a) => throw new NotImplementedException();
 
     [Builtin]
-    public static BishNum Log(BishNum a, BishNum b) => new(Math.Log(a.Value, b.Value));
+    public static BishNum Log(BishNum a, BishNum b) => throw new NotImplementedException();
 
     [Builtin]
     public new static BishString Repr(BishObject self, BishReprContext ctx)
@@ -108,9 +107,9 @@ public class BishNum(double value) : BishObject
     [Builtin]
     public static BishBool Bool(BishNum a) => BishBool.Of(a.Value != 0);
 
-    static BishNum()
-    {
-        StaticType.DefMember("PI", new BishNum(Math.PI));
-        StaticType.DefMember("E", new BishNum(Math.E));
-    }
+    [Builtin("hook")]
+    public static BishNum Get_PI(BishType _) => new(BigNum.Pi);
+
+    [Builtin("hook")]
+    public static BishNum Get_E(BishType _) => new(BigNum.E);
 }

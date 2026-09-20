@@ -32,7 +32,7 @@ public class BishList(IList<BishObject> list) : BishObject
     private static BishList MulHelper(BishList s, BishObject b)
     {
         return b is BishInt x
-            ? new BishList(Enumerable.Repeat(s.List, x.Value).SelectMany(l => l).ToList())
+            ? new BishList(Enumerable.Repeat(s.List, (int)x.Value).SelectMany(l => l).ToList())
             : throw BishException.OfType_Argument(b, BishInt.StaticType);
     }
 
@@ -78,8 +78,8 @@ public class BishList(IList<BishObject> list) : BishObject
                 if (value is not BishList list) throw BishException.OfType_Argument(value, StaticType);
                 if (range.Step == 1)
                 {
-                    var start = range.Start!.Value;
-                    var end = range.End!.Value;
+                    var start = (int)range.Start!.Value;
+                    var end = (int)range.End!.Value;
                     self.List.RemoveRange(start, end - start);
                     self.List.InsertRange(start, list.List);
                     break;
@@ -110,7 +110,7 @@ public class BishList(IList<BishObject> list) : BishObject
             case BishRange range:
                 var indexes = range.Regularize(self.List.Count).ToInts()
                     .Select(i => i.Value).OrderDescending().ToList();
-                foreach (var index in indexes) self.List.RemoveAt(index);
+                foreach (var index in indexes) self.List.RemoveAt((int)index);
                 break;
             default: throw BishException.OfType_Argument(self, BishInt.StaticType);
         }
@@ -147,7 +147,7 @@ public class BishList(IList<BishObject> list) : BishObject
     [Builtin]
     public static BishList Sorted(BishList self, [DefaultNull] BishObject? key) =>
         new(self.List.Order(new BishObjectComparer(key)).ToList());
-    
+
     private class BishObjectComparer(BishObject? key) : IComparer<BishObject>
     {
         public int Compare(BishObject? x, BishObject? y) => (x, y) switch
@@ -156,7 +156,7 @@ public class BishList(IList<BishObject> list) : BishObject
             (null, _) => -1,
             (_, null) => 1,
             _ => BishOperator.Cmp(key is null ? x : key.Call(new BishArgs([x])),
-                key is null ? y : key.Call(new BishArgs([y])))
+                key is null ? y : key.Call(new BishArgs([y]))).CompareTo(0)
         };
     }
 }

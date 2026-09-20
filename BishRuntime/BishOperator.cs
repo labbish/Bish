@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using BishRuntime.Numerals;
 
 namespace BishRuntime;
 
@@ -100,7 +101,7 @@ public static partial class BishOperator
     public static bool Eq(BishObject a, BishObject b) => Call("op_eq", new BishArgs([a, b]))
         .As<BishBool>($"{BishString.CallDebug(a)} == {BishString.CallDebug(b)}").Value;
     
-    public static int Cmp(BishObject a, BishObject b) => Call("op_cmp", new BishArgs([a, b]))
+    public static BigInt Cmp(BishObject a, BishObject b) => Call("op_cmp", new BishArgs([a, b]))
         .As<BishInt>($"{BishString.CallDebug(a)} <=> {BishString.CallDebug(b)}").Value;
 
     public static SpecialMethod? GetSpecialMethod(string name) =>

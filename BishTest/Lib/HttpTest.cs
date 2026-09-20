@@ -4,7 +4,6 @@ namespace BishTest.Lib;
 
 public class HttpTest : LibTest
 {
-    public static readonly bool IsCi = Environment.GetEnvironmentVariable("CI") == "true";
     public static readonly string Url = IsCi ? "http://localhost:8080" : "https://httpbin.org";
     public static readonly bool Skip = IsCi && !RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 

@@ -1,4 +1,5 @@
-﻿using BishUtils;
+﻿using BishRuntime.Numerals;
+using BishUtils;
 
 namespace BishRuntime;
 
@@ -173,8 +174,18 @@ public class BishException(BishError error) : Exception
     public static BishException OfArgument_MRO(BishType type) =>
         OfArgument($"Cannot create Consistent MRO for {type.Name}").With("type", type);
 
-    public static BishException OfArgument_Parse(BishString str, BishType type) =>
-        OfArgument($"Cannot parse {str.Value} to {type.Name}").With("type", type).With("string", str);
+    public static BishException OfArgument_Parse(string expr, string type) =>
+        OfArgument($"Cannot parse {expr} to {type}").With("type", new BishString(type))
+            .With("expr", new BishString(expr));
+
+    public static BishException OfArgument_InvalidDigit(char digit, BigInt radix) =>
+        OfArgument($"Digit {digit} is invalid for base {radix}").With("digit", new BishString(digit))
+            .With("base", BishInt.Of(radix));
+
+    public static BishException OfArgument_IntOverflow(BigInt value) =>
+        OfArgument($"{value} is too big for an int").With("value", BishInt.Of(value));
+
+    public static BishException OfArgument_InvalidPow() => OfArgument("Invalid power expression");
 
     public static BishException OfArgument_ListSetCount(int expect, int got) =>
         OfArgument($"Setting {expect} indexes with {got} elements")

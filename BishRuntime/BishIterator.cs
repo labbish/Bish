@@ -1,4 +1,6 @@
-﻿namespace BishRuntime;
+﻿using BishRuntime.Numerals;
+
+namespace BishRuntime;
 
 public static class BishIterator
 {
@@ -10,7 +12,7 @@ public class BishIteratorStop : BishObject
 {
     public override BishType DefaultType => StaticType;
     public new static readonly BishType StaticType = new("IteratorStop");
-    
+
     public static readonly BishIteratorStop Instance = new();
 
     private BishIteratorStop()
@@ -30,6 +32,11 @@ internal static class IndexHelper
             if ((index >= -length && index < length) || !check) return index + (index < 0 ? length : 0);
             throw BishException.OfArgument_IndexOutOfBound(length, index);
         }
+    }
+
+    extension(BigInt index)
+    {
+        internal int Regularize(int length, bool check = true) => ((int)index).Regularize(length, check);
     }
 }
 

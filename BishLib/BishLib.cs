@@ -5,8 +5,9 @@ namespace BishLib;
 
 public static class BishLib
 {
-    public static void Initialize()
+    public static void Init()
     {
+        BishBuiltinBinder.Init();
         foreach (var module in typeof(BishLib).Assembly.TypesOf(typeof(IModule)))
             BishScope.BuiltinModules.Add(ModuleName(module.Name), IModule.ExportsFromType(module));
         BuiltinsRegistry.Register();

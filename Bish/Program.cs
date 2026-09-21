@@ -28,8 +28,7 @@ public static class Program
 
     static Program()
     {
-        BishBuiltinBinder.Init();
-        BishLib.BishLib.Initialize();
+        BishLib.BishLib.Init();
 #if !SIMPLE_DEBUG_REPL
         try
         {

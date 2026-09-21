@@ -5,4 +5,5 @@ import('async-iterator-helpers');
 extend builtins() {
     {.static} := import('static');
     macro := import('macros');
+    { .test, .tests, .AssertionFailed } := import('testing');
 };

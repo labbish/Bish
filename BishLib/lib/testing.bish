@@ -1,0 +1,60 @@
+﻿class AssertionFailed : Error {
+    new(expr, expect, found) extend Error('Assertion Failed: expect {} to be {}, found {}'
+        .format(expr, expect, found)) { .expect, .found };
+};
+
+func tests(file) {
+    cases := import(file).#('test$cases');
+    success := 0;
+    for (f : cases) {
+        result := try f();
+        print('Test case {} -- '.format(f.name));
+        if (result is err e) print('Failed: {}\n'.format(e.message))
+        else {
+            print('Succeeded\n');
+            success += 1
+        };
+    };
+    print('Tests done. Total: {}; Success: {}.\n'.format(cases.length, success));
+};
+
+func test(obj) {
+    switch obj {
+        of Func => testFunc(obj),
+        of ParseTree => testTree(obj),
+        null => throw TypeError('Invalid empty expression'),
+        _ => throw TypeError('`test` only accept Func and ParseTree')
+    }
+};
+
+func testFunc(f) {
+    {.scope} := this().caller.caller;
+    if (scope is not {.#('test$cases'): of list})
+        scope.#('test$cases') := [];
+    scope.#('test$cases').add(f);
+};
+
+func testTree(tree) {
+    if (tree.type != 'MatchExpr') throw TypeError('Expect match expr');
+    T := ParseTree;
+    [expr, _, expect] := tree.children;
+    T('BlockExpr', [
+        T('{'),
+        T('Def', [T('AtomExpr', [T('IdAtom', [T('SimpleId', [T('x')])])]), T('='), expr]),
+        T(';'),
+        T('IfExpr', [T('if'), T('('), T('UnOpExpr', [T('!'), T('MatchExpr', [
+            T('AtomExpr', [T('IdAtom', [T('SimpleId', [T('x')])])]), T('is'), expect])]), T(')'),
+            T('ThrowExpr', [T('throw'), T('GetAccess', [
+                T('AtomExpr', [T('IdAtom', [T('SimpleId', [T('AssertionFailed')])])]), 
+                T('NullAccess', [T('CallAccess', [T('('), T('Args', [
+                    T('SingleArg', [T('AtomExpr', [T('StrAtom', [T('r"{}"'.format(expr.code))])])]),
+                    T(','),
+                    T('SingleArg', [T('AtomExpr', [T('StrAtom', [T('r"{}"'.format(expect.code))])])]),
+                    T(','),
+                    T('SingleArg', [T('AtomExpr', [T('IdAtom', [T('SimpleId', [T('x')])])])])
+                ]), T(')')])])
+            ])])
+        ]),
+        T('}')
+    ])
+};
